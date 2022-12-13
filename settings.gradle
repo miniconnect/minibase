@@ -1,6 +1,9 @@
 rootProject.name = 'minibase'
 
-include 'framework'
+include 'common'
+include 'engine'
+include 'query'
+include 'storage'
 
 rootProject.children.each { project ->
     project.projectDir = new File(settingsDir, "projects/${project.name}")
