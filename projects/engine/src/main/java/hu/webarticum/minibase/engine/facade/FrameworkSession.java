@@ -68,6 +68,10 @@ public class FrameworkSession implements MiniSession, CheckableCloseable {
             exception = e;
         }
         if (exception != null) {
+            
+            // FIXME
+            exception.printStackTrace();
+            
             logger.error("Query execution failed", exception);
         }
         return new StoredResult(errorOfException(exception));
@@ -133,6 +137,10 @@ public class FrameworkSession implements MiniSession, CheckableCloseable {
     }
     
     private String extractMessage(Throwable exception) {
+        if (exception == null) {
+            return "Unknown error";
+        }
+        
         String message = exception.getMessage();
         if (message != null) {
             return message;

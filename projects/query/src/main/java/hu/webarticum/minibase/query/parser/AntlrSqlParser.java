@@ -15,6 +15,11 @@ import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
+import hu.webarticum.minibase.query.expression.ColumnExpression;
+import hu.webarticum.minibase.query.expression.ConcatExpression;
+import hu.webarticum.minibase.query.expression.ConstantExpression;
+import hu.webarticum.minibase.query.expression.Expression;
+import hu.webarticum.minibase.query.expression.VariableExpression;
 import hu.webarticum.minibase.query.query.DeleteQuery;
 import hu.webarticum.minibase.query.query.InsertQuery;
 import hu.webarticum.minibase.query.query.JoinType;
@@ -36,16 +41,20 @@ import hu.webarticum.minibase.query.query.VariableValue;
 import hu.webarticum.minibase.query.query.SelectQuery.JoinItem;
 import hu.webarticum.minibase.query.query.SelectQuery.OrderByItem;
 import hu.webarticum.minibase.query.query.SelectQuery.SelectItem;
+import hu.webarticum.minibase.query.query.SelectQuery.ExpressionSelectItem;
+import hu.webarticum.minibase.query.query.SelectQuery.WildcardSelectItem;
 import hu.webarticum.minibase.query.query.SelectQuery.WhereItem;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.LargeInteger;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryLexer;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.AliasableExpressionContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.DeleteQueryContext;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.ExpressionContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.ExtendedValueContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.FieldListContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.FieldNameContext;
-import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.FieldSelectItemContext;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.FunctionCallContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.IdentifierContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.InsertQueryContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.JoinPartContext;
@@ -408,31 +417,78 @@ public class AntlrSqlParser implements SqlParser {
         if (wildcardSelectItemNode != null) {
             return parseWildcardSelectItemNode(wildcardSelectItemNode);
         } else {
-            return parseFieldSelectItem(selectItemNode.fieldSelectItem());
+            return parseAliasableExpressionNode(selectItemNode.aliasableExpression());
+            
+            //return parseFieldSelectItem(selectItemNode.fieldSelectItem());
         }
     }
     
-    private SelectItem parseWildcardSelectItemNode(WildcardSelectItemContext wildcardSelectItemNode) {
+    private WildcardSelectItem parseWildcardSelectItemNode(WildcardSelectItemContext wildcardSelectItemNode) {
         TableNameContext tableNameNode = wildcardSelectItemNode.tableName();
         String tableName = tableNameNode != null ? parseIdentifierNode(tableNameNode.identifier()) : null;
         
         // TODO: check table name?
         
-        return new SelectItem(tableName, null, null);
+        return new WildcardSelectItem(tableName);
+    }
+
+    private ExpressionSelectItem parseAliasableExpressionNode(AliasableExpressionContext aliasableExpressionNode) {
+        ExpressionContext expressionNode = aliasableExpressionNode.expression();
+        Expression expression = parseExpressionNode(expressionNode);
+        String alias =
+                aliasableExpressionNode.alias != null ? parseIdentifierNode(aliasableExpressionNode.alias) : null;
+        return new ExpressionSelectItem(expression, alias);
     }
     
-    private SelectItem parseFieldSelectItem(FieldSelectItemContext fieldSelectItemNode) {
-        ScopeableFieldNameContext scopeableFieldNameNode = fieldSelectItemNode.scopeableFieldName();
-        String fieldName = parseIdentifierNode(scopeableFieldNameNode.fieldName().identifier());
-        TableNameContext tableNameNode = scopeableFieldNameNode.tableName();
-        String tableName = tableNameNode != null ? parseIdentifierNode(tableNameNode.identifier()) : null;
+    private Expression parseExpressionNode(ExpressionContext expressionNode) {
+        if (expressionNode.paredExpression != null) {
+            return parseExpressionNode(expressionNode.paredExpression);
+        }
         
-        // TODO: check table name?
+        TerminalNode nullNode = expressionNode.NULL();
+        if (nullNode != null) {
+            return new ConstantExpression(null);
+        }
         
-        String alias = fieldSelectItemNode.alias != null ?
-                fieldSelectItemNode.alias.getText() :
-                fieldName;
-        return new SelectItem(tableName, fieldName, alias);
+        TerminalNode integerTokenNode = expressionNode.TOKEN_INTEGER();
+        if (integerTokenNode != null) {
+            Integer integerValue = parseIntegerNode(integerTokenNode);
+            return new ConstantExpression(integerValue);
+        }
+        
+        TerminalNode stringTokenNode = expressionNode.TOKEN_STRING();
+        if (stringTokenNode != null) {
+            String stringValue = parseStringNode(stringTokenNode);
+            return new ConstantExpression(stringValue);
+        }
+        
+        VariableContext variableNode = expressionNode.variable();
+        if (variableNode != null) {
+            String variableName = parseIdentifierNode(variableNode.identifier());
+            return new VariableExpression(variableName);
+        }
+        
+        ScopeableFieldNameContext scopeableFieldNameNode = expressionNode.scopeableFieldName();
+        if (scopeableFieldNameNode != null) {
+            TableNameContext tableNameNode = scopeableFieldNameNode.tableName();
+            String tableAlias = tableNameNode != null ? parseIdentifierNode(tableNameNode.identifier()) : null;
+            String columnName = parseIdentifierNode(scopeableFieldNameNode.fieldName().identifier());
+            return new ColumnExpression(tableAlias, columnName);
+        }
+        
+        FunctionCallContext functionCallNode = expressionNode.functionCall();
+        if (functionCallNode != null) {
+            String functionName = parseIdentifierNode(functionCallNode.identifier());
+            ImmutableList<Expression> parameters = functionCallNode.expression().stream()
+                    .map(n -> parseExpressionNode(n))
+                    .collect(ImmutableList.createCollector());
+            // XXX
+            if (functionName.equalsIgnoreCase("CONCAT")) {
+                return new ConcatExpression(parameters);
+            }
+        }
+        
+        throw new IllegalArgumentException("Unknown expression: " + expressionNode.getText());
     }
     
     private ImmutableList<JoinItem> parseJoinPartNodes(

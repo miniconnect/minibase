@@ -42,8 +42,8 @@ selectCountQuery: (
 );
 
 selectPart: selectItem ( ',' selectItem )*;
-selectItem: fieldSelectItem | wildcardSelectItem;
-fieldSelectItem: scopeableFieldName ( AS? alias=identifier )?;
+selectItem: aliasableExpression | wildcardSelectItem;
+aliasableExpression: expression ( AS? alias=identifier )?;
 wildcardSelectItem: ( tableName '.' )? WILDCARD;
 limitPart: LIMIT TOKEN_INTEGER;
 
@@ -88,6 +88,10 @@ orderByItem: ( scopeableFieldName | orderByPosition ) ( ASC | DESC )? ( nullsFir
 nullsFirst: NULLS FIRST;
 nullsLast: NULLS LAST;
 orderByPosition: TOKEN_INTEGER;
+expression:
+    NULL | TOKEN_STRING | TOKEN_INTEGER | variable | scopeableFieldName | functionCall |
+    PAR_START paredExpression=expression PAR_END;
+functionCall: identifier PAR_START expression ( ',' expression )* PAR_END;
 scopeableFieldName: ( tableName '.' )? fieldName;
 extendedValue: literal | variable | NULL;
 variable: '@' identifier;

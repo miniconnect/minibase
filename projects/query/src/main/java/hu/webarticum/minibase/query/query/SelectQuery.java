@@ -2,6 +2,7 @@ package hu.webarticum.minibase.query.query;
 
 import java.util.Objects;
 
+import hu.webarticum.minibase.query.expression.Expression;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.LargeInteger;
 
@@ -75,7 +76,7 @@ public final class SelectQuery implements Query {
     
     public static final class SelectQueryBuilder {
         
-        private ImmutableList<SelectItem> selectItems = ImmutableList.of(new SelectItem(null, null, null));
+        private ImmutableList<SelectItem> selectItems = ImmutableList.of(new WildcardSelectItem(null));
 
         private String schemaName = null;
 
@@ -150,30 +151,45 @@ public final class SelectQuery implements Query {
     }
     
     
-    public static class SelectItem {
+    public interface SelectItem {
         
-        private final String tableName;
+    }
+    
+    
+    public static class WildcardSelectItem implements SelectItem {
         
-        private final String fieldName;
+        private final String tableAlias;
+
+        
+        public WildcardSelectItem(String tableAlias) {
+            this.tableAlias = tableAlias;
+        }
+
+        
+        public String tableAlias() {
+            return tableAlias;
+        }
+        
+    }
+    
+    
+    public static class ExpressionSelectItem implements SelectItem {
+        
+        private final Expression expression;
         
         private final String alias;
 
         
-        public SelectItem(String tableName, String fieldName, String alias) {
-            this.tableName = tableName;
-            this.fieldName = fieldName;
+        public ExpressionSelectItem(Expression expression, String alias) {
+            this.expression = expression;
             this.alias = alias;
         }
 
         
-        public String tableName() {
-            return tableName;
+        public Expression expression() {
+            return expression;
         }
-
-        public String fieldName() {
-            return fieldName;
-        }
-
+        
         public String alias() {
             return alias;
         }

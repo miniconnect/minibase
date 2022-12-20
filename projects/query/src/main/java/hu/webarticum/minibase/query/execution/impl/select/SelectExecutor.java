@@ -18,15 +18,24 @@ import java.util.stream.Collectors;
 
 import hu.webarticum.minibase.common.error.PredefinedError;
 import hu.webarticum.minibase.query.execution.ThrowingQueryExecutor;
+import hu.webarticum.minibase.query.expression.ColumnExpression;
+import hu.webarticum.minibase.query.expression.ColumnParameter;
+import hu.webarticum.minibase.query.expression.Expression;
+import hu.webarticum.minibase.query.expression.FixedTypeExpression;
+import hu.webarticum.minibase.query.expression.Parameter;
+import hu.webarticum.minibase.query.expression.VariableExpression;
+import hu.webarticum.minibase.query.expression.VariableParameter;
 import hu.webarticum.minibase.query.query.JoinType;
 import hu.webarticum.minibase.query.query.Query;
 import hu.webarticum.minibase.query.query.SelectQuery;
 import hu.webarticum.minibase.query.query.SpecialCondition;
 import hu.webarticum.minibase.query.query.VariableValue;
+import hu.webarticum.minibase.query.query.SelectQuery.ExpressionSelectItem;
 import hu.webarticum.minibase.query.query.SelectQuery.JoinItem;
 import hu.webarticum.minibase.query.query.SelectQuery.OrderByItem;
 import hu.webarticum.minibase.query.query.SelectQuery.SelectItem;
 import hu.webarticum.minibase.query.query.SelectQuery.WhereItem;
+import hu.webarticum.minibase.query.query.SelectQuery.WildcardSelectItem;
 import hu.webarticum.minibase.query.state.SessionState;
 import hu.webarticum.minibase.query.util.TableQueryUtil;
 import hu.webarticum.minibase.storage.api.Column;
@@ -36,6 +45,7 @@ import hu.webarticum.minibase.storage.api.Schema;
 import hu.webarticum.minibase.storage.api.StorageAccess;
 import hu.webarticum.minibase.storage.api.Table;
 import hu.webarticum.minibase.storage.impl.simple.MultiComparator;
+import hu.webarticum.minibase.storage.impl.simple.SimpleColumnDefinition;
 import hu.webarticum.miniconnect.api.MiniColumnHeader;
 import hu.webarticum.miniconnect.api.MiniResult;
 import hu.webarticum.miniconnect.api.MiniValue;
@@ -44,6 +54,7 @@ import hu.webarticum.miniconnect.impl.result.StoredColumnHeader;
 import hu.webarticum.miniconnect.impl.result.StoredResult;
 import hu.webarticum.miniconnect.impl.result.StoredResultSetData;
 import hu.webarticum.miniconnect.lang.ImmutableList;
+import hu.webarticum.miniconnect.lang.ImmutableMap;
 import hu.webarticum.miniconnect.lang.LargeInteger;
 import hu.webarticum.miniconnect.record.translator.JavaTranslator;
 import hu.webarticum.miniconnect.record.translator.ValueTranslator;
@@ -59,7 +70,8 @@ public class SelectExecutor implements ThrowingQueryExecutor {
     private MiniResult executeInternal(StorageAccess storageAccess, SessionState state, SelectQuery selectQuery) {
         LinkedHashMap<String, TableEntry> tableEntries = collectTableEntries(selectQuery, storageAccess, state);
         
-        List<SelectItemEntry> selectItemEntries = collectSelectItemEntries(selectQuery, tableEntries, storageAccess);
+        List<SelectItemEntry> selectItemEntries = collectSelectItemEntries(
+                selectQuery, tableEntries, storageAccess, state);
         List<OrderByEntry> orderByEntries = collectOrderByEntries(selectQuery, selectItemEntries, tableEntries);
         Set<String> uniqueOrderedAliases = new HashSet<>();
         List<OrderByEntry> normalizedOrderByEntries = normalizeOrderByEntries(
@@ -84,7 +96,7 @@ public class SelectExecutor implements ThrowingQueryExecutor {
                 reorderedTableEntries, normalizedOrderByEntries, limit, state);
         
         ImmutableList<ImmutableList<MiniValue>> data = joinedRowIndices.stream()
-                .map(r -> selectRow(r, selectItemEntries, reorderedTableEntries))
+                .map(r -> selectRow(r, selectItemEntries, reorderedTableEntries, state))
                 .collect(ImmutableList.createCollector());
         
         return new StoredResult(new StoredResultSetData(columnHeaders, data));
@@ -354,11 +366,14 @@ public class SelectExecutor implements ThrowingQueryExecutor {
     }
     
     private List<SelectItemEntry> collectSelectItemEntries(
-            SelectQuery selectQuery, LinkedHashMap<String, TableEntry> tableEntries, StorageAccess storageAccess) {
+            SelectQuery selectQuery,
+            LinkedHashMap<String, TableEntry> tableEntries,
+            StorageAccess storageAccess,
+            SessionState state) {
         List<SelectItemEntry> result = new ArrayList<>();
         ImmutableList<SelectItem> querySelectItems = selectQuery.selectItems();
         for (SelectItem querySelectItem : querySelectItems) {
-            addSelectItemEntries(result, querySelectItem, tableEntries, storageAccess);
+            addSelectItemEntries(result, querySelectItem, tableEntries, storageAccess, state);
         }
         return result;
     }
@@ -460,32 +475,74 @@ public class SelectExecutor implements ThrowingQueryExecutor {
             List<SelectItemEntry> selectItemEntries,
             SelectItem querySelectItem,
             LinkedHashMap<String, TableEntry> tableEntries,
-            StorageAccess storageAccess) {
-        String tableName = querySelectItem.tableName();
-        String fieldName = querySelectItem.fieldName();
-        
-        if (fieldName == null) {
-            addSelectItemEntriesForWildcard(selectItemEntries, tableName, tableEntries, storageAccess);
+            StorageAccess storageAccess,
+            SessionState state) {
+        if (querySelectItem instanceof WildcardSelectItem) {
+            WildcardSelectItem wildcardSelectItem = (WildcardSelectItem) querySelectItem;
+            String wildcardTableAlias = wildcardSelectItem.tableAlias();
+            addSelectItemEntriesForWildcard(selectItemEntries, wildcardTableAlias, tableEntries, storageAccess);
+            return;
+        }
+
+        if (querySelectItem instanceof ExpressionSelectItem) {
+            ExpressionSelectItem expressionSelectItem = (ExpressionSelectItem) querySelectItem;
+            SelectItemEntry selectItemEntry = createSelectItemEntryForExpression(
+                    expressionSelectItem, tableEntries, storageAccess, state);
+            selectItemEntries.add(selectItemEntry);
             return;
         }
         
-        String fieldAlias = querySelectItem.alias();
+        throw new IllegalArgumentException("Unknown select item type: " + querySelectItem.getClass());
+    }
 
-        if (fieldAlias == null) {
-            fieldAlias = fieldName;
+    private SelectItemEntry createSelectItemEntryForExpression(
+            ExpressionSelectItem expressionSelectItem,
+            LinkedHashMap<String, TableEntry> tableEntries,
+            StorageAccess storageAccess,
+            SessionState state) {
+        Expression expression = expressionSelectItem.expression();
+        if (expression instanceof FixedTypeExpression) {
+            Class<?> type = ((FixedTypeExpression) expression).type();
+            return createSelectItemEntryForFixedType(expressionSelectItem, type, true);
+        } else if (expression instanceof VariableExpression) {
+            String variableName = ((VariableExpression) expression).variableParameter().variableName();
+            Object variableValue = state.getUserVariable(variableName);
+            boolean isNull = variableValue == null;
+            Class<?> type = isNull ? Void.class : variableValue.getClass();
+            return createSelectItemEntryForFixedType(expressionSelectItem, type, isNull);
+        } else if (expression instanceof ColumnExpression) {
+            return createSelectItemEntryForColumnExpression(expressionSelectItem, tableEntries);
+        } else {
+            throw new IllegalArgumentException("Expression type without type information: " + expression.getClass());
         }
+    }
+    
+    private SelectItemEntry createSelectItemEntryForFixedType(
+            ExpressionSelectItem expressionSelectItem, Class<?> type, boolean nullable) {
+        ColumnDefinition fakeColumnDefinition = new SimpleColumnDefinition(type, nullable);
+        ValueTranslator valueTranslator = createValueTranslator(fakeColumnDefinition);
+        return new SelectItemEntry(expressionSelectItem, valueTranslator, fakeColumnDefinition);
+    }
+    
+    private SelectItemEntry createSelectItemEntryForColumnExpression(
+            ExpressionSelectItem expressionSelectItem, LinkedHashMap<String, TableEntry> tableEntries) {
+        ColumnExpression columnExpression = (ColumnExpression) expressionSelectItem.expression();
+        ColumnParameter columnParameter = columnExpression.columnParameter();
         
-        if (tableName == null) {
-            tableName = tableEntries.keySet().iterator().next();
-        } else if (!tableEntries.containsKey(tableName)) {
-            throw PredefinedError.TABLE_NOT_FOUND.toException(tableName);
+        String tableAias = columnParameter.tableAlias();
+        String columnName = columnParameter.columnName();
+        
+        if (tableAias == null) {
+            tableAias = tableEntries.keySet().iterator().next();
+        } else if (!tableEntries.containsKey(tableAias)) {
+            throw PredefinedError.TABLE_NOT_FOUND.toException(tableAias);
         }
-        TableEntry tableEntry = tableEntries.get(tableName);
-        checkColumn(tableEntry.table, fieldName);
+        TableEntry tableEntry = tableEntries.get(tableAias);
+        checkColumn(tableEntry.table, columnName);
         
-        ValueTranslator valueTranslator = getValueTranslator(tableEntry, fieldName);
-        ColumnDefinition columnDefinition = tableEntry.table.columns().get(fieldName).definition();
-        selectItemEntries.add(new SelectItemEntry(tableName, fieldName, fieldAlias, valueTranslator, columnDefinition));
+        ValueTranslator valueTranslator = getValueTranslator(tableEntry, columnName);
+        ColumnDefinition columnDefinition = tableEntry.table.columns().get(columnName).definition();
+        return new SelectItemEntry(expressionSelectItem, valueTranslator, columnDefinition);
     }
     
     private void addSelectItemEntriesForWildcard(
@@ -504,13 +561,14 @@ public class SelectExecutor implements ThrowingQueryExecutor {
         Table table = tableEntry.table;
         NamedResourceStore<Column> columns = table.columns();
         for (String columnName : columns.names()) {
+            Expression columnExpression = new ColumnExpression(tableName, columnName);
+            SelectItem columnSelectItem = new ExpressionSelectItem(columnExpression, columnName);
             ValueTranslator valueTranslator = getValueTranslator(tableEntry, columnName);
             ColumnDefinition columnDefinition = columns.get(columnName).definition();
-            selectItemEntries.add(new SelectItemEntry(
-                    tableName, columnName, columnName, valueTranslator, columnDefinition));
+            selectItemEntries.add(new SelectItemEntry(columnSelectItem, valueTranslator, columnDefinition));
         }
     }
-
+    
     private OrderByEntry toOrderByEntry(
             OrderByItem orderByItem,
             List<SelectItemEntry> selectItemEntries,
@@ -521,9 +579,13 @@ public class SelectExecutor implements ThrowingQueryExecutor {
                 throw PredefinedError.COLUMN_POSITION_INVALID.toException(position);
             }
             SelectItemEntry selectItemEntry = selectItemEntries.get(position - 1);
+            ColumnParameter columnParameter = columnParameterOf(selectItemEntry);
+            if (columnParameter == null) {
+                throw new IllegalArgumentException("Currently, only column based ordering is supported");
+            }
             return new OrderByEntry(
-                    selectItemEntry.tableAlias,
-                    selectItemEntry.fieldName,
+                    columnParameter.tableAlias(),
+                    columnParameter.columnName(),
                     orderByItem.ascOrder(),
                     orderByItem.nullsOrderMode());
         }
@@ -532,21 +594,15 @@ public class SelectExecutor implements ThrowingQueryExecutor {
         String fieldName = orderByItem.fieldName();
         
         if (tableName == null) {
-            SelectItemEntry matchingSelectItemEntry = null;
-            for (SelectItemEntry selectItemEntry : selectItemEntries) {
-                if (selectItemEntry.fieldAlias.equals(fieldName)) {
-                    matchingSelectItemEntry = selectItemEntry;
-                    break;
-                }
-            }
-            if (matchingSelectItemEntry != null) {
+            ColumnParameter matchingColumnParameter = findMatchingColumnParameter(selectItemEntries, fieldName);
+            if (matchingColumnParameter != null) {
                 return new OrderByEntry(
-                        matchingSelectItemEntry.tableAlias,
-                        matchingSelectItemEntry.fieldName,
+                        matchingColumnParameter.tableAlias(),
+                        matchingColumnParameter.columnName(),
                         orderByItem.ascOrder(),
                         orderByItem.nullsOrderMode());
             } else {
-                tableName = selectItemEntries.get(0).tableAlias;
+                tableName = tableEntries.keySet().iterator().next();
             }
         }
 
@@ -557,6 +613,32 @@ public class SelectExecutor implements ThrowingQueryExecutor {
         checkColumn(tableEntry.table, fieldName);
         
         return new OrderByEntry(tableName, fieldName, orderByItem.ascOrder(), orderByItem.nullsOrderMode());
+    }
+    
+    private ColumnParameter findMatchingColumnParameter(List<SelectItemEntry> selectItemEntries, String fieldName) {
+        for (SelectItemEntry selectItemEntry : selectItemEntries) {
+            ColumnParameter columnParameter = columnParameterOf(selectItemEntry);
+            if (columnParameter == null) {
+                continue;
+            }
+            ExpressionSelectItem expressionSelectItem = (ExpressionSelectItem) selectItemEntry.selectItem;
+            if (expressionSelectItem.alias().equals(fieldName)) {
+                return columnParameter;
+            }
+        }
+        return null;
+    }
+    
+    private ColumnParameter columnParameterOf(SelectItemEntry selectItemEntry) {
+        SelectItem selectItem = selectItemEntry.selectItem;
+        if (!(selectItem instanceof ExpressionSelectItem)) {
+            return null;
+        }
+        Expression expression = ((ExpressionSelectItem) selectItem).expression();
+        if (!(expression instanceof ColumnExpression)) {
+            return null;
+        }
+        return ((ColumnExpression) expression).columnParameter();
     }
     
     private void checkColumn(Table table, String columnName) {
@@ -587,11 +669,29 @@ public class SelectExecutor implements ThrowingQueryExecutor {
     
     private MiniColumnHeader columnHeaderOf(SelectItemEntry selectItemEntry, Map<String, TableEntry> tableEntries) {
         MiniValueDefinition valueDefinition = selectItemEntry.valueTranslator.definition();
-        boolean isNullable = selectItemEntry.columnDefinition.isNullable();
-        if (!isNullable && isTransitivelyLeftJoined(selectItemEntry.tableAlias, tableEntries)) {
-            isNullable = true;
+        SelectItem selectItem = selectItemEntry.selectItem;
+        if (!(selectItem instanceof ExpressionSelectItem)) {
+            throw new IllegalArgumentException("Not a column expression");
         }
-        return new StoredColumnHeader(selectItemEntry.fieldAlias, isNullable, valueDefinition);
+        ExpressionSelectItem expressionSelectItem = (ExpressionSelectItem) selectItem;
+        String tableAlias = tableAliasOf(expressionSelectItem);
+        String fieldAlias = expressionSelectItem.alias();
+        if (fieldAlias == null) {
+            fieldAlias = expressionSelectItem.expression().automaticName();
+        }
+        boolean isNullable =
+                selectItemEntry.columnDefinition.isNullable() ||
+                (tableAlias != null && isTransitivelyLeftJoined(tableAlias, tableEntries));
+        return new StoredColumnHeader(fieldAlias, isNullable, valueDefinition);
+    }
+    
+    private String tableAliasOf(ExpressionSelectItem expressionSelectItem) {
+        Expression expression = expressionSelectItem.expression();
+        if (!(expression instanceof ColumnExpression)) {
+            return null;
+        }
+        
+        return ((ColumnExpression) expression).columnParameter().tableAlias();
     }
 
     private boolean isTransitivelyLeftJoined(String tableAlias, Map<String, TableEntry> tableEntries) {
@@ -612,19 +712,68 @@ public class SelectExecutor implements ThrowingQueryExecutor {
     private ImmutableList<MiniValue> selectRow(
             Map<String, LargeInteger> joinedRow,
             List<SelectItemEntry> selectItemEntries,
-            Map<String, TableEntry> tableEntries) {
+            Map<String, TableEntry> tableEntries,
+            SessionState state) {
         List<MiniValue> resultBuilder = new ArrayList<>(selectItemEntries.size());
         for (SelectItemEntry selectItemEntry : selectItemEntries) {
-            LargeInteger rowIndex = joinedRow.get(selectItemEntry.tableAlias);
-            Object value = null;
-            if (rowIndex != null) {
-                TableEntry tableEntry = tableEntries.get(selectItemEntry.tableAlias);
-                value = tableEntry.table.row(rowIndex).get(selectItemEntry.fieldName);
-            }
-            MiniValue miniValue = selectItemEntry.valueTranslator.encodeFully(value);
+            MiniValue miniValue = selectRowValue(joinedRow, selectItemEntry, tableEntries, state);
             resultBuilder.add(miniValue);
         }
         return ImmutableList.fromCollection(resultBuilder);
+    }
+    
+    private MiniValue selectRowValue(
+            Map<String, LargeInteger> joinedRow,
+            SelectItemEntry selectItemEntry,
+            Map<String, TableEntry> tableEntries,
+            SessionState state) {
+        SelectItem selectItem = selectItemEntry.selectItem;
+        if (!(selectItem instanceof ExpressionSelectItem)) {
+            throw new IllegalArgumentException("Not an expression item: " + selectItem.getClass());
+        }
+
+        Expression expression = ((ExpressionSelectItem) selectItem).expression();
+        ImmutableList<Parameter> parameters = expression.parameters();
+        ImmutableMap<Parameter, Object> parameterValues = parameters.assign(
+                p -> selectExpressionParameter(joinedRow, tableEntries, state, p));
+        Object value = expression.evaluate(parameterValues);
+        return selectItemEntry.valueTranslator.encodeFully(value);
+    }
+    
+    private Object selectExpressionParameter(
+            Map<String, LargeInteger> joinedRow,
+            Map<String, TableEntry> tableEntries,
+            SessionState state,
+            Parameter parameter) {
+        if (parameter instanceof VariableParameter) {
+            return selectExpressionVariableParameter(state, (VariableParameter) parameter);
+        } else if (parameter instanceof ColumnParameter) {
+            return selectExpressionColumnParameter(joinedRow, tableEntries, (ColumnParameter) parameter);
+        } else {
+            throw new IllegalArgumentException("Unknown parameter type: " + parameter.getClass());
+        }
+    }
+    
+    private Object selectExpressionVariableParameter(SessionState state, VariableParameter variableParameter) {
+        return state.getUserVariable(variableParameter.variableName());
+    }
+    
+    private Object selectExpressionColumnParameter(
+            Map<String, LargeInteger> joinedRow,
+            Map<String, TableEntry> tableEntries,
+            ColumnParameter columnParameter) {
+        String tableAlias = columnParameter.tableAlias();
+        if (tableAlias == null) {
+            tableAlias = tableEntries.keySet().iterator().next();
+        }
+        String columnName = columnParameter.columnName();
+        LargeInteger rowIndex = joinedRow.get(tableAlias);
+        Object value = null;
+        if (rowIndex != null) {
+            TableEntry tableEntry = tableEntries.get(tableAlias);
+            value = tableEntry.table.row(rowIndex).get(columnName);
+        }
+        return value;
     }
 
     private List<Map<String, LargeInteger>> collectRows(
