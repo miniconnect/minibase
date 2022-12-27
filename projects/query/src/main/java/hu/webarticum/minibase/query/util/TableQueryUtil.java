@@ -15,10 +15,14 @@ import java.util.Set;
 import java.util.function.Function;
 
 import hu.webarticum.minibase.common.error.PredefinedError;
+import hu.webarticum.minibase.query.execution.impl.select.IncompatibleFiltersException;
 import hu.webarticum.minibase.query.execution.impl.select.OrderByEntry;
+import hu.webarticum.minibase.query.query.NullCondition;
 import hu.webarticum.minibase.query.query.NullsOrderMode;
+import hu.webarticum.minibase.query.query.RangeCondition;
 import hu.webarticum.minibase.query.query.SpecialCondition;
 import hu.webarticum.minibase.query.query.VariableValue;
+import hu.webarticum.minibase.query.query.SelectQuery.WhereItem;
 import hu.webarticum.minibase.query.state.SessionState;
 import hu.webarticum.minibase.storage.api.Column;
 import hu.webarticum.minibase.storage.api.ColumnDefinition;
@@ -62,10 +66,126 @@ public class TableQueryUtil {
             throw PredefinedError.COLUMN_NOT_FOUND.toException(table.name(), columnName);
         }
     }
+    
+    public static Map<String, Object> mergeAndConvertFilters(
+            ImmutableList<WhereItem> where, Table table, SessionState state) {
+        Map<String, Object> result = new LinkedHashMap<>();
+        NamedResourceStore<Column> columns = table.columns();
+        for (WhereItem whereItem : where) {
+            String fieldName = whereItem.fieldName();
+            Object newRawValue = whereItem.value();
+            ColumnDefinition columnDefinition = columns.get(fieldName).definition();
+            applyFilterValue(result, fieldName, newRawValue, columnDefinition, state);
+        }
+        return result;
+    }
+
+    public static void applyFilterValue(
+            Map<String, Object> subFilter,
+            String key,
+            Object newRawValue,
+            ColumnDefinition columnDefinition,
+            SessionState state) {
+        Object existingValue = subFilter.get(key);
+        Object convertedValue = newRawValue;
+        Class<?> clazz = columnDefinition.clazz();
+        if (convertedValue instanceof VariableValue) {
+            String variableName = ((VariableValue) convertedValue).name();
+            convertedValue = state.getUserVariable(variableName);
+        } else if (convertedValue instanceof RangeCondition) {
+            RangeCondition rangeCondition = (RangeCondition) convertedValue;
+            Object convertedFrom = TableQueryUtil.convert(rangeCondition.from(), clazz);
+            Object convertedTo = TableQueryUtil.convert(rangeCondition.to(), clazz);
+            convertedValue = new RangeCondition(
+                    convertedFrom, rangeCondition.fromInclusive(), convertedTo, rangeCondition.toInclusive());
+        } else if (!(convertedValue instanceof SpecialCondition)) {
+            convertedValue = TableQueryUtil.convert(convertedValue, clazz);
+        }
+        @SuppressWarnings("unchecked")
+        Comparator<Object> comparator = (Comparator<Object>) columnDefinition.comparator();
+        subFilter.put(key, mergeFilterValue(existingValue, convertedValue, comparator));
+    }
+
+    public static Object mergeFilterValue(Object existingValue, Object newValue, Comparator<Object> comparator) {
+        if (existingValue == null) {
+            return newValue;
+        }
+        
+        if (
+                !(existingValue instanceof SpecialCondition) &&
+                !(newValue instanceof SpecialCondition) &&
+                comparator.compare(newValue, existingValue) == 0) {
+            return newValue;
+        }
+        
+        if (existingValue == NullCondition.IS_NOT_NULL) {
+            if (newValue == NullCondition.IS_NULL) {
+                throw new IncompatibleFiltersException(existingValue, newValue);
+            }
+            return newValue;
+        } else if (existingValue == NullCondition.IS_NULL) {
+            if (newValue != NullCondition.IS_NULL) {
+                throw new IncompatibleFiltersException(existingValue, newValue);
+            }
+            return newValue;
+        } else if (existingValue instanceof RangeCondition) {
+            if (!(newValue instanceof RangeCondition)) {
+                throw new IncompatibleFiltersException(existingValue, newValue);
+            }
+            return mergeRangeConditions((RangeCondition) existingValue, (RangeCondition) newValue, comparator);
+        } else {
+            throw new IncompatibleFiltersException(existingValue, newValue);
+        }
+    }
+    
+    private static RangeCondition mergeRangeConditions(
+            RangeCondition existingRange, RangeCondition newRange, Comparator<Object> comparator) {
+        boolean narrowFrom = checkNarrowing(
+                existingRange.from(),
+                existingRange.fromInclusive(),
+                newRange.from(),
+                newRange.fromInclusive(),
+                comparator);
+        boolean narrowTo = checkNarrowing(
+                existingRange.to(),
+                existingRange.toInclusive(),
+                newRange.to(),
+                newRange.toInclusive(),
+                comparator.reversed());
+        
+        Object from = narrowFrom ? newRange.from() : existingRange.from();
+        boolean fromInclusive = narrowFrom ? newRange.fromInclusive() : existingRange.fromInclusive();
+        Object to = narrowTo ? newRange.to() : existingRange.to();
+        boolean toInclusive = narrowTo ? newRange.toInclusive() : existingRange.toInclusive();
+        
+        return new RangeCondition(from, fromInclusive, to, toInclusive);
+    }
+    
+    private static boolean checkNarrowing(
+            Object value, boolean inclusive, Object liftValue, boolean liftInclusive, Comparator<Object> comparator) {
+        if (liftValue == null) {
+            return false;
+        } else if (value == null) {
+            return true;
+        }
+        
+        int cmp = comparator.compare(value, liftValue);
+        if (cmp > 0) {
+            return false;
+        } else if (cmp < 0) {
+            return true;
+        }
+        
+        if (inclusive == liftInclusive) {
+            return false;
+        }
+        
+        return !liftInclusive;
+    }
 
     public static LargeInteger countRows(Table table, Map<String, Object> queryWhere) {
         Map<ImmutableList<String>, TableIndex> indexesByColumnName = new LinkedHashMap<>();
-        Set<String> unindexedColumnNames = collectIndexes(table, queryWhere.keySet(), indexesByColumnName);
+        Set<String> unindexedColumnNames = collectIndexes(table, queryWhere, indexesByColumnName);
         
         List<TableSelection> moreSelections = new ArrayList<>();
         TableSelection firstSelection = collectIndexSelections(
@@ -97,7 +217,7 @@ public class TableQueryUtil {
             filterIndexColumns.removeAll(matchedFilterColumns);
         }
         Map<ImmutableList<String>, TableIndex> indexesByColumnName = new LinkedHashMap<>();
-        Set<String> unindexedColumnNames = collectIndexes(table, filterIndexColumns, indexesByColumnName);
+        Set<String> unindexedColumnNames = collectIndexes(table, filter, indexesByColumnName);
         indexesByColumnName = prependIndex(matchedFilterColumns, orderIndex, indexesByColumnName);
 
         List<TableSelection> moreSelections = new ArrayList<>();
@@ -241,16 +361,16 @@ public class TableQueryUtil {
     }
     
     private static Set<String> collectIndexes(
-            Table table, Set<String> columnNames, Map<ImmutableList<String>, TableIndex> map) {
+            Table table, Map<String, Object> queryWhere, Map<ImmutableList<String>, TableIndex> map) {
         NamedResourceStore<TableIndex> indexStore = table.indexes();
         ImmutableList<TableIndex> indexes = indexStore.resources();
         int maxIndexColumnCount = calculateMaxIndexColumnCount(indexes);
-        int maxMatchingColumnCount = Math.min(columnNames.size(), maxIndexColumnCount);
-        Set<String> result = new LinkedHashSet<>(columnNames);
+        int maxMatchingColumnCount = Math.min(queryWhere.size(), maxIndexColumnCount);
+        Set<String> result = new LinkedHashSet<>(queryWhere.keySet());
         for (int columnCount = maxMatchingColumnCount; columnCount > 0; columnCount--) {
             for (TableIndex tableIndex : indexes) {
                 ImmutableList<String> indexColumnNames = tableIndex.columnNames();
-                if (areColumnsMatching(indexColumnNames, result, columnCount)) {
+                if (areColumnsMatching(indexColumnNames, result, columnCount, queryWhere)) {
                     ImmutableList<String> matchedColumnNames =
                             indexColumnNames.section(0, columnCount);
                     map.put(matchedColumnNames, tableIndex);
@@ -259,6 +379,41 @@ public class TableQueryUtil {
             }
         }
         return result;
+    }
+
+    private static int calculateMaxIndexColumnCount(ImmutableList<TableIndex> indexes) {
+        int maxIndexColumnCount = 0;
+        for (TableIndex tableIndex : indexes) {
+            int indexColumnCount = tableIndex.columnNames().size();
+            if (indexColumnCount > maxIndexColumnCount) {
+                maxIndexColumnCount = indexColumnCount;
+            }
+        }
+        return maxIndexColumnCount;
+    }
+
+    private static boolean areColumnsMatching(
+            ImmutableList<String> indexColumnNames,
+            Set<String> availableColumnNames,
+            int columnCount,
+            Map<String, Object> queryWhere) {
+        if (indexColumnNames.size() < columnCount) {
+            return false;
+        }
+        
+        for (int i = 0; i < columnCount; i++) {
+            String columnName = indexColumnNames.get(i);
+            if (!availableColumnNames.contains(columnName)) {
+                return false;
+            } else if (i < columnCount - 1) {
+                Object value = queryWhere.get(columnName);
+                if (value instanceof RangeCondition) {
+                    return false;
+                }
+            }
+        }
+        
+        return true;
     }
 
     private static TableSelection collectIndexSelections(
@@ -283,10 +438,10 @@ public class TableQueryUtil {
                 sortModes = values.map(v -> SortMode.UNSORTED);
             }
             TableSelection selection = tableIndex.findMulti(
-                    values.map(v -> v instanceof SpecialCondition ? null : v),
-                    InclusionMode.INCLUDE,
-                    values.map(v -> v instanceof SpecialCondition ? null : v),
-                    InclusionMode.INCLUDE,
+                    values.map(TableQueryUtil::rangeFromForValue),
+                    rangeFromInclusionModeForValues(values),
+                    values.map(TableQueryUtil::rangeToForValue),
+                    rangeToInclusionModeForValues(values),
                     values.map(TableQueryUtil::nullsModeForValue),
                     sortModes);
             if (firstSelection == null) {
@@ -302,10 +457,63 @@ public class TableQueryUtil {
         return firstSelection;
     }
     
+    private static Object rangeFromForValue(Object value) {
+        if (value instanceof RangeCondition) {
+            return ((RangeCondition) value).from();
+        } else if (value instanceof SpecialCondition) {
+            return null;
+        } else {
+            return value;
+        }
+    }
+
+    private static Object rangeToForValue(Object value) {
+        if (value instanceof RangeCondition) {
+            return ((RangeCondition) value).to();
+        } else if (value instanceof SpecialCondition) {
+            return null;
+        } else {
+            return value;
+        }
+    }
+
+    private static InclusionMode rangeFromInclusionModeForValues(ImmutableList<Object> values) {
+        RangeCondition rangeLastValue = extractRangeLastValue(values);
+        if (rangeLastValue == null) {
+            return InclusionMode.INCLUDE;
+        }
+        
+        return rangeLastValue.fromInclusive() ? InclusionMode.INCLUDE : InclusionMode.EXCLUDE;
+    }
+
+    private static InclusionMode rangeToInclusionModeForValues(ImmutableList<Object> values) {
+        RangeCondition rangeLastValue = extractRangeLastValue(values);
+        if (rangeLastValue == null) {
+            return InclusionMode.INCLUDE;
+        }
+        
+        return rangeLastValue.toInclusive() ? InclusionMode.INCLUDE : InclusionMode.EXCLUDE;
+    }
+
+    private static RangeCondition extractRangeLastValue(ImmutableList<Object> values) {
+        if (values.isEmpty()) {
+            return null;
+        }
+        
+        Object lastValue = values.get(values.size() - 1);
+        if (!(lastValue instanceof RangeCondition)) {
+            return null;
+        }
+        
+        return (RangeCondition) lastValue;
+    }
+
     private static NullsMode nullsModeForValue(Object value) {
-        if (value == SpecialCondition.IS_NULL) {
+        if (value == NullCondition.IS_NULL) {
             return NullsMode.NULLS_ONLY;
-        } else if (value == SpecialCondition.IS_NOT_NULL) {
+        } else if (value == NullCondition.IS_NOT_NULL) {
+            return NullsMode.NO_NULLS;
+        } else if (value instanceof RangeCondition) {
             return NullsMode.NO_NULLS;
         } else {
             return NullsMode.WITH_NULLS;
@@ -377,50 +585,52 @@ public class TableQueryUtil {
     }
     
     private static boolean isValueMatching(Object expectedValue, Object actualValue, Column column) {
-        if (expectedValue == SpecialCondition.IS_NULL) {
+        if (expectedValue == NullCondition.IS_NULL) {
             return actualValue == null;
-        } else if (expectedValue == SpecialCondition.IS_NOT_NULL) {
+        } else if (expectedValue == NullCondition.IS_NOT_NULL) {
             return actualValue != null;
+        } else if (actualValue == null) {
+            return false;
         }
         
         @SuppressWarnings("unchecked")
         Comparator<Object> comparator = (Comparator<Object>) column.definition().comparator();
+        if (expectedValue instanceof RangeCondition) {
+            return checkRange(null, actualValue, comparator);
+        }
+        
         return comparator.compare(actualValue, expectedValue) == 0;
     }
 
-    private static boolean areColumnsMatching(
-            ImmutableList<String> indexColumnNames, Set<String> availableColumnNames, int columnCount) {
-        if (indexColumnNames.size() < columnCount) {
-            return false;
+    private static boolean checkRange(
+            RangeCondition rangeCondition, Object actualValue, Comparator<Object> comparator) {
+        Object from = rangeCondition.from();
+        if (from != null) {
+            boolean fromInclusive = rangeCondition.fromInclusive();
+            int fromCmp = comparator.compare(actualValue, from);
+            if ((fromInclusive && fromCmp < 0) || (!fromInclusive && fromCmp <= 0)) {
+                return false;
+            }
         }
-        
-        for (int i = 0; i < columnCount; i++) {
-            String columnName = indexColumnNames.get(i);
-            if (!availableColumnNames.contains(columnName)) {
+
+        Object to = rangeCondition.to();
+        if (to != null) {
+            boolean toInclusive = rangeCondition.toInclusive();
+            int toCmp = comparator.compare(actualValue, to);
+            if ((toInclusive && toCmp > 0) || (!toInclusive && toCmp >= 0)) {
                 return false;
             }
         }
         
         return true;
     }
-
-    private static int calculateMaxIndexColumnCount(ImmutableList<TableIndex> indexes) {
-        int maxIndexColumnCount = 0;
-        for (TableIndex tableIndex : indexes) {
-            int indexColumnCount = tableIndex.columnNames().size();
-            if (indexColumnCount > maxIndexColumnCount) {
-                maxIndexColumnCount = indexColumnCount;
-            }
-        }
-        return maxIndexColumnCount;
-    }
-
+    
     @SuppressWarnings("unchecked")
     public static <T> T convert(Object source, Class<T> targetClazz) {
         return (T) CONVERTER.convert(source, targetClazz);
     }
 
-    public static Map<String, Object> convertColumnValues(
+    public static Map<String, Object> convertColumnNewValues(
             Table table, Map<String, Object> columnValues, SessionState state, boolean check) {
         Map<String, Object> result = new LinkedHashMap<>();
         NamedResourceStore<Column> columns = table.columns();

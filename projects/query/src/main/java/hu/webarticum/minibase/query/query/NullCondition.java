@@ -1,6 +1,6 @@
 package hu.webarticum.minibase.query.query;
 
-public enum SpecialCondition {
+public enum NullCondition implements SpecialCondition {
     
     IS_NULL,
     

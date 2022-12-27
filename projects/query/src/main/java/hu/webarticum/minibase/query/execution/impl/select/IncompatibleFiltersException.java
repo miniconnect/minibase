@@ -1,6 +1,6 @@
 package hu.webarticum.minibase.query.execution.impl.select;
 
-class IncompatibleFiltersException extends RuntimeException {
+public class IncompatibleFiltersException extends RuntimeException {
 
     private static final long serialVersionUID = 1L;
     

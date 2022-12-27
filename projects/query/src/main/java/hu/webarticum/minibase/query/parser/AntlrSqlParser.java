@@ -23,9 +23,11 @@ import hu.webarticum.minibase.query.expression.VariableExpression;
 import hu.webarticum.minibase.query.query.DeleteQuery;
 import hu.webarticum.minibase.query.query.InsertQuery;
 import hu.webarticum.minibase.query.query.JoinType;
+import hu.webarticum.minibase.query.query.NullCondition;
 import hu.webarticum.minibase.query.query.NullsOrderMode;
 import hu.webarticum.minibase.query.query.Queries;
 import hu.webarticum.minibase.query.query.Query;
+import hu.webarticum.minibase.query.query.RangeCondition;
 import hu.webarticum.minibase.query.query.SelectCountQuery;
 import hu.webarticum.minibase.query.query.SelectQuery;
 import hu.webarticum.minibase.query.query.SelectSpecialQuery;
@@ -33,7 +35,6 @@ import hu.webarticum.minibase.query.query.SelectValueQuery;
 import hu.webarticum.minibase.query.query.SetVariableQuery;
 import hu.webarticum.minibase.query.query.ShowSchemasQuery;
 import hu.webarticum.minibase.query.query.ShowTablesQuery;
-import hu.webarticum.minibase.query.query.SpecialCondition;
 import hu.webarticum.minibase.query.query.SpecialSelectableType;
 import hu.webarticum.minibase.query.query.UpdateQuery;
 import hu.webarticum.minibase.query.query.UseQuery;
@@ -49,6 +50,7 @@ import hu.webarticum.miniconnect.lang.LargeInteger;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryLexer;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.AliasableExpressionContext;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.BetweenRelationContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.DeleteQueryContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.ExpressionContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.ExtendedValueContext;
@@ -76,6 +78,7 @@ import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.SelectVal
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.SetVariableQueryContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.ShowSchemasQueryContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.ShowTablesQueryContext;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.SimpleRelationContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.SpecialSelectableNameContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.SqlQueryContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.TableNameContext;
@@ -220,7 +223,7 @@ public class AntlrSqlParser implements SqlParser {
         }
         
         WherePartContext wherePartNode = selectCountQueryNode.wherePart();
-        LinkedHashMap<String, Object> where = parseSimpleWherePartNode(wherePartNode, tableAlias);
+        ImmutableList<WhereItem> where = parseWherePartNode(wherePartNode);
         
         return Queries.selectCount()
                 .inSchema(schemaName)
@@ -325,7 +328,7 @@ public class AntlrSqlParser implements SqlParser {
         UpdatePartContext updatePartNode = updateQueryNode.updatePart();
         LinkedHashMap<String, Object> values = parseUpdatePartNode(updatePartNode);
         WherePartContext wherePartNode = updateQueryNode.wherePart();
-        LinkedHashMap<String, Object> where = parseSimpleWherePartNode(wherePartNode, tableName); // TODO: alias?
+        ImmutableList<WhereItem> where = parseWherePartNode(wherePartNode);
 
         return Queries.update()
                 .inSchema(schemaName)
@@ -343,7 +346,7 @@ public class AntlrSqlParser implements SqlParser {
         IdentifierContext identifierNode = deleteQueryNode.tableName().identifier();
         String tableName = parseIdentifierNode(identifierNode);
         WherePartContext wherePartNode = deleteQueryNode.wherePart();
-        LinkedHashMap<String, Object> where = parseSimpleWherePartNode(wherePartNode, tableName); // TODO: alias?
+        ImmutableList<WhereItem> where = parseWherePartNode(wherePartNode);
         
         return Queries.delete()
                 .inSchema(schemaName)
@@ -587,39 +590,6 @@ public class AntlrSqlParser implements SqlParser {
         return new WhereItem(tableName, fieldName, value);
     }
     
-    private LinkedHashMap<String, Object> parseSimpleWherePartNode(WherePartContext wherePartNode, String tableAlias) {
-        LinkedHashMap<String, Object> result = new LinkedHashMap<>();
-        if (wherePartNode == null) {
-            return result;
-        }
-        
-        for (WhereItemContext whereItemNode : wherePartNode.whereItem()) {
-            Object[] fieldNameAndValue = parseSimpleWhereItemNode(whereItemNode, tableAlias);
-            String fieldName = (String) fieldNameAndValue[0];
-            if (result.containsKey(fieldName)) {
-                throw new IllegalArgumentException("Duplicated field in where clause: " + fieldName);
-            }
-            Object value = fieldNameAndValue[1];
-            result.put(fieldName, value);
-        }
-        return result;
-    }
-    
-    private Object[] parseSimpleWhereItemNode(WhereItemContext whereItemNode, String tableAlias) {
-        WhereItemContext subItemNode = whereItemNode.whereItem();
-        if (subItemNode != null) {
-            return parseSimpleWhereItemNode(subItemNode, tableAlias);
-        }
-        
-        ScopeableFieldNameContext scopeableFieldNameNode = whereItemNode.scopeableFieldName();
-        String fieldName = parseIdentifierNode(scopeableFieldNameNode.fieldName().identifier());
-        
-        checkTableNameNode(scopeableFieldNameNode.tableName(), tableAlias);
-        
-        Object value = parsePostfixConditionNode(whereItemNode.postfixCondition());
-        return new Object[] { fieldName, value };
-    }
-
     private ImmutableList<OrderByItem> parseOrderByPartNode(OrderByPartContext orderByPartNode) {
         if (orderByPartNode == null) {
             return ImmutableList.empty();
@@ -702,26 +672,53 @@ public class AntlrSqlParser implements SqlParser {
     }
 
     private Object parsePostfixConditionNode(PostfixConditionContext postfixConditionNode) {
-        ExtendedValueContext extendedValueNode = postfixConditionNode.extendedValue();
-        if (extendedValueNode != null) {
-            return parseExtendedValueNode(extendedValueNode);
-        } else if (postfixConditionNode.isNull() != null) {
-            return SpecialCondition.IS_NULL;
+        SimpleRelationContext simpleRelationNode = postfixConditionNode.simpleRelation();
+        if (simpleRelationNode != null) {
+            ExtendedValueContext extendedValueNode = postfixConditionNode.extendedValue();
+            Object value = parseExtendedValueNode(extendedValueNode);
+            if (simpleRelationNode.EQ() != null) {
+                return value;
+            } else {
+                return buildHalfRangeCondition(simpleRelationNode, value);
+            }
+        }
+        
+        BetweenRelationContext betweenRelationNode = postfixConditionNode.betweenRelation();
+        if (betweenRelationNode != null) {
+            return parseBetweenRelationNode(betweenRelationNode);
+        }
+        
+        if (postfixConditionNode.isNull() != null) {
+            return NullCondition.IS_NULL;
         } else if (postfixConditionNode.isNotNull() != null) {
-            return SpecialCondition.IS_NOT_NULL;
+            return NullCondition.IS_NOT_NULL;
+        }
+        
+        throw new IllegalArgumentException("Invalid postfix condition: " + postfixConditionNode.getText());
+    }
+    
+    private Object buildHalfRangeCondition(SimpleRelationContext simpleRelationNode, Object value) {
+        if (simpleRelationNode.LESS() != null) {
+            return new RangeCondition(null, false, value, false);
+        } else if (simpleRelationNode.LESS_EQ() != null) {
+            return new RangeCondition(null, false, value, true);
+        } else if (simpleRelationNode.GREATER() != null) {
+            return new RangeCondition(value, false, null, false);
+        } else if (simpleRelationNode.GREATER_EQ() != null) {
+            return new RangeCondition(value, true, null, false);
         } else {
-            throw new IllegalArgumentException("Invalid postfix condition: " + postfixConditionNode.getText());
+            throw new IllegalArgumentException("Invalid range condition: " + simpleRelationNode.getText());
         }
     }
 
     private Object parseExtendedValueNode(ExtendedValueContext extendedValueNode) {
+        if (extendedValueNode.NULL() != null) {
+            return null;
+        }
+        
         LiteralContext literalNode = extendedValueNode.literal();
         if (literalNode != null) {
             return parseLiteralNode(literalNode);
-        }
-        
-        if (extendedValueNode.NULL() != null) {
-            return null;
         }
         
         VariableContext variableNode = extendedValueNode.variable();
@@ -731,6 +728,12 @@ public class AntlrSqlParser implements SqlParser {
         }
 
         throw new IllegalArgumentException("Invalid value: " + extendedValueNode.getText());
+    }
+
+    private Object parseBetweenRelationNode(BetweenRelationContext betweenRelationNode) {
+        Object firstValue = parseExtendedValueNode(betweenRelationNode.firstValue);
+        Object secondValue = parseExtendedValueNode(betweenRelationNode.secondValue);
+        return new RangeCondition(firstValue, true, secondValue, true);
     }
     
     private Object parseLiteralNode(LiteralContext literalNode) {

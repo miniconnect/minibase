@@ -9,6 +9,7 @@ import hu.webarticum.minibase.common.error.PredefinedError;
 import hu.webarticum.minibase.query.execution.ThrowingQueryExecutor;
 import hu.webarticum.minibase.query.query.Query;
 import hu.webarticum.minibase.query.query.UpdateQuery;
+import hu.webarticum.minibase.query.query.SelectQuery.WhereItem;
 import hu.webarticum.minibase.query.state.SessionState;
 import hu.webarticum.minibase.query.util.TableQueryUtil;
 import hu.webarticum.minibase.storage.api.Column;
@@ -19,6 +20,7 @@ import hu.webarticum.minibase.storage.api.TablePatch;
 import hu.webarticum.minibase.storage.api.TablePatch.TablePatchBuilder;
 import hu.webarticum.miniconnect.api.MiniResult;
 import hu.webarticum.miniconnect.impl.result.StoredResult;
+import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
 import hu.webarticum.miniconnect.lang.LargeInteger;
 
@@ -54,14 +56,13 @@ public class UpdateExecutor implements ThrowingQueryExecutor {
         }
 
         Map<String, Object> queryUpdates = updateQuery.values();
-        Map<String, Object> queryWhere = updateQuery.where();
-        
         TableQueryUtil.checkFields(table, queryUpdates.keySet());
-        TableQueryUtil.checkFields(table, queryWhere.keySet());
-
+        
+        ImmutableList<WhereItem> queryWhere = updateQuery.where();
         Map<String, Object> convertedQueryUpdates =
-                TableQueryUtil.convertColumnValues(table, queryUpdates, state, true);
-        Map<String, Object> convertedQueryWhere = TableQueryUtil.convertColumnValues(table, queryWhere, state, false);
+                TableQueryUtil.convertColumnNewValues(table, queryUpdates, state, true);
+        Map<String, Object> convertedQueryWhere = TableQueryUtil.mergeAndConvertFilters(queryWhere, table, state);
+        TableQueryUtil.checkFields(table, convertedQueryWhere.keySet());
 
         List<LargeInteger> rowIndexes = TableQueryUtil.filterRowsToList(
                 table, convertedQueryWhere, Collections.emptyList(), null);

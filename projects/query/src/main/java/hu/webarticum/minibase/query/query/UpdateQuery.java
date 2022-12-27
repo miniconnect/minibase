@@ -4,6 +4,9 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
+import hu.webarticum.minibase.query.query.SelectQuery.WhereItem;
+import hu.webarticum.miniconnect.lang.ImmutableList;
+
 public final class UpdateQuery implements Query {
     
     private final String schemaName;
@@ -12,14 +15,14 @@ public final class UpdateQuery implements Query {
 
     private final LinkedHashMap<String, Object> values;
     
-    private final LinkedHashMap<String, Object> where;
+    private final ImmutableList<WhereItem> where;
     
     
     private UpdateQuery(UpdateQueryBuilder builder) {
         this.schemaName = builder.schemaName;
         this.tableName = Objects.requireNonNull(builder.tableName);
         this.values = Objects.requireNonNull(builder.values);
-        this.where = Objects.requireNonNull(builder.where);
+        this.where = builder.where;
     }
     
     public static UpdateQueryBuilder builder() {
@@ -39,8 +42,8 @@ public final class UpdateQuery implements Query {
         return new LinkedHashMap<>(values);
     }
     
-    public Map<String, Object> where() {
-        return new LinkedHashMap<>(where);
+    public ImmutableList<WhereItem> where() {
+        return where;
     }
     
     
@@ -52,7 +55,7 @@ public final class UpdateQuery implements Query {
 
         private LinkedHashMap<String, Object> values = new LinkedHashMap<>();
 
-        private LinkedHashMap<String, Object> where = new LinkedHashMap<>();
+        private ImmutableList<WhereItem> where = ImmutableList.empty();
 
         
         private UpdateQueryBuilder() {
@@ -75,8 +78,8 @@ public final class UpdateQuery implements Query {
             return this;
         }
 
-        public UpdateQueryBuilder where(Map<String, Object> where) {
-            this.where = new LinkedHashMap<>(where);
+        public UpdateQueryBuilder where(ImmutableList<WhereItem> where) {
+            this.where = where;
             return this;
         }
         

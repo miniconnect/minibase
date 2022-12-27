@@ -80,7 +80,9 @@ setVariableQuery: SET variable '=' extendedValue;
 
 wherePart: WHERE whereItem ( AND whereItem )*;
 whereItem: scopeableFieldName postfixCondition | '(' whereItem ')';
-postfixCondition: '=' extendedValue | isNull | isNotNull;
+postfixCondition: simpleRelation extendedValue | betweenRelation | isNull | isNotNull;
+simpleRelation: EQ | LESS | LESS_EQ | GREATER| GREATER_EQ;
+betweenRelation: BETWEEN firstValue=extendedValue AND secondValue=extendedValue;
 isNull: IS NULL;
 isNotNull: IS NOT NULL;
 orderByPart: ORDER BY orderByItem ( ',' orderByItem )*;
@@ -127,6 +129,7 @@ FROM: F R O M;
 INTO: I N T O;
 WHERE: W H E R E;
 AND: A N D;
+BETWEEN: B E T W E E N;
 ORDER: O R D E R;
 BY: B Y;
 ASC: A S C;
@@ -160,6 +163,12 @@ WILDCARD: '*';
 
 PAR_START: '(';
 PAR_END: ')';
+
+EQ: '=';
+LESS: '<';
+LESS_EQ: '<=';
+GREATER: '>';
+GREATER_EQ: '>=';
 
 WHITESPACE: [ \n\t\r] -> skip;
 

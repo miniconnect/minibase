@@ -6,6 +6,7 @@ import hu.webarticum.minibase.common.error.PredefinedError;
 import hu.webarticum.minibase.query.execution.ThrowingQueryExecutor;
 import hu.webarticum.minibase.query.query.Query;
 import hu.webarticum.minibase.query.query.SelectCountQuery;
+import hu.webarticum.minibase.query.query.SelectQuery.WhereItem;
 import hu.webarticum.minibase.query.state.SessionState;
 import hu.webarticum.minibase.query.util.ResultUtil;
 import hu.webarticum.minibase.query.util.TableQueryUtil;
@@ -13,6 +14,7 @@ import hu.webarticum.minibase.storage.api.Schema;
 import hu.webarticum.minibase.storage.api.StorageAccess;
 import hu.webarticum.minibase.storage.api.Table;
 import hu.webarticum.miniconnect.api.MiniResult;
+import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.LargeInteger;
 
 public class SelectCountExecutor implements ThrowingQueryExecutor {
@@ -47,12 +49,12 @@ public class SelectCountExecutor implements ThrowingQueryExecutor {
             throw PredefinedError.TABLE_NOT_FOUND.toException(tableName);
         }
         
-        Map<String, Object> queryWhere = selectCountQuery.where();
+        ImmutableList<WhereItem> queryWhere = selectCountQuery.where();
         if (queryWhere.isEmpty()) {
             return ResultUtil.createSingleValueResult(COLUMN_NAME, table.size());
         }
         
-        Map<String, Object> convertedQueryWhere = TableQueryUtil.convertColumnValues(table, queryWhere, state, false);
+        Map<String, Object> convertedQueryWhere = TableQueryUtil.mergeAndConvertFilters(queryWhere, table, state);
         LargeInteger count = TableQueryUtil.countRows(table, convertedQueryWhere);
         return ResultUtil.createSingleValueResult(COLUMN_NAME, count);
     }

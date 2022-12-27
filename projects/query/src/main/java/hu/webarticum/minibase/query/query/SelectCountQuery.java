@@ -1,8 +1,9 @@
 package hu.webarticum.minibase.query.query;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.Objects;
+
+import hu.webarticum.minibase.query.query.SelectQuery.WhereItem;
+import hu.webarticum.miniconnect.lang.ImmutableList;
 
 public final class SelectCountQuery implements Query {
     
@@ -10,13 +11,13 @@ public final class SelectCountQuery implements Query {
 
     private final String tableName;
     
-    private final LinkedHashMap<String, Object> where;
+    private final ImmutableList<WhereItem> where;
     
     
     private SelectCountQuery(SelectCountQueryBuilder builder) {
         this.schemaName = builder.schemaName;
         this.tableName = Objects.requireNonNull(builder.tableName);
-        this.where = new LinkedHashMap<>(Objects.requireNonNull(builder.where));
+        this.where = builder.where;
     }
     
     public static SelectCountQueryBuilder builder() {
@@ -32,8 +33,8 @@ public final class SelectCountQuery implements Query {
         return tableName;
     }
 
-    public Map<String, Object> where() {
-        return new LinkedHashMap<>(where);
+    public ImmutableList<WhereItem> where() {
+        return where;
     }
     
     
@@ -43,7 +44,7 @@ public final class SelectCountQuery implements Query {
 
         private String tableName = null;
         
-        private LinkedHashMap<String, Object> where = new LinkedHashMap<>();
+        private ImmutableList<WhereItem> where = ImmutableList.empty();
         
         
         private SelectCountQueryBuilder() {
@@ -61,8 +62,8 @@ public final class SelectCountQuery implements Query {
             return this;
         }
 
-        public SelectCountQueryBuilder where(Map<String, Object> where) {
-            this.where = new LinkedHashMap<>(where);
+        public SelectCountQueryBuilder where(ImmutableList<WhereItem> where) {
+            this.where = where;
             return this;
         }
 

@@ -28,8 +28,6 @@ import hu.webarticum.minibase.query.expression.VariableParameter;
 import hu.webarticum.minibase.query.query.JoinType;
 import hu.webarticum.minibase.query.query.Query;
 import hu.webarticum.minibase.query.query.SelectQuery;
-import hu.webarticum.minibase.query.query.SpecialCondition;
-import hu.webarticum.minibase.query.query.VariableValue;
 import hu.webarticum.minibase.query.query.SelectQuery.ExpressionSelectItem;
 import hu.webarticum.minibase.query.query.SelectQuery.JoinItem;
 import hu.webarticum.minibase.query.query.SelectQuery.OrderByItem;
@@ -468,7 +466,7 @@ public class SelectExecutor implements ThrowingQueryExecutor {
         Object value = whereItem.value();
         ColumnDefinition columnDefinition = tableEntry.table.columns().get(fieldName).definition();
         
-        applyFilterValue(tableEntry.subFilter, fieldName, value, columnDefinition, state);
+        TableQueryUtil.applyFilterValue(tableEntry.subFilter, fieldName, value, columnDefinition, state);
     }
     
     private void addSelectItemEntries(
@@ -814,7 +812,7 @@ public class SelectExecutor implements ThrowingQueryExecutor {
                 Object joinValue = sourceTable.row(rowIndex).get(sourceFieldName);
                 ColumnDefinition columnDefinition = tableEntry.table.columns().get(targetFieldName).definition();
                 try {
-                    applyFilterValue(subFilter, targetFieldName, joinValue, columnDefinition, state);
+                    TableQueryUtil.applyFilterValue(subFilter, targetFieldName, joinValue, columnDefinition, state);
                 } catch (IncompatibleFiltersException e) {
                     return;
                 }
@@ -918,53 +916,6 @@ public class SelectExecutor implements ThrowingQueryExecutor {
                         tableEntries,
                         state);
             }
-        }
-    }
-    
-    private void applyFilterValue(
-            Map<String, Object> subFilter,
-            String key,
-            Object newRawValue,
-            ColumnDefinition columnDefinition,
-            SessionState state) {
-        Object existingValue = subFilter.get(key);
-        Object convertedValue = newRawValue;
-        if (convertedValue instanceof VariableValue) {
-            String variableName = ((VariableValue) convertedValue).name();
-            convertedValue = state.getUserVariable(variableName);
-        }
-        if (!(convertedValue instanceof SpecialCondition)) {
-            convertedValue = TableQueryUtil.convert(convertedValue, columnDefinition.clazz());
-        }
-        @SuppressWarnings("unchecked")
-        Comparator<Object> comparator = (Comparator<Object>) columnDefinition.comparator();
-        subFilter.put(key, mergeFilterValue(existingValue, convertedValue, comparator));
-    }
-
-    private Object mergeFilterValue(Object existingValue, Object newValue, Comparator<Object> comparator) {
-        if (existingValue == null) {
-            return newValue;
-        }
-        
-        if (
-                !(existingValue instanceof SpecialCondition) &&
-                !(newValue instanceof SpecialCondition) &&
-                comparator.compare(newValue, existingValue) == 0) {
-            return newValue;
-        }
-        
-        if (existingValue == SpecialCondition.IS_NOT_NULL) {
-            if (newValue == SpecialCondition.IS_NULL) {
-                throw new IncompatibleFiltersException(existingValue, newValue);
-            }
-            return newValue;
-        } else if (existingValue == SpecialCondition.IS_NULL) {
-            if (newValue != SpecialCondition.IS_NULL) {
-                throw new IncompatibleFiltersException(existingValue, newValue);
-            }
-            return newValue;
-        } else {
-            throw new IncompatibleFiltersException(existingValue, newValue);
         }
     }
     

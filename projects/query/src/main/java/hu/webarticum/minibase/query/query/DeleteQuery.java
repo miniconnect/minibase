@@ -1,8 +1,9 @@
 package hu.webarticum.minibase.query.query;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.Objects;
+
+import hu.webarticum.minibase.query.query.SelectQuery.WhereItem;
+import hu.webarticum.miniconnect.lang.ImmutableList;
 
 public final class DeleteQuery implements Query {
 
@@ -10,13 +11,13 @@ public final class DeleteQuery implements Query {
     
     private final String tableName;
     
-    private final LinkedHashMap<String, Object> where;
+    private final ImmutableList<WhereItem> where;
     
     
     private DeleteQuery(DeleteQueryBuilder builder) {
         this.schemaName = builder.schemaName;
         this.tableName = Objects.requireNonNull(builder.tableName);
-        this.where = Objects.requireNonNull(builder.where);
+        this.where = builder.where;
     }
     
     public static DeleteQueryBuilder builder() {
@@ -32,8 +33,8 @@ public final class DeleteQuery implements Query {
         return tableName;
     }
 
-    public Map<String, Object> where() {
-        return new LinkedHashMap<>(where);
+    public ImmutableList<WhereItem> where() {
+        return where;
     }
     
     
@@ -43,7 +44,7 @@ public final class DeleteQuery implements Query {
         
         private String tableName = null;
         
-        private LinkedHashMap<String, Object> where = new LinkedHashMap<>();
+        private ImmutableList<WhereItem> where = ImmutableList.empty();
 
         
         private DeleteQueryBuilder() {
@@ -61,8 +62,8 @@ public final class DeleteQuery implements Query {
             return this;
         }
 
-        public DeleteQueryBuilder where(Map<String, Object> where) {
-            this.where = new LinkedHashMap<>(where);
+        public DeleteQueryBuilder where(ImmutableList<WhereItem> where) {
+            this.where = where;
             return this;
         }
 
