@@ -455,11 +455,7 @@ public class SelectExecutor implements ThrowingQueryExecutor {
             tableName = tableEntries.keySet().iterator().next();
         }
         
-        TableEntry tableEntry = tableEntries.get(tableName);
-        if (tableEntry == null) {
-            throw PredefinedError.TABLE_NOT_FOUND.toException(tableName);
-        }
-
+        TableEntry tableEntry = findTableEntryOrThrow(tableEntries, tableName);
         String fieldName = whereItem.fieldName();
         checkColumn(tableEntry.table, fieldName);
         
@@ -499,6 +495,7 @@ public class SelectExecutor implements ThrowingQueryExecutor {
             StorageAccess storageAccess,
             SessionState state) {
         Expression expression = expressionSelectItem.expression();
+        checkExpressionColumns(expression, tableEntries);
         if (expression instanceof FixedTypeExpression) {
             Class<?> type = ((FixedTypeExpression) expression).type();
             return createSelectItemEntryForFixedType(expressionSelectItem, type, true);
@@ -515,6 +512,16 @@ public class SelectExecutor implements ThrowingQueryExecutor {
         }
     }
     
+    private void checkExpressionColumns(Expression expression, LinkedHashMap<String, TableEntry> tableEntries) {
+        for (Parameter parameter : expression.parameters()) {
+            if (parameter instanceof ColumnParameter) {
+                ColumnParameter columnParameter = (ColumnParameter) parameter;
+                TableEntry tableEntry = findTableEntryOrThrow(tableEntries, columnParameter.tableAlias());
+                checkColumn(tableEntry.table, columnParameter.columnName());
+            }
+        }
+    }
+    
     private SelectItemEntry createSelectItemEntryForFixedType(
             ExpressionSelectItem expressionSelectItem, Class<?> type, boolean nullable) {
         ColumnDefinition fakeColumnDefinition = new SimpleColumnDefinition(type, nullable);
@@ -526,18 +533,8 @@ public class SelectExecutor implements ThrowingQueryExecutor {
             ExpressionSelectItem expressionSelectItem, LinkedHashMap<String, TableEntry> tableEntries) {
         ColumnExpression columnExpression = (ColumnExpression) expressionSelectItem.expression();
         ColumnParameter columnParameter = columnExpression.columnParameter();
-        
-        String tableAias = columnParameter.tableAlias();
+        TableEntry tableEntry = findTableEntryOrThrow(tableEntries, columnParameter.tableAlias());
         String columnName = columnParameter.columnName();
-        
-        if (tableAias == null) {
-            tableAias = tableEntries.keySet().iterator().next();
-        } else if (!tableEntries.containsKey(tableAias)) {
-            throw PredefinedError.TABLE_NOT_FOUND.toException(tableAias);
-        }
-        TableEntry tableEntry = tableEntries.get(tableAias);
-        checkColumn(tableEntry.table, columnName);
-        
         ValueTranslator valueTranslator = getValueTranslator(tableEntry, columnName);
         ColumnDefinition columnDefinition = tableEntry.table.columns().get(columnName).definition();
         return new SelectItemEntry(expressionSelectItem, valueTranslator, columnDefinition);
@@ -604,13 +601,23 @@ public class SelectExecutor implements ThrowingQueryExecutor {
             }
         }
 
-        TableEntry tableEntry = tableEntries.get(tableName);
-        if (tableEntry == null) {
-            throw PredefinedError.TABLE_NOT_FOUND.toException(tableName);
-        }
+        TableEntry tableEntry = findTableEntryOrThrow(tableEntries, tableName);
         checkColumn(tableEntry.table, fieldName);
         
         return new OrderByEntry(tableName, fieldName, orderByItem.ascOrder(), orderByItem.nullsOrderMode());
+    }
+    
+    private TableEntry findTableEntryOrThrow(Map<String, TableEntry> tableEntries, String tableAlias) {
+        if (tableAlias == null) {
+            tableAlias = tableEntries.keySet().iterator().next();
+        }
+
+        TableEntry tableEntry = tableEntries.get(tableAlias);
+        if (tableEntry == null) {
+            throw PredefinedError.TABLE_NOT_FOUND.toException(tableAlias);
+        }
+        
+        return tableEntry;
     }
     
     private ColumnParameter findMatchingColumnParameter(List<SelectItemEntry> selectItemEntries, String fieldName) {
