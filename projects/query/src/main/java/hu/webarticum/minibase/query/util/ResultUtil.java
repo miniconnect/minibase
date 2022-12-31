@@ -37,7 +37,7 @@ public final class ResultUtil {
     
     // FIXME: custom translators?
     public static ValueTranslator createValueTranslatorFor(Class<?> clazz) {
-        Optional<StandardValueType> valueTypeOptional = StandardValueType.forClazz(String.class);
+        Optional<StandardValueType> valueTypeOptional = StandardValueType.forClazz(clazz);
         if (valueTypeOptional.isPresent()) {
             return valueTypeOptional.get().defaultTranslator();
         } else {
