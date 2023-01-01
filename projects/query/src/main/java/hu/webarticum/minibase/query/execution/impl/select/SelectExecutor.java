@@ -23,6 +23,7 @@ import hu.webarticum.minibase.query.expression.ColumnParameter;
 import hu.webarticum.minibase.query.expression.Expression;
 import hu.webarticum.minibase.query.expression.FixedTypeExpression;
 import hu.webarticum.minibase.query.expression.Parameter;
+import hu.webarticum.minibase.query.expression.SpecialValueParameter;
 import hu.webarticum.minibase.query.expression.VariableExpression;
 import hu.webarticum.minibase.query.expression.VariableParameter;
 import hu.webarticum.minibase.query.query.JoinType;
@@ -751,16 +752,14 @@ public class SelectExecutor implements ThrowingQueryExecutor {
             SessionState state,
             Parameter parameter) {
         if (parameter instanceof VariableParameter) {
-            return selectExpressionVariableParameter(state, (VariableParameter) parameter);
+            return state.getUserVariable(((VariableParameter) parameter).variableName());
+        } else if (parameter instanceof SpecialValueParameter) {
+            return TableQueryUtil.getSpecialValue((SpecialValueParameter) parameter, state);
         } else if (parameter instanceof ColumnParameter) {
             return selectExpressionColumnParameter(joinedRow, tableEntries, (ColumnParameter) parameter);
         } else {
             throw new IllegalArgumentException("Unknown parameter type: " + parameter.getClass());
         }
-    }
-    
-    private Object selectExpressionVariableParameter(SessionState state, VariableParameter variableParameter) {
-        return state.getUserVariable(variableParameter.variableName());
     }
     
     private Object selectExpressionColumnParameter(

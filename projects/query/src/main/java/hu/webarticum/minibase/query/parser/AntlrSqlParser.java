@@ -19,6 +19,8 @@ import hu.webarticum.minibase.query.expression.ColumnExpression;
 import hu.webarticum.minibase.query.expression.ConcatExpression;
 import hu.webarticum.minibase.query.expression.ConstantExpression;
 import hu.webarticum.minibase.query.expression.Expression;
+import hu.webarticum.minibase.query.expression.SpecialValueExpression;
+import hu.webarticum.minibase.query.expression.SpecialValueParameter;
 import hu.webarticum.minibase.query.expression.VariableExpression;
 import hu.webarticum.minibase.query.query.DeleteQuery;
 import hu.webarticum.minibase.query.query.InsertQuery;
@@ -30,12 +32,11 @@ import hu.webarticum.minibase.query.query.Query;
 import hu.webarticum.minibase.query.query.RangeCondition;
 import hu.webarticum.minibase.query.query.SelectCountQuery;
 import hu.webarticum.minibase.query.query.SelectQuery;
-import hu.webarticum.minibase.query.query.SelectSpecialQuery;
-import hu.webarticum.minibase.query.query.SelectValueQuery;
 import hu.webarticum.minibase.query.query.SetVariableQuery;
 import hu.webarticum.minibase.query.query.ShowSchemasQuery;
+import hu.webarticum.minibase.query.query.ShowSpecialQuery;
 import hu.webarticum.minibase.query.query.ShowTablesQuery;
-import hu.webarticum.minibase.query.query.SpecialSelectableType;
+import hu.webarticum.minibase.query.query.StandaloneSelectQuery;
 import hu.webarticum.minibase.query.query.UpdateQuery;
 import hu.webarticum.minibase.query.query.UseQuery;
 import hu.webarticum.minibase.query.query.VariableValue;
@@ -73,14 +74,15 @@ import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.SelectCou
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.SelectItemContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.SelectPartContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.SelectQueryContext;
-import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.SelectSpecialQueryContext;
-import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.SelectValueQueryContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.SetVariableQueryContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.ShowSchemasQueryContext;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.ShowSpecialQueryContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.ShowTablesQueryContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.SimpleRelationContext;
-import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.SpecialSelectableNameContext;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.SpecialSelectableContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.SqlQueryContext;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.StandaloneSelectQueryContext;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.StandaloneSelectRowContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.TableNameContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.UpdateItemContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.UpdatePartContext;
@@ -118,16 +120,16 @@ public class AntlrSqlParser implements SqlParser {
             return parseSelectCountNode(selectCountQueryNode);
         }
         
-        SelectSpecialQueryContext selectSpecialQueryNode = rootNode.selectSpecialQuery();
-        if (selectSpecialQueryNode != null) {
-            return parseSelectSpecialNode(selectSpecialQueryNode);
-        }
-
-        SelectValueQueryContext selectValueQueryNode = rootNode.selectValueQuery();
-        if (selectValueQueryNode != null) {
-            return parseSelectValueNode(selectValueQueryNode);
+        StandaloneSelectQueryContext standaloneSelectQueryNode = rootNode.standaloneSelectQuery();
+        if (standaloneSelectQueryNode != null) {
+            return parseStandaloneSelectNode(standaloneSelectQueryNode);
         }
         
+        ShowSpecialQueryContext showSpecialQueryNode = rootNode.showSpecialQuery();
+        if (showSpecialQueryNode != null) {
+            return parseShowSpecialNode(showSpecialQueryNode);
+        }
+
         InsertQueryContext insertQueryNode = rootNode.insertQuery();
         if (insertQueryNode != null) {
             return parseInsertNode(insertQueryNode);
@@ -232,48 +234,51 @@ public class AntlrSqlParser implements SqlParser {
                 .build();
     }
     
-    private SelectSpecialQuery parseSelectSpecialNode(SelectSpecialQueryContext selectSpecialQueryNode) {
-        SpecialSelectableNameContext specialSelectableNameNode =
-                selectSpecialQueryNode.specialSelectable().specialSelectableName();
-        SpecialSelectableType queryType;
-        if (specialSelectableNameNode.CURRENT_USER() != null) {
-            queryType = SpecialSelectableType.CURRENT_USER;
-        } else if (specialSelectableNameNode.CURRENT_SCHEMA() != null) {
-            queryType = SpecialSelectableType.CURRENT_SCHEMA;
-        } else if (specialSelectableNameNode.CURRENT_CATALOG() != null) {
-            queryType = SpecialSelectableType.CURRENT_CATALOG;
-        } else if (specialSelectableNameNode.READONLY() != null) {
-            queryType = SpecialSelectableType.READONLY;
-        } else if (specialSelectableNameNode.AUTOCOMMIT() != null) {
-            queryType = SpecialSelectableType.AUTOCOMMIT;
-        } else if (specialSelectableNameNode.IDENTITY() != null || specialSelectableNameNode.LAST_INSERT_ID() != null) {
-            queryType = SpecialSelectableType.LAST_INSERT_ID;
-        } else {
-            throw new IllegalArgumentException("Unknown selectable: " + specialSelectableNameNode.getText());
+    private StandaloneSelectQuery parseStandaloneSelectNode(StandaloneSelectQueryContext standaloneSelectQueryNode) {
+        List<String> aliases = new ArrayList<>();
+        StandaloneSelectRowContext firstRowNode = standaloneSelectQueryNode.standaloneSelectRow(0);
+        for (AliasableExpressionContext aliasableExpressionNode : firstRowNode.aliasableExpression()) {
+            String alias = parseNullableIdentifierNode(aliasableExpressionNode.alias);
+            aliases.add(alias);
+        }
+        int columnCount = aliases.size();
+        
+        List<List<Expression>> expressionMatrix = new ArrayList<>();
+        for (StandaloneSelectRowContext standaloneSelectRowNode : standaloneSelectQueryNode.standaloneSelectRow()) {
+            List<Expression> expressionRow = new ArrayList<>();
+            List<AliasableExpressionContext> aliasableExpressionNodes = standaloneSelectRowNode.aliasableExpression();
+            if (aliasableExpressionNodes.size() != columnCount) {
+                throw new IllegalArgumentException("Non-matching row lengths");
+            }
+            for (AliasableExpressionContext aliasableExpressionNode : aliasableExpressionNodes) {
+                ExpressionContext expressionNode = aliasableExpressionNode.expression();
+                Expression expression = parseExpressionNode(expressionNode);
+                expressionRow.add(expression);
+            }
+            expressionMatrix.add(expressionRow);
         }
         
+        return Queries.standaloneSelect()
+                .aliases(aliases)
+                .expressionMatrix(expressionMatrix)
+                .build();
+    }
+    
+    private ShowSpecialQuery parseShowSpecialNode(ShowSpecialQueryContext selectSpecialQueryNode) {
         IdentifierContext aliasNode = selectSpecialQueryNode.alias;
-        String alias = aliasNode != null ? parseIdentifierNode(aliasNode) : null;
+        String alias = parseNullableIdentifierNode(aliasNode);
         
-        return Queries.selectSpecial()
-                .queryType(queryType)
+        SpecialSelectableContext specialSelectableNode = selectSpecialQueryNode.specialSelectable();
+        String specialSelectableName = specialSelectableNode.specialSelectableName().getText().toUpperCase();
+        SpecialValueExpression expression =
+                new SpecialValueExpression(SpecialValueParameter.valueOf(specialSelectableName));
+        
+        return Queries.showSpecial()
+                .specialValueExpression(expression)
                 .alias(alias)
                 .build();
     }
 
-    private SelectValueQuery parseSelectValueNode(SelectValueQueryContext selectValueQueryNode) {
-        ExtendedValueContext extendedValueContext = selectValueQueryNode.extendedValue();
-        Object value = parseExtendedValueNode(extendedValueContext);
-        
-        IdentifierContext aliasNode = selectValueQueryNode.alias;
-        String alias = aliasNode != null ? parseIdentifierNode(aliasNode) : null;
-        
-        return Queries.selectValue()
-                .value(value)
-                .alias(alias)
-                .build();
-    }
-    
     private InsertQuery parseInsertNode(InsertQueryContext insertQueryNode) {
         boolean replace = (insertQueryNode.REPLACE() != null);
         SchemaNameContext schemaNameNode = insertQueryNode.schemaName();
@@ -421,8 +426,6 @@ public class AntlrSqlParser implements SqlParser {
             return parseWildcardSelectItemNode(wildcardSelectItemNode);
         } else {
             return parseAliasableExpressionNode(selectItemNode.aliasableExpression());
-            
-            //return parseFieldSelectItem(selectItemNode.fieldSelectItem());
         }
     }
     
@@ -469,6 +472,12 @@ public class AntlrSqlParser implements SqlParser {
         if (variableNode != null) {
             String variableName = parseIdentifierNode(variableNode.identifier());
             return new VariableExpression(variableName);
+        }
+        
+        SpecialSelectableContext specialSelectableNode = expressionNode.specialSelectable();
+        if (specialSelectableNode != null) {
+            String specialSelectableName = specialSelectableNode.specialSelectableName().getText().toUpperCase();
+            return new SpecialValueExpression(SpecialValueParameter.valueOf(specialSelectableName));
         }
         
         ScopeableFieldNameContext scopeableFieldNameNode = expressionNode.scopeableFieldName();
@@ -652,6 +661,14 @@ public class AntlrSqlParser implements SqlParser {
         }
     }
 
+    private String parseNullableIdentifierNode(IdentifierContext identifierNode) {
+        if (identifierNode == null) {
+            return null;
+        }
+        
+        return parseIdentifierNode(identifierNode);
+    }
+    
     private String parseIdentifierNode(IdentifierContext identifierNode) {
         TerminalNode simpleNameNode = identifierNode.TOKEN_SIMPLENAME();
         if (simpleNameNode != null) {

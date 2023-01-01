@@ -10,12 +10,12 @@ public interface Queries {
         return SelectCountQuery.builder();
     }
 
-    public static SelectSpecialQuery.SelectSpecialQueryBuilder selectSpecial() {
-        return SelectSpecialQuery.builder();
+    public static StandaloneSelectQuery.StandaloneSelectQueryBuilder standaloneSelect() {
+        return StandaloneSelectQuery.builder();
     }
 
-    public static SelectValueQuery.SelectValueQueryBuilder selectValue() {
-        return SelectValueQuery.builder();
+    public static ShowSpecialQuery.ShowSpecialQueryBuilder showSpecial() {
+        return ShowSpecialQuery.builder();
     }
 
     public static InsertQuery.InsertQueryBuilder insert() {

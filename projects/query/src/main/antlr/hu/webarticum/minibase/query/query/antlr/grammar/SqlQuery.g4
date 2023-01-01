@@ -7,8 +7,8 @@ package hu.webarticum.minibase.query.query.antlr.grammar;
 sqlQuery: (
     selectQuery |
     selectCountQuery |
-    selectSpecialQuery |
-    selectValueQuery |
+    standaloneSelectQuery |
+    showSpecialQuery |
     updateQuery |
     insertQuery |
     deleteQuery |
@@ -43,22 +43,13 @@ selectCountQuery: (
 
 selectPart: selectItem ( ',' selectItem )*;
 selectItem: aliasableExpression | wildcardSelectItem;
-aliasableExpression: expression ( AS? alias=identifier )?;
 wildcardSelectItem: ( tableName '.' )? WILDCARD;
 limitPart: LIMIT TOKEN_INTEGER;
 
-selectSpecialQuery: ( SELECT | SHOW | CALL ) specialSelectable ( AS? alias=identifier )?;
-specialSelectable: specialSelectableName ( parentheses )?;
-specialSelectableName:
-    CURRENT_USER |
-    CURRENT_SCHEMA |
-    CURRENT_CATALOG |
-    READONLY |
-    AUTOCOMMIT |
-    IDENTITY |
-    LAST_INSERT_ID;
+standaloneSelectQuery: standaloneSelectRow ( UNION standaloneSelectRow )*;
+standaloneSelectRow: SELECT aliasableExpression ( ',' aliasableExpression )* ( FROM UNIT )?;
 
-selectValueQuery: SELECT extendedValue ( AS? alias=identifier )?;
+showSpecialQuery: ( SHOW | CALL ) specialSelectable ( AS? alias=identifier )?;
 
 updateQuery: UPDATE ( schemaName '.' )? tableName updatePart wherePart?;
 updatePart: SET updateItem ( ',' updateItem )*;
@@ -90,9 +81,25 @@ orderByItem: ( scopeableFieldName | orderByPosition ) ( ASC | DESC )? ( nullsFir
 nullsFirst: NULLS FIRST;
 nullsLast: NULLS LAST;
 orderByPosition: TOKEN_INTEGER;
+aliasableExpression: expression ( AS? alias=identifier )?;
 expression:
-    NULL | TOKEN_STRING | TOKEN_INTEGER | variable | scopeableFieldName | functionCall |
+    NULL |
+    TOKEN_STRING |
+    TOKEN_INTEGER |
+    variable |
+    specialSelectable |
+    scopeableFieldName |
+    functionCall |
     PAR_START paredExpression=expression PAR_END;
+specialSelectable: specialSelectableName ( parentheses )?;
+specialSelectableName:
+    CURRENT_USER |
+    CURRENT_SCHEMA |
+    CURRENT_CATALOG |
+    READONLY |
+    AUTOCOMMIT |
+    IDENTITY |
+    LAST_INSERT_ID;
 functionCall: identifier PAR_START expression ( ',' expression )* PAR_END;
 scopeableFieldName: ( tableName '.' )? fieldName;
 extendedValue: literal | variable | NULL;
@@ -126,6 +133,7 @@ LAST_INSERT_ID: L A S T UNDERSCORE I N S E R T UNDERSCORE I D;
 AS: A S;
 COUNT: C O U N T;
 FROM: F R O M;
+UNIT: U N I T;
 INTO: I N T O;
 WHERE: W H E R E;
 AND: A N D;
@@ -151,6 +159,7 @@ INNER: I N N E R;
 OUTER: O U T E R;
 JOIN: J O I N;
 ON: O N;
+UNION: U N I O N;
 
 TOKEN_SIMPLENAME: [\p{L}_] [\p{N}\p{L}_]* ;
 TOKEN_QUOTEDNAME: '"' ( '\\' . | '""' | ~[\\"] )* '"';

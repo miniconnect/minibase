@@ -17,6 +17,7 @@ import java.util.function.Function;
 import hu.webarticum.minibase.common.error.PredefinedError;
 import hu.webarticum.minibase.query.execution.impl.select.IncompatibleFiltersException;
 import hu.webarticum.minibase.query.execution.impl.select.OrderByEntry;
+import hu.webarticum.minibase.query.expression.SpecialValueParameter;
 import hu.webarticum.minibase.query.query.NullCondition;
 import hu.webarticum.minibase.query.query.NullsOrderMode;
 import hu.webarticum.minibase.query.query.RangeCondition;
@@ -753,6 +754,25 @@ public class TableQueryUtil {
             }
         }
         return ImmutableList.fromCollection(result);
+    }
+    
+    public static Object getSpecialValue(SpecialValueParameter specialValueParameter, SessionState state) {
+        switch (specialValueParameter) {
+            case CURRENT_USER:
+                return "";
+            case CURRENT_SCHEMA:
+                return state.getCurrentSchema();
+            case CURRENT_CATALOG:
+                return state.getCurrentSchema();
+            case READONLY:
+                return false;
+            case AUTOCOMMIT:
+                return true;
+            case LAST_INSERT_ID:
+                return state.getLastInsertId();
+            default:
+                throw PredefinedError.OTHER_ERROR.toException();
+        }
     }
     
 }
