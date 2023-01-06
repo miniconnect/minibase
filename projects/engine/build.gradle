@@ -4,18 +4,6 @@ plugins {
 
 description "Database session management"
 
-sourceSets {
-    lab {
-        compileClasspath += sourceSets.main.runtimeClasspath
-        runtimeClasspath += sourceSets.main.runtimeClasspath
-    }
-}
-
-configurations {
-    labImplementation.extendsFrom implementation
-    labRuntimeOnly.extendsFrom runtimeOnly
-}
-
 dependencies {
     api project(':query')
     api project(':storage')
@@ -24,6 +12,4 @@ dependencies {
     api "hu.webarticum.miniconnect:impl:${miniConnectVersion}"
     
     implementation 'org.slf4j:slf4j-api:1.7.36'
-    
-    labImplementation "hu.webarticum.miniconnect:repl:${miniConnectVersion}"
 }
