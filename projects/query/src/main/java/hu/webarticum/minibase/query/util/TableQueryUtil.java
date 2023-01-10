@@ -240,8 +240,8 @@ public class TableQueryUtil {
         } else if (matchedOrderByEntries.size() < orderBy.size()) {
             MultiComparator outerRowComparator = createMultiComparator(matchedOrderByEntries, s -> table);
             Comparator<LargeInteger> outerRowIndexComparator = createRowIndexComparator(
-                    outerRowComparator, table, orderBy);
-            MultiComparator innerRowComparator = createMultiComparator(matchedOrderByEntries, s -> table);
+                    outerRowComparator, table, matchedOrderByEntries);
+            MultiComparator innerRowComparator = createMultiComparator(orderBy, s -> table);
             Comparator<LargeInteger> innerRowIndexComparator = createRowIndexComparator(
                     innerRowComparator, table, orderBy);
             result = new GroupingIterator<>(result, outerRowIndexComparator, (List<LargeInteger> groupItems) -> {
@@ -308,6 +308,7 @@ public class TableQueryUtil {
                         (matchLength == maxMatchLength && filterCount > maxMatchMaxFilterCount)) {
                     maxOrderByEntries = orderByEntriesOut;
                     maxfilterColumns = filterColumnsOut;
+                    result = tableIndex;
                 }
             }
         }
