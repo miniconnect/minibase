@@ -18,8 +18,8 @@ description "SQL query definitions and executors"
 dependencies {
     api project(':common')
     api project(':storage')
-    api "hu.webarticum.miniconnect.api:lang"
-    api "hu.webarticum.miniconnect.api:api"
+    api "hu.webarticum.miniconnect.api:lang:${miniConnectApiVersion}"
+    api "hu.webarticum.miniconnect.api:api:${miniConnectApiVersion}"
     api "hu.webarticum.miniconnect:impl:${miniConnectVersion}"
     api "hu.webarticum.miniconnect:record:${miniConnectVersion}"
     api "hu.webarticum.miniconnect:util:${miniConnectVersion}"

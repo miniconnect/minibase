@@ -6,7 +6,7 @@ description "RDBMS storage API and related functionality"
 
 dependencies {
     api project(':common')
-    api "hu.webarticum.miniconnect.api:lang"
+    api "hu.webarticum.miniconnect.api:lang:${miniConnectApiVersion}"
     api "hu.webarticum.miniconnect:util:${miniConnectVersion}"
     
     implementation 'org.slf4j:slf4j-api:1.7.36'
