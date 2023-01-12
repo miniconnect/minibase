@@ -12,14 +12,14 @@ MiniBase has built-in support for SQL queries. Features:
 - User variables
 - Simple expressions
 
-`SELECT` example, demonstrating most of the available features:
+`SELECT` example, demonstrating most of the supported features:
 
 ```sql
 SELECT
   l.*,
   t.label,
   t.created t_created,
-  CONCAT(@somevar, ': ', l2.col1) AS `concatenated value`,
+  CONCAT(@somevar, ': ', l2.col1) AS `concatenated value`
 FROM base_table t
 INNER JOIN inner_joined_table i ON i.id = t.i_id
 LEFT JOIN left_joined_table l ON l.id = t.l_id
