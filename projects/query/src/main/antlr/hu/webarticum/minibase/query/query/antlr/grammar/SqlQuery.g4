@@ -20,7 +20,7 @@ sqlQuery: (
 
 selectQuery: (
     SELECT selectPart
-    FROM ( schemaName '.' )? tableName ( AS? tableAlias=identifier )?
+    FROM ( schemaName DOT )? tableName ( AS? tableAlias=identifier )?
     joinPart*
     wherePart?
     orderByPart?
@@ -29,37 +29,37 @@ selectQuery: (
 
 joinPart: (
 	( innerJoin | leftJoin )
-	( targetSchemaName=schemaName '.' )? targetTableName=tableName ( AS? tableAlias=identifier )?
-	ON scope1=tableName '.' field1=fieldName '=' scope2=tableName '.' field2=fieldName
+	( targetSchemaName=schemaName DOT )? targetTableName=tableName ( AS? tableAlias=identifier )?
+	ON scope1=tableName DOT field1=fieldName EQ scope2=tableName DOT field2=fieldName
 );
 innerJoin: INNER? JOIN;
 leftJoin: LEFT OUTER? JOIN;
 
 selectCountQuery: (
     SELECT COUNT PAR_START wildcardSelectItem PAR_END
-    FROM ( schemaName '.' )? tableName ( AS? tableAlias=identifier )?
+    FROM ( schemaName DOT )? tableName ( AS? tableAlias=identifier )?
     wherePart?
 );
 
-selectPart: selectItem ( ',' selectItem )*;
+selectPart: selectItem ( COMMA selectItem )*;
 selectItem: aliasableExpression | wildcardSelectItem;
-wildcardSelectItem: ( tableName '.' )? WILDCARD;
+wildcardSelectItem: ( tableName DOT )? WILDCARD;
 limitPart: LIMIT TOKEN_INTEGER;
 
 standaloneSelectQuery: standaloneSelectRow ( UNION standaloneSelectRow )*;
-standaloneSelectRow: SELECT aliasableExpression ( ',' aliasableExpression )* ( FROM UNIT )?;
+standaloneSelectRow: SELECT aliasableExpression ( COMMA aliasableExpression )* ( FROM UNIT )?;
 
 showSpecialQuery: ( SHOW | CALL ) specialSelectable ( AS? alias=identifier )?;
 
-updateQuery: UPDATE ( schemaName '.' )? tableName updatePart wherePart?;
-updatePart: SET updateItem ( ',' updateItem )*;
-updateItem: fieldName '=' extendedValue;
+updateQuery: UPDATE ( schemaName DOT )? tableName updatePart wherePart?;
+updatePart: SET updateItem ( COMMA updateItem )*;
+updateItem: fieldName EQ extendedValue;
 
-insertQuery: ( INSERT | REPLACE ) INTO ( schemaName '.' )? tableName fieldList? VALUES valueList;
-fieldList: '(' fieldName ( ',' fieldName )* ')';
-valueList: '(' extendedValue ( ',' extendedValue )* ')';
+insertQuery: ( INSERT | REPLACE ) INTO ( schemaName DOT )? tableName fieldList? VALUES valueList;
+fieldList: PAR_START fieldName ( COMMA fieldName )* PAR_END;
+valueList: PAR_START extendedValue ( COMMA extendedValue )* PAR_END;
 
-deleteQuery: DELETE FROM ( schemaName '.' )? tableName wherePart?;
+deleteQuery: DELETE FROM ( schemaName DOT )? tableName wherePart?;
 
 showSchemasQuery: SHOW ( SCHEMAS | DATABASES ) likePart?;
 
@@ -67,16 +67,16 @@ showTablesQuery: SHOW TABLES ( FROM schemaName )? likePart?;
 
 useQuery: USE schemaName;
 
-setVariableQuery: SET variable '=' extendedValue;
+setVariableQuery: SET variable EQ extendedValue;
 
 wherePart: WHERE whereItem ( AND whereItem )*;
-whereItem: scopeableFieldName postfixCondition | '(' whereItem ')';
+whereItem: scopeableFieldName postfixCondition | PAR_START whereItem PAR_END;
 postfixCondition: simpleRelation extendedValue | betweenRelation | isNull | isNotNull;
 simpleRelation: EQ | LESS | LESS_EQ | GREATER| GREATER_EQ;
 betweenRelation: BETWEEN firstValue=extendedValue AND secondValue=extendedValue;
 isNull: IS NULL;
 isNotNull: IS NOT NULL;
-orderByPart: ORDER BY orderByItem ( ',' orderByItem )*;
+orderByPart: ORDER BY orderByItem ( COMMA orderByItem )*;
 orderByItem: ( scopeableFieldName | orderByPosition ) ( ASC | DESC )? ( nullsFirst | nullsLast )?;
 nullsFirst: NULLS FIRST;
 nullsLast: NULLS LAST;
@@ -100,10 +100,10 @@ specialSelectableName:
     AUTOCOMMIT |
     IDENTITY |
     LAST_INSERT_ID;
-functionCall: identifier PAR_START expression ( ',' expression )* PAR_END;
-scopeableFieldName: ( tableName '.' )? fieldName;
+functionCall: identifier PAR_START expression ( COMMA expression )* PAR_END;
+scopeableFieldName: ( tableName DOT )? fieldName;
 extendedValue: literal | variable | NULL;
-variable: '@' identifier;
+variable: AT identifier;
 fieldName: identifier;
 tableName: identifier;
 identifier: TOKEN_SIMPLENAME | TOKEN_QUOTEDNAME | TOKEN_BACKTICKEDNAME;
@@ -170,6 +170,10 @@ TOKEN_INTEGER: '-'? [0-9]+;
 
 WILDCARD: '*';
 
+DOT: '.';
+COMMA: ',';
+AT: '@';
+
 PAR_START: '(';
 PAR_END: ')';
 
@@ -180,6 +184,8 @@ GREATER: '>';
 GREATER_EQ: '>=';
 
 WHITESPACE: [ \n\t\r] -> skip;
+
+ANY: .;
 
 fragment UNDERSCORE: [_];
 
