@@ -33,7 +33,7 @@ allprojects {
     version automaticVersion
     
     ext.miniConnectApiVersion = '0.1.0'
-    ext.miniConnectVersion = '0.4.0'
+    ext.miniConnectVersion = '0.4.1-SNAPSHOT'
     
     repositories {
         mavenCentral()
