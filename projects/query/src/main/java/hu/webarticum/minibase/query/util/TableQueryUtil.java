@@ -605,7 +605,7 @@ public class TableQueryUtil {
         @SuppressWarnings("unchecked")
         Comparator<Object> comparator = (Comparator<Object>) column.definition().comparator();
         if (expectedValue instanceof RangeCondition) {
-            return checkRange(null, actualValue, comparator);
+            return checkRange((RangeCondition) expectedValue, actualValue, comparator);
         }
         
         return comparator.compare(actualValue, expectedValue) == 0;
