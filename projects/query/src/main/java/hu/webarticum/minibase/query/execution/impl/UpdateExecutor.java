@@ -3,7 +3,6 @@ package hu.webarticum.minibase.query.execution.impl;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import hu.webarticum.minibase.common.error.PredefinedError;
 import hu.webarticum.minibase.query.execution.ThrowingQueryExecutor;
@@ -75,9 +74,9 @@ public class UpdateExecutor implements ThrowingQueryExecutor {
 
         table.applyPatch(patch);
 
-        Optional<Column> autoIncrementedColumnHolder = TableQueryUtil.getAutoIncrementedColumn(table);
-        if (autoIncrementedColumnHolder.isPresent()) {
-            String columnName = autoIncrementedColumnHolder.get().name();
+        Column autoIncrementedColumn = TableQueryUtil.getAutoIncrementedColumn(table);
+        if (autoIncrementedColumn != null) {
+            String columnName = autoIncrementedColumn.name();
             if (convertedQueryUpdates.containsKey(columnName)) {
                 Object value = convertedQueryUpdates.get(columnName);
                 LargeInteger largeIntegerValue = TableQueryUtil.convert(value, LargeInteger.class);

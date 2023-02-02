@@ -22,8 +22,6 @@ public enum PredefinedError {
 
     TABLE_READONLY(6, "00006", "Table is read-only: '%s'"),
 
-    COLUMN_COUNT_NOT_MATCHING(7, "00007", "%d values expected, but %d given"),
-
     COLUMN_MISSING(8, "00008", "Missing column: '%s'"),
     
     COLUMN_POSITION_INVALID(9, "00009", "Invalid column position: %d"),
@@ -32,7 +30,7 @@ public enum PredefinedError {
     
     COLUMN_VALUE_NOT_UNIQUE(11, "00011", "Already existing value given for unique column '%s': '%s'"),
     
-    COLUMN_VALUE_NULL(12, "00012", "NULL value for non nullable column '%s'"),
+    COLUMN_VALUE_NULL(12, "00012", "NULL value given for non nullable column '%s'"),
     
     QUERY_INTERRUPTED(99, "00099", "Query was interrupted"),
     

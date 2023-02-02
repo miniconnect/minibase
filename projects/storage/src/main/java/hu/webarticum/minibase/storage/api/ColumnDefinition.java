@@ -17,7 +17,8 @@ public interface ColumnDefinition {
     
     public Optional<ImmutableList<Object>> enumValues();
     
-    // FIXME: Comparator<Object> ?
     public Comparator<?> comparator(); // NOSONAR
+    
+    public Object defaultValue();
     
 }

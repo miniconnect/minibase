@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 import hu.webarticum.minibase.common.error.PredefinedError;
@@ -62,39 +61,16 @@ public class InsertExecutor implements ThrowingQueryExecutor {
         ImmutableList<String> insertFields = givenInsertFields != null ? givenInsertFields : table.columns().names();
         ImmutableList<Object> insertValues = insertQuery.values();
         
-        Map<String, Object> insertValueMap = insertFields .assign((v, i) -> insertValues.get(i)).toHashMap();
-
-        Optional<Column> autoIncrementedColumnHolder = TableQueryUtil.getAutoIncrementedColumn(table);
-        if (autoIncrementedColumnHolder.isPresent()) {
-            String columName = autoIncrementedColumnHolder.get().name();
-            if (!insertValueMap.containsKey(columName)) {
-                insertValueMap.put(columName, null);
-            }
-        }
-        
-        // FIXME: currently default values are not supported
-        int columnCount = table.columns().names().size();
-        int givenCount = insertValueMap.size();
-        if (givenCount != columnCount) {
-            throw PredefinedError.COLUMN_COUNT_NOT_MATCHING.toException(columnCount, givenCount);
-        }
-        
+        Map<String, Object> insertValueMap =
+                insertFields.assign((v, i) -> ResultUtil.resolveValue(insertValues.get(i), state)).toHashMap();
         TableQueryUtil.checkFields(table, insertValueMap.keySet());
 
-        LargeInteger lastInsertId = null;
-        if (autoIncrementedColumnHolder.isPresent()) {
-            String columName = autoIncrementedColumnHolder.get().name();
-            Object autoIncrementColumnValue = ResultUtil.resolveValue(insertValueMap.get(columName), state);
-            if (autoIncrementColumnValue == null) {
-                LargeInteger autoValue = table.sequence().getAndIncrement();
-                insertValueMap.put(columName, autoValue);
-                lastInsertId = autoValue;
-            }
-        }
+        LargeInteger lastInsertId = includeDefaultValues(insertValueMap, table, state);
         
         Map<String, Object> convertedInsertValues =
                 TableQueryUtil.convertColumnNewValues(table, insertValueMap, state, true);
 
+        int columnCount = table.columns().names().size();
         ImmutableMap<Integer, Object> values =
                 TableQueryUtil.toByColumnPoisitionedImmutableMap(table, convertedInsertValues);
         List<Object> rowDataBuilder = new ArrayList<>(columnCount);
@@ -120,17 +96,62 @@ public class InsertExecutor implements ThrowingQueryExecutor {
         TablePatch patch = patchBuilder.build();
         
         table.applyPatch(patch);
-        
+
+        Column autoIncrementedColumn = TableQueryUtil.getAutoIncrementedColumn(table);
+        if (autoIncrementedColumn != null) {
+            String columName = autoIncrementedColumn.name();
+            Object convertedAutoIncrementColumnValue = convertedInsertValues.get(columName);
+            LargeInteger largeIntegerValue =
+                    TableQueryUtil.convert(convertedAutoIncrementColumnValue, LargeInteger.class);
+            table.sequence().ensureGreaterThan(largeIntegerValue);
+        }
+
         if (lastInsertId != null) {
             state.setLastInsertId(lastInsertId);
-        } else if (autoIncrementedColumnHolder.isPresent()) {
-            String columName = autoIncrementedColumnHolder.get().name();
-            Object convertedAutoIncrementColumnValue = convertedInsertValues.get(columName);
-            LargeInteger largeIntegerValue = TableQueryUtil.convert(convertedAutoIncrementColumnValue, LargeInteger.class);
-            table.sequence().ensureGreaterThan(largeIntegerValue);
         }
         
         return new StoredResult();
+    }
+    
+    private LargeInteger includeDefaultValues(Map<String, Object> insertValueMap, Table table, SessionState state) {
+        LargeInteger lastInsertId = null;
+        for (Column column : table.columns().resources()) {
+            String columnName = column.name();
+            ColumnDefinition definition = column.definition();
+            if (
+                    !insertValueMap.containsKey(columnName) ||
+                    (!definition.isNullable() && insertValueMap.get(columnName) == null)) {
+                Object defaultValue = getDefaultValue(table, column);
+                insertValueMap.put(columnName, defaultValue);
+                if (lastInsertId == null && definition.isAutoIncremented()) {
+                    lastInsertId = TableQueryUtil.convert(defaultValue, LargeInteger.class);
+                }
+            }
+        }
+        
+        return lastInsertId;
+    }
+    
+    private Object getDefaultValue(Table table, Column column) {
+        ColumnDefinition definition = column.definition();
+        if (definition.isAutoIncremented()) {
+            return generateAutoIncrementedValue(table, column.name());
+        }
+        
+        Object defaultValue = definition.defaultValue();
+        if (defaultValue == null && !definition.isNullable()) {
+            throw PredefinedError.COLUMN_VALUE_NULL.toException(column.name());
+        }
+        
+        return defaultValue;
+    }
+
+    private LargeInteger generateAutoIncrementedValue(Table table, String columnName) {
+        LargeInteger autoIncrementedValue = table.sequence().get();
+        while (TableQueryUtil.isColumnContainingValue(table, columnName, autoIncrementedValue)) {
+            autoIncrementedValue = autoIncrementedValue.increment();
+        }
+        return autoIncrementedValue;
     }
 
     private Set<LargeInteger> collectConflictingRowIndices(Map<String, Object> convertedInsertValues, Table table) {

@@ -21,6 +21,8 @@ public class SimpleColumnDefinition implements ColumnDefinition {
     
     private final Comparator<?> comparator;
     
+    private final Object defaultValue;
+    
 
     public SimpleColumnDefinition() {
         this(Object.class);
@@ -58,12 +60,24 @@ public class SimpleColumnDefinition implements ColumnDefinition {
             boolean autoIncremented,
             ImmutableList<Object> enumValues,
             Comparator<?> comparator) {
+        this(clazz, nullable, unique, autoIncremented, enumValues, comparator, null);
+    }
+    
+    public SimpleColumnDefinition(
+            Class<?> clazz,
+            boolean nullable,
+            boolean unique,
+            boolean autoIncremented,
+            ImmutableList<Object> enumValues,
+            Comparator<?> comparator,
+            Object defaultValue) {
         this.clazz = clazz;
         this.nullable = nullable;
         this.unique = unique;
         this.autoIncremented = autoIncremented;
         this.enumValues = Optional.ofNullable(enumValues);
         this.comparator = comparator != null ? comparator : ComparatorUtil.createDefaultComparatorFor(clazz);
+        this.defaultValue = defaultValue;
     }
     
 
@@ -95,6 +109,11 @@ public class SimpleColumnDefinition implements ColumnDefinition {
     @Override
     public Comparator<?> comparator() {
         return comparator;
+    }
+    
+    @Override
+    public Object defaultValue() {
+        return defaultValue;
     }
 
 }

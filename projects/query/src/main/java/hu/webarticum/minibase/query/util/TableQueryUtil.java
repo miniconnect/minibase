@@ -201,6 +201,13 @@ public class TableQueryUtil {
         return result;
     }
 
+    public static boolean isColumnContainingValue(Table table, String columnName, Object value) {
+        Map<String, Object> filter = new HashMap<>();
+        filter.put(columnName, value);
+        Iterator<LargeInteger> iterator = filterRows(table, filter, Collections.emptyList(), null);
+        return iterator.hasNext();
+    }
+    
     public static List<LargeInteger> filterRowsToList(
             Table table, Map<String, Object> filter, List<OrderByEntry> orderBy, LargeInteger limit) {
         Iterator<LargeInteger> iterator = filterRows(table, filter, orderBy, limit);
@@ -674,14 +681,14 @@ public class TableQueryUtil {
         return ImmutableMap.fromMap(columnValues).map(columnNames::indexOf, v -> v);
     }
 
-    public static Optional<Column> getAutoIncrementedColumn(Table table) {
+    public static Column getAutoIncrementedColumn(Table table) {
         for (Column column : table.columns().resources()) {
             if (column.definition().isAutoIncremented()) {
-                return Optional.of(column);
+                return column;
             }
         }
         
-        return Optional.empty();
+        return null;
     }
     
     public static List<LargeInteger> findAllNonNull(Table table, String columnName, Object value) {
