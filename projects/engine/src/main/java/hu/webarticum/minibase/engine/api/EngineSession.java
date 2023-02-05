@@ -1,6 +1,6 @@
 package hu.webarticum.minibase.engine.api;
 
-import hu.webarticum.minibase.query.execution.QueryExecutor;
+import hu.webarticum.minibase.execution.QueryExecutor;
 import hu.webarticum.minibase.query.parser.SqlParser;
 import hu.webarticum.minibase.query.state.SessionState;
 import hu.webarticum.minibase.storage.api.StorageAccess;

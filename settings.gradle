@@ -2,6 +2,7 @@ rootProject.name = 'minibase'
 
 include 'common'
 include 'engine'
+include 'execution'
 include 'query'
 include 'storage'
 

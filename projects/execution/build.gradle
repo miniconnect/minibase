@@ -1,0 +1,23 @@
+plugins {
+    id 'java-library'
+}
+
+description "SQL query executors"
+
+dependencies {
+    api project(':common')
+    api project(':query')
+    api project(':storage')
+    api "hu.webarticum.miniconnect.api:lang:${miniConnectApiVersion}"
+    api "hu.webarticum.miniconnect.api:api:${miniConnectApiVersion}"
+    api "hu.webarticum.miniconnect:impl:${miniConnectVersion}"
+    api "hu.webarticum.miniconnect:record:${miniConnectVersion}"
+    api "hu.webarticum.miniconnect:util:${miniConnectVersion}"
+    
+    implementation 'org.slf4j:slf4j-api:1.7.36'
+    
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.1'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.7.1'
+    testImplementation 'org.assertj:assertj-core:3.19.0'
+}

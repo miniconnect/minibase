@@ -5,6 +5,7 @@ plugins {
 description "Database session management"
 
 dependencies {
+    api project(':execution')
     api project(':query')
     api project(':storage')
     api "hu.webarticum.miniconnect.api:api:${miniConnectApiVersion}"

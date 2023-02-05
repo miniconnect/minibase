@@ -7,7 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import hu.webarticum.minibase.engine.api.EngineSession;
-import hu.webarticum.minibase.query.execution.QueryExecutor;
+import hu.webarticum.minibase.execution.QueryExecutor;
 import hu.webarticum.minibase.query.parser.SqlParser;
 import hu.webarticum.minibase.query.query.Query;
 import hu.webarticum.minibase.query.state.SessionState;

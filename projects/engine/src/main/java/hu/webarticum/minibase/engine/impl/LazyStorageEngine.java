@@ -7,7 +7,7 @@ import java.util.function.Supplier;
 
 import hu.webarticum.minibase.engine.api.EngineSession;
 import hu.webarticum.minibase.engine.api.TackedEngine;
-import hu.webarticum.minibase.query.execution.QueryExecutor;
+import hu.webarticum.minibase.execution.QueryExecutor;
 import hu.webarticum.minibase.query.parser.SqlParser;
 import hu.webarticum.minibase.storage.api.StorageAccess;
 import hu.webarticum.minibase.storage.impl.simple.SimpleStorageAccess;
