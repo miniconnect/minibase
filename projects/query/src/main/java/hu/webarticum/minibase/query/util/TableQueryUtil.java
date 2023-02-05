@@ -93,6 +93,7 @@ public class TableQueryUtil {
         if (convertedValue instanceof VariableValue) {
             String variableName = ((VariableValue) convertedValue).name();
             convertedValue = state.getUserVariable(variableName);
+            convertedValue = TableQueryUtil.convert(convertedValue, clazz);
         } else if (convertedValue instanceof RangeCondition) {
             RangeCondition rangeCondition = (RangeCondition) convertedValue;
             Object convertedFrom = TableQueryUtil.convert(rangeCondition.from(), clazz);
@@ -647,13 +648,14 @@ public class TableQueryUtil {
             String columnName = entry.getKey();
             Object value = entry.getValue();
             Object convertedValue = value;
+            ColumnDefinition definition = columns.get(columnName).definition();
+            Class<?> columnClazz = definition.clazz();
             if (convertedValue instanceof VariableValue) {
                 String variableName = ((VariableValue) value).name();
                 convertedValue = state.getUserVariable(variableName);
+                convertedValue = convert(convertedValue, columnClazz);
             }
             if (!(convertedValue instanceof SpecialCondition)) {
-                ColumnDefinition definition = columns.get(columnName).definition();
-                Class<?> columnClazz = definition.clazz();
                 convertedValue = convert(convertedValue, columnClazz);
                 
                 // FIXME currently, null check is performed in applyPatch()
