@@ -1,9 +1,11 @@
 package hu.webarticum.minibase.query.expression;
 
+import java.util.Optional;
+
 import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
 
-public class SpecialValueExpression implements FixedTypeExpression {
+public class SpecialValueExpression implements Expression {
     
     private final SpecialValueParameter specialValueParameter;
     
@@ -18,15 +20,20 @@ public class SpecialValueExpression implements FixedTypeExpression {
     }
 
     @Override
-    public Class<?> type() {
-        return specialValueParameter.type();
-    }
-
-    @Override
     public ImmutableList<Parameter> parameters() {
         return ImmutableList.of(specialValueParameter);
     }
 
+    @Override
+    public Optional<Class<?>> type() {
+        return Optional.of(specialValueParameter.type());
+    }
+
+    @Override
+    public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
+        return specialValueParameter.type();
+    }
+    
     @Override
     public Object evaluate(ImmutableMap<Parameter, Object> values) {
         return values.get(specialValueParameter);

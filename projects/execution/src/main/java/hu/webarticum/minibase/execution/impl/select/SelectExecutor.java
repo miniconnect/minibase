@@ -22,7 +22,6 @@ import hu.webarticum.minibase.execution.util.TableQueryUtil;
 import hu.webarticum.minibase.query.expression.ColumnExpression;
 import hu.webarticum.minibase.query.expression.ColumnParameter;
 import hu.webarticum.minibase.query.expression.Expression;
-import hu.webarticum.minibase.query.expression.FixedTypeExpression;
 import hu.webarticum.minibase.query.expression.Parameter;
 import hu.webarticum.minibase.query.expression.SpecialValueParameter;
 import hu.webarticum.minibase.query.expression.VariableExpression;
@@ -482,7 +481,7 @@ public class SelectExecutor implements ThrowingQueryExecutor {
         if (querySelectItem instanceof ExpressionSelectItem) {
             ExpressionSelectItem expressionSelectItem = (ExpressionSelectItem) querySelectItem;
             SelectItemEntry selectItemEntry = createSelectItemEntryForExpression(
-                    expressionSelectItem, tableEntries, storageAccess, state);
+                    expressionSelectItem, tableEntries, state);
             selectItemEntries.add(selectItemEntry);
             return;
         }
@@ -493,26 +492,59 @@ public class SelectExecutor implements ThrowingQueryExecutor {
     private SelectItemEntry createSelectItemEntryForExpression(
             ExpressionSelectItem expressionSelectItem,
             LinkedHashMap<String, TableEntry> tableEntries,
-            StorageAccess storageAccess,
             SessionState state) {
         Expression expression = expressionSelectItem.expression();
         checkExpressionColumns(expression, tableEntries);
-        if (expression instanceof FixedTypeExpression) {
-            Class<?> type = ((FixedTypeExpression) expression).type();
-            return createSelectItemEntryForFixedType(expressionSelectItem, type, true);
-        } else if (expression instanceof VariableExpression) {
-            String variableName = ((VariableExpression) expression).variableParameter().variableName();
-            Object variableValue = state.getUserVariable(variableName);
-            boolean isNull = variableValue == null;
-            Class<?> type = isNull ? Void.class : variableValue.getClass();
-            return createSelectItemEntryForFixedType(expressionSelectItem, type, isNull);
-        } else if (expression instanceof ColumnExpression) {
-            return createSelectItemEntryForColumnExpression(expressionSelectItem, tableEntries);
+        ColumnDefinition columnDefinition;
+        ValueTranslator valueTranslator;
+        if (expression instanceof ColumnExpression) {
+            ColumnParameter columnParameter = ((ColumnExpression) expression).columnParameter();
+            String tableAlias = columnParameter.tableAlias();
+            String columnName = columnParameter.columnName();
+            TableEntry tableEntry = tableEntries.get(tableAlias);
+            columnDefinition = tableEntry.table.columns().get(columnName).definition();
+            valueTranslator = getValueTranslator(tableEntry, columnName);
         } else {
-            throw new IllegalArgumentException("Expression type without type information: " + expression.getClass());
+            ImmutableMap<Parameter, Class<?>> parameterTypes =
+                    expression.parameters().assign(p -> detectExpressionParameterType(p, tableEntries, state));
+            Class<?> type = expression.type(parameterTypes);
+            boolean nullable = !(expression instanceof VariableExpression) || (type == Void.class);
+            columnDefinition = new SimpleColumnDefinition(type, nullable);
+            valueTranslator = createValueTranslator(columnDefinition);
+        }
+        return new SelectItemEntry(expressionSelectItem, valueTranslator, columnDefinition);
+    }
+    
+    private Class<?> detectExpressionParameterType(
+            Parameter parameter, LinkedHashMap<String, TableEntry> tableEntries, SessionState state) {
+        if (parameter instanceof VariableParameter) {
+            return typeOf(state.getUserVariable(((VariableParameter) parameter).variableName()));
+        } else if (parameter instanceof SpecialValueParameter) {
+            return typeOf(TableQueryUtil.getSpecialValue((SpecialValueParameter) parameter, state));
+        } else if (parameter instanceof ColumnParameter) {
+            ColumnParameter columnParameter = (ColumnParameter) parameter;
+            String tableAlias = columnParameter.tableAlias();
+            String columnName = columnParameter.columnName();
+            TableEntry tableEntry = findTableEntryOrThrow(tableEntries, tableAlias);
+            ColumnDefinition columnDefinition = tableEntry
+                    .table
+                    .columns()
+                    .get(columnName)
+                    .definition();
+            return columnDefinition.clazz();
+        } else {
+            throw new IllegalArgumentException("Unknown parameter type: " + parameter.getClass());
         }
     }
     
+    private Class<?> typeOf(Object object) {
+        if (object == null) {
+            return Void.class;
+        } else {
+            return object.getClass();
+        }
+    }
+
     private void checkExpressionColumns(Expression expression, LinkedHashMap<String, TableEntry> tableEntries) {
         for (Parameter parameter : expression.parameters()) {
             if (parameter instanceof ColumnParameter) {
@@ -521,24 +553,6 @@ public class SelectExecutor implements ThrowingQueryExecutor {
                 checkColumn(tableEntry.table, columnParameter.columnName());
             }
         }
-    }
-    
-    private SelectItemEntry createSelectItemEntryForFixedType(
-            ExpressionSelectItem expressionSelectItem, Class<?> type, boolean nullable) {
-        ColumnDefinition fakeColumnDefinition = new SimpleColumnDefinition(type, nullable);
-        ValueTranslator valueTranslator = createValueTranslator(fakeColumnDefinition);
-        return new SelectItemEntry(expressionSelectItem, valueTranslator, fakeColumnDefinition);
-    }
-    
-    private SelectItemEntry createSelectItemEntryForColumnExpression(
-            ExpressionSelectItem expressionSelectItem, LinkedHashMap<String, TableEntry> tableEntries) {
-        ColumnExpression columnExpression = (ColumnExpression) expressionSelectItem.expression();
-        ColumnParameter columnParameter = columnExpression.columnParameter();
-        TableEntry tableEntry = findTableEntryOrThrow(tableEntries, columnParameter.tableAlias());
-        String columnName = columnParameter.columnName();
-        ValueTranslator valueTranslator = getValueTranslator(tableEntry, columnName);
-        ColumnDefinition columnDefinition = tableEntry.table.columns().get(columnName).definition();
-        return new SelectItemEntry(expressionSelectItem, valueTranslator, columnDefinition);
     }
     
     private void addSelectItemEntriesForWildcard(

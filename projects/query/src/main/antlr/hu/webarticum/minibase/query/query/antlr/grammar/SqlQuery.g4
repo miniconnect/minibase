@@ -43,7 +43,7 @@ selectCountQuery: (
 
 selectPart: selectItem ( COMMA selectItem )*;
 selectItem: aliasableExpression | wildcardSelectItem;
-wildcardSelectItem: ( tableName DOT )? WILDCARD;
+wildcardSelectItem: ( tableName DOT )? ASTERISK;
 limitPart: LIMIT TOKEN_INTEGER;
 
 standaloneSelectQuery: standaloneSelectRow ( UNION standaloneSelectRow )*;
@@ -83,6 +83,10 @@ nullsLast: NULLS LAST;
 orderByPosition: TOKEN_INTEGER;
 aliasableExpression: expression ( AS? alias=identifier )?;
 expression:
+    leftExpression=expression ( ASTERISK | MOD | PERCENT | DIV ) rightExpression=expression |
+    leftExpression=expression ( PLUS | MINUS ) rightExpression=expression |
+    atomicExpression;
+atomicExpression:
     NULL |
     TOKEN_STRING |
     TOKEN_INTEGER |
@@ -90,7 +94,8 @@ expression:
     specialSelectable |
     scopeableFieldName |
     functionCall |
-    PAR_START paredExpression=expression PAR_END;
+    PAR_START paredExpression=expression PAR_END |
+    MINUS negatedExpression=expression;
 specialSelectable: specialSelectableName ( parentheses )?;
 specialSelectableName:
     CURRENT_USER |
@@ -161,27 +166,34 @@ JOIN: J O I N;
 ON: O N;
 UNION: U N I O N;
 
+MOD: M O D;
+DIV: D I V;
+
 TOKEN_SIMPLENAME: [\p{L}_] [\p{N}\p{L}_]* ;
 TOKEN_QUOTEDNAME: '"' ( '\\' . | '""' | ~[\\"] )* '"';
 TOKEN_BACKTICKEDNAME: '`' ( '``' | ~[`] )* '`';
 
 TOKEN_STRING: '\'' ( '\\' . | '\'\'' | ~[\\'] )* '\'';
-TOKEN_INTEGER: '-'? [0-9]+;
-
-WILDCARD: '*';
+TOKEN_INTEGER: MINUS? [0-9]+;
 
 DOT: '.';
 COMMA: ',';
 AT: '@';
 
-PAR_START: '(';
-PAR_END: ')';
+ASTERISK: '*';
+PERCENT: '*';
+
+PLUS: '+';
+MINUS: '-';
 
 EQ: '=';
 LESS: '<';
 LESS_EQ: '<=';
 GREATER: '>';
 GREATER_EQ: '>=';
+
+PAR_START: '(';
+PAR_END: ')';
 
 WHITESPACE: [ \n\t\r] -> skip;
 

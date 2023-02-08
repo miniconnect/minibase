@@ -19,6 +19,7 @@ import hu.webarticum.minibase.query.expression.ColumnExpression;
 import hu.webarticum.minibase.query.expression.ConcatExpression;
 import hu.webarticum.minibase.query.expression.ConstantExpression;
 import hu.webarticum.minibase.query.expression.Expression;
+import hu.webarticum.minibase.query.expression.NegateExpression;
 import hu.webarticum.minibase.query.expression.SpecialValueExpression;
 import hu.webarticum.minibase.query.expression.SpecialValueParameter;
 import hu.webarticum.minibase.query.expression.VariableExpression;
@@ -51,6 +52,7 @@ import hu.webarticum.miniconnect.lang.LargeInteger;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryLexer;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.AliasableExpressionContext;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.AtomicExpressionContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.BetweenRelationContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.DeleteQueryContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.ExpressionContext;
@@ -445,42 +447,66 @@ public class AntlrSqlParser implements SqlParser {
                 aliasableExpressionNode.alias != null ? parseIdentifierNode(aliasableExpressionNode.alias) : null;
         return new ExpressionSelectItem(expression, alias);
     }
-    
+
     private Expression parseExpressionNode(ExpressionContext expressionNode) {
-        if (expressionNode.paredExpression != null) {
-            return parseExpressionNode(expressionNode.paredExpression);
+        AtomicExpressionContext atomicExpressionNode = expressionNode.atomicExpression();
+        if (atomicExpressionNode != null) {
+            return parseAtomicExpressionNode(atomicExpressionNode);
+        }
+
+        ExpressionContext leftExpressionNode = expressionNode.leftExpression;
+        if (leftExpressionNode == null) {
+            throw new IllegalArgumentException("Left expression is null in: " + expressionNode.getText());
         }
         
-        TerminalNode nullNode = expressionNode.NULL();
+        ExpressionContext rightExpressionNode = expressionNode.rightExpression;
+        if (rightExpressionNode == null) {
+            throw new IllegalArgumentException("Right expression is null in: " + expressionNode.getText());
+        }
+
+        Expression leftExpression = parseExpressionNode(leftExpressionNode);
+        Expression rightExpression = parseExpressionNode(rightExpressionNode);
+        
+        // TODO
+        throw new UnsupportedOperationException("Not implemented yet");
+        
+    }
+    
+    private Expression parseAtomicExpressionNode(AtomicExpressionContext atomicExpressionNode) {
+        if (atomicExpressionNode.paredExpression != null) {
+            return parseExpressionNode(atomicExpressionNode.paredExpression);
+        }
+        
+        TerminalNode nullNode = atomicExpressionNode.NULL();
         if (nullNode != null) {
             return new ConstantExpression(null);
         }
         
-        TerminalNode integerTokenNode = expressionNode.TOKEN_INTEGER();
+        TerminalNode integerTokenNode = atomicExpressionNode.TOKEN_INTEGER();
         if (integerTokenNode != null) {
             Integer integerValue = parseIntegerNode(integerTokenNode);
             return new ConstantExpression(integerValue);
         }
         
-        TerminalNode stringTokenNode = expressionNode.TOKEN_STRING();
+        TerminalNode stringTokenNode = atomicExpressionNode.TOKEN_STRING();
         if (stringTokenNode != null) {
             String stringValue = parseStringNode(stringTokenNode);
             return new ConstantExpression(stringValue);
         }
         
-        VariableContext variableNode = expressionNode.variable();
+        VariableContext variableNode = atomicExpressionNode.variable();
         if (variableNode != null) {
             String variableName = parseIdentifierNode(variableNode.identifier());
             return new VariableExpression(variableName);
         }
         
-        SpecialSelectableContext specialSelectableNode = expressionNode.specialSelectable();
+        SpecialSelectableContext specialSelectableNode = atomicExpressionNode.specialSelectable();
         if (specialSelectableNode != null) {
             String specialSelectableName = specialSelectableNode.specialSelectableName().getText().toUpperCase();
             return new SpecialValueExpression(SpecialValueParameter.valueOf(specialSelectableName));
         }
         
-        ScopeableFieldNameContext scopeableFieldNameNode = expressionNode.scopeableFieldName();
+        ScopeableFieldNameContext scopeableFieldNameNode = atomicExpressionNode.scopeableFieldName();
         if (scopeableFieldNameNode != null) {
             TableNameContext tableNameNode = scopeableFieldNameNode.tableName();
             String tableAlias = tableNameNode != null ? parseIdentifierNode(tableNameNode.identifier()) : null;
@@ -488,19 +514,26 @@ public class AntlrSqlParser implements SqlParser {
             return new ColumnExpression(tableAlias, columnName);
         }
         
-        FunctionCallContext functionCallNode = expressionNode.functionCall();
+        FunctionCallContext functionCallNode = atomicExpressionNode.functionCall();
         if (functionCallNode != null) {
             String functionName = parseIdentifierNode(functionCallNode.identifier());
             ImmutableList<Expression> parameters = functionCallNode.expression().stream()
-                    .map(n -> parseExpressionNode(n))
+                    .map(this::parseExpressionNode)
                     .collect(ImmutableList.createCollector());
             // XXX
             if (functionName.equalsIgnoreCase("CONCAT")) {
                 return new ConcatExpression(parameters);
+            } else {
+                throw new IllegalArgumentException("Unknown function: " + functionName);
             }
         }
         
-        throw new IllegalArgumentException("Unknown expression: " + expressionNode.getText());
+        if (atomicExpressionNode.MINUS() != null) {
+            Expression subExpression = parseExpressionNode(atomicExpressionNode.negatedExpression);
+            return new NegateExpression(subExpression);
+        }
+        
+        throw new IllegalArgumentException("Unknown expression: " + atomicExpressionNode.getText());
     }
     
     private ImmutableList<JoinItem> parseJoinPartNodes(

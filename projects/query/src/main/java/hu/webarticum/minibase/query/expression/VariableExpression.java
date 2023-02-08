@@ -1,5 +1,7 @@
 package hu.webarticum.minibase.query.expression;
 
+import java.util.Optional;
+
 import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
 
@@ -20,6 +22,16 @@ public class VariableExpression implements Expression {
     @Override
     public ImmutableList<Parameter> parameters() {
         return ImmutableList.of(variableParameter);
+    }
+    
+    @Override
+    public Optional<Class<?>> type() {
+        return Optional.empty();
+    }
+    
+    @Override
+    public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
+        return types.get(variableParameter);
     }
 
     @Override

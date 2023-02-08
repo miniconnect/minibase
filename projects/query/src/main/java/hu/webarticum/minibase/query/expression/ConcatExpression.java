@@ -1,17 +1,24 @@
 package hu.webarticum.minibase.query.expression;
 
+import java.util.Optional;
+
 import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
 
-public class ConcatExpression extends AbstractCompoundExpression implements FixedTypeExpression {
+public class ConcatExpression extends AbstractCompoundExpression {
 
     public ConcatExpression(ImmutableList<Expression> subExpressions) {
         super(subExpressions);
     }
 
-    
+
     @Override
-    public Class<?> type() {
+    public Optional<Class<?>> type() {
+        return Optional.of(String.class);
+    }
+
+    @Override
+    public Class<?> type(ImmutableMap<Parameter, Class<?>> values) {
         return String.class;
     }
     

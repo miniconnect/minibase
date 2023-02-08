@@ -1,10 +1,12 @@
 package hu.webarticum.minibase.query.expression;
 
+import java.util.Optional;
+
 import hu.webarticum.miniconnect.lang.ByteString;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
 
-public class ConstantExpression implements FixedTypeExpression {
+public class ConstantExpression implements Expression {
 
     private final Object value;
     
@@ -13,16 +15,18 @@ public class ConstantExpression implements FixedTypeExpression {
         this.value = value;
     }
     
-    
+
     @Override
-    public Class<?> type() {
-        if (value == null) {
-            return Void.class;
-        }
-        
-        return value.getClass();
+    public Optional<Class<?>> type() {
+        Class<?> clazz = value != null ? value.getClass() : Void.class;
+        return Optional.of(clazz);
     }
     
+    @Override
+    public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
+        return value != null ? value.getClass() : Void.class;
+    }
+
     @Override
     public ImmutableList<Parameter> parameters() {
         return ImmutableList.empty();
