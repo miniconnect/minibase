@@ -34,7 +34,9 @@ public class NumberParser {
     
 
     /**
-     * Returns with one of the following class types:
+     * Searches the best fitting numeric type for the given type.
+     * 
+     * <p>Returns with one of the following class types:</p>
      * 
      * <ul>
      * <li><code>Void.class</code></li>
@@ -79,6 +81,21 @@ public class NumberParser {
         }
     }
 
+    /**
+     * Searches the best fitting common numeric type for the given types.
+     * 
+     * <p>Returns with one of the following class types:</p>
+     * 
+     * <ul>
+     * <li><code>Void.class</code></li>
+     * <li><code>LargeInteger.class</code></li>
+     * <li><code>BigDecimal.class</code></li>
+     * <li><code>Double.class</code></li>
+     * </ul>
+     * 
+     * @param types Any types
+     * @return The common class
+     */
     public static Class<?> commonNumericTypeOf(Class<?>... types) {
         ImmutableList<Class<?>> numericTypes = ImmutableList.of(types).map(NumberParser::numberifyType);
         Class<?>[] typesToCheck = new Class<?>[] { Double.class, BigDecimal.class, LargeInteger.class };
@@ -88,6 +105,42 @@ public class NumberParser {
             }
         }
         return Void.class;
+    }
+    
+    public static Object promote(Object convertedValue, Class<?> targetType) {
+        if (convertedValue == null) {
+            if (targetType == Void.class) {
+                return null;
+            } else {
+                throw new IllegalArgumentException("Can not promote null to " + targetType);
+            }
+        } else if (targetType == Void.class) {
+            throw new IllegalArgumentException("Can not promote " + convertedValue + " to void");
+        } else if (targetType == LargeInteger.class) {
+            if (convertedValue instanceof LargeInteger) {
+                return convertedValue;
+            } else {
+                throw new IllegalArgumentException("Can not promote " + convertedValue + " to " + LargeInteger.class);
+            }
+        } else if (targetType == BigDecimal.class) {
+            if (convertedValue instanceof LargeInteger) {
+                return ((LargeInteger) convertedValue).bigDecimalValue();
+            } else if (convertedValue instanceof BigDecimal) {
+                return convertedValue;
+            } else {
+                throw new IllegalArgumentException("Can not promote " + convertedValue + " to " + BigDecimal.class);
+            }
+        } else if (targetType != Double.class) {
+            throw new IllegalArgumentException("Unsupported promotion to " + targetType);
+        } else if (convertedValue instanceof LargeInteger) {
+            return ((LargeInteger) convertedValue).doubleValue();
+        } else if (convertedValue instanceof BigDecimal) {
+            return ((BigDecimal) convertedValue).doubleValue();
+        } else if (convertedValue instanceof Double) {
+            return convertedValue;
+        } else {
+            throw new IllegalArgumentException("Unsupported value for promotion: " + convertedValue);
+        }
     }
     
     /**
@@ -100,7 +153,7 @@ public class NumberParser {
      * <li><code>Double</code></li>
      * </ul>
      * 
-     * <p>This method is consistent with {@link #numberifyType(Object)}.</p>
+     * <p>This method is consistent with {@link #numberifyType(Class)}.</p>
      * 
      * @param object Any object
      * @return the Number instance
@@ -145,6 +198,11 @@ public class NumberParser {
         }
     }
     
+    /**
+     * Parses the given {@link String} to {@link BigDecimal}.
+     * 
+     * <p>Works for any input (cleans the text first).</p>
+     */
     public static BigDecimal parse(String numberString) {
         if (numberString == null) {
             return null;

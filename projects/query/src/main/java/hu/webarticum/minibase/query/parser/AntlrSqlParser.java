@@ -15,6 +15,7 @@ import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
+import hu.webarticum.minibase.query.expression.BinaryArithmeticExpression;
 import hu.webarticum.minibase.query.expression.ColumnExpression;
 import hu.webarticum.minibase.query.expression.ConcatExpression;
 import hu.webarticum.minibase.query.expression.ConstantExpression;
@@ -464,12 +465,34 @@ public class AntlrSqlParser implements SqlParser {
             throw new IllegalArgumentException("Right expression is null in: " + expressionNode.getText());
         }
 
+        BinaryArithmeticExpression.Operation operation = extractOperation(expressionNode);
+        if (operation == null) {
+            throw new IllegalArgumentException("Can not detect operation in: " + expressionNode.getText());
+        }
+
         Expression leftExpression = parseExpressionNode(leftExpressionNode);
         Expression rightExpression = parseExpressionNode(rightExpressionNode);
-        
-        // TODO
-        throw new UnsupportedOperationException("Not implemented yet");
-        
+        return new BinaryArithmeticExpression(operation, leftExpression, rightExpression);
+    }
+    
+    private BinaryArithmeticExpression.Operation extractOperation(ExpressionContext expressionNode) {
+        if (expressionNode.ASTERISK() != null) {
+            return BinaryArithmeticExpression.Operation.MUL;
+        } else if (expressionNode.MOD() != null) {
+            return BinaryArithmeticExpression.Operation.MOD;
+        } else if (expressionNode.PERCENT() != null) {
+            return BinaryArithmeticExpression.Operation.MOD;
+        } else if (expressionNode.DIV() != null) {
+            return BinaryArithmeticExpression.Operation.DIV;
+        } else if (expressionNode.SLASH() != null) {
+            return BinaryArithmeticExpression.Operation.RAT;
+        } else if (expressionNode.PLUS() != null) {
+            return BinaryArithmeticExpression.Operation.ADD;
+        } else if (expressionNode.MINUS() != null) {
+            return BinaryArithmeticExpression.Operation.SUB;
+        } else {
+            return null;
+        }
     }
     
     private Expression parseAtomicExpressionNode(AtomicExpressionContext atomicExpressionNode) {

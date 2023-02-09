@@ -83,7 +83,7 @@ nullsLast: NULLS LAST;
 orderByPosition: TOKEN_INTEGER;
 aliasableExpression: expression ( AS? alias=identifier )?;
 expression:
-    leftExpression=expression ( ASTERISK | MOD | PERCENT | DIV ) rightExpression=expression |
+    leftExpression=expression ( ASTERISK | MOD | PERCENT | DIV | SLASH ) rightExpression=expression |
     leftExpression=expression ( PLUS | MINUS ) rightExpression=expression |
     atomicExpression;
 atomicExpression:
@@ -181,7 +181,8 @@ COMMA: ',';
 AT: '@';
 
 ASTERISK: '*';
-PERCENT: '*';
+PERCENT: '%';
+SLASH: '/';
 
 PLUS: '+';
 MINUS: '-';

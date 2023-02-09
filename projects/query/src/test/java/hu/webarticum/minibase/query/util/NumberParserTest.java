@@ -74,7 +74,40 @@ class NumberParserTest {
         Class<?> expectedCommonType = Double.class;
         assertThat(commonType).isEqualTo(expectedCommonType);
     }
+
+    @Test
+    void testPromoteInvalidParameter() {
+        assertThatThrownBy(() -> NumberParser.promote(1.1d, Void.class)) // not void
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> NumberParser.promote(2.2d, Float.class)) // invalid target
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> NumberParser.promote(2.2d, Optional.class)) // non-numeric target
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> NumberParser.promote(0.5f, Double.class)) // invalid source type
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void testPromoteInvalidPromotion() {
+        assertThatThrownBy(() -> NumberParser.promote(3.2d, LargeInteger.class))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> NumberParser.promote(3.2d, BigDecimal.class))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> NumberParser.promote(BigDecimal.valueOf(33L), LargeInteger.class))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
     
+    @Test
+    void testPromote() {
+        assertThat(NumberParser.promote(null, Void.class)).isNull();
+        assertThat(NumberParser.promote(LargeInteger.of(10), LargeInteger.class)).isEqualTo(LargeInteger.of(10));
+        assertThat(NumberParser.promote(LargeInteger.of(10), BigDecimal.class)).isEqualTo(BigDecimal.valueOf(10));
+        assertThat(NumberParser.promote(LargeInteger.of(10), Double.class)).isEqualTo(10d);
+        assertThat(NumberParser.promote(BigDecimal.valueOf(20), BigDecimal.class)).isEqualTo(BigDecimal.valueOf(20));
+        assertThat(NumberParser.promote(BigDecimal.valueOf(20), Double.class)).isEqualTo(20d);
+        assertThat(NumberParser.promote(30d, Double.class)).isEqualTo(30d);
+    }
+
     @Test
     void testNumberify() {
         ImmutableList<Number> numbers = createValues().map(NumberParser::numberify);
