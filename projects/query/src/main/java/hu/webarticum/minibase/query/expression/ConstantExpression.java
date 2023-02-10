@@ -17,19 +17,29 @@ public class ConstantExpression implements Expression {
     
 
     @Override
+    public ImmutableList<Parameter> parameters() {
+        return ImmutableList.empty();
+    }
+
+    @Override
     public Optional<Class<?>> type() {
         Class<?> clazz = value != null ? value.getClass() : Void.class;
         return Optional.of(clazz);
     }
     
     @Override
+    public boolean isNullable() {
+        return value == null;
+    }
+    
+    @Override
+    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
+        return value == null;
+    }
+    
+    @Override
     public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
         return value != null ? value.getClass() : Void.class;
-    }
-
-    @Override
-    public ImmutableList<Parameter> parameters() {
-        return ImmutableList.empty();
     }
 
     @Override

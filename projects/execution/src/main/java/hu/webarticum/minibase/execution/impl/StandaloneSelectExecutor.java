@@ -39,9 +39,11 @@ public class StandaloneSelectExecutor implements ThrowingQueryExecutor {
         ImmutableList<String> aliases = standaloneSelectQuery.aliases()
                 .map((i, a) -> ensureAlias(a, firstRow.get(i)));
         ImmutableList<Class<?>> types = aliases
-                .map((i, a) -> findType(i, standaloneSelectQuery.expressionMatrix(), state));
+                .map((i, a) -> findType(i, expressionMatrix, state));
+        ImmutableList<Boolean> nullabilities = aliases
+                .map((i, a) -> findNullability(i, expressionMatrix, state));
         ImmutableList<MiniColumnHeader> columnHeaders = aliases
-                .map((i, a) -> createColumnHeader(a, types.get(i)));
+                .map((i, a) -> createColumnHeader(a, types.get(i), nullabilities.get(i)));
         ImmutableList<ImmutableList<MiniValue>> values = standaloneSelectQuery.expressionMatrix()
                 .map(r -> r.map((i, e) -> craftValue(e, types.get(i), state)));
         return new StoredResult(new StoredResultSetData(columnHeaders, values));
@@ -101,11 +103,37 @@ public class StandaloneSelectExecutor implements ThrowingQueryExecutor {
             return value.getClass();
         }
     }
+
+    private boolean findNullability(
+            int columnIndex, ImmutableList<ImmutableList<Expression>> expressionMatrix, SessionState state) {
+        for (ImmutableList<Expression> expressionRow : expressionMatrix) {
+            Expression expression = expressionRow.get(columnIndex);
+            boolean isNullable = extractNullability(expression, state);
+            if (isNullable) {
+                return true;
+            }
+        }
+        return false;
+    }
     
-    private MiniColumnHeader createColumnHeader(String alias, Class<?> type) {
+    private boolean extractNullability(Expression expression, SessionState state) {
+        if (!expression.isNullable()) {
+            return false;
+        }
+        
+        ImmutableMap<Parameter, Boolean> nullabilities =
+                expression.parameters().assign(p -> isParameterNullable(p, state));
+        return expression.isNullable(nullabilities);
+    }
+
+    private boolean isParameterNullable(Parameter parameter, SessionState state) {
+        Object value = substitute(parameter, state);
+        return value == null;
+    }
+    
+    private MiniColumnHeader createColumnHeader(String alias, Class<?> type, boolean nullable) {
         ValueTranslator translator = ResultUtil.createValueTranslatorFor(type);
         MiniValueDefinition columnDefinition = translator.definition();
-        boolean nullable = true;
         return new StoredColumnHeader(alias, nullable, columnDefinition);
     }
     

@@ -34,6 +34,16 @@ public class NegateExpression implements Expression {
         Class<?> subType = subExpression.type(types);
         return NumberParser.numberifyType(subType);
     }
+    
+    @Override
+    public boolean isNullable() {
+        return subExpression.isNullable();
+    }
+    
+    @Override
+    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
+        return subExpression.isNullable(nullabilities);
+    }
 
     @Override
     public Object evaluate(ImmutableMap<Parameter, Object> values) {

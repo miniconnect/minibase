@@ -33,7 +33,17 @@ public class VariableExpression implements Expression {
     public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
         return types.get(variableParameter);
     }
+    
+    @Override
+    public boolean isNullable() {
+        return true;
+    }
 
+    @Override
+    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
+        return nullabilities.get(variableParameter);
+    }
+    
     @Override
     public Object evaluate(ImmutableMap<Parameter, Object> values) {
         return values.get(variableParameter);

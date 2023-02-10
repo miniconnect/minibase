@@ -12,6 +12,10 @@ public interface Expression {
     public Optional<Class<?>> type();
     
     public Class<?> type(ImmutableMap<Parameter, Class<?>> types);
+
+    public boolean isNullable();
+    
+    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities);
     
     public Object evaluate(ImmutableMap<Parameter, Object> values);
     

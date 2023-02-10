@@ -81,7 +81,17 @@ public class BinaryArithmeticExpression implements Expression {
             throw new IllegalArgumentException("Type detection failed");
         }
     }
+    
+    @Override
+    public boolean isNullable() {
+        return leftOperand.isNullable() || rightOperand.isNullable();
+    }
 
+    @Override
+    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
+        return leftOperand.isNullable(nullabilities) || rightOperand.isNullable(nullabilities);
+    }
+    
     @Override
     public Object evaluate(ImmutableMap<Parameter, Object> values) {
         Object leftValue = NumberParser.numberify(leftOperand.evaluate(values));

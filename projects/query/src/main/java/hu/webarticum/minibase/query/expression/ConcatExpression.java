@@ -23,6 +23,16 @@ public class ConcatExpression extends AbstractCompoundExpression {
     }
     
     @Override
+    public boolean isNullable() {
+        return false;
+    }
+
+    @Override
+    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
+        return false;
+    }
+    
+    @Override
     public Object evaluate(ImmutableMap<Parameter, Object> values) {
         StringBuilder resultBuilder = new StringBuilder();
         boolean allNull = true;

@@ -24,7 +24,6 @@ import hu.webarticum.minibase.query.expression.ColumnParameter;
 import hu.webarticum.minibase.query.expression.Expression;
 import hu.webarticum.minibase.query.expression.Parameter;
 import hu.webarticum.minibase.query.expression.SpecialValueParameter;
-import hu.webarticum.minibase.query.expression.VariableExpression;
 import hu.webarticum.minibase.query.expression.VariableParameter;
 import hu.webarticum.minibase.query.query.JoinType;
 import hu.webarticum.minibase.query.query.Query;
@@ -508,7 +507,9 @@ public class SelectExecutor implements ThrowingQueryExecutor {
             ImmutableMap<Parameter, Class<?>> parameterTypes =
                     expression.parameters().assign(p -> detectExpressionParameterType(p, tableEntries, state));
             Class<?> type = expression.type(parameterTypes);
-            boolean nullable = !(expression instanceof VariableExpression) || (type == Void.class);
+            ImmutableMap<Parameter, Boolean> parameterNullabilities =
+                    expression.parameters().assign(p -> detectExpressionParameterNullability(p, tableEntries, state));
+            boolean nullable = expression.isNullable(parameterNullabilities);
             columnDefinition = new SimpleColumnDefinition(type, nullable);
             valueTranslator = createValueTranslator(columnDefinition);
         }
@@ -536,7 +537,7 @@ public class SelectExecutor implements ThrowingQueryExecutor {
             throw new IllegalArgumentException("Unknown parameter type: " + parameter.getClass());
         }
     }
-    
+
     private Class<?> typeOf(Object object) {
         if (object == null) {
             return Void.class;
@@ -545,6 +546,30 @@ public class SelectExecutor implements ThrowingQueryExecutor {
         }
     }
 
+    private boolean detectExpressionParameterNullability(
+            Parameter parameter, LinkedHashMap<String, TableEntry> tableEntries, SessionState state) {
+        if (parameter instanceof VariableParameter) {
+            Object value = state.getUserVariable(((VariableParameter) parameter).variableName());
+            return value == null;
+        } else if (parameter instanceof SpecialValueParameter) {
+            Object value = TableQueryUtil.getSpecialValue((SpecialValueParameter) parameter, state);
+            return value == null;
+        } else if (parameter instanceof ColumnParameter) {
+            ColumnParameter columnParameter = (ColumnParameter) parameter;
+            String tableAlias = columnParameter.tableAlias();
+            String columnName = columnParameter.columnName();
+            TableEntry tableEntry = findTableEntryOrThrow(tableEntries, tableAlias);
+            ColumnDefinition columnDefinition = tableEntry
+                    .table
+                    .columns()
+                    .get(columnName)
+                    .definition();
+            return columnDefinition.isNullable();
+        } else {
+            throw new IllegalArgumentException("Unknown parameter type: " + parameter.getClass());
+        }
+    }
+    
     private void checkExpressionColumns(Expression expression, LinkedHashMap<String, TableEntry> tableEntries) {
         for (Parameter parameter : expression.parameters()) {
             if (parameter instanceof ColumnParameter) {

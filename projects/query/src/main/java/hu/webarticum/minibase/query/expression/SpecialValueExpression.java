@@ -35,6 +35,16 @@ public class SpecialValueExpression implements Expression {
     }
     
     @Override
+    public boolean isNullable() {
+        return true;
+    }
+    
+    @Override
+    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
+        return nullabilities.get(specialValueParameter);
+    }
+    
+    @Override
     public Object evaluate(ImmutableMap<Parameter, Object> values) {
         return values.get(specialValueParameter);
     }
