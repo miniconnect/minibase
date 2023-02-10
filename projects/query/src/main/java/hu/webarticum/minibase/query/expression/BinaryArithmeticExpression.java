@@ -88,7 +88,7 @@ public class BinaryArithmeticExpression implements Expression {
         Object rightValue = NumberParser.numberify(rightOperand.evaluate(values));
         if (leftValue == null || rightValue == null) {
             return null;
-        } else if ((operation == Operation.RAT || operation == Operation.DIV) && isZero(rightValue)) {
+        } else if (isDivision(operation) && isZero(rightValue)) {
             // TODO: raise SQL warning
             return null;
         } else if (operation == Operation.RAT) {
@@ -110,6 +110,10 @@ public class BinaryArithmeticExpression implements Expression {
         } else {
             throw new IllegalArgumentException("Operation failed");
         }
+    }
+    
+    private boolean isDivision(Operation operation) {
+        return operation == Operation.DIV || operation == Operation.MOD || operation == Operation.RAT;
     }
     
     private boolean isZero(Object convertedValue) {
