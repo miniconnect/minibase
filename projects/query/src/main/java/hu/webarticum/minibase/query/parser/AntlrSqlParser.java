@@ -16,6 +16,7 @@ import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 import hu.webarticum.minibase.query.expression.BinaryArithmeticExpression;
+import hu.webarticum.minibase.query.expression.CoalesceExpression;
 import hu.webarticum.minibase.query.expression.ColumnExpression;
 import hu.webarticum.minibase.query.expression.ConcatExpression;
 import hu.webarticum.minibase.query.expression.ConstantExpression;
@@ -543,9 +544,10 @@ public class AntlrSqlParser implements SqlParser {
             ImmutableList<Expression> parameters = functionCallNode.expression().stream()
                     .map(this::parseExpressionNode)
                     .collect(ImmutableList.createCollector());
-            // XXX
             if (functionName.equalsIgnoreCase("CONCAT")) {
                 return new ConcatExpression(parameters);
+            } else if (functionName.equalsIgnoreCase("COALESCE")) {
+                return new CoalesceExpression(parameters);
             } else {
                 throw new IllegalArgumentException("Unknown function: " + functionName);
             }
