@@ -500,7 +500,7 @@ public class SelectExecutor implements ThrowingQueryExecutor {
             ColumnParameter columnParameter = ((ColumnExpression) expression).columnParameter();
             String tableAlias = columnParameter.tableAlias();
             String columnName = columnParameter.columnName();
-            TableEntry tableEntry = tableEntries.get(tableAlias);
+            TableEntry tableEntry = findTableEntryOrThrow(tableEntries, tableAlias);
             columnDefinition = tableEntry.table.columns().get(columnName).definition();
             valueTranslator = getValueTranslator(tableEntry, columnName);
         } else {
