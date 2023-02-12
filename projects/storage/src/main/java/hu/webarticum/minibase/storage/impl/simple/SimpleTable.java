@@ -63,10 +63,9 @@ public class SimpleTable implements Table {
     private LargeInteger calculateSequenceValue(LargeInteger sequenceValue, List<ImmutableList<Object>> rows) {
         if (sequenceValue != null) {
             return sequenceValue;
+        } else {
+            return LargeInteger.of(rows.size()).increment();
         }
-        
-        // FIXME: find max id + 1?
-        return LargeInteger.of(rows.size()).increment();
     }
     
     public static SimpleTableBuilder builder() {
@@ -112,8 +111,7 @@ public class SimpleTable implements Table {
         
         rows.addAll(patch.insertedRows());
         
-        for (Map.Entry<LargeInteger, ImmutableMap<Integer, Object>> entry :
-                patch.updates().entrySet()) {
+        for (Map.Entry<LargeInteger, ImmutableMap<Integer, Object>> entry : patch.updates().entrySet()) {
             int rowIndex = entry.getKey().intValueExact();
             ImmutableMap<Integer, Object> rowUpdates = entry.getValue();
             ImmutableList<Object> currentRow = rows.get(rowIndex);
