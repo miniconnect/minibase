@@ -5,7 +5,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -22,6 +21,7 @@ import hu.webarticum.minibase.storage.api.Sequence;
 import hu.webarticum.minibase.storage.api.Table;
 import hu.webarticum.minibase.storage.api.TableIndex;
 import hu.webarticum.minibase.storage.api.TablePatch;
+import hu.webarticum.minibase.storage.util.TablePatchUtil;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
 import hu.webarticum.miniconnect.lang.LargeInteger;
@@ -107,7 +107,7 @@ public class SimpleTable implements Table {
     @Override
     public synchronized void applyPatch(TablePatch patch) {
         checkWritable();
-        checkNullsInPatch(patch);
+        TablePatchUtil.checkIndividualValues(this, patch);
         checkUniqueInPatch(patch);
         
         rows.addAll(patch.insertedRows());
@@ -134,38 +134,6 @@ public class SimpleTable implements Table {
         }
     }
 
-    private void checkNullsInPatch(TablePatch patch) {
-        Set<Integer> nonNullableColumnIndices = new HashSet<>();
-        int columnCount = columnNames.size();
-        for (int i = 0; i < columnCount; i++) {
-            if (!columnDefinitions.get(columnNames.get(i)).isNullable()) {
-                nonNullableColumnIndices.add(i);
-            }
-        }
-        if (nonNullableColumnIndices.isEmpty()) {
-            return;
-        }
-        
-        for (ImmutableMap<Integer, Object> rowUpdates : patch.updates().values()) {
-            for (Map.Entry<Integer, Object> updateEntry : rowUpdates.entrySet()) {
-                Integer columnIndex = updateEntry.getKey();
-                if (nonNullableColumnIndices.contains(columnIndex) && updateEntry.getValue() == null) {
-                    String columnName = columnNames.get(columnIndex);
-                    throw PredefinedError.COLUMN_VALUE_NULL.toException(columnName);
-                }
-            }
-        }
-
-        for (ImmutableList<Object> insertedRow : patch.insertedRows()) {
-            for (Integer columnIndex : nonNullableColumnIndices) {
-                if (insertedRow.get(columnIndex) == null) {
-                    String columnName = columnNames.get(columnIndex);
-                    throw PredefinedError.COLUMN_VALUE_NULL.toException(columnName);
-                }
-            }
-        }
-    }
-    
     private void checkUniqueInPatch(TablePatch patch) {
         Map<Integer, Set<Object>> uniqueColumnValues = new HashMap<>();
         int columnCount = columnNames.size();

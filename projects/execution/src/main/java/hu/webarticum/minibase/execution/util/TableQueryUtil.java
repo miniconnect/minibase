@@ -10,7 +10,6 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 
@@ -673,19 +672,6 @@ public class TableQueryUtil {
             }
             if (!(convertedValue instanceof SpecialCondition)) {
                 convertedValue = convert(convertedValue, columnClazz);
-                
-                // FIXME currently, null check is performed in applyPatch()
-                if (check && convertedValue != null) {
-                    Optional<ImmutableList<Object>> enumValuesOptional = definition.enumValues();
-                    if (enumValuesOptional.isPresent()) {
-                        ImmutableList<Object> enumValues = enumValuesOptional.get();
-                        if (!enumValues.contains(convertedValue)) {
-                            throw new IllegalArgumentException(
-                                    "Invalid value for ENUM: " + convertedValue +
-                                    " (allowed values: " + enumValues + ")");
-                        }
-                    }
-                }
             }
             result.put(columnName, convertedValue);
         }

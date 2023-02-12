@@ -32,6 +32,8 @@ public enum PredefinedError {
     
     COLUMN_VALUE_NULL(12, "00012", "NULL value given for non nullable column '%s'"),
     
+    COLUMN_VALUE_NOT_IN_ENUM(13, "00013", "Invalid value for ENUM: column '%s' (allowed values: %s)"),
+    
     QUERY_INTERRUPTED(99, "00099", "Query was interrupted"),
     
     OTHER_ERROR(100, "00100", "Unexpected error occured"),
