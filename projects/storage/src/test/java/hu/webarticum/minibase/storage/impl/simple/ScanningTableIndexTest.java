@@ -8,9 +8,6 @@ import hu.webarticum.minibase.storage.api.TableSelection;
 import hu.webarticum.minibase.storage.api.TableIndex.InclusionMode;
 import hu.webarticum.minibase.storage.api.TableIndex.NullsMode;
 import hu.webarticum.minibase.storage.api.TableIndex.SortMode;
-import hu.webarticum.minibase.storage.impl.simple.ScanningTableIndex;
-import hu.webarticum.minibase.storage.impl.simple.SimpleColumnDefinition;
-import hu.webarticum.minibase.storage.impl.simple.SimpleTable;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.LargeInteger;
 

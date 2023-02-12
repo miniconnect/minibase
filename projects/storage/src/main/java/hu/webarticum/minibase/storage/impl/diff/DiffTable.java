@@ -526,10 +526,7 @@ public class DiffTable extends AbstractTableDecorator {
 
         @Override
         public boolean isUnique() {
-            
-            // TODO FIXME
-            return false;
-            
+            return baseIndex.isUnique();
         }
 
         @Override
