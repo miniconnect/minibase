@@ -436,9 +436,6 @@ public class AntlrSqlParser implements SqlParser {
     private WildcardSelectItem parseWildcardSelectItemNode(WildcardSelectItemContext wildcardSelectItemNode) {
         TableNameContext tableNameNode = wildcardSelectItemNode.tableName();
         String tableName = tableNameNode != null ? parseIdentifierNode(tableNameNode.identifier()) : null;
-        
-        // TODO: check table name?
-        
         return new WildcardSelectItem(tableName);
     }
 
@@ -650,9 +647,6 @@ public class AntlrSqlParser implements SqlParser {
         String fieldName = parseIdentifierNode(scopeableFieldNameNode.fieldName().identifier());
         TableNameContext tableNameNode = scopeableFieldNameNode.tableName();
         String tableName = tableNameNode != null ? parseIdentifierNode(tableNameNode.identifier()) : null;
-        
-        // TODO: check table name?
-        
         Object value = parsePostfixConditionNode(whereItemNode.postfixCondition());
         return new WhereItem(tableName, fieldName, value);
     }

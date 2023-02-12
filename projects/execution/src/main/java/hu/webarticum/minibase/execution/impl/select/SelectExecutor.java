@@ -593,6 +593,10 @@ public class SelectExecutor implements ThrowingQueryExecutor {
         }
         
         TableEntry tableEntry = tableEntries.get(tableName);
+        if (tableEntry == null) {
+            throw PredefinedError.TABLE_NOT_FOUND.toException(tableName);
+        }
+        
         Table table = tableEntry.table;
         NamedResourceStore<Column> columns = table.columns();
         for (String columnName : columns.names()) {
