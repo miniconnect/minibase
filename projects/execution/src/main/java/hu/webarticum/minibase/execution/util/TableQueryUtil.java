@@ -46,6 +46,8 @@ import hu.webarticum.miniconnect.record.converter.DefaultConverter;
 import hu.webarticum.miniconnect.util.FilteringIterator;
 import hu.webarticum.miniconnect.util.GroupingIterator;
 import hu.webarticum.miniconnect.util.LimitingIterator;
+import hu.webarticum.miniconnect.util.SortedLimitingIterator;
+import hu.webarticum.miniconnect.util.SortingIterator;
 
 public class TableQueryUtil {
     
@@ -236,15 +238,13 @@ public class TableQueryUtil {
         Iterator<LargeInteger> result = matchRows(table, filter, firstSelection, moreSelections, unindexedColumnNames);
         
         if (!orderBy.isEmpty() && orderIndex == null) {
-            List<LargeInteger> resultList = collectIterator(result);
             MultiComparator rowComparator = createMultiComparator(orderBy, s -> table);
             Comparator<LargeInteger> rowIndexComparator = createRowIndexComparator(rowComparator, table, orderBy);
-            resultList.sort(rowIndexComparator);
             if (limit != null) {
-                int intLimit = limit.intValueExact();
-                resultList = resultList.subList(0, intLimit);
+                result = new SortedLimitingIterator<>(result, rowIndexComparator, limit);
+            } else {
+                result = new SortingIterator<>(result, rowIndexComparator);
             }
-            result = resultList.iterator();
         } else if (matchedOrderByEntries.size() < orderBy.size()) {
             MultiComparator outerRowComparator = createMultiComparator(matchedOrderByEntries, s -> table);
             Comparator<LargeInteger> outerRowIndexComparator = createRowIndexComparator(
@@ -252,18 +252,34 @@ public class TableQueryUtil {
             MultiComparator innerRowComparator = createMultiComparator(orderBy, s -> table);
             Comparator<LargeInteger> innerRowIndexComparator = createRowIndexComparator(
                     innerRowComparator, table, orderBy);
-            result = new GroupingIterator<>(result, outerRowIndexComparator, (List<LargeInteger> groupItems) -> {
-                groupItems.sort(innerRowIndexComparator);
-                return groupItems;
-            });
-            if (limit != null) {
-                result = new LimitingIterator<>(result, limit);
-            }
+            result = new GroupingIterator<>(
+                    result,
+                    outerRowIndexComparator,
+                    (Iterator<LargeInteger> groupItems, LargeInteger position) -> sortGroup(
+                            groupItems, innerRowIndexComparator, position, limit)
+            );
         } else if (limit != null) {
             result = new LimitingIterator<>(result, limit);
         }
         
         return result;
+    }
+    
+    private static Iterator<LargeInteger> sortGroup(
+            Iterator<LargeInteger> groupItems,
+            Comparator<LargeInteger> comparator,
+            LargeInteger position,
+            LargeInteger limit) {
+        if (limit == null) {
+            return new SortingIterator<>(groupItems, comparator);
+        }
+        
+        LargeInteger remainingLimit = limit.subtract(position);
+        if (remainingLimit.isLessThanOrEqualTo(LargeInteger.ZERO)) {
+            return null;
+        }
+        
+        return new SortedLimitingIterator<>(groupItems, comparator, remainingLimit);
     }
     
     private static Comparator<LargeInteger> createRowIndexComparator(
