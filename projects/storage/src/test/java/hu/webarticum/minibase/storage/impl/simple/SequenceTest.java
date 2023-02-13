@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.junit.jupiter.api.Test;
 
-import hu.webarticum.minibase.storage.impl.simple.Sequence;
 import hu.webarticum.miniconnect.lang.LargeInteger;
 
 class SequenceTest {
@@ -22,21 +21,12 @@ class SequenceTest {
 
     @Test
     void testSingle() {
-        assertThat(new Sequence(1)).containsExactly(bigs(0));
+        assertThat(new Sequence(1)).containsExactly(LargeInteger.ZERO);
     }
-
+    
     @Test
     void testUntilFive() {
-        assertThat(new Sequence(5)).containsExactly(bigs(0, 1, 2, 3, 4));
-    }
-
-    
-    private LargeInteger[] bigs(int... values) {
-        LargeInteger[] result = new LargeInteger[values.length];
-        for (int i = 0; i < values.length; i++) {
-            result[i] = LargeInteger.of(values[i]);
-        }
-        return result;
+        assertThat(new Sequence(5)).containsExactly(LargeInteger.arrayOf(0, 1, 2, 3, 4));
     }
     
 }

@@ -48,12 +48,12 @@ class ScanningTableIndexTest {
     
     @Test
     void testFindValueSingleResult() {
-        assertThat(index("id").find(3)).containsExactly(larges(2));
+        assertThat(index("id").find(3)).containsExactly(LargeInteger.of(2));
     }
 
     @Test
     void testFindValueMoreResults() {
-        assertThat(index("lastname").find("Smith")).containsExactly(larges(1, 2));
+        assertThat(index("lastname").find("Smith")).containsExactly(LargeInteger.arrayOf(1, 2));
     }
 
     @Test
@@ -65,19 +65,19 @@ class ScanningTableIndexTest {
     @Test
     void testFindMultiColumnSingleResult() {
         assertThat(index("firstname", "lastname").findMulti(ImmutableList.of("Karl", "Marx")))
-                .containsExactly(larges(3));
+                .containsExactly(LargeInteger.of(3));
     }
 
     @Test
     void testFindMultiColumnMoreResults() {
         assertThat(index("firstname", "lastname").findMulti(ImmutableList.of("Anton", "Bruckner")))
-                .containsExactly(larges(4, 6));
+                .containsExactly(LargeInteger.arrayOf(4, 6));
     }
 
     @Test
     void testFindMultiColumnPartialMoreResults() {
         assertThat(index("lastname", "firstname").findMulti(ImmutableList.of("Smith")))
-                .containsExactly(larges(1, 2));
+                .containsExactly(LargeInteger.arrayOf(1, 2));
     }
 
     @Test
@@ -95,7 +95,7 @@ class ScanningTableIndexTest {
                 InclusionMode.INCLUDE,
                 ImmutableList.fill(2, NullsMode.WITH_NULLS),
                 ImmutableList.fill(2, SortMode.UNSORTED));
-        assertThat(selection).containsExactly(larges(3, 4, 5, 6));
+        assertThat(selection).containsExactly(LargeInteger.arrayOf(3, 4, 5, 6));
     }
 
     @Test
@@ -107,7 +107,7 @@ class ScanningTableIndexTest {
                 InclusionMode.EXCLUDE,
                 ImmutableList.fill(2, NullsMode.WITH_NULLS),
                 ImmutableList.fill(2, SortMode.UNSORTED));
-        assertThat(selection).containsExactlyInAnyOrder(larges(4, 5, 6));
+        assertThat(selection).containsExactlyInAnyOrder(LargeInteger.arrayOf(4, 5, 6));
     }
 
     @Test
@@ -119,7 +119,7 @@ class ScanningTableIndexTest {
                 InclusionMode.EXCLUDE,
                 ImmutableList.fill(2, NullsMode.WITH_NULLS),
                 ImmutableList.fill(2, SortMode.UNSORTED));
-        assertThat(selection).containsExactlyInAnyOrder(larges(3, 4, 5, 6));
+        assertThat(selection).containsExactlyInAnyOrder(LargeInteger.arrayOf(3, 4, 5, 6));
     }
 
     @Test
@@ -131,7 +131,7 @@ class ScanningTableIndexTest {
                 InclusionMode.EXCLUDE,
                 ImmutableList.fill(2, NullsMode.WITH_NULLS),
                 ImmutableList.fill(2, SortMode.ASC_NULLS_FIRST));
-        assertThat(selection).containsExactly(larges(3, 0, 1, 2));
+        assertThat(selection).containsExactly(LargeInteger.arrayOf(3, 0, 1, 2));
     }
 
     @Test
@@ -143,7 +143,7 @@ class ScanningTableIndexTest {
                 InclusionMode.EXCLUDE,
                 ImmutableList.fill(2, NullsMode.WITH_NULLS),
                 ImmutableList.fill(2, SortMode.ASC_NULLS_FIRST));
-        assertThat(selection).containsExactly(larges(0, 1, 2));
+        assertThat(selection).containsExactly(LargeInteger.arrayOf(0, 1, 2));
     }
 
     @Test
@@ -155,7 +155,7 @@ class ScanningTableIndexTest {
                 InclusionMode.EXCLUDE,
                 ImmutableList.fill(2, NullsMode.WITH_NULLS),
                 ImmutableList.fill(2, SortMode.ASC_NULLS_FIRST));
-        assertThat(selection).containsExactly(larges(0, 1, 2));
+        assertThat(selection).containsExactly(LargeInteger.arrayOf(0, 1, 2));
     }
     
     @Test
@@ -167,7 +167,7 @@ class ScanningTableIndexTest {
                 InclusionMode.EXCLUDE,
                 ImmutableList.fill(2, NullsMode.WITH_NULLS),
                 ImmutableList.fill(2, SortMode.ASC_NULLS_FIRST));
-        assertThat(selection).containsExactly(larges(0));
+        assertThat(selection).containsExactly(LargeInteger.ZERO);
     }
     
     @Test
@@ -179,20 +179,12 @@ class ScanningTableIndexTest {
                 InclusionMode.INCLUDE,
                 ImmutableList.fill(2, NullsMode.WITH_NULLS),
                 ImmutableList.fill(2, SortMode.ASC_NULLS_FIRST));
-        assertThat(selection).containsExactly(larges(3, 0, 1));
+        assertThat(selection).containsExactly(LargeInteger.arrayOf(3, 0, 1));
     }
     
     
     private ScanningTableIndex index(String... columnNames) {
         return new ScanningTableIndex(table, "index", ImmutableList.of(columnNames));
-    }
-    
-    private LargeInteger[] larges(int... values) {
-        LargeInteger[] result = new LargeInteger[values.length];
-        for (int i = 0; i < values.length; i++) {
-            result[i] = LargeInteger.of(values[i]);
-        }
-        return result;
     }
     
 }

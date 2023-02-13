@@ -8,7 +8,6 @@ import hu.webarticum.minibase.storage.api.ColumnDefinition;
 import hu.webarticum.minibase.storage.api.Table;
 import hu.webarticum.minibase.storage.api.TablePatch;
 import hu.webarticum.minibase.storage.impl.AbstractWritableTableTest;
-import hu.webarticum.minibase.storage.impl.diff.DiffTable;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
 import hu.webarticum.miniconnect.lang.LargeInteger;
@@ -21,20 +20,20 @@ class DiffTableTest extends AbstractWritableTableTest {
         DiffTable diffTable = new DiffTable(baseTable);
         
         TablePatch patch1 = TablePatch.builder()
-                .insert(ImmutableList.of(large(11), "AAA", true))
-                .insert(ImmutableList.of(large(12), "BBB", false))
-                .insert(ImmutableList.of(large(13), "CCC", true))
-                .update(large(2), ImmutableMap.of(1, "UUU"))
-                .update(large(3), ImmutableMap.of(1, "VVV"))
+                .insert(ImmutableList.of(LargeInteger.of(11), "AAA", true))
+                .insert(ImmutableList.of(LargeInteger.of(12), "BBB", false))
+                .insert(ImmutableList.of(LargeInteger.of(13), "CCC", true))
+                .update(LargeInteger.of(2), ImmutableMap.of(1, "UUU"))
+                .update(LargeInteger.of(3), ImmutableMap.of(1, "VVV"))
                 .delete(LargeInteger.ZERO)
                 .build();
         diffTable.applyPatch(patch1);
 
         TablePatch patch2 = TablePatch.builder()
-                .insert(ImmutableList.of(large(14), "XXX", true))
-                .update(large(1), ImmutableMap.of(1, "uuuu", 2, false))
-                .delete(large(0))
-                .delete(large(3))
+                .insert(ImmutableList.of(LargeInteger.of(14), "XXX", true))
+                .update(LargeInteger.of(1), ImmutableMap.of(1, "uuuu", 2, false))
+                .delete(LargeInteger.ZERO)
+                .delete(LargeInteger.of(3))
                 .build();
         diffTable.applyPatch(patch2);
 

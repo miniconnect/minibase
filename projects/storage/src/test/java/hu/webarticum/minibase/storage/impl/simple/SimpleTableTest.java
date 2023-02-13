@@ -2,7 +2,6 @@ package hu.webarticum.minibase.storage.impl.simple;
 
 import hu.webarticum.minibase.storage.api.ColumnDefinition;
 import hu.webarticum.minibase.storage.impl.AbstractWritableTableTest;
-import hu.webarticum.minibase.storage.impl.simple.SimpleTable;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 
 class SimpleTableTest extends AbstractWritableTableTest {

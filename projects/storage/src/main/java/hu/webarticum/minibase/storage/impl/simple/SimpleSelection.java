@@ -16,6 +16,10 @@ public class SimpleSelection implements TableSelection {
     private final Iterable<LargeInteger> reverseRowIndexes;
     
 
+    public SimpleSelection(LargeInteger... rowIndexes) {
+        this(ImmutableList.of(rowIndexes));
+    }
+    
     public SimpleSelection(ImmutableList<LargeInteger> rowIndexes) {
         this(
                 rowIndexes::contains,
