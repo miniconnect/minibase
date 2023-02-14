@@ -2,12 +2,21 @@
 
 RDBMS framework for miniConnect.
 
+## Overview
+
+MiniBase is a flexible java framework for building relational database engines.
+It has built-in support for SQL parsing, query execution, storages, indexing, and more.
+It manages concurrency, currently a very basic transaction management is implemented.
+
+One of its implementations is [HoloDB, a database seemingly filled with random data](https://github.com/miniconnect/holodb).
+
 ## SQL support
+
+[Click here for the full SQL documeentation](SQL.md)
 
 MiniBase has built-in support for SQL queries. Features:
 
-- Simple `UPDATE`, `INSERT`, `REPLACE`, and `DELETE`
-- Somewhat complex `SELECT` queries
+- Limited support for the CRUD operations
 - Multiple schemas, multi-schema queries
 - User variables
 - Simple expressions
