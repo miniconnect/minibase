@@ -2,9 +2,14 @@
 
 ## Overview
 
-[For the ANTLR4 grammar file click here](projects/query/src/main/antlr/hu/webarticum/minibase/query/query/antlr/grammar/SqlQuery.g4)
+[For the ANTLR4 grammar file click here.](projects/query/src/main/antlr/hu/webarticum/minibase/query/query/antlr/grammar/SqlQuery.g4)
 
-<!-- TODO introduction -->
+MiniBase has a partial support for SQL.
+It supports the most important CRUD features, user variables, schema selections and some more.
+(A later goal is full SQL92 support.)
+
+Various optimizations are performed when the queries are run,
+indexes are intelligently selected, the joined tables will be also rearranged if necessary.
 
 ## Keywords
 
