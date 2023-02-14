@@ -34,6 +34,25 @@ Any other name must be written between `` ` `` or `"`:
 SELECT `1col` AS `from`, "2col" AS `2``col` FROM `table`
 ```
 
+In some cases identifiers can also form a hierarchy, form example:
+
+- `some_schema.some_table`
+- `some_table.some_column`
+- `some_schema.some_table.some_column`
+- `` `schema`.`table`.`column` ``
+- `` `sche.ma`.`table` ``
+
+The hierarchical syntax can be used wherever a table or column name can be written.
+
+## Aliases
+
+Tables and columns can be aliased in queries.
+
+You can alias an identifier using one of the two variants:
+
+- without `AS`, e. g. `col c`, `` `sch`.`tbl` t `` etc.
+- with `AS`, e. g. `col AS c`, `` `sch`.`tbl` AS t `` etc.
+
 ## Literals
 
 Currently, two types of literals are supported:
@@ -45,7 +64,9 @@ Integer literals can be arbitrarily large.
 Use arithmetic operators or string literals to produce fractional and other numbers.
 Use string literals for setting dates and other complex data fields.
 
-## Use schema
+## Statements
+
+### Use schema
 
 You can set the current database schema with the `USE` statement.
 
@@ -55,7 +76,7 @@ Example:
 USE some_schema;
 ```
 
-## Show schemas and tables
+### Show schemas and tables
 
 You can list all the schemas:
 
@@ -87,7 +108,7 @@ All the above can be filtered with the `LIKE` clause, for example:
 SHOW TABLES FROM some_schema LIKE 'a%';
 ```
 
-## Set variables
+### Set variable
 
 You can define user variables for the current session with the `SET` statement:
 
@@ -101,7 +122,7 @@ You can quote variable names too:
 SET @`some special `` variable name` = 35;
 ```
 
-## Select variables and other values
+### Select variables and other values
 
 You can execute several types of `SELECT` queries without a table.
 
@@ -133,7 +154,7 @@ SELECT 2 AS no, @some_other_variable AS var
 SELECT 3 AS no, @some_more_variable AS var;
 ```
 
-## Select table size or count of matching records
+### Select table size or count of matching records
 
 You can count rows in a table:
 
@@ -147,26 +168,98 @@ Or count rows that match a filter:
 SELECT COUNT(*) FROM books WHERE id > 3 AND category IS NOT NULL;
 ```
 
-## Select data from tables
+### Select data from tables
 
-TODO
+You can select records from a table with the `SELECT` statement.
 
-<!-- TODO selectQuery -->
+The simplest table select is to query all records and columns:
 
-## Insert (or replace) records to table
+```sql
+SELECT * FROM tbl;
+```
 
-TODO
+You can also specify some columns and/or filters:
 
-<!-- TODO insertQuery -->
+```sql
+SELECT id, col1, col2 some_alias, col3 AS some_other_alias FROM tbl;
+```
 
-## Update records in table
+Table alias, more wildcards, custom expresssions,
+sorting (using the `ORDER BY` clause), limiting (using the `LIMIT` clause) are also supported:
 
-TODO
+```sql
+SELECT CONCAT('#', t.id), t.* FROM tbl t WHERE id > 20 ORDER by id, label DESC NULLS FIRST LIMIT 5;
+```
 
-<!-- TODO updateQuery -->
+You can select data from multiple tables using joins.
+Currently two types of joins are supported: `INNER JOIN` and `LEFT JOIN` (or `LEFT OUTER JOIN`).
+A very simple joined select looks like this:
 
-## Delete records from table
+```sql
+SELECT t1.id, t2.* FROM table1 t1 LEFT JOIN table2 t2 ON t2.t1_id = t1.id;
+```
 
-TODO
+Finally, here is a complex example including most of the supported features for table select:
 
-<!-- TODO deleteQuery -->
+```sql
+SELECT
+  t3.*,
+  t1.label,
+  t1.created t_created,
+  CONCAT(@somevar, ': ', t4.col1) AS `concatenated value`
+FROM base_table t1
+INNER JOIN inner_joined_table t2 ON t2.id = t1.i_id
+LEFT JOIN left_joined_table t3 ON t3.id = t1.l_id
+LEFT JOIN other_left_joined_table t4 ON t4.id = t3.l2_id
+WHERE
+  t1.category = 'basic' AND
+  t1.id >= 150 AND
+  t1.id < 960 AND
+  t4.year BETWEEN 1995 AND 2003 AND
+  t4.phone IS NOT NULL
+ORDER BY
+  t1.level,
+  1 DESC,
+  t3.price ASC NULLS LAST
+LIMIT 10
+```
+
+### Insert (or replace) records to table
+
+You can insert new records to a table with the `INSERT` statement:
+
+```sql
+INSERT INTO tbl VALUES (null, 'lorem', 42);
+```
+
+Or with explicitly enumerated columns:
+
+```sql
+INSERT INTO tbl (col1, col2) VALUES ('lorem', 42);
+```
+
+The `REPLACE` statement is nearly the same, but it deletes all the conflicting records:
+
+```sql
+REPLACE INTO tbl (col1, col2) VALUES ('lorem', 42);
+```
+
+### Update records in table
+
+You can change existing values in a table with the `UPDATE` statement:
+
+```sql
+UPDATE tbl SET col1 = 'lorem', col2 = 42 WHERE id BETWEEN 16 AND 23;
+```
+
+The `WHERE` clause is optional, if omitted, all records will be updated.
+
+### Delete records from table
+
+You can delete records from a table with the `DELETE` statement:
+
+```sql
+DELETE FROM tbl WHERE id = 44;
+```
+
+The `WHERE` clause is optional, if omitted, all records will be updated.
