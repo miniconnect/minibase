@@ -103,7 +103,6 @@ specialSelectableName:
     CURRENT_CATALOG |
     READONLY |
     AUTOCOMMIT |
-    IDENTITY |
     LAST_INSERT_ID;
 functionCall: identifier PAR_START expression ( COMMA expression )* PAR_END;
 scopeableFieldName: ( tableName DOT )? fieldName;
