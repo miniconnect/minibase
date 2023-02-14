@@ -6,10 +6,28 @@
 
 MiniBase has a partial support for SQL.
 It supports the most important CRUD features, user variables, schema selections and some more.
-(A later goal is full SQL92 support.)
 
 Various optimizations are performed when the queries are run,
 indexes are intelligently selected, the joined tables will be also rearranged if necessary.
+
+## Limitations
+
+Only a basic feature set is supported.
+Here is some of the major **missing** features:
+
+- advanced transaction management (currently, autocommit is forced, but concurrency is handled efficiently)
+- grouping: the `GROUP BY` and `HAVING` clauses, group functions, window functions
+- expressions elsewhere than select items
+- arbitrary `WHERE` filters (currently, we support only column range filters, connected with `AND` operators)
+- more join types (currently, only `INNER JOIN` and `LEFT OUTER JOIN` are supported)
+- set operations on result sets (currently, we support `UNION`, only in non-table `SELECT` queries)
+- subqueries
+- programming features
+- date operations
+- and so on
+
+The list of supported features is gradually expanding.
+A later (probably distant) goal is full SQL-92 support.
 
 ## Keywords
 

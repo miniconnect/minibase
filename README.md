@@ -12,7 +12,7 @@ One of its implementations is [HoloDB, a database seemingly filled with random d
 
 ## SQL support
 
-[Click here for the full SQL documentation](SQL.md)
+[Click here for the SQL documentation](SQL.md)
 
 MiniBase has built-in support for SQL queries. Features:
 
