@@ -64,6 +64,38 @@ Integer literals can be arbitrarily large.
 Use arithmetic operators or string literals to produce fractional and other numbers.
 Use string literals for setting dates and other complex data fields.
 
+## Functions and operators
+
+Special global functions:
+
+| Function | Description |
+| -------- | ----------- |
+| `CURRENT_USER()` | current database user (currently always empty) |
+| `CURRENT_SCHEMA()` | current selected schema (or `NULL` if not selected) |
+| `CURRENT_CATALOG()` | alias for `CURRENT_SCHEMA()` |
+| `READONLY()` | checks whether the database is read-only or not |
+| `AUTOCOMMIT()` | checks whether autocommit is on (currently always `1`) |
+| `LAST_INSERT_ID()` | gets the last inserted value for an auto-incremented column (or `NULL` if none) |
+
+Expression functions:
+
+| Name | Example | Description |
+| ---- | ------- | ----------- |
+| `CONCAT` | `CONCAT('hello, ', name)` | Concats values to a longer string (always returns a string, skips `NULL` values) |
+| `COALESCE` | `COALESCE(col1, col2, 'fallback value')` | Returns the first non-`NULL` value if any, `NULL` otherwise |
+
+Operators:
+
+| Operator | Example | Result | Description |
+| -------- | :-----: | :----: | ----------- |
+| `-` | `- 4` | `-4` | Negates a value |
+| `+` | `2 + 3` | `5` | Adds two values |
+| `-` | `100 - 20` | `80` | Subtracts a value from an other |
+| `*` | `2 * 7` | `14` | Multiplies two values |
+| `/` | `5 / 2` | `2.5` | Divides a value with an other |
+| `DIV` | `13 / 5` | `2` | Divides a value with an other resulting an integer |
+| `%` or `MOD` | `13 % 5` | `3` | Get the remainder dividing a value with an other |
+
 ## Statements
 
 ### Use schema
@@ -132,10 +164,22 @@ To show a variable:
 SELECT @some_variable;
 ```
 
+Optionally you can use a `FROM` clause to the special table `UNIT`:
+
+```sql
+SELECT 'value' FROM UNIT;
+```
+
 Or to show a special value:
 
 ```sql
 SELECT CURRENT_SCHEMA();
+```
+
+These special values can be selected with alternative syntaxes (just like to other RDMBS engines), for example:
+
+```sql
+SHOW CURRENT_SCHEMA;
 ```
 
 You can select multiple values in a single query:
