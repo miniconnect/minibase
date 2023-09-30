@@ -949,7 +949,11 @@ public class SelectExecutor implements ThrowingQueryExecutor {
             
             result.addAll(subResult);
         }
-        if (!found && tableEntry.joinItem != null && tableEntry.joinItem.joinType() == JoinType.LEFT_OUTER) {
+        if (
+                !found &&
+                tableEntry.subFilter.isEmpty() &&
+                tableEntry.joinItem != null &&
+                tableEntry.joinItem.joinType() == JoinType.LEFT_OUTER) {
             Map<String, LargeInteger> joinedRow = new HashMap<>(joinedPrefix);
             joinedRow.put(tableAlias, null);
             if (isLeaf) {
