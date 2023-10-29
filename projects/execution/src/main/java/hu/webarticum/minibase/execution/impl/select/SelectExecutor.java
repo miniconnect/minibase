@@ -420,7 +420,7 @@ public class SelectExecutor implements ThrowingQueryExecutor {
             throw PredefinedError.TABLE_ALIAS_DUPLICATED.toException(alias);
         }
         
-        tableEntries.put(alias, new TableEntry(schemaName, table, joinItem, false));
+        tableEntries.put(alias, new TableEntry(schemaName, table, joinItem));
 
         checkJoinItem(joinItem, tableEntries);
     }
@@ -831,11 +831,33 @@ public class SelectExecutor implements ThrowingQueryExecutor {
         List<String> remainingTableAliasList = new ArrayList<>(tableEntries.keySet());
         Map<String, LargeInteger> joinedPrefix = new HashMap<>();
         List<Map<String, LargeInteger>> result = new ArrayList<>();
+        boolean prelimitable = checkPrelimitable(tableEntries);
         collectRowsFromNextTable(
-                result, null, remainingTableAliasList, orderByEntries, joinedPrefix, limit, tableEntries, state);
+                result,
+                null,
+                remainingTableAliasList,
+                orderByEntries,
+                joinedPrefix,
+                limit,
+                prelimitable,
+                tableEntries,
+                state);
         return result;
     }
-    
+
+    private boolean checkPrelimitable(LinkedHashMap<String, TableEntry> reorderedTableEntries) {
+        for (TableEntry tableEntry : reorderedTableEntries.values()) {
+            if (!tableEntry.preorderable) {
+                return false;
+            }
+            if (tableEntry.joinItem != null && (
+                    tableEntry.joinItem.joinType() != JoinType.LEFT_OUTER || !tableEntry.subFilter.isEmpty())) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     private void collectRowsFromNextTable(
             List<Map<String, LargeInteger>> result,
             String previousAlias,
@@ -843,6 +865,7 @@ public class SelectExecutor implements ThrowingQueryExecutor {
             List<OrderByEntry> remainingOrderByEntries,
             Map<String, LargeInteger> joinedPrefix,
             LargeInteger limit,
+            boolean prelimitable,
             LinkedHashMap<String, TableEntry> tableEntries,
             SessionState state) {
         boolean isLeaf = remainingTableAliasList.size() == 1;
@@ -898,14 +921,13 @@ public class SelectExecutor implements ThrowingQueryExecutor {
             
             List<Map<String, LargeInteger>> subResult = new ArrayList<>();
             
-            Iterator<LargeInteger> rowIndexIterator;
-            if (tableEntry.preorderable) {
-                rowIndexIterator = TableQueryUtil.filterRows(
-                        tableEntry.table, subFilter, currentOrderByEntries, limit);
-            } else {
-                rowIndexIterator = TableQueryUtil.filterRows(
-                        tableEntry.table, subFilter, Collections.emptyList(), limit);
-            }
+            LargeInteger preappliedLimit = prelimitable ? limit : null;
+            List<OrderByEntry> subOrderByEntries =
+                    tableEntry.preorderable ? currentOrderByEntries : Collections.emptyList();
+            
+            Iterator<LargeInteger> rowIndexIterator = TableQueryUtil.filterRows(
+                        tableEntry.table, subFilter, subOrderByEntries, preappliedLimit);
+            
             found = rowIndexIterator.hasNext();
             while (rowIndexIterator.hasNext()) {
                 LargeInteger rowIndex = rowIndexIterator.next();
@@ -921,10 +943,12 @@ public class SelectExecutor implements ThrowingQueryExecutor {
                             subRemainingOrderByEntries,
                             joinedRow,
                             limit,
+                            prelimitable,
                             tableEntries,
                             state);
                 }
                 if (
+                        prelimitable &&
                         limit != null &&
                         previousSize + subResult.size() >= intLimit) {
                     break;
@@ -942,9 +966,10 @@ public class SelectExecutor implements ThrowingQueryExecutor {
                         TableQueryUtil.extractOrderValues(remainingOrderByEntries, tableResolver, r1::get),
                         TableQueryUtil.extractOrderValues(remainingOrderByEntries, tableResolver, r2::get));
                 subResult.sort(rowIndexComparator);
-                if (limit != null) {
-                    subResult = subResult.subList(0, intLimit);
-                }
+            }
+
+            if ((previousAlias == null || prelimitable) && limit != null && subResult.size() > intLimit) {
+                subResult = subResult.subList(0, intLimit);
             }
             
             result.addAll(subResult);
@@ -966,6 +991,7 @@ public class SelectExecutor implements ThrowingQueryExecutor {
                         subRemainingOrderByEntries,
                         joinedRow,
                         limit,
+                        prelimitable,
                         tableEntries,
                         state);
             }
