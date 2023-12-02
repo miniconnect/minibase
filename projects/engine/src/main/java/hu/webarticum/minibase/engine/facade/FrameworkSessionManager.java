@@ -15,7 +15,7 @@ public class FrameworkSessionManager implements MiniSessionManager {
     
     
     @Override
-    public MiniSession openSession() {
+    public FrameworkSession openSession() {
         return new FrameworkSession(engine.openSession());
     }
 
