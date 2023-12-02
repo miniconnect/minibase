@@ -4,7 +4,6 @@ import java.util.Objects;
 
 import hu.webarticum.minibase.query.expression.Expression;
 import hu.webarticum.miniconnect.lang.ImmutableList;
-import hu.webarticum.miniconnect.lang.LargeInteger;
 
 public final class SelectQuery implements Query {
     
@@ -22,7 +21,7 @@ public final class SelectQuery implements Query {
     
     private final ImmutableList<OrderByItem> orderBy;
 
-    private final LargeInteger limit;
+    private final Object limit;
     
     
     private SelectQuery(SelectQueryBuilder builder) {
@@ -69,7 +68,7 @@ public final class SelectQuery implements Query {
         return orderBy;
     }
 
-    public LargeInteger limit() {
+    public Object limit() {
         return limit;
     }
     
@@ -90,7 +89,7 @@ public final class SelectQuery implements Query {
         
         private ImmutableList<OrderByItem> orderBy = ImmutableList.empty();
 
-        private LargeInteger limit = null;
+        private Object limit = null;
         
         
         private SelectQueryBuilder() {
@@ -138,7 +137,7 @@ public final class SelectQuery implements Query {
             return this;
         }
 
-        public SelectQueryBuilder limit(LargeInteger limit) {
+        public SelectQueryBuilder limit(Object limit) {
             this.limit = limit;
             return this;
         }

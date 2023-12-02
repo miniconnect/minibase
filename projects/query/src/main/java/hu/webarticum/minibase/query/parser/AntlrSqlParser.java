@@ -190,12 +190,10 @@ public class AntlrSqlParser implements SqlParser {
         ImmutableList<JoinItem> joins = parseJoinPartNodes(joinParts, tableAlias);
         WherePartContext wherePartNode = selectQueryNode.wherePart();
         ImmutableList<WhereItem> where = parseWherePartNode(wherePartNode);
-        OrderByPartContext orderByNode = selectQueryNode.orderByPart();
-        ImmutableList<OrderByItem> orderBy = parseOrderByPartNode(orderByNode);
+        OrderByPartContext orderByPartNode = selectQueryNode.orderByPart();
+        ImmutableList<OrderByItem> orderBy = parseOrderByPartNode(orderByPartNode);
         LimitPartContext limitPartNode = selectQueryNode.limitPart();
-        LargeInteger limit = limitPartNode != null ?
-                parseBigIntegerNode(limitPartNode.TOKEN_INTEGER()) :
-                null;
+        Object limit = parseLimitPartNode(limitPartNode);
         
         return Queries.select()
                 .selectItems(selectItems)
@@ -692,6 +690,26 @@ public class AntlrSqlParser implements SqlParser {
         return new OrderByItem(tableName, fieldName, null, ascOrder, nullsOrderMode);
     }
     
+    private Object parseLimitPartNode(LimitPartContext limitPartNode) {
+        if (limitPartNode == null) {
+            return null;
+        }
+
+        TerminalNode integerToken = limitPartNode.TOKEN_INTEGER();
+        if (integerToken != null) {
+            return parseLargeIntegerNode(integerToken);
+        }
+
+        TerminalNode stringToken = limitPartNode.TOKEN_STRING();
+        if (stringToken != null) {
+            return parseStringNode(stringToken);
+        } else {
+            VariableContext variableNode = limitPartNode.variable();
+            String variableName = parseIdentifierNode(variableNode.identifier());
+            return new VariableValue(variableName);
+        }
+    }
+    
     private LinkedHashMap<String, Object> parseUpdatePartNode(UpdatePartContext updatePartNode) {
         LinkedHashMap<String, Object> result = new LinkedHashMap<>();
         for (UpdateItemContext updateItemNode : updatePartNode.updateItem()) {
@@ -823,7 +841,7 @@ public class AntlrSqlParser implements SqlParser {
         return Integer.parseInt(integerNode.getText());
     }
 
-    private LargeInteger parseBigIntegerNode(TerminalNode integerNode) {
+    private LargeInteger parseLargeIntegerNode(TerminalNode integerNode) {
         return LargeInteger.of(integerNode.getText());
     }
 

@@ -44,7 +44,7 @@ selectCountQuery: (
 selectPart: selectItem ( COMMA selectItem )*;
 selectItem: aliasableExpression | wildcardSelectItem;
 wildcardSelectItem: ( tableName DOT )? ASTERISK;
-limitPart: LIMIT TOKEN_INTEGER;
+limitPart: ( LIMIT | FETCH FIRST ) ( TOKEN_INTEGER | TOKEN_STRING | variable ) ( ( ROW | ROWS ) ONLY )?;
 
 standaloneSelectQuery: standaloneSelectRow ( UNION standaloneSelectRow )*;
 standaloneSelectRow: SELECT aliasableExpression ( COMMA aliasableExpression )* ( FROM UNIT )?;
@@ -146,10 +146,14 @@ ORDER: O R D E R;
 BY: B Y;
 ASC: A S C;
 DESC: D E S C;
-LIMIT: L I M I T;
 NULLS: N U L L S;
 FIRST: F I R S T;
 LAST: L A S T;
+LIMIT: L I M I T;
+FETCH: F E T C H;
+ROW: R O W;
+ROWS: R O W S;
+ONLY: O N L Y;
 VALUES: V A L U E S;
 IS: I S;
 NOT: N O T;

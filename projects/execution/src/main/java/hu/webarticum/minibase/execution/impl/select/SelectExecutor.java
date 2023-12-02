@@ -28,6 +28,7 @@ import hu.webarticum.minibase.query.expression.VariableParameter;
 import hu.webarticum.minibase.query.query.JoinType;
 import hu.webarticum.minibase.query.query.Query;
 import hu.webarticum.minibase.query.query.SelectQuery;
+import hu.webarticum.minibase.query.query.VariableValue;
 import hu.webarticum.minibase.query.query.SelectQuery.ExpressionSelectItem;
 import hu.webarticum.minibase.query.query.SelectQuery.JoinItem;
 import hu.webarticum.minibase.query.query.SelectQuery.OrderByItem;
@@ -87,7 +88,7 @@ public class SelectExecutor implements ThrowingQueryExecutor {
             return new StoredResult(new StoredResultSetData(columnHeaders, ImmutableList.empty()));
         }
 
-        LargeInteger limit = selectQuery.limit();
+        LargeInteger limit = resolveLimit(selectQuery.limit(), state);
 
         List<Map<String, LargeInteger>> joinedRowIndices = collectRows(
                 reorderedTableEntries, normalizedOrderByEntries, limit, state);
@@ -97,6 +98,20 @@ public class SelectExecutor implements ThrowingQueryExecutor {
                 .collect(ImmutableList.createCollector());
         
         return new StoredResult(new StoredResultSetData(columnHeaders, data));
+    }
+    
+    private LargeInteger resolveLimit(Object rawLimit, SessionState state) {
+        if (rawLimit == null || rawLimit instanceof LargeInteger) {
+            return (LargeInteger) rawLimit;
+        } else if (rawLimit instanceof String) {
+            return TableQueryUtil.convert(rawLimit, LargeInteger.class);
+        } else if (rawLimit instanceof VariableValue) {
+            VariableValue variableValue = (VariableValue) rawLimit;
+            Object value = state.getUserVariable(variableValue.name());
+            return TableQueryUtil.convert(value, LargeInteger.class);
+        } else {
+            throw new IllegalArgumentException("Illegal limit type: " + rawLimit.getClass());
+        }
     }
 
     private LinkedHashMap<String, TableEntry> collectTableEntries(
