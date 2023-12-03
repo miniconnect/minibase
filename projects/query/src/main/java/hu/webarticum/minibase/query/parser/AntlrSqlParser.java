@@ -220,11 +220,12 @@ public class AntlrSqlParser implements SqlParser {
             tableAlias = parseIdentifierNode(aliasIdentifierNode);
         }
         
-        WildcardSelectItemContext wildcardSelectItemNode = selectCountQueryNode.wildcardSelectItem();
-        TableNameContext tableNameNode = wildcardSelectItemNode.tableName();
+        TableNameContext tableNameNode = extractTableNameNode(selectCountQueryNode);
         if (tableNameNode != null) {
             checkTableNameNode(tableNameNode, tableAlias);
         }
+        
+        String fieldName = extractFieldName(selectCountQueryNode);
         
         WherePartContext wherePartNode = selectCountQueryNode.wherePart();
         ImmutableList<WhereItem> where = parseWherePartNode(wherePartNode);
@@ -232,8 +233,32 @@ public class AntlrSqlParser implements SqlParser {
         return Queries.selectCount()
                 .inSchema(schemaName)
                 .from(tableName)
+                .onField(fieldName)
                 .where(where)
                 .build();
+    }
+    
+    private TableNameContext extractTableNameNode(SelectCountQueryContext selectCountQueryNode) {
+        WildcardSelectItemContext wildcardSelectItemNode = selectCountQueryNode.wildcardSelectItem();
+        if (wildcardSelectItemNode != null) {
+            return wildcardSelectItemNode.tableName();
+        }
+        
+        ScopeableFieldNameContext scopeableFieldNameNode = selectCountQueryNode.scopeableFieldName();
+        if (scopeableFieldNameNode != null) {
+            return scopeableFieldNameNode.tableName();
+        }
+        
+        return null;
+    }
+
+    private String extractFieldName(SelectCountQueryContext selectCountQueryNode) {
+        ScopeableFieldNameContext scopeableFieldNameNode = selectCountQueryNode.scopeableFieldName();
+        if (scopeableFieldNameNode != null) {
+            return parseIdentifierNode(scopeableFieldNameNode.fieldName().identifier());
+        }
+        
+        return null;
     }
     
     private StandaloneSelectQuery parseStandaloneSelectNode(StandaloneSelectQueryContext standaloneSelectQueryNode) {

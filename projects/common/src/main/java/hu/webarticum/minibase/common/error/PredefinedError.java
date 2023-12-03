@@ -34,6 +34,8 @@ public enum PredefinedError {
     
     COLUMN_VALUE_NOT_IN_ENUM(13, "00013", "Invalid value for ENUM: column '%s' (allowed values: %s)"),
     
+    COLUMN_NOT_UNIQUE(13, "00013", "Column '%2$s' in table '%1$s' is not unique"),
+    
     QUERY_INTERRUPTED(99, "00099", "Query was interrupted"),
     
     OTHER_ERROR(100, "00100", "Unexpected error occured"),

@@ -36,7 +36,7 @@ innerJoin: INNER? JOIN;
 leftJoin: LEFT OUTER? JOIN;
 
 selectCountQuery: (
-    SELECT COUNT PAR_START wildcardSelectItem PAR_END
+    SELECT COUNT PAR_START ( wildcardSelectItem | DISTINCT? scopeableFieldName ) PAR_END
     FROM ( schemaName DOT )? tableName ( AS? tableAlias=identifier )?
     wherePart?
 );
@@ -136,6 +136,7 @@ LAST_INSERT_ID: L A S T UNDERSCORE I N S E R T UNDERSCORE I D;
 
 AS: A S;
 COUNT: C O U N T;
+DISTINCT: D I S T I N C T;
 FROM: F R O M;
 UNIT: U N I T;
 INTO: I N T O;

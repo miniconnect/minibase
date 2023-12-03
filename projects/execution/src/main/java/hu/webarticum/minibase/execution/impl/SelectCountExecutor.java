@@ -10,6 +10,8 @@ import hu.webarticum.minibase.query.query.Query;
 import hu.webarticum.minibase.query.query.SelectCountQuery;
 import hu.webarticum.minibase.query.query.SelectQuery.WhereItem;
 import hu.webarticum.minibase.query.state.SessionState;
+import hu.webarticum.minibase.storage.api.Column;
+import hu.webarticum.minibase.storage.api.NamedResourceStore;
 import hu.webarticum.minibase.storage.api.Schema;
 import hu.webarticum.minibase.storage.api.StorageAccess;
 import hu.webarticum.minibase.storage.api.Table;
@@ -31,6 +33,7 @@ public class SelectCountExecutor implements ThrowingQueryExecutor {
             StorageAccess storageAccess, SessionState state, SelectCountQuery selectCountQuery) {
         String schemaName = selectCountQuery.schemaName();
         String tableName = selectCountQuery.tableName();
+        String fieldName = selectCountQuery.fieldName();
         
         if (schemaName == null) {
             schemaName = state.getCurrentSchema();
@@ -47,6 +50,16 @@ public class SelectCountExecutor implements ThrowingQueryExecutor {
         Table table = schema.tables().get(tableName);
         if (table == null) {
             throw PredefinedError.TABLE_NOT_FOUND.toException(tableName);
+        }
+        
+        if (fieldName != null) {
+            NamedResourceStore<Column> columns = table.columns();
+            if (!columns.contains(fieldName)) {
+                throw PredefinedError.COLUMN_NOT_FOUND.toException(tableName, fieldName);
+            }
+            if (!columns.get(fieldName).definition().isUnique()) {
+                throw PredefinedError.COLUMN_NOT_UNIQUE.toException(tableName, fieldName);
+            }
         }
         
         ImmutableList<WhereItem> queryWhere = selectCountQuery.where();
