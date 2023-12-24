@@ -15,6 +15,7 @@ plugins {
 
 description "SQL query definitions"
 
+// FIXME: fix the antlr plugin's dependency issue
 configurations {
     compile {
         extendsFrom = extendsFrom.findAll { it != configurations.antlr }
@@ -40,4 +41,20 @@ dependencies {
 
 afterEvaluate {
     sourcesJar.dependsOn generateGrammarSource
+}
+
+// FIXME: fix the antlr plugin's dependency issue
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            pom.withXml {
+                Node pomNode = asNode()
+                pomNode.dependencies.'*'.findAll() {
+                    it.groupId.text() == 'org.antlr' && it.artifactId.text() == 'antlr4'
+                }.each() {
+                    it.parent().remove(it)
+                }
+            }
+        }
+    }
 }
