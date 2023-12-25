@@ -324,4 +324,4 @@ You can delete records from a table with the `DELETE` statement:
 DELETE FROM tbl WHERE id = 44;
 ```
 
-The `WHERE` clause is optional, if omitted, all records will be updated.
+The `WHERE` clause is optional, if omitted, all records will be deleted.
