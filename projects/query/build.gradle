@@ -43,6 +43,10 @@ afterEvaluate {
     sourcesJar.dependsOn generateGrammarSource
 }
 
+generateGrammarSource {
+    arguments += ['-no-listener', '-no-visitor']
+}
+
 // FIXME: fix the antlr plugin's dependency issue
 publishing {
     publications {
