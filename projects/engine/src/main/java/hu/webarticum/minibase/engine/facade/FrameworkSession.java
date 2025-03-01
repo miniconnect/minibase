@@ -45,8 +45,7 @@ public class FrameworkSession implements MiniSession, CheckableCloseable {
         checkClosed();
         Query query;
         try {
-            SqlParser sqlParser = engineSession.sqlParser();
-            query = sqlParser.parse(sql);
+            query = parseAndMeasure(engineSession.sqlParser(), sql);
         } catch (Exception e) {
             logger.error("Unable to parse query string: " + sql, e);
             return new StoredResult(errorOfException(e));
@@ -54,34 +53,65 @@ public class FrameworkSession implements MiniSession, CheckableCloseable {
         return execute(query);
     }
     
-    public MiniResult execute(Query query) {
-        checkClosed();
-        Exception exception;
-        try {
-            return executeThrowing(query);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            exception = e;
-        } catch (ExecutionException e) {
-            exception = (Exception) e.getCause();
-        } catch (Exception e) {
-            exception = e;
+    private Query parseAndMeasure(SqlParser sqlParser, String sql) {
+        long startNanoTime = -1;
+        if (logger.isDebugEnabled()) {
+            startNanoTime = System.nanoTime();
         }
-        if (exception != null) {
-            
-            // FIXME
-            exception.printStackTrace();
-            
-            logger.error("Query execution failed", exception);
+        Query query = sqlParser.parse(sql);
+        if (logger.isDebugEnabled()) {
+            long endNanoTime = System.nanoTime();
+            long elapsedNanoTime = endNanoTime - startNanoTime;
+            logger.trace("Query parsed in {}: {}", formatNanoSeconds(elapsedNanoTime), sql);
         }
-        return new StoredResult(errorOfException(exception));
+        return query;
     }
 
-    public MiniResult executeThrowing(Query query) throws InterruptedException, ExecutionException {
+    public MiniResult execute(Query query) {
+        checkClosed();
+        try {
+            return executeThrowing(query);
+        } catch (Exception e) {
+            logger.error("Query execution failed", e);
+            return new StoredResult(errorOfException(e));
+        }
+    }
+
+    public MiniResult executeThrowing(Query query) {
         QueryExecutor queryExecutor = engineSession.queryExecutor();
         StorageAccess storageAccess = engineSession.storageAccess();
         SessionState state = engineSession.state();
-        return queryExecutor.execute(storageAccess, state, query);
+        return executeAndMeasure(queryExecutor, storageAccess, state, query);
+    }
+    
+    private MiniResult executeAndMeasure(
+            QueryExecutor queryExecutor, StorageAccess storageAccess, SessionState state, Query query) {
+        long startNanoTime = -1;
+        if (logger.isTraceEnabled()) {
+            startNanoTime = System.nanoTime();
+        }
+        MiniResult result = queryExecutor.execute(storageAccess, state, query);
+        if (logger.isTraceEnabled()) {
+            long endNanoTime = System.nanoTime();
+            long elapsedNanoTime = endNanoTime - startNanoTime;
+            logger.trace("Query executed in {}", formatNanoSeconds(elapsedNanoTime));
+        }
+        return result;
+    }
+    
+    private String formatNanoSeconds(long nanoSeconds) {
+        long seconds = nanoSeconds / 1_000_000;
+        long fractionNanoSeconds = nanoSeconds % 1_000_000;
+        String fractionNanoSecondsStr = "" + fractionNanoSeconds;
+        int fractionLength = fractionNanoSecondsStr.length();
+        StringBuilder resultBuilder = new StringBuilder();
+        resultBuilder.append(seconds);
+        resultBuilder.append('.');
+        for (int i = fractionLength; i < 6; i++) {
+            resultBuilder.append('0');
+        }
+        resultBuilder.append(fractionNanoSecondsStr);
+        return resultBuilder.toString();
     }
 
     @Override
