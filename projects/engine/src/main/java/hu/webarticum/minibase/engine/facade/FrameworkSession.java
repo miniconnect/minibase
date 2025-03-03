@@ -25,6 +25,11 @@ import hu.webarticum.miniconnect.lang.CheckableCloseable;
 
 public class FrameworkSession implements MiniSession, CheckableCloseable {
     
+    private static final long NANO_FACTOR = 1_000_000_000L;
+    
+    private static final int NANO_DIGITS = 9;
+    
+    
     private static final Logger logger = LoggerFactory.getLogger(FrameworkSession.class);
     
     
@@ -100,17 +105,18 @@ public class FrameworkSession implements MiniSession, CheckableCloseable {
     }
     
     private String formatNanoSeconds(long nanoSeconds) {
-        long seconds = nanoSeconds / 1_000_000;
-        long fractionNanoSeconds = nanoSeconds % 1_000_000;
+        long seconds = nanoSeconds / NANO_FACTOR;
+        long fractionNanoSeconds = nanoSeconds % NANO_FACTOR;
         String fractionNanoSecondsStr = "" + fractionNanoSeconds;
         int fractionLength = fractionNanoSecondsStr.length();
         StringBuilder resultBuilder = new StringBuilder();
         resultBuilder.append(seconds);
         resultBuilder.append('.');
-        for (int i = fractionLength; i < 6; i++) {
+        for (int i = fractionLength; i < NANO_DIGITS; i++) {
             resultBuilder.append('0');
         }
         resultBuilder.append(fractionNanoSecondsStr);
+        resultBuilder.append(" seconds");
         return resultBuilder.toString();
     }
 
