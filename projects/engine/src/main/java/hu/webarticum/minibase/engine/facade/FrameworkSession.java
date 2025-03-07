@@ -29,6 +29,8 @@ public class FrameworkSession implements MiniSession, CheckableCloseable {
     
     private static final int NANO_DIGITS = 9;
     
+    private static final int DISPLAY_DIGITS = 6;
+    
     
     private static final Logger logger = LoggerFactory.getLogger(FrameworkSession.class);
     
@@ -109,15 +111,16 @@ public class FrameworkSession implements MiniSession, CheckableCloseable {
         long fractionNanoSeconds = nanoSeconds % NANO_FACTOR;
         String fractionNanoSecondsStr = "" + fractionNanoSeconds;
         int fractionLength = fractionNanoSecondsStr.length();
-        StringBuilder resultBuilder = new StringBuilder();
-        resultBuilder.append(seconds);
-        resultBuilder.append('.');
+        StringBuilder fractionBuilder = new StringBuilder();
         for (int i = fractionLength; i < NANO_DIGITS; i++) {
-            resultBuilder.append('0');
+            fractionBuilder.append('0');
         }
-        resultBuilder.append(fractionNanoSecondsStr);
-        resultBuilder.append(" seconds");
-        return resultBuilder.toString();
+        fractionBuilder.append(fractionNanoSeconds);
+        String fractionStr = fractionBuilder.toString();
+        if (DISPLAY_DIGITS < NANO_DIGITS) {
+            fractionStr = fractionStr.substring(0, DISPLAY_DIGITS);
+        }
+        return seconds + "." + fractionStr + " seconds";
     }
 
     @Override
