@@ -2,7 +2,6 @@ package hu.webarticum.minibase.engine.impl;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import hu.webarticum.minibase.engine.api.EngineSession;
@@ -10,41 +9,27 @@ import hu.webarticum.minibase.engine.api.TackedEngine;
 import hu.webarticum.minibase.execution.QueryExecutor;
 import hu.webarticum.minibase.query.parser.SqlParser;
 import hu.webarticum.minibase.storage.api.StorageAccess;
-import hu.webarticum.minibase.storage.impl.simple.SimpleStorageAccess;
 
-public class LazyStorageEngine implements TackedEngine {
+public class DynamicStorageEngine implements TackedEngine {
     
     private final SqlParser sqlParser;
     
     private final QueryExecutor queryExecutor;
     
     
-    private volatile Supplier<StorageAccess> storageAccessFactory; // NOSONAR volatile is necessary
-    
-    private volatile StorageAccess storageAccess = null; // NOSONAR volatile is necessary
-    
-    private volatile Consumer<LazyStorageEngine> onLoadedCallback = null; // NOSONAR volatile is necessary
+    private volatile Supplier<StorageAccess> storageAccessSupplier; // NOSONAR volatile is necessary
     
     
     private volatile boolean closed = false;
     
 
-    public LazyStorageEngine(
+    public DynamicStorageEngine(
             SqlParser sqlParser,
             QueryExecutor queryExecutor,
             Supplier<StorageAccess> storageAccessSupplier) {
-        this(sqlParser, queryExecutor, storageAccessSupplier, e -> {});
-    }
-    
-    public LazyStorageEngine(
-            SqlParser sqlParser,
-            QueryExecutor queryExecutor,
-            Supplier<StorageAccess> storageAccessFactory,
-            Consumer<LazyStorageEngine> onLoadedCallback) {
         this.sqlParser = sqlParser;
         this.queryExecutor = queryExecutor;
-        this.storageAccessFactory = storageAccessFactory;
-        this.onLoadedCallback = onLoadedCallback;
+        this.storageAccessSupplier = storageAccessSupplier;
     }
     
 
@@ -66,24 +51,7 @@ public class LazyStorageEngine implements TackedEngine {
             throw new IllegalArgumentException("This engine was already closed");
         }
         
-        StorageAccess result = storageAccess;
-        if (result != null) {
-            return result;
-        }
-        Consumer<LazyStorageEngine> callback = onLoadedCallback;
-        synchronized(this) {
-            if (storageAccess == null) {
-                try {
-                    storageAccess = storageAccessFactory.get();
-                } catch (StorageAccessNotReadyException e) {
-                    return new SimpleStorageAccess();
-                }
-                storageAccessFactory = null;
-                onLoadedCallback = null;
-            }
-        }
-        callback.accept(this);
-        return storageAccess;
+        return storageAccessSupplier.get();
     }
 
     @Override
@@ -92,6 +60,7 @@ public class LazyStorageEngine implements TackedEngine {
             return;
         }
         closed = true;
+        StorageAccess storageAccess = storageAccessSupplier.get();
         if (storageAccess instanceof AutoCloseable) {
             try {
                 ((AutoCloseable) storageAccess).close();
