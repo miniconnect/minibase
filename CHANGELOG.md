@@ -1,5 +1,23 @@
 # Changelog
 
+## Version 0.3.0
+
+Released on *2025-03-15*
+
+### Added:
+
+- Added `DynamicStorageEngine`
+
+### Improved:
+
+- Improved logging
+
+## Development:
+
+- Upgrade to gradle 8
+- Simplified ANTLR generation
+
+
 ## Version 0.2.0
 
 Released on *2023-12-16*
