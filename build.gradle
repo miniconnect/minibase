@@ -13,10 +13,10 @@ def automaticVersion = '0.1.0-SNAPSHOT'
 def versionMatcher = gitVersion() =~ /^v?(\d+\.\d+\.)(\d+)(.*)$/
 if (versionMatcher.size() > 0) {
     def versionMatch = versionMatcher[0]
-	def isVersionDirty = !versionMatch[3].isEmpty()
-	def versionPrefix = versionMatch[1]
-	def versionPatch = isVersionDirty ? (Integer.parseInt(versionMatch[2]) + 1) + "" : versionMatch[2];
-	def versionSuffix = isVersionDirty ? "-SNAPSHOT" : ""
+    def isVersionDirty = !versionMatch[3].isEmpty()
+    def versionPrefix = versionMatch[1]
+    def versionPatch = isVersionDirty ? (Integer.parseInt(versionMatch[2]) + 1) + "" : versionMatch[2];
+    def versionSuffix = isVersionDirty ? "-SNAPSHOT" : ""
     automaticVersion = versionPrefix + versionPatch + versionSuffix
 }
 
@@ -32,7 +32,8 @@ allprojects {
     group 'hu.webarticum.minibase'
     version automaticVersion
     
-    ext.miniConnectVersion = '0.3.1-SNAPSHOT'
+    ext.miniConnectApiVersion = '0.3.0'
+    ext.miniConnectVersion = '0.6.0'
     
     repositories {
         mavenCentral()
@@ -50,8 +51,8 @@ subprojects {
     apply plugin: 'signing'
     apply plugin: 'maven-publish'
 
-	sourceCompatibility = 1.8
-	targetCompatibility = 1.8
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
     
     afterEvaluate {
         if (sourceSets.hasProperty('lab')) {
@@ -64,15 +65,30 @@ subprojects {
             }
         }
         
+        tasks.withType(JavaCompile) {
+            options.encoding = 'UTF-8'
+            options.release = 8
+        }
+        
         java {
             withJavadocJar()
             withSourcesJar()
         }
         
         javadoc {
-		    options.addStringOption('Xdoclint:none', '-quiet')
-		}
-		
+            options.addStringOption('Xdoclint:none', '-quiet')
+        }
+        
+        def moduleNamePrefix = 'hu.webarticum.minibase.'
+        def cleanProjectName = project.name.replaceAll(/\W/, ".")
+        def moduleName = "${moduleNamePrefix}${cleanProjectName}"
+        
+        jar {
+            manifest {
+                attributes('Automatic-Module-Name': moduleName)
+            }
+        }
+        
         test {
             useJUnitPlatform()
             testLogging {

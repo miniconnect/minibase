@@ -1,0 +1,12 @@
+plugins {
+    id 'java-library'
+}
+
+description "Common definitions"
+
+dependencies {
+    api "hu.webarticum.miniconnect.api:api:${miniConnectApiVersion}"
+    api "hu.webarticum.miniconnect:impl:${miniConnectVersion}"
+    
+    implementation 'org.slf4j:slf4j-api:1.7.36'
+}
