@@ -181,11 +181,12 @@ public class AntlrSqlParser implements SqlParser {
                 null;
         IdentifierContext identifierNode = selectQueryNode.tableName().identifier();
         String tableName = parseIdentifierNode(identifierNode);
-        String tableAlias = tableName;
-        IdentifierContext aliasIdentifierNode = selectQueryNode.tableAlias;
-        if (aliasIdentifierNode != null) {
-            tableAlias = parseIdentifierNode(aliasIdentifierNode);
+        
+        String tableAlias = parseAliasPartNode(selectQueryNode.tableAliasPart);
+        if (tableAlias == null) {
+            tableAlias = tableName;
         }
+        
         ImmutableList<SelectItem> selectItems = parseSelectPartNode(selectPartNode);
         List<JoinPartContext> joinParts = selectQueryNode.joinPart();
         ImmutableList<JoinItem> joins = parseJoinPartNodes(joinParts, tableAlias);
@@ -215,10 +216,10 @@ public class AntlrSqlParser implements SqlParser {
                 null;
         IdentifierContext identifierNode = selectCountQueryNode.tableName().identifier();
         String tableName = parseIdentifierNode(identifierNode);
-        String tableAlias = tableName;
-        IdentifierContext tableAliasIdentifierNode = selectCountQueryNode.tableAlias;
-        if (tableAliasIdentifierNode != null) {
-            tableAlias = parseIdentifierNode(tableAliasIdentifierNode);
+
+        String tableAlias = parseAliasPartNode(selectCountQueryNode.tableAliasPart);
+        if (tableAlias == null) {
+            tableAlias = tableName;
         }
         
         TableNameContext tableNameNode = extractTableNameNode(selectCountQueryNode);
@@ -265,7 +266,7 @@ public class AntlrSqlParser implements SqlParser {
     }
 
     private String extractAlias(SelectCountQueryContext selectCountQueryNode) {
-        return parseAliasPartNode(selectCountQueryNode.aliasPart());
+        return parseAliasPartNode(selectCountQueryNode.fieldAliasPart);
     }
     
     private StandaloneSelectQuery parseStandaloneSelectNode(StandaloneSelectQueryContext standaloneSelectQueryNode) {
@@ -299,8 +300,7 @@ public class AntlrSqlParser implements SqlParser {
     }
     
     private ShowSpecialQuery parseShowSpecialNode(ShowSpecialQueryContext selectSpecialQueryNode) {
-        IdentifierContext aliasNode = selectSpecialQueryNode.alias;
-        String alias = parseNullableIdentifierNode(aliasNode);
+        String alias = parseAliasPartNode(selectSpecialQueryNode.aliasPart());
         
         SpecialSelectableContext specialSelectableNode = selectSpecialQueryNode.specialSelectable();
         String specialSelectableName = specialSelectableNode.specialSelectableName().getText().toUpperCase();
@@ -613,8 +613,12 @@ public class AntlrSqlParser implements SqlParser {
                 parseIdentifierNode(targetSchemaNameNode.identifier()) :
                 null;
         String targetTableName = parseIdentifierNode(joinPartNode.targetTableName.identifier());
-        IdentifierContext tableAliasNode = joinPartNode.tableAlias;
-        String targetTableAlias = tableAliasNode != null ? parseIdentifierNode(tableAliasNode) : targetTableName;
+        
+        String targetTableAlias = parseAliasPartNode(joinPartNode.tableAliasPart);
+        if (targetTableAlias == null) {
+            targetTableAlias = targetTableName;
+        }
+        
         String scope1 = parseIdentifierNode(joinPartNode.scope1.identifier());
         String field1 = parseIdentifierNode(joinPartNode.field1.identifier());
         String scope2 = parseIdentifierNode(joinPartNode.scope2.identifier());
@@ -770,14 +774,6 @@ public class AntlrSqlParser implements SqlParser {
         }
     }
 
-    private String parseNullableIdentifierNode(IdentifierContext identifierNode) {
-        if (identifierNode == null) {
-            return null;
-        }
-        
-        return parseIdentifierNode(identifierNode);
-    }
-    
     private String parseIdentifierNode(IdentifierContext identifierNode) {
         TerminalNode simpleNameNode = identifierNode.TOKEN_SIMPLENAME();
         if (simpleNameNode != null) {

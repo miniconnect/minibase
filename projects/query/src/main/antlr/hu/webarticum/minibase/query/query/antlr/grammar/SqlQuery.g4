@@ -20,7 +20,7 @@ sqlQuery: (
 
 selectQuery: (
     SELECT selectPart
-    FROM ( schemaName DOT )? tableName ( AS? tableAlias=identifier )?
+    FROM ( schemaName DOT )? tableName tableAliasPart=aliasPart?
     joinPart*
     wherePart?
     orderByPart?
@@ -29,15 +29,15 @@ selectQuery: (
 
 joinPart: (
 	( innerJoin | leftJoin )
-	( targetSchemaName=schemaName DOT )? targetTableName=tableName ( AS? tableAlias=identifier )?
+	( targetSchemaName=schemaName DOT )? targetTableName=tableName tableAliasPart=aliasPart?
 	ON scope1=tableName DOT field1=fieldName EQ scope2=tableName DOT field2=fieldName
 );
 innerJoin: INNER? JOIN;
 leftJoin: LEFT OUTER? JOIN;
 
 selectCountQuery: (
-    SELECT COUNT PAR_START ( wildcardSelectItem | DISTINCT? scopeableFieldName ) PAR_END aliasPart?
-    FROM ( schemaName DOT )? tableName ( AS? tableAlias=identifier )?
+    SELECT COUNT PAR_START ( wildcardSelectItem | DISTINCT? scopeableFieldName ) PAR_END fieldAliasPart=aliasPart?
+    FROM ( schemaName DOT )? tableName tableAliasPart=aliasPart?
     wherePart?
 );
 
@@ -49,7 +49,7 @@ limitPart: ( LIMIT | FETCH FIRST ) ( TOKEN_INTEGER | TOKEN_STRING | variable ) (
 standaloneSelectQuery: standaloneSelectRow ( UNION standaloneSelectRow )*;
 standaloneSelectRow: SELECT aliasableExpression ( COMMA aliasableExpression )* ( FROM UNIT )?;
 
-showSpecialQuery: ( SHOW | CALL ) specialSelectable ( AS? alias=identifier )?;
+showSpecialQuery: ( SHOW | CALL ) specialSelectable aliasPart?;
 
 updateQuery: UPDATE ( schemaName DOT )? tableName updatePart wherePart?;
 updatePart: SET updateItem ( COMMA updateItem )*;
