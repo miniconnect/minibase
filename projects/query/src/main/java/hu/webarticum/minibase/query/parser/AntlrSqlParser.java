@@ -53,6 +53,7 @@ import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.LargeInteger;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryLexer;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.AliasPartContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.AliasableExpressionContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.AtomicExpressionContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.BetweenRelationContext;
@@ -215,9 +216,9 @@ public class AntlrSqlParser implements SqlParser {
         IdentifierContext identifierNode = selectCountQueryNode.tableName().identifier();
         String tableName = parseIdentifierNode(identifierNode);
         String tableAlias = tableName;
-        IdentifierContext aliasIdentifierNode = selectCountQueryNode.tableAlias;
-        if (aliasIdentifierNode != null) {
-            tableAlias = parseIdentifierNode(aliasIdentifierNode);
+        IdentifierContext tableAliasIdentifierNode = selectCountQueryNode.tableAlias;
+        if (tableAliasIdentifierNode != null) {
+            tableAlias = parseIdentifierNode(tableAliasIdentifierNode);
         }
         
         TableNameContext tableNameNode = extractTableNameNode(selectCountQueryNode);
@@ -226,6 +227,7 @@ public class AntlrSqlParser implements SqlParser {
         }
         
         String fieldName = extractFieldName(selectCountQueryNode);
+        String alias = extractAlias(selectCountQueryNode);
         
         WherePartContext wherePartNode = selectCountQueryNode.wherePart();
         ImmutableList<WhereItem> where = parseWherePartNode(wherePartNode);
@@ -234,6 +236,7 @@ public class AntlrSqlParser implements SqlParser {
                 .inSchema(schemaName)
                 .from(tableName)
                 .onField(fieldName)
+                .as(alias)
                 .where(where)
                 .build();
     }
@@ -260,12 +263,16 @@ public class AntlrSqlParser implements SqlParser {
         
         return null;
     }
+
+    private String extractAlias(SelectCountQueryContext selectCountQueryNode) {
+        return parseAliasPartNode(selectCountQueryNode.aliasPart());
+    }
     
     private StandaloneSelectQuery parseStandaloneSelectNode(StandaloneSelectQueryContext standaloneSelectQueryNode) {
         List<String> aliases = new ArrayList<>();
         StandaloneSelectRowContext firstRowNode = standaloneSelectQueryNode.standaloneSelectRow(0);
         for (AliasableExpressionContext aliasableExpressionNode : firstRowNode.aliasableExpression()) {
-            String alias = parseNullableIdentifierNode(aliasableExpressionNode.alias);
+            String alias = parseAliasPartNode(aliasableExpressionNode.aliasPart());
             aliases.add(alias);
         }
         int columnCount = aliases.size();
@@ -465,8 +472,7 @@ public class AntlrSqlParser implements SqlParser {
     private ExpressionSelectItem parseAliasableExpressionNode(AliasableExpressionContext aliasableExpressionNode) {
         ExpressionContext expressionNode = aliasableExpressionNode.expression();
         Expression expression = parseExpressionNode(expressionNode);
-        String alias =
-                aliasableExpressionNode.alias != null ? parseIdentifierNode(aliasableExpressionNode.alias) : null;
+        String alias = parseAliasPartNode(aliasableExpressionNode.aliasPart());
         return new ExpressionSelectItem(expression, alias);
     }
 
@@ -494,6 +500,14 @@ public class AntlrSqlParser implements SqlParser {
         Expression leftExpression = parseExpressionNode(leftExpressionNode);
         Expression rightExpression = parseExpressionNode(rightExpressionNode);
         return new BinaryArithmeticExpression(operation, leftExpression, rightExpression);
+    }
+    
+    private String parseAliasPartNode(AliasPartContext aliasPartNode) {
+        if (aliasPartNode == null) {
+            return null;
+        }
+        
+        return parseIdentifierNode(aliasPartNode.alias);
     }
     
     private BinaryArithmeticExpression.Operation extractOperation(ExpressionContext expressionNode) {

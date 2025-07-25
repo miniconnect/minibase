@@ -12,6 +12,8 @@ public final class SelectCountQuery implements Query {
     private final String tableName;
 
     private final String fieldName;
+
+    private final String alias;
     
     private final ImmutableList<WhereItem> where;
     
@@ -20,6 +22,7 @@ public final class SelectCountQuery implements Query {
         this.schemaName = builder.schemaName;
         this.tableName = Objects.requireNonNull(builder.tableName);
         this.fieldName = builder.fieldName;
+        this.alias = builder.alias;
         this.where = builder.where;
     }
     
@@ -40,6 +43,10 @@ public final class SelectCountQuery implements Query {
         return fieldName;
     }
 
+    public String alias() {
+        return alias;
+    }
+
     public ImmutableList<WhereItem> where() {
         return where;
     }
@@ -52,6 +59,8 @@ public final class SelectCountQuery implements Query {
         private String tableName = null;
 
         private String fieldName = null;
+
+        private String alias = null;
         
         private ImmutableList<WhereItem> where = ImmutableList.empty();
         
@@ -73,6 +82,11 @@ public final class SelectCountQuery implements Query {
 
         public SelectCountQueryBuilder onField(String fieldName) {
             this.fieldName = fieldName;
+            return this;
+        }
+
+        public SelectCountQueryBuilder as(String alias) {
+            this.alias = alias;
             return this;
         }
 

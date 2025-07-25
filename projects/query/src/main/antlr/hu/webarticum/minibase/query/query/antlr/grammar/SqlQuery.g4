@@ -36,7 +36,7 @@ innerJoin: INNER? JOIN;
 leftJoin: LEFT OUTER? JOIN;
 
 selectCountQuery: (
-    SELECT COUNT PAR_START ( wildcardSelectItem | DISTINCT? scopeableFieldName ) PAR_END
+    SELECT COUNT PAR_START ( wildcardSelectItem | DISTINCT? scopeableFieldName ) PAR_END aliasPart?
     FROM ( schemaName DOT )? tableName ( AS? tableAlias=identifier )?
     wherePart?
 );
@@ -81,7 +81,8 @@ orderByItem: ( scopeableFieldName | orderByPosition ) ( ASC | DESC )? ( nullsFir
 nullsFirst: NULLS FIRST;
 nullsLast: NULLS LAST;
 orderByPosition: TOKEN_INTEGER;
-aliasableExpression: expression ( AS? alias=identifier )?;
+aliasableExpression: expression aliasPart?;
+aliasPart: AS? alias=identifier;
 expression:
     leftExpression=expression ( ASTERISK | MOD | PERCENT | DIV | SLASH ) rightExpression=expression |
     leftExpression=expression ( PLUS | MINUS ) rightExpression=expression |
