@@ -780,6 +780,7 @@ public class TableQueryUtil {
                 return false;
             case AUTOCOMMIT:
                 return true;
+            case IDENTITY:
             case LAST_INSERT_ID:
                 return state.getLastInsertId();
             default:

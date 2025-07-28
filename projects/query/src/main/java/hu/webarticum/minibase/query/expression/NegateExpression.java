@@ -1,8 +1,7 @@
 package hu.webarticum.minibase.query.expression;
 
+import java.math.BigDecimal;
 import java.util.Optional;
-
-import com.ibm.icu.math.BigDecimal;
 
 import hu.webarticum.minibase.query.util.NumberParser;
 import hu.webarticum.miniconnect.lang.ImmutableList;

@@ -14,6 +14,8 @@ public enum SpecialValueParameter implements Parameter {
     
     AUTOCOMMIT(Boolean.class),
     
+    IDENTITY(LargeInteger.class),
+    
     LAST_INSERT_ID(LargeInteger.class),
     
     ;

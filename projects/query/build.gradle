@@ -1,26 +1,13 @@
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-
-    dependencies {
-        classpath 'org.antlr:antlr4-runtime:4.13.1'
-    }
-}
-
 plugins {
     id 'java-library'
     id 'antlr'
 }
 
-description "SQL query definitions"
+description = "SQL query definitions"
 
 // FIXME: fix the antlr plugin's dependency issue
 configurations {
-    compile {
-        extendsFrom = extendsFrom.findAll { it != configurations.antlr }
-    }
-    implementation {
+    api {
         extendsFrom = extendsFrom.findAll { it != configurations.antlr }
     }
 }
@@ -28,15 +15,14 @@ configurations {
 dependencies {
     api "hu.webarticum.miniconnect.api:lang:${miniConnectApiVersion}"
     
-    implementation 'org.slf4j:slf4j-api:1.7.36'
-    implementation 'org.antlr:antlr4-runtime:4.13.1'
+    implementation 'org.antlr:antlr4-runtime:4.13.2'
     
-    antlr 'org.antlr:antlr4:4.13.1'
+    antlr 'org.antlr:antlr4:4.13.2'
     
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.1'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.1'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.7.1'
-    testImplementation 'org.assertj:assertj-core:3.24.2'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.13.4'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.13.4'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.13.4'
+    testImplementation 'org.assertj:assertj-core:3.27.3'
 }
 
 afterEvaluate {
@@ -45,20 +31,4 @@ afterEvaluate {
 
 generateGrammarSource {
     arguments += ['-no-listener', '-no-visitor']
-}
-
-// FIXME: fix the antlr plugin's dependency issue
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            pom.withXml {
-                Node pomNode = asNode()
-                pomNode.dependencies.'*'.findAll() {
-                    it.groupId.text() == 'org.antlr' && it.artifactId.text() == 'antlr4'
-                }.each() {
-                    it.parent().remove(it)
-                }
-            }
-        }
-    }
 }
