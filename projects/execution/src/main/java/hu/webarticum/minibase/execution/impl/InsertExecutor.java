@@ -123,9 +123,9 @@ public class InsertExecutor implements ThrowingQueryExecutor {
                     (!definition.isNullable() && insertValueMap.get(columnName) == null)) {
                 Object defaultValue = getDefaultValue(table, column);
                 insertValueMap.put(columnName, defaultValue);
-                if (lastInsertId == null && definition.isAutoIncremented()) {
-                    lastInsertId = TableQueryUtil.convert(defaultValue, LargeInteger.class);
-                }
+            }
+            if (lastInsertId == null && definition.isAutoIncremented()) {
+                lastInsertId = TableQueryUtil.convert(insertValueMap.get(columnName), LargeInteger.class);
             }
         }
         
