@@ -67,7 +67,7 @@ public class UpdateExecutor implements ThrowingQueryExecutor {
                 table, convertedQueryWhere, Collections.emptyList(), null);
         
         ImmutableMap<Integer, Object> updates =
-                TableQueryUtil.toByColumnPoisitionedImmutableMap(table, convertedQueryUpdates);
+                TableQueryUtil.toByColumnPositionedImmutableMap(table, convertedQueryUpdates);
         TablePatchBuilder patchBuilder = TablePatch.builder();
         rowIndexes.forEach(i -> patchBuilder.update(i, updates));
         TablePatch patch = patchBuilder.build();

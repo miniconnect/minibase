@@ -678,7 +678,7 @@ public class TableQueryUtil {
         return result;
     }
 
-    public static ImmutableMap<Integer, Object> toByColumnPoisitionedImmutableMap(
+    public static ImmutableMap<Integer, Object> toByColumnPositionedImmutableMap(
             Table table, Map<String, Object> columnValues) {
         NamedResourceStore<Column> columns = table.columns();
         ImmutableList<String> columnNames = columns.names();

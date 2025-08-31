@@ -72,7 +72,7 @@ public class InsertExecutor implements ThrowingQueryExecutor {
 
         int columnCount = table.columns().names().size();
         ImmutableMap<Integer, Object> values =
-                TableQueryUtil.toByColumnPoisitionedImmutableMap(table, convertedInsertValues);
+                TableQueryUtil.toByColumnPositionedImmutableMap(table, convertedInsertValues);
         List<Object> rowDataBuilder = new ArrayList<>(columnCount);
         for (int i = 0; i < columnCount; i++) {
             if (!values.containsKey(i)) {
