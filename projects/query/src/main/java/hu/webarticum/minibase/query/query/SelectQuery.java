@@ -21,6 +21,8 @@ public final class SelectQuery implements Query {
     
     private final ImmutableList<OrderByItem> orderBy;
 
+    private final Object offset;
+
     private final Object limit;
     
     
@@ -32,6 +34,7 @@ public final class SelectQuery implements Query {
         this.joins = Objects.requireNonNull(builder.joins);
         this.where = Objects.requireNonNull(builder.where);
         this.orderBy = Objects.requireNonNull(builder.orderBy);
+        this.offset = builder.offset;
         this.limit = builder.limit;
     }
     
@@ -68,6 +71,10 @@ public final class SelectQuery implements Query {
         return orderBy;
     }
 
+    public Object offset() {
+        return offset;
+    }
+
     public Object limit() {
         return limit;
     }
@@ -88,6 +95,8 @@ public final class SelectQuery implements Query {
         private ImmutableList<WhereItem> where = ImmutableList.empty();
         
         private ImmutableList<OrderByItem> orderBy = ImmutableList.empty();
+
+        private Object offset = null;
 
         private Object limit = null;
         
@@ -134,6 +143,11 @@ public final class SelectQuery implements Query {
 
         public SelectQueryBuilder orderBy(ImmutableList<OrderByItem> orderBy) {
             this.orderBy = orderBy;
+            return this;
+        }
+
+        public SelectQueryBuilder offset(Object offset) {
+            this.offset = offset;
             return this;
         }
 

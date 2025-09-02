@@ -28,7 +28,6 @@ import hu.webarticum.minibase.query.expression.VariableParameter;
 import hu.webarticum.minibase.query.query.JoinType;
 import hu.webarticum.minibase.query.query.Query;
 import hu.webarticum.minibase.query.query.SelectQuery;
-import hu.webarticum.minibase.query.query.VariableValue;
 import hu.webarticum.minibase.query.query.SelectQuery.ExpressionSelectItem;
 import hu.webarticum.minibase.query.query.SelectQuery.JoinItem;
 import hu.webarticum.minibase.query.query.SelectQuery.OrderByItem;
@@ -88,10 +87,35 @@ public class SelectExecutor implements ThrowingQueryExecutor {
             return new StoredResult(new StoredResultSetData(columnHeaders, ImmutableList.empty()));
         }
 
-        LargeInteger limit = resolveLimit(selectQuery.limit(), state);
+        LargeInteger offset = TableQueryUtil.resolveLimitParameter(selectQuery.offset(), state);
+        LargeInteger limit = TableQueryUtil.resolveLimitParameter(selectQuery.limit(), state);
 
+        // FIXME: naive implementation of offset (for now, mostly for compatibility)
+        boolean hasOffset = offset != null && offset.isPositive();
+        if (hasOffset) {
+            limit = offset.add(limit);
+        }
+        
         List<Map<String, LargeInteger>> joinedRowIndices = collectRows(
                 reorderedTableEntries, normalizedOrderByEntries, limit, state);
+
+       // FIXME: naive implementation of offset (for now, mostly for compatibility)
+        if (hasOffset) {
+            boolean willBeEmpty = true;
+            int offsetInt = 0;
+            int rowCount = joinedRowIndices.size();
+            if (offset.isFittingInInt()) {
+                offsetInt = offset.intValue();
+                if (offsetInt < rowCount) {
+                    willBeEmpty = false;
+                }
+            }
+            if (willBeEmpty) {
+                joinedRowIndices = Collections.emptyList();
+            } else {
+                joinedRowIndices = joinedRowIndices.subList(offsetInt, rowCount);
+            }
+        }
         
         ImmutableList<ImmutableList<MiniValue>> data = joinedRowIndices.stream()
                 .map(r -> selectRow(r, selectItemEntries, reorderedTableEntries, state))
@@ -100,20 +124,6 @@ public class SelectExecutor implements ThrowingQueryExecutor {
         return new StoredResult(new StoredResultSetData(columnHeaders, data));
     }
     
-    private LargeInteger resolveLimit(Object rawLimit, SessionState state) {
-        if (rawLimit == null || rawLimit instanceof LargeInteger) {
-            return (LargeInteger) rawLimit;
-        } else if (rawLimit instanceof String) {
-            return TableQueryUtil.convert(rawLimit, LargeInteger.class);
-        } else if (rawLimit instanceof VariableValue) {
-            VariableValue variableValue = (VariableValue) rawLimit;
-            Object value = state.getUserVariable(variableValue.name());
-            return TableQueryUtil.convert(value, LargeInteger.class);
-        } else {
-            throw new IllegalArgumentException("Illegal limit type: " + rawLimit.getClass());
-        }
-    }
-
     private LinkedHashMap<String, TableEntry> collectTableEntries(
             SelectQuery selectQuery, StorageAccess storageAccess, SessionState state) {
         LinkedHashMap<String, TableEntry> result = new LinkedHashMap<>();

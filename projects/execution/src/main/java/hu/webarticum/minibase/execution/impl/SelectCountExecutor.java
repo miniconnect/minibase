@@ -64,6 +64,11 @@ public class SelectCountExecutor implements ThrowingQueryExecutor {
         }
         
         String resultColumnName = alias != null ? alias : DEFAULT_RESULT_COLUMN_NAME;
+
+        LargeInteger limit = TableQueryUtil.resolveLimitParameter(selectCountQuery.limit(), state);
+        if (limit != null && limit.isNonPositive()) {
+            return ResultUtil.createEmptySingleColumnResult(resultColumnName, LargeInteger.class);
+        }
         
         ImmutableList<WhereItem> queryWhere = selectCountQuery.where();
         if (queryWhere.isEmpty()) {
