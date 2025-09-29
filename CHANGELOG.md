@@ -1,5 +1,28 @@
 # Changelog
 
+
+## Version 0.4.0
+
+Released on *2025-09-29*
+
+### Fixed:
+
+- Fixed handling of lastInsertedId
+
+### Added:
+
+- Added support for alias for COUNT
+- Added more query capabilities for better ORM integration
+
+### Improved:
+
+- Improved table alias handling in query grammar
+
+### Development:
+
+- Improved project tools
+
+
 ## Version 0.3.0
 
 Released on *2025-03-15*
@@ -12,7 +35,7 @@ Released on *2025-03-15*
 
 - Improved logging
 
-## Development:
+### Development:
 
 - Upgrade to gradle 8
 - Simplified ANTLR generation
