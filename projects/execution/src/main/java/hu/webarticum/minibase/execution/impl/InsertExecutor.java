@@ -72,7 +72,7 @@ public class InsertExecutor implements ThrowingQueryExecutor {
 
         int columnCount = table.columns().names().size();
         ImmutableMap<Integer, Object> values =
-                TableQueryUtil.toByColumnPoisitionedImmutableMap(table, convertedInsertValues);
+                TableQueryUtil.toByColumnPositionedImmutableMap(table, convertedInsertValues);
         List<Object> rowDataBuilder = new ArrayList<>(columnCount);
         for (int i = 0; i < columnCount; i++) {
             if (!values.containsKey(i)) {
@@ -123,9 +123,9 @@ public class InsertExecutor implements ThrowingQueryExecutor {
                     (!definition.isNullable() && insertValueMap.get(columnName) == null)) {
                 Object defaultValue = getDefaultValue(table, column);
                 insertValueMap.put(columnName, defaultValue);
-                if (lastInsertId == null && definition.isAutoIncremented()) {
-                    lastInsertId = TableQueryUtil.convert(defaultValue, LargeInteger.class);
-                }
+            }
+            if (lastInsertId == null && definition.isAutoIncremented()) {
+                lastInsertId = TableQueryUtil.convert(insertValueMap.get(columnName), LargeInteger.class);
             }
         }
         

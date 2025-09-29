@@ -20,36 +20,41 @@ sqlQuery: (
 
 selectQuery: (
     SELECT selectPart
-    FROM ( schemaName DOT )? tableName ( AS? tableAlias=identifier )?
+    FROM ( schemaName DOT )? tableName tableAliasPart=aliasPart?
     joinPart*
     wherePart?
     orderByPart?
-    limitPart?
+    offsetLimitPart?
 );
 
 joinPart: (
 	( innerJoin | leftJoin )
-	( targetSchemaName=schemaName DOT )? targetTableName=tableName ( AS? tableAlias=identifier )?
+	( targetSchemaName=schemaName DOT )? targetTableName=tableName tableAliasPart=aliasPart?
 	ON scope1=tableName DOT field1=fieldName EQ scope2=tableName DOT field2=fieldName
 );
 innerJoin: INNER? JOIN;
 leftJoin: LEFT OUTER? JOIN;
 
 selectCountQuery: (
-    SELECT COUNT PAR_START ( wildcardSelectItem | DISTINCT? scopeableFieldName ) PAR_END
-    FROM ( schemaName DOT )? tableName ( AS? tableAlias=identifier )?
+    SELECT COUNT PAR_START ( wildcardSelectItem | DISTINCT? scopeableFieldName ) PAR_END fieldAliasPart=aliasPart?
+    FROM ( schemaName DOT )? tableName tableAliasPart=aliasPart?
     wherePart?
+    limitPart?
 );
 
 selectPart: selectItem ( COMMA selectItem )*;
 selectItem: aliasableExpression | wildcardSelectItem;
 wildcardSelectItem: ( tableName DOT )? ASTERISK;
-limitPart: ( LIMIT | FETCH FIRST ) ( TOKEN_INTEGER | TOKEN_STRING | variable ) ( ( ROW | ROWS ) ONLY )?;
+offsetLimitPart: offsetPart limitPart?  | limitPart offsetPart? | commaLimitPart;
+offsetPart: OFFSET limitParameter ( ROW | ROWS )?;
+limitPart: ( LIMIT | FETCH ( FIRST | NEXT ) ) limitParameter ( ( ROW | ROWS ) ONLY? )?;
+commaLimitPart: LIMIT offsetValue=limitParameter COMMA limitValue=limitParameter;
+limitParameter: TOKEN_INTEGER | TOKEN_STRING | variable;
 
 standaloneSelectQuery: standaloneSelectRow ( UNION standaloneSelectRow )*;
 standaloneSelectRow: SELECT aliasableExpression ( COMMA aliasableExpression )* ( FROM UNIT )?;
 
-showSpecialQuery: ( SHOW | CALL ) specialSelectable ( AS? alias=identifier )?;
+showSpecialQuery: ( SHOW | CALL ) specialSelectable aliasPart?;
 
 updateQuery: UPDATE ( schemaName DOT )? tableName updatePart wherePart?;
 updatePart: SET updateItem ( COMMA updateItem )*;
@@ -57,7 +62,8 @@ updateItem: fieldName EQ extendedValue;
 
 insertQuery: ( INSERT | REPLACE ) INTO ( schemaName DOT )? tableName fieldList? VALUES valueList;
 fieldList: PAR_START fieldName ( COMMA fieldName )* PAR_END;
-valueList: PAR_START extendedValue ( COMMA extendedValue )* PAR_END;
+valueList: PAR_START insertValue ( COMMA insertValue )* PAR_END;
+insertValue: extendedValue | DEFAULT;
 
 deleteQuery: DELETE FROM ( schemaName DOT )? tableName wherePart?;
 
@@ -69,7 +75,7 @@ useQuery: USE schemaName;
 
 setVariableQuery: SET variable EQ extendedValue;
 
-wherePart: WHERE whereItem ( AND whereItem )*;
+wherePart: WHERE ( whereItem ( AND whereItem )* | PAR_START whereItem ( AND whereItem )* PAR_END );
 whereItem: scopeableFieldName postfixCondition | PAR_START whereItem PAR_END;
 postfixCondition: simpleRelation extendedValue | betweenRelation | isNull | isNotNull;
 simpleRelation: EQ | LESS | LESS_EQ | GREATER| GREATER_EQ;
@@ -81,19 +87,18 @@ orderByItem: ( scopeableFieldName | orderByPosition ) ( ASC | DESC )? ( nullsFir
 nullsFirst: NULLS FIRST;
 nullsLast: NULLS LAST;
 orderByPosition: TOKEN_INTEGER;
-aliasableExpression: expression ( AS? alias=identifier )?;
+aliasableExpression: expression aliasPart?;
+aliasPart: AS? alias=identifier;
 expression:
     leftExpression=expression ( ASTERISK | MOD | PERCENT | DIV | SLASH ) rightExpression=expression |
     leftExpression=expression ( PLUS | MINUS ) rightExpression=expression |
     atomicExpression;
 atomicExpression:
-    NULL |
-    TOKEN_STRING |
-    TOKEN_INTEGER |
+    literal |
     variable |
     specialSelectable |
     scopeableFieldName |
-    functionCall |
+    functionCall |PAR_START
     PAR_START paredExpression=expression PAR_END |
     MINUS negatedExpression=expression;
 specialSelectable: specialSelectableName ( parentheses )?;
@@ -103,15 +108,17 @@ specialSelectableName:
     CURRENT_CATALOG |
     READONLY |
     AUTOCOMMIT |
+    IDENTITY |
     LAST_INSERT_ID;
 functionCall: identifier PAR_START expression ( COMMA expression )* PAR_END;
 scopeableFieldName: ( tableName DOT )? fieldName;
-extendedValue: literal | variable | NULL;
+extendedValue: literal | variable;
 variable: AT identifier;
 fieldName: identifier;
 tableName: identifier;
 identifier: TOKEN_SIMPLENAME | TOKEN_QUOTEDNAME | TOKEN_BACKTICKEDNAME;
-literal: TOKEN_STRING | TOKEN_INTEGER;
+literal: NULL | TOKEN_STRING | TOKEN_INTEGER | booleanLiteral;
+booleanLiteral: TRUE | FALSE;
 likePart: LIKE TOKEN_STRING;
 schemaName: identifier;
 parentheses: PAR_START PAR_END;
@@ -136,6 +143,7 @@ LAST_INSERT_ID: L A S T UNDERSCORE I N S E R T UNDERSCORE I D;
 
 AS: A S;
 COUNT: C O U N T;
+DEFAULT: D E F A U L T;
 DISTINCT: D I S T I N C T;
 FROM: F R O M;
 UNIT: U N I T;
@@ -150,8 +158,10 @@ DESC: D E S C;
 NULLS: N U L L S;
 FIRST: F I R S T;
 LAST: L A S T;
+OFFSET: O F F S E T;
 LIMIT: L I M I T;
 FETCH: F E T C H;
+NEXT: N E X T;
 ROW: R O W;
 ROWS: R O W S;
 ONLY: O N L Y;
@@ -172,6 +182,9 @@ UNION: U N I O N;
 
 MOD: M O D;
 DIV: D I V;
+
+TRUE: T R U E;
+FALSE: F A L S E;
 
 TOKEN_SIMPLENAME: [\p{L}_] [\p{N}\p{L}_]* ;
 TOKEN_QUOTEDNAME: '"' ( '\\' . | '""' | ~[\\"] )* '"';

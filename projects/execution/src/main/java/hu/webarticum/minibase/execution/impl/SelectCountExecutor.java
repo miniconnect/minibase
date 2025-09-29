@@ -21,7 +21,7 @@ import hu.webarticum.miniconnect.lang.LargeInteger;
 
 public class SelectCountExecutor implements ThrowingQueryExecutor {
 
-    private static final String COLUMN_NAME = "COUNT";
+    private static final String DEFAULT_RESULT_COLUMN_NAME = "COUNT";
     
     
     @Override
@@ -34,6 +34,7 @@ public class SelectCountExecutor implements ThrowingQueryExecutor {
         String schemaName = selectCountQuery.schemaName();
         String tableName = selectCountQuery.tableName();
         String fieldName = selectCountQuery.fieldName();
+        String alias = selectCountQuery.alias();
         
         if (schemaName == null) {
             schemaName = state.getCurrentSchema();
@@ -62,14 +63,21 @@ public class SelectCountExecutor implements ThrowingQueryExecutor {
             }
         }
         
+        String resultColumnName = alias != null ? alias : DEFAULT_RESULT_COLUMN_NAME;
+
+        LargeInteger limit = TableQueryUtil.resolveLimitParameter(selectCountQuery.limit(), state);
+        if (limit != null && limit.isNonPositive()) {
+            return ResultUtil.createEmptySingleColumnResult(resultColumnName, LargeInteger.class);
+        }
+        
         ImmutableList<WhereItem> queryWhere = selectCountQuery.where();
         if (queryWhere.isEmpty()) {
-            return ResultUtil.createSingleValueResult(COLUMN_NAME, table.size());
+            return ResultUtil.createSingleValueResult(resultColumnName, table.size());
         }
         
         Map<String, Object> convertedQueryWhere = TableQueryUtil.mergeAndConvertFilters(queryWhere, table, state);
         LargeInteger count = TableQueryUtil.countRows(table, convertedQueryWhere);
-        return ResultUtil.createSingleValueResult(COLUMN_NAME, count);
+        return ResultUtil.createSingleValueResult(resultColumnName, count);
     }
     
 }

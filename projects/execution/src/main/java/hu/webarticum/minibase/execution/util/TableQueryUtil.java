@@ -280,7 +280,21 @@ public class TableQueryUtil {
         
         return new SortedLimitingIterator<>(groupItems, comparator, remainingLimit);
     }
-    
+
+    public static LargeInteger resolveLimitParameter(Object rawLimit, SessionState state) {
+        if (rawLimit == null || rawLimit instanceof LargeInteger) {
+            return (LargeInteger) rawLimit;
+        } else if (rawLimit instanceof String) {
+            return TableQueryUtil.convert(rawLimit, LargeInteger.class);
+        } else if (rawLimit instanceof VariableValue) {
+            VariableValue variableValue = (VariableValue) rawLimit;
+            Object value = state.getUserVariable(variableValue.name());
+            return TableQueryUtil.convert(value, LargeInteger.class);
+        } else {
+            throw new IllegalArgumentException("Illegal limit type: " + rawLimit.getClass());
+        }
+    }
+
     private static Comparator<LargeInteger> createRowIndexComparator(
             MultiComparator rowComparator, Table table, List<OrderByEntry> orderByEntries) {
         return (i1, i2) -> rowComparator.compare(
@@ -678,7 +692,7 @@ public class TableQueryUtil {
         return result;
     }
 
-    public static ImmutableMap<Integer, Object> toByColumnPoisitionedImmutableMap(
+    public static ImmutableMap<Integer, Object> toByColumnPositionedImmutableMap(
             Table table, Map<String, Object> columnValues) {
         NamedResourceStore<Column> columns = table.columns();
         ImmutableList<String> columnNames = columns.names();
@@ -780,6 +794,7 @@ public class TableQueryUtil {
                 return false;
             case AUTOCOMMIT:
                 return true;
+            case IDENTITY:
             case LAST_INSERT_ID:
                 return state.getLastInsertId();
             default:

@@ -2,7 +2,7 @@ plugins {
     id 'java-library'
 }
 
-description "Database session management"
+description = "Database session management"
 
 dependencies {
     api project(':execution')
@@ -12,5 +12,5 @@ dependencies {
     api "hu.webarticum.miniconnect.api:lang:${miniConnectApiVersion}"
     api "hu.webarticum.miniconnect:impl:${miniConnectVersion}"
     
-    implementation 'org.slf4j:slf4j-api:1.7.36'
+    implementation 'org.slf4j:slf4j-api:2.0.17'
 }

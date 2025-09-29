@@ -53,9 +53,12 @@ import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.LargeInteger;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryLexer;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.AliasPartContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.AliasableExpressionContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.AtomicExpressionContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.BetweenRelationContext;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.BooleanLiteralContext;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.CommaLimitPartContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.DeleteQueryContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.ExpressionContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.ExtendedValueContext;
@@ -64,10 +67,14 @@ import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.FieldName
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.FunctionCallContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.IdentifierContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.InsertQueryContext;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.InsertValueContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.JoinPartContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.LikePartContext;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.LimitParameterContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.LimitPartContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.LiteralContext;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.OffsetLimitPartContext;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.OffsetPartContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.OrderByItemContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.OrderByPartContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.OrderByPositionContext;
@@ -180,11 +187,12 @@ public class AntlrSqlParser implements SqlParser {
                 null;
         IdentifierContext identifierNode = selectQueryNode.tableName().identifier();
         String tableName = parseIdentifierNode(identifierNode);
-        String tableAlias = tableName;
-        IdentifierContext aliasIdentifierNode = selectQueryNode.tableAlias;
-        if (aliasIdentifierNode != null) {
-            tableAlias = parseIdentifierNode(aliasIdentifierNode);
+        
+        String tableAlias = parseAliasPartNode(selectQueryNode.tableAliasPart);
+        if (tableAlias == null) {
+            tableAlias = tableName;
         }
+        
         ImmutableList<SelectItem> selectItems = parseSelectPartNode(selectPartNode);
         List<JoinPartContext> joinParts = selectQueryNode.joinPart();
         ImmutableList<JoinItem> joins = parseJoinPartNodes(joinParts, tableAlias);
@@ -192,8 +200,10 @@ public class AntlrSqlParser implements SqlParser {
         ImmutableList<WhereItem> where = parseWherePartNode(wherePartNode);
         OrderByPartContext orderByPartNode = selectQueryNode.orderByPart();
         ImmutableList<OrderByItem> orderBy = parseOrderByPartNode(orderByPartNode);
-        LimitPartContext limitPartNode = selectQueryNode.limitPart();
-        Object limit = parseLimitPartNode(limitPartNode);
+        OffsetLimitPartContext offsetLimitNode = selectQueryNode.offsetLimitPart();
+        Object[] offsetAndLimit = parseOffsetLimitPartNode(offsetLimitNode);
+        Object offset = offsetAndLimit[0];
+        Object limit = offsetAndLimit[1];
         
         return Queries.select()
                 .selectItems(selectItems)
@@ -203,6 +213,7 @@ public class AntlrSqlParser implements SqlParser {
                 .joins(joins)
                 .where(where)
                 .orderBy(orderBy)
+                .offset(offset)
                 .limit(limit)
                 .build();
     }
@@ -214,10 +225,10 @@ public class AntlrSqlParser implements SqlParser {
                 null;
         IdentifierContext identifierNode = selectCountQueryNode.tableName().identifier();
         String tableName = parseIdentifierNode(identifierNode);
-        String tableAlias = tableName;
-        IdentifierContext aliasIdentifierNode = selectCountQueryNode.tableAlias;
-        if (aliasIdentifierNode != null) {
-            tableAlias = parseIdentifierNode(aliasIdentifierNode);
+
+        String tableAlias = parseAliasPartNode(selectCountQueryNode.tableAliasPart);
+        if (tableAlias == null) {
+            tableAlias = tableName;
         }
         
         TableNameContext tableNameNode = extractTableNameNode(selectCountQueryNode);
@@ -226,15 +237,21 @@ public class AntlrSqlParser implements SqlParser {
         }
         
         String fieldName = extractFieldName(selectCountQueryNode);
+        String alias = extractAlias(selectCountQueryNode);
         
         WherePartContext wherePartNode = selectCountQueryNode.wherePart();
         ImmutableList<WhereItem> where = parseWherePartNode(wherePartNode);
+        
+        LimitPartContext limitPartNode = selectCountQueryNode.limitPart();
+        Object limit = parseLimitPartNode(limitPartNode);
         
         return Queries.selectCount()
                 .inSchema(schemaName)
                 .from(tableName)
                 .onField(fieldName)
+                .as(alias)
                 .where(where)
+                .limit(limit)
                 .build();
     }
     
@@ -260,12 +277,16 @@ public class AntlrSqlParser implements SqlParser {
         
         return null;
     }
+
+    private String extractAlias(SelectCountQueryContext selectCountQueryNode) {
+        return parseAliasPartNode(selectCountQueryNode.fieldAliasPart);
+    }
     
     private StandaloneSelectQuery parseStandaloneSelectNode(StandaloneSelectQueryContext standaloneSelectQueryNode) {
         List<String> aliases = new ArrayList<>();
         StandaloneSelectRowContext firstRowNode = standaloneSelectQueryNode.standaloneSelectRow(0);
         for (AliasableExpressionContext aliasableExpressionNode : firstRowNode.aliasableExpression()) {
-            String alias = parseNullableIdentifierNode(aliasableExpressionNode.alias);
+            String alias = parseAliasPartNode(aliasableExpressionNode.aliasPart());
             aliases.add(alias);
         }
         int columnCount = aliases.size();
@@ -292,8 +313,7 @@ public class AntlrSqlParser implements SqlParser {
     }
     
     private ShowSpecialQuery parseShowSpecialNode(ShowSpecialQueryContext selectSpecialQueryNode) {
-        IdentifierContext aliasNode = selectSpecialQueryNode.alias;
-        String alias = parseNullableIdentifierNode(aliasNode);
+        String alias = parseAliasPartNode(selectSpecialQueryNode.aliasPart());
         
         SpecialSelectableContext specialSelectableNode = selectSpecialQueryNode.specialSelectable();
         String specialSelectableName = specialSelectableNode.specialSelectableName().getText().toUpperCase();
@@ -343,9 +363,14 @@ public class AntlrSqlParser implements SqlParser {
 
     private ImmutableList<Object> parseInsertValueListNode(ValueListContext valueListNode) {
         List<Object> resultBuilder = new ArrayList<>();
-        for (ExtendedValueContext nullableValueNode : valueListNode.extendedValue()) {
-            Object value = parseExtendedValueNode(nullableValueNode);
-            resultBuilder.add(value);
+        for (InsertValueContext insertValueNode : valueListNode.insertValue()) {
+            ExtendedValueContext extendedValueNode = insertValueNode.extendedValue();
+            if (extendedValueNode != null) {
+                Object value = parseExtendedValueNode(extendedValueNode);
+                resultBuilder.add(value);
+            } else {
+                resultBuilder.add(null);
+            }
         }
         return ImmutableList.fromCollection(resultBuilder);
     }
@@ -465,8 +490,7 @@ public class AntlrSqlParser implements SqlParser {
     private ExpressionSelectItem parseAliasableExpressionNode(AliasableExpressionContext aliasableExpressionNode) {
         ExpressionContext expressionNode = aliasableExpressionNode.expression();
         Expression expression = parseExpressionNode(expressionNode);
-        String alias =
-                aliasableExpressionNode.alias != null ? parseIdentifierNode(aliasableExpressionNode.alias) : null;
+        String alias = parseAliasPartNode(aliasableExpressionNode.aliasPart());
         return new ExpressionSelectItem(expression, alias);
     }
 
@@ -496,6 +520,14 @@ public class AntlrSqlParser implements SqlParser {
         return new BinaryArithmeticExpression(operation, leftExpression, rightExpression);
     }
     
+    private String parseAliasPartNode(AliasPartContext aliasPartNode) {
+        if (aliasPartNode == null) {
+            return null;
+        }
+        
+        return parseIdentifierNode(aliasPartNode.alias);
+    }
+    
     private BinaryArithmeticExpression.Operation extractOperation(ExpressionContext expressionNode) {
         if (expressionNode.ASTERISK() != null) {
             return BinaryArithmeticExpression.Operation.MUL;
@@ -521,21 +553,10 @@ public class AntlrSqlParser implements SqlParser {
             return parseExpressionNode(atomicExpressionNode.paredExpression);
         }
         
-        TerminalNode nullNode = atomicExpressionNode.NULL();
-        if (nullNode != null) {
-            return new ConstantExpression(null);
-        }
-        
-        TerminalNode integerTokenNode = atomicExpressionNode.TOKEN_INTEGER();
-        if (integerTokenNode != null) {
-            Integer integerValue = parseIntegerNode(integerTokenNode);
-            return new ConstantExpression(integerValue);
-        }
-        
-        TerminalNode stringTokenNode = atomicExpressionNode.TOKEN_STRING();
-        if (stringTokenNode != null) {
-            String stringValue = parseStringNode(stringTokenNode);
-            return new ConstantExpression(stringValue);
+        LiteralContext literalNode = atomicExpressionNode.literal();
+        if (literalNode != null) {
+            Object literalValue = parseLiteralNode(literalNode);
+            return new ConstantExpression(literalValue);
         }
         
         VariableContext variableNode = atomicExpressionNode.variable();
@@ -599,8 +620,12 @@ public class AntlrSqlParser implements SqlParser {
                 parseIdentifierNode(targetSchemaNameNode.identifier()) :
                 null;
         String targetTableName = parseIdentifierNode(joinPartNode.targetTableName.identifier());
-        IdentifierContext tableAliasNode = joinPartNode.tableAlias;
-        String targetTableAlias = tableAliasNode != null ? parseIdentifierNode(tableAliasNode) : targetTableName;
+        
+        String targetTableAlias = parseAliasPartNode(joinPartNode.tableAliasPart);
+        if (targetTableAlias == null) {
+            targetTableAlias = targetTableName;
+        }
+        
         String scope1 = parseIdentifierNode(joinPartNode.scope1.identifier());
         String field1 = parseIdentifierNode(joinPartNode.field1.identifier());
         String scope2 = parseIdentifierNode(joinPartNode.scope2.identifier());
@@ -715,21 +740,51 @@ public class AntlrSqlParser implements SqlParser {
         return new OrderByItem(tableName, fieldName, null, ascOrder, nullsOrderMode);
     }
     
+    private Object[] parseOffsetLimitPartNode(OffsetLimitPartContext offsetLimitPartNode) {
+        Object[] result = new Object[] { null, null };
+        if (offsetLimitPartNode == null) {
+            return result;
+        }
+        
+        OffsetPartContext offsetPartNode = offsetLimitPartNode.offsetPart();
+        if (offsetPartNode != null) {
+            result[0] = parseLimitParameterNode(offsetPartNode.limitParameter());
+        }
+        
+        LimitPartContext limitPartNode = offsetLimitPartNode.limitPart();
+        if (limitPartNode != null) {
+            result[1] = parseLimitParameterNode(limitPartNode.limitParameter());
+        }
+        
+        CommaLimitPartContext commaLimitPartNode = offsetLimitPartNode.commaLimitPart();
+        if (commaLimitPartNode != null) {
+            result[0] = parseLimitParameterNode(commaLimitPartNode.offsetValue);
+            result[1] = parseLimitParameterNode(commaLimitPartNode.limitValue);
+        }
+        
+        return result;
+    }
+    
     private Object parseLimitPartNode(LimitPartContext limitPartNode) {
         if (limitPartNode == null) {
             return null;
         }
+        
+        LimitParameterContext limitParameterNode = limitPartNode.limitParameter();
+        return parseLimitParameterNode(limitParameterNode);
+    }
 
-        TerminalNode integerToken = limitPartNode.TOKEN_INTEGER();
+    private Object parseLimitParameterNode(LimitParameterContext limitParameterNode) {
+        TerminalNode integerToken = limitParameterNode.TOKEN_INTEGER();
         if (integerToken != null) {
             return parseLargeIntegerNode(integerToken);
         }
 
-        TerminalNode stringToken = limitPartNode.TOKEN_STRING();
+        TerminalNode stringToken = limitParameterNode.TOKEN_STRING();
         if (stringToken != null) {
             return parseStringNode(stringToken);
         } else {
-            VariableContext variableNode = limitPartNode.variable();
+            VariableContext variableNode = limitParameterNode.variable();
             String variableName = parseIdentifierNode(variableNode.identifier());
             return new VariableValue(variableName);
         }
@@ -756,14 +811,6 @@ public class AntlrSqlParser implements SqlParser {
         }
     }
 
-    private String parseNullableIdentifierNode(IdentifierContext identifierNode) {
-        if (identifierNode == null) {
-            return null;
-        }
-        
-        return parseIdentifierNode(identifierNode);
-    }
-    
     private String parseIdentifierNode(IdentifierContext identifierNode) {
         TerminalNode simpleNameNode = identifierNode.TOKEN_SIMPLENAME();
         if (simpleNameNode != null) {
@@ -824,10 +871,6 @@ public class AntlrSqlParser implements SqlParser {
     }
 
     private Object parseExtendedValueNode(ExtendedValueContext extendedValueNode) {
-        if (extendedValueNode.NULL() != null) {
-            return null;
-        }
-        
         LiteralContext literalNode = extendedValueNode.literal();
         if (literalNode != null) {
             return parseLiteralNode(literalNode);
@@ -849,6 +892,10 @@ public class AntlrSqlParser implements SqlParser {
     }
     
     private Object parseLiteralNode(LiteralContext literalNode) {
+        if (literalNode.NULL() != null) {
+            return null;
+        }
+        
         TerminalNode integerNode = literalNode.TOKEN_INTEGER();
         if (integerNode != null) {
             return parseIntegerNode(integerNode);
@@ -857,6 +904,11 @@ public class AntlrSqlParser implements SqlParser {
         TerminalNode stringNode = literalNode.TOKEN_STRING();
         if (stringNode != null) {
             return parseStringNode(stringNode);
+        }
+        
+        BooleanLiteralContext booleanLiteralNode = literalNode.booleanLiteral();
+        if (booleanLiteralNode != null) {
+            return parseBooleanLiteralNode(booleanLiteralNode);
         }
         
         throw new IllegalArgumentException("Invalid literal: " + literalNode.getText());
@@ -884,6 +936,10 @@ public class AntlrSqlParser implements SqlParser {
     public static String unbacktick(String token) {
         int length = token.length();
         return token.substring(1, length - 1).replace("``", "`");
+    }
+    
+    public static Boolean parseBooleanLiteralNode(BooleanLiteralContext booleanLiteralNode) {
+        return booleanLiteralNode.TRUE() != null;
     }
 
     

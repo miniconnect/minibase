@@ -12,15 +12,21 @@ public final class SelectCountQuery implements Query {
     private final String tableName;
 
     private final String fieldName;
+
+    private final String alias;
     
     private final ImmutableList<WhereItem> where;
+    
+    private final Object limit;
     
     
     private SelectCountQuery(SelectCountQueryBuilder builder) {
         this.schemaName = builder.schemaName;
         this.tableName = Objects.requireNonNull(builder.tableName);
         this.fieldName = builder.fieldName;
+        this.alias = builder.alias;
         this.where = builder.where;
+        this.limit = builder.limit;
     }
     
     public static SelectCountQueryBuilder builder() {
@@ -40,8 +46,16 @@ public final class SelectCountQuery implements Query {
         return fieldName;
     }
 
+    public String alias() {
+        return alias;
+    }
+
     public ImmutableList<WhereItem> where() {
         return where;
+    }
+
+    public Object limit() {
+        return limit;
     }
     
     
@@ -52,8 +66,12 @@ public final class SelectCountQuery implements Query {
         private String tableName = null;
 
         private String fieldName = null;
+
+        private String alias = null;
         
         private ImmutableList<WhereItem> where = ImmutableList.empty();
+
+        private Object limit = null;
         
         
         private SelectCountQueryBuilder() {
@@ -76,8 +94,18 @@ public final class SelectCountQuery implements Query {
             return this;
         }
 
+        public SelectCountQueryBuilder as(String alias) {
+            this.alias = alias;
+            return this;
+        }
+
         public SelectCountQueryBuilder where(ImmutableList<WhereItem> where) {
             this.where = where;
+            return this;
+        }
+
+        public SelectCountQueryBuilder limit(Object limit) {
+            this.limit = limit;
             return this;
         }
 

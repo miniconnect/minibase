@@ -22,6 +22,13 @@ public final class ResultUtil {
         // utility class
     }
     
+
+    public static MiniResult createEmptySingleColumnResult(String columnName, Class<?> clazz) {
+        ValueTranslator translator = createValueTranslatorFor(clazz);
+        MiniValueDefinition columnDefinition = translator.definition();
+        MiniColumnHeader columnHeader = new StoredColumnHeader(columnName, false, columnDefinition);
+        return new StoredResult(new StoredResultSetData(ImmutableList.of(columnHeader), ImmutableList.empty()));
+    }
     
     public static MiniResult createSingleValueResult(String columnName, Object content) {
         Class<?> clazz = content == null ? String.class : content.getClass();
@@ -30,9 +37,7 @@ public final class ResultUtil {
         boolean nullable = content == null;
         MiniColumnHeader columnHeader = new StoredColumnHeader(columnName, nullable, columnDefinition);
         MiniValue value = translator.encodeFully(content);
-        return new StoredResult(new StoredResultSetData(
-                ImmutableList.of(columnHeader),
-                ImmutableList.of(ImmutableList.of(value))));
+        return new StoredResult(new StoredResultSetData(ImmutableList.of(columnHeader), ImmutableList.of(ImmutableList.of(value))));
     }
     
     // FIXME: custom translators?
