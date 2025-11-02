@@ -155,6 +155,10 @@ public class SelectExecutor implements ThrowingQueryExecutor {
         List<OrderByEntry> result = new ArrayList<>();
         for (OrderByEntry orderByEntry : orderByEntries) {
             String tableAlias = orderByEntry.tableAlias;
+            if(tableAlias == null) {
+                tableAlias = tableEntries.keySet().iterator().next();
+            }
+            
             if (uniqueOrderedAliasesOut.contains(tableAlias)) {
                 continue;
             }
@@ -637,6 +641,8 @@ public class SelectExecutor implements ThrowingQueryExecutor {
             OrderByItem orderByItem,
             List<SelectItemEntry> selectItemEntries,
             LinkedHashMap<String, TableEntry> tableEntries) {
+        String defaultTableAlias = tableEntries.keySet().iterator().next();
+        
         Integer position = orderByItem.position();
         if (orderByItem.position() != null) {
             if (position < 1 || position > selectItemEntries.size()) {
@@ -647,11 +653,12 @@ public class SelectExecutor implements ThrowingQueryExecutor {
             if (columnParameter == null) {
                 throw new IllegalArgumentException("Currently, only column based ordering is supported");
             }
+            String columnTableAlias = columnParameter.tableAlias();
+            if (columnTableAlias == null) {
+                columnTableAlias = defaultTableAlias;
+            }
             return new OrderByEntry(
-                    columnParameter.tableAlias(),
-                    columnParameter.columnName(),
-                    orderByItem.ascOrder(),
-                    orderByItem.nullsOrderMode());
+                    columnTableAlias, columnParameter.columnName(), orderByItem.ascOrder(), orderByItem.nullsOrderMode());
         }
         
         String tableName = orderByItem.tableName();
@@ -660,13 +667,14 @@ public class SelectExecutor implements ThrowingQueryExecutor {
         if (tableName == null) {
             ColumnParameter matchingColumnParameter = findMatchingColumnParameter(selectItemEntries, fieldName);
             if (matchingColumnParameter != null) {
+                String matchingColumnTableAlias = matchingColumnParameter.tableAlias();
+                if (matchingColumnTableAlias == null) {
+                    matchingColumnTableAlias = defaultTableAlias;
+                }
                 return new OrderByEntry(
-                        matchingColumnParameter.tableAlias(),
-                        matchingColumnParameter.columnName(),
-                        orderByItem.ascOrder(),
-                        orderByItem.nullsOrderMode());
+                        matchingColumnTableAlias, matchingColumnParameter.columnName(), orderByItem.ascOrder(), orderByItem.nullsOrderMode());
             } else {
-                tableName = tableEntries.keySet().iterator().next();
+                tableName = defaultTableAlias;
             }
         }
 
@@ -696,7 +704,8 @@ public class SelectExecutor implements ThrowingQueryExecutor {
                 continue;
             }
             ExpressionSelectItem expressionSelectItem = (ExpressionSelectItem) selectItemEntry.selectItem;
-            if (expressionSelectItem.alias().equals(fieldName)) {
+            String fieldAlias = fieldAliasOf(expressionSelectItem);
+            if (fieldAlias.equals(fieldName)) {
                 return columnParameter;
             }
         }
@@ -749,10 +758,7 @@ public class SelectExecutor implements ThrowingQueryExecutor {
         }
         ExpressionSelectItem expressionSelectItem = (ExpressionSelectItem) selectItem;
         String tableAlias = tableAliasOf(expressionSelectItem);
-        String fieldAlias = expressionSelectItem.alias();
-        if (fieldAlias == null) {
-            fieldAlias = expressionSelectItem.expression().automaticName();
-        }
+        String fieldAlias = fieldAliasOf(expressionSelectItem);
         boolean isNullable =
                 selectItemEntry.columnDefinition.isNullable() ||
                 (tableAlias != null && isTransitivelyLeftJoined(tableAlias, tableEntries));
@@ -766,6 +772,15 @@ public class SelectExecutor implements ThrowingQueryExecutor {
         }
         
         return ((ColumnExpression) expression).columnParameter().tableAlias();
+    }
+
+    private String fieldAliasOf(ExpressionSelectItem expressionSelectItem) {
+        String explicitAlias = expressionSelectItem.alias();
+        if (explicitAlias != null) {
+            return explicitAlias;
+        } else {
+            return expressionSelectItem.expression().automaticName();
+        }
     }
 
     private boolean isTransitivelyLeftJoined(String tableAlias, Map<String, TableEntry> tableEntries) {
