@@ -6,7 +6,6 @@ import java.util.Comparator;
 
 import org.junit.jupiter.api.Test;
 
-import hu.webarticum.minibase.storage.impl.diff.DiffTableUtil;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 
 class DiffTableUtilTest {

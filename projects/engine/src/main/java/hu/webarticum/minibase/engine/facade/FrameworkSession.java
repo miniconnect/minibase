@@ -21,9 +21,8 @@ import hu.webarticum.miniconnect.impl.result.StoredError;
 import hu.webarticum.miniconnect.impl.result.StoredLargeDataSaveResult;
 import hu.webarticum.miniconnect.impl.result.StoredResult;
 import hu.webarticum.miniconnect.lang.ByteString;
-import hu.webarticum.miniconnect.lang.CheckableCloseable;
 
-public class FrameworkSession implements MiniSession, CheckableCloseable {
+public class FrameworkSession implements MiniSession {
     
     private static final long NANO_FACTOR = 1_000_000_000L;
     
