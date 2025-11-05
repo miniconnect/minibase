@@ -98,7 +98,7 @@ atomicExpression:
     variable |
     specialSelectable |
     scopeableFieldName |
-    functionCall |PAR_START
+    functionCall |
     PAR_START paredExpression=expression PAR_END |
     MINUS negatedExpression=expression;
 specialSelectable: specialSelectableName ( parentheses )?;
