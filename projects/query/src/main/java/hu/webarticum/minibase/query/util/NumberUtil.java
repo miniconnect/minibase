@@ -20,7 +20,7 @@ import hu.webarticum.miniconnect.lang.LargeInteger;
  * 
  * <p>One of the main goals is to prevent arithmetic overflows.</p>
  */
-public class NumberParser {
+public final class NumberUtil {
     
     private static final Pattern NUMBER_CLEAN_PATTERN = Pattern.compile("[ _]");
     
@@ -28,7 +28,7 @@ public class NumberParser {
             "^(?<sign>[+\\-]?)(?<whole>\\d+)?(?<frac>\\.\\d+)?");
     
 
-    private NumberParser() {
+    private NumberUtil() {
         // utility class
     }
     
@@ -97,7 +97,7 @@ public class NumberParser {
      * @return The common class
      */
     public static Class<?> commonNumericTypeOf(Class<?>... types) {
-        ImmutableList<Class<?>> numericTypes = ImmutableList.of(types).map(NumberParser::numberifyType);
+        ImmutableList<Class<?>> numericTypes = ImmutableList.of(types).map(NumberUtil::numberifyType);
         Class<?>[] typesToCheck = new Class<?>[] { Double.class, BigDecimal.class, LargeInteger.class };
         for (Class<?> type : typesToCheck) {
             if (numericTypes.contains(type)) {
@@ -107,7 +107,7 @@ public class NumberParser {
         return Void.class;
     }
     
-    public static Object promote(Object convertedValue, Class<?> targetType) {
+    public static Number promote(Object convertedValue, Class<?> targetType) {
         if (convertedValue == null) {
             if (targetType == Void.class) {
                 return null;
@@ -118,7 +118,7 @@ public class NumberParser {
             throw new IllegalArgumentException("Can not promote " + convertedValue + " to void");
         } else if (targetType == LargeInteger.class) {
             if (convertedValue instanceof LargeInteger) {
-                return convertedValue;
+                return (LargeInteger) convertedValue;
             } else {
                 throw new IllegalArgumentException("Can not promote " + convertedValue + " to " + LargeInteger.class);
             }
@@ -126,7 +126,7 @@ public class NumberParser {
             if (convertedValue instanceof LargeInteger) {
                 return ((LargeInteger) convertedValue).bigDecimalValue();
             } else if (convertedValue instanceof BigDecimal) {
-                return convertedValue;
+                return (BigDecimal) convertedValue;
             } else {
                 throw new IllegalArgumentException("Can not promote " + convertedValue + " to " + BigDecimal.class);
             }
@@ -137,9 +137,49 @@ public class NumberParser {
         } else if (convertedValue instanceof BigDecimal) {
             return ((BigDecimal) convertedValue).doubleValue();
         } else if (convertedValue instanceof Double) {
-            return convertedValue;
+            return (Double) convertedValue;
         } else {
             throw new IllegalArgumentException("Unsupported value for promotion: " + convertedValue);
+        }
+    }
+
+    public static Number[] unify(Object value1, Object value2) {
+        Number number1 = numberify(value1);
+        Number number2 = numberify(value2);
+        if (number1 == null || number2 == null) {
+            return new Number[] { number1, number2 };
+        }
+
+        Class<? extends Number> class1 = number1.getClass();
+        Class<? extends Number> class2 = number2.getClass();
+        if (class1 == class2 && class1 != BigDecimal.class) {
+            return new Number[] { number1, number2 };
+        }
+
+        if (class1 == Double.class) {
+            return new Number[] { number1, promote(number2, Double.class) };
+        } else if (class2 == Double.class) {
+            return new Number[] { promote(number1, Double.class), number2 };
+        } else if (class1 == BigDecimal.class) {
+            return unifyBigDecimals(number1, promote(number2, BigDecimal.class));
+        } else if (class2 == BigDecimal.class) {
+            return unifyBigDecimals(promote(number1, BigDecimal.class), number2);
+        } else {
+            return new Number[] { promote(number1, Double.class), promote(number2, Double.class) };
+        }
+    }
+
+    private static Number[] unifyBigDecimals(Number value1, Number value2) {
+        BigDecimal bigDecimal1 = (BigDecimal) value1;
+        BigDecimal bigDecimal2 = (BigDecimal) value2;
+        int scale1 = bigDecimal1.scale();
+        int scale2 = bigDecimal2.scale();
+        if (scale1 == scale2) {
+            return new Number[] { value1, value2 };
+        } else if (scale1 > scale2) {
+            return new Number[] { value1, bigDecimal2.setScale(scale1) };
+        } else {
+            return new Number[] { bigDecimal1.setScale(scale2), value2 };
         }
     }
     
@@ -195,6 +235,36 @@ public class NumberParser {
             return parse(object.toString());
         } else {
             throw new IllegalArgumentException("Can not convert to number: " + object);
+        }
+    }
+
+    /**
+     * Checks if the given number is zero.
+     * 
+     * <p>Appropriate for non-zero checks and boolean conversion.</p>
+     * <p>In this context, null is not zero.</p>
+     * <p>Possible <code>numberify()</code> results are handled first for performance reasons.</p>
+     * 
+     * @param number A numberic object
+     * @return true if the given number is zero, false otherwise
+     */
+    public static boolean isZero(Number number) {
+        if (number instanceof LargeInteger) {
+            return ((LargeInteger) number).isZero();
+        } else if (number instanceof BigDecimal) {
+            return ((BigDecimal) number).signum() == 0;
+        } else if (number == null) {
+            return false;
+        } else if (
+                number instanceof Long ||
+                number instanceof Integer ||
+                number instanceof Short ||
+                number instanceof Byte) {
+            return number.longValue() == 0;
+        } else if (number instanceof BigInteger) {
+            return ((BigInteger) number).signum() == 0;
+        } else {
+            return number.doubleValue() == 0.0;
         }
     }
     

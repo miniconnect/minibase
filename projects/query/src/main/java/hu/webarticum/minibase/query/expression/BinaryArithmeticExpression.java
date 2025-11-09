@@ -3,7 +3,7 @@ package hu.webarticum.minibase.query.expression;
 import java.math.BigDecimal;
 import java.util.Optional;
 
-import hu.webarticum.minibase.query.util.NumberParser;
+import hu.webarticum.minibase.query.util.NumberUtil;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
 import hu.webarticum.miniconnect.lang.LargeInteger;
@@ -65,8 +65,8 @@ public class BinaryArithmeticExpression implements Expression {
 
     @Override
     public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
-        Class<?> leftNumericType = NumberParser.numberifyType(leftOperand.type(types));
-        Class<?> rightNumericType = NumberParser.numberifyType(rightOperand.type(types));
+        Class<?> leftNumericType = NumberUtil.numberifyType(leftOperand.type(types));
+        Class<?> rightNumericType = NumberUtil.numberifyType(rightOperand.type(types));
         if (leftNumericType == Void.class || rightNumericType == Void.class) {
             return Void.class;
         } else if (operation == Operation.RAT) {
@@ -94,28 +94,28 @@ public class BinaryArithmeticExpression implements Expression {
     
     @Override
     public Object evaluate(ImmutableMap<Parameter, Object> values) {
-        Object leftValue = NumberParser.numberify(leftOperand.evaluate(values));
-        Object rightValue = NumberParser.numberify(rightOperand.evaluate(values));
+        Object leftValue = NumberUtil.numberify(leftOperand.evaluate(values));
+        Object rightValue = NumberUtil.numberify(rightOperand.evaluate(values));
         if (leftValue == null || rightValue == null) {
             return null;
         } else if (isDivision(operation) && isZero(rightValue)) {
             // TODO: raise SQL warning
             return null;
         } else if (operation == Operation.RAT) {
-            double leftDouble = (Double) NumberParser.promote(leftValue, Double.class);
-            double rightDouble = (Double) NumberParser.promote(rightValue, Double.class);
+            double leftDouble = (Double) NumberUtil.promote(leftValue, Double.class);
+            double rightDouble = (Double) NumberUtil.promote(rightValue, Double.class);
             return leftDouble / rightDouble;
         } else if (leftValue instanceof Double || rightValue instanceof Double) {
-            double leftDouble = (Double) NumberParser.promote(leftValue, Double.class);
-            double rightDouble = (Double) NumberParser.promote(rightValue, Double.class);
+            double leftDouble = (Double) NumberUtil.promote(leftValue, Double.class);
+            double rightDouble = (Double) NumberUtil.promote(rightValue, Double.class);
             return operate(leftDouble, rightDouble);
         } else if (leftValue instanceof BigDecimal || rightValue instanceof BigDecimal) {
-            BigDecimal leftBigDecimal = (BigDecimal) NumberParser.promote(leftValue, BigDecimal.class);
-            BigDecimal rightBigDecimal = (BigDecimal) NumberParser.promote(rightValue, BigDecimal.class);
+            BigDecimal leftBigDecimal = (BigDecimal) NumberUtil.promote(leftValue, BigDecimal.class);
+            BigDecimal rightBigDecimal = (BigDecimal) NumberUtil.promote(rightValue, BigDecimal.class);
             return operate(leftBigDecimal, rightBigDecimal);
         } else if (leftValue instanceof LargeInteger || rightValue instanceof LargeInteger) {
-            LargeInteger leftLargeInteger = (LargeInteger) NumberParser.promote(leftValue, LargeInteger.class);
-            LargeInteger rightLargeInteger = (LargeInteger) NumberParser.promote(rightValue, LargeInteger.class);
+            LargeInteger leftLargeInteger = (LargeInteger) NumberUtil.promote(leftValue, LargeInteger.class);
+            LargeInteger rightLargeInteger = (LargeInteger) NumberUtil.promote(rightValue, LargeInteger.class);
             return operate(leftLargeInteger, rightLargeInteger);
         } else {
             throw new IllegalArgumentException("Operation failed");
@@ -173,7 +173,7 @@ public class BinaryArithmeticExpression implements Expression {
 
     @Override
     public String automaticName() {
-        return leftOperand.automaticName() + "_" + operation.operator() + "_" + rightOperand.automaticName();
+        return leftOperand.automaticName() + " " + operation.operator() + " " + rightOperand.automaticName();
     }
     
 }

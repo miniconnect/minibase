@@ -13,7 +13,7 @@ import hu.webarticum.minibase.query.expression.VariableParameter;
 import hu.webarticum.minibase.query.query.Query;
 import hu.webarticum.minibase.query.query.StandaloneSelectQuery;
 import hu.webarticum.minibase.query.state.SessionState;
-import hu.webarticum.minibase.query.util.NumberParser;
+import hu.webarticum.minibase.query.util.NumberUtil;
 import hu.webarticum.minibase.storage.api.StorageAccess;
 import hu.webarticum.miniconnect.api.MiniColumnHeader;
 import hu.webarticum.miniconnect.api.MiniResult;
@@ -77,7 +77,7 @@ public class StandaloneSelectExecutor implements ThrowingQueryExecutor {
         } else if (type == Void.class) {
             return bestFoundType;
         } else if (Number.class.isAssignableFrom(type) && Number.class.isAssignableFrom(bestFoundType)) {
-            return NumberParser.commonNumericTypeOf(bestFoundType, type);
+            return NumberUtil.commonNumericTypeOf(bestFoundType, type);
         } else if (CharSequence.class.isAssignableFrom(type) && CharSequence.class.isAssignableFrom(bestFoundType)) {
             return String.class;
         } else {

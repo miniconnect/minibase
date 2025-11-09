@@ -12,11 +12,11 @@ import org.junit.jupiter.api.Test;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.LargeInteger;
 
-class NumberParserTest {
+class NumberUtilTest {
 
     @Test
     void testNumberifyType() {
-        ImmutableList<Class<?>> types = createValues().map(this::classOf).map(NumberParser::numberifyType);
+        ImmutableList<Class<?>> types = createValues().map(this::classOf).map(NumberUtil::numberifyType);
         ImmutableList<Class<?>> exceptedTypes = ImmutableList.of(
                 Void.class,
                 LargeInteger.class,
@@ -37,13 +37,13 @@ class NumberParserTest {
 
     @Test
     void testNumberifyTypeInvalid() {
-        assertThatThrownBy(() -> NumberParser.numberifyType(Optional.class))
+        assertThatThrownBy(() -> NumberUtil.numberifyType(Optional.class))
                 .isInstanceOf(IllegalArgumentException.class);
     }
     
     @Test
     void testCommonNumericTypeOf1() {
-        Class<?> commonType = NumberParser.commonNumericTypeOf(
+        Class<?> commonType = NumberUtil.commonNumericTypeOf(
                 Void.class,
                 Integer.class,
                 Boolean.class);
@@ -53,7 +53,7 @@ class NumberParserTest {
 
     @Test
     void testCommonNumericTypeOf2() {
-        Class<?> commonType = NumberParser.commonNumericTypeOf(
+        Class<?> commonType = NumberUtil.commonNumericTypeOf(
                 Void.class,
                 String.class,
                 Integer.class,
@@ -64,7 +64,7 @@ class NumberParserTest {
 
     @Test
     void testCommonNumericTypeOf3() {
-        Class<?> commonType = NumberParser.commonNumericTypeOf(
+        Class<?> commonType = NumberUtil.commonNumericTypeOf(
                 Void.class,
                 String.class,
                 Integer.class,
@@ -77,40 +77,52 @@ class NumberParserTest {
 
     @Test
     void testPromoteInvalidParameter() {
-        assertThatThrownBy(() -> NumberParser.promote(1.1d, Void.class)) // not void
+        assertThatThrownBy(() -> NumberUtil.promote(1.1d, Void.class)) // not void
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> NumberParser.promote(2.2d, Float.class)) // invalid target
+        assertThatThrownBy(() -> NumberUtil.promote(2.2d, Float.class)) // invalid target
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> NumberParser.promote(2.2d, Optional.class)) // non-numeric target
+        assertThatThrownBy(() -> NumberUtil.promote(2.2d, Optional.class)) // non-numeric target
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> NumberParser.promote(0.5f, Double.class)) // invalid source type
+        assertThatThrownBy(() -> NumberUtil.promote(0.5f, Double.class)) // invalid source type
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     void testPromoteInvalidPromotion() {
-        assertThatThrownBy(() -> NumberParser.promote(3.2d, LargeInteger.class))
+        assertThatThrownBy(() -> NumberUtil.promote(3.2d, LargeInteger.class))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> NumberParser.promote(3.2d, BigDecimal.class))
+        assertThatThrownBy(() -> NumberUtil.promote(3.2d, BigDecimal.class))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> NumberParser.promote(BigDecimal.valueOf(33L), LargeInteger.class))
+        assertThatThrownBy(() -> NumberUtil.promote(BigDecimal.valueOf(33L), LargeInteger.class))
                 .isInstanceOf(IllegalArgumentException.class);
     }
     
     @Test
     void testPromote() {
-        assertThat(NumberParser.promote(null, Void.class)).isNull();
-        assertThat(NumberParser.promote(LargeInteger.of(10), LargeInteger.class)).isEqualTo(LargeInteger.of(10));
-        assertThat(NumberParser.promote(LargeInteger.of(10), BigDecimal.class)).isEqualTo(BigDecimal.valueOf(10));
-        assertThat(NumberParser.promote(LargeInteger.of(10), Double.class)).isEqualTo(10d);
-        assertThat(NumberParser.promote(BigDecimal.valueOf(20), BigDecimal.class)).isEqualTo(BigDecimal.valueOf(20));
-        assertThat(NumberParser.promote(BigDecimal.valueOf(20), Double.class)).isEqualTo(20d);
-        assertThat(NumberParser.promote(30d, Double.class)).isEqualTo(30d);
+        assertThat(NumberUtil.promote(null, Void.class)).isNull();
+        assertThat(NumberUtil.promote(LargeInteger.of(10), LargeInteger.class)).isEqualTo(LargeInteger.of(10));
+        assertThat(NumberUtil.promote(LargeInteger.of(10), BigDecimal.class)).isEqualTo(BigDecimal.valueOf(10));
+        assertThat(NumberUtil.promote(LargeInteger.of(10), Double.class)).isEqualTo(10d);
+        assertThat(NumberUtil.promote(BigDecimal.valueOf(20), BigDecimal.class)).isEqualTo(BigDecimal.valueOf(20));
+        assertThat(NumberUtil.promote(BigDecimal.valueOf(20), Double.class)).isEqualTo(20d);
+        assertThat(NumberUtil.promote(30d, Double.class)).isEqualTo(30d);
     }
 
     @Test
+    void testUnify() {
+        assertThat(NumberUtil.unify(null, null)).containsExactly(null, null);
+        assertThat(NumberUtil.unify(Integer.valueOf(1), null)).containsExactly(LargeInteger.of(1), null);
+        assertThat(NumberUtil.unify(LargeInteger.of(756), LargeInteger.of(99))).containsExactly(LargeInteger.of(756), LargeInteger.of(99));
+        assertThat(NumberUtil.unify(null, LargeInteger.of(1))).containsExactly(null, LargeInteger.of(1));
+        assertThat(NumberUtil.unify(Float.valueOf(0.4f), Integer.valueOf(1))).containsExactly(Double.valueOf((double) 0.4f), Double.valueOf(1));
+        assertThat(NumberUtil.unify(LargeInteger.of(5), Integer.valueOf(7))).containsExactly(LargeInteger.of(5), LargeInteger.of(7));
+        assertThat(NumberUtil.unify(new BigDecimal("0.47"), Integer.valueOf(7))).containsExactly(new BigDecimal("0.47"), new BigDecimal("7.00"));
+        assertThat(NumberUtil.unify(Double.valueOf(7), new BigDecimal("0.32"))).containsExactly(Double.valueOf(7), Double.valueOf(0.32));
+    }
+    
+    @Test
     void testNumberify() {
-        ImmutableList<Number> numbers = createValues().map(NumberParser::numberify);
+        ImmutableList<Number> numbers = createValues().map(NumberUtil::numberify);
         ImmutableList<Number> exceptedNumbers = ImmutableList.of(
                 null,
                 LargeInteger.of(9),
@@ -131,13 +143,13 @@ class NumberParserTest {
 
     @Test
     void testNumberifyInvalid() {
-        assertThatThrownBy(() -> NumberParser.numberify(Optional.empty()))
+        assertThatThrownBy(() -> NumberUtil.numberify(Optional.empty()))
                 .isInstanceOf(IllegalArgumentException.class);
     }
     
     @Test
     void testParse() {
-        ImmutableList<BigDecimal> numbers = createStringValues().map(NumberParser::parse);
+        ImmutableList<BigDecimal> numbers = createStringValues().map(NumberUtil::parse);
         ImmutableList<Number> exceptedNumbers = ImmutableList.of(
                 BigDecimal.ZERO,
                 BigDecimal.ZERO,

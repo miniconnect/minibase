@@ -5,6 +5,7 @@ import java.util.Optional;
 import hu.webarticum.miniconnect.lang.ByteString;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
+import hu.webarticum.miniconnect.lang.LargeInteger;
 
 public class ConstantExpression implements Expression {
 
@@ -23,6 +24,9 @@ public class ConstantExpression implements Expression {
 
     @Override
     public Optional<Class<?>> type() {
+        if (value instanceof LargeInteger) {
+            return Optional.of(LargeInteger.class);
+        }
         Class<?> clazz = value != null ? value.getClass() : Void.class;
         return Optional.of(clazz);
     }
@@ -39,6 +43,9 @@ public class ConstantExpression implements Expression {
     
     @Override
     public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
+        if (value instanceof LargeInteger) {
+            return LargeInteger.class;
+        }
         return value != null ? value.getClass() : Void.class;
     }
 

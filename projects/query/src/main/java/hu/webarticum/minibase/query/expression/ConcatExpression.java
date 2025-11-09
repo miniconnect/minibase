@@ -1,16 +1,30 @@
 package hu.webarticum.minibase.query.expression;
 
+import java.util.LinkedHashSet;
 import java.util.Optional;
+import java.util.Set;
 
 import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
 
-public class ConcatExpression extends AbstractCompoundExpression {
+public class ConcatExpression implements Expression {
 
-    public ConcatExpression(ImmutableList<Expression> subExpressions) {
-        super(subExpressions);
+    protected ImmutableList<Expression> parameterExpressions;
+    
+
+    public ConcatExpression(ImmutableList<Expression> parameterExpressions) {
+        this.parameterExpressions = parameterExpressions;
     }
-
+    
+    
+    @Override
+    public ImmutableList<Parameter> parameters() {
+        Set<Parameter> subParameters = new LinkedHashSet<>();
+        for (Expression parameterExpression : parameterExpressions) {
+            subParameters.addAll(parameterExpression.parameters().asList());
+        }
+        return ImmutableList.fromCollection(subParameters);
+    }
 
     @Override
     public Optional<Class<?>> type() {
@@ -36,8 +50,8 @@ public class ConcatExpression extends AbstractCompoundExpression {
     public Object evaluate(ImmutableMap<Parameter, Object> values) {
         StringBuilder resultBuilder = new StringBuilder();
         boolean allNull = true;
-        for (Expression subExpression : subExpressions) {
-            Object value = subExpression.evaluate(values);
+        for (Expression parameterExpression : parameterExpressions) {
+            Object value = parameterExpression.evaluate(values);
             if (value != null) {
                 resultBuilder.append(value.toString());
                 allNull = false;
@@ -50,13 +64,13 @@ public class ConcatExpression extends AbstractCompoundExpression {
     public String automaticName() {
         StringBuilder resultBuilder = new StringBuilder("CONCAT(");
         boolean first = true;
-        for (Expression subExpression : subExpressions) {
+        for (Expression parameterExpression : parameterExpressions) {
             if (first) {
                 first = false;
             } else {
                 resultBuilder.append(", ");
             }
-            resultBuilder.append(subExpression.automaticName());
+            resultBuilder.append(parameterExpression.automaticName());
         }
         resultBuilder.append(")");
         return resultBuilder.toString();

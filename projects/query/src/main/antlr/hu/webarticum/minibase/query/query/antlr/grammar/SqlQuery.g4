@@ -80,8 +80,8 @@ whereItem: scopeableFieldName postfixCondition | PAR_START whereItem PAR_END;
 postfixCondition: simpleRelation extendedValue | betweenRelation | isNull | isNotNull;
 simpleRelation: EQ | LESS | LESS_EQ | GREATER| GREATER_EQ;
 betweenRelation: BETWEEN firstValue=extendedValue AND secondValue=extendedValue;
-isNull: IS NULL;
-isNotNull: IS NOT NULL;
+isNull: IS ( NULL | UNKNOWN );
+isNotNull: IS NOT ( NULL | UNKNOWN );
 orderByPart: ORDER BY orderByItem ( COMMA orderByItem )*;
 orderByItem: ( scopeableFieldName | orderByPosition ) ( ASC | DESC )? ( nullsFirst | nullsLast )?;
 nullsFirst: NULLS FIRST;
@@ -90,17 +90,35 @@ orderByPosition: TOKEN_INTEGER;
 aliasableExpression: expression aliasPart?;
 aliasPart: AS? alias=identifier;
 expression:
-    leftExpression=expression ( ASTERISK | MOD | PERCENT | DIV | SLASH ) rightExpression=expression |
-    leftExpression=expression ( PLUS | MINUS ) rightExpression=expression |
+    unaryArithmeticExpression |
+    leftExpression=expression binaryOperator=( ASTERISK | MOD | PERCENT | DIV | SLASH ) rightExpression=expression |
+    leftExpression=expression binaryOperator=( PLUS | MINUS ) rightExpression=expression |
+    notOperator=NOT subExpression=expression |
+    leftExpression=expression binaryOperator=AND rightExpression=expression |
+    leftExpression=expression binaryOperator=XOR rightExpression=expression |
+    leftExpression=expression binaryOperator=OR rightExpression=expression |
+    leftExpression=expression binaryOperator=CONCAT rightExpression=expression |
+    leftExpression=expression binaryOperator=( LESS | LESS_EQ | GREATER | GREATER_EQ ) rightExpression=expression |
+    leftExpression=expression binaryOperator=( EQ | NEQ_ANG | NEQ_BANG ) rightExpression=expression |
+    givenExpression=expression BETWEEN minExpression=expression AND maxExpression=expression |
+    subExpression=expression IS NOT? isNullOperator=( NULL | UNKNOWN ) |
+    givenExpression=expression NOT? likeOperator=( LIKE | ILIKE ) patternExpression=expression ( ESCAPE escapeExpression=expression )? |
+    givenExpression=expression NOT? regexpOperator=( REGEXP | RLIKE ) patternExpression=expression |
+    caseExpression |
+    COUNT PAR_START DISTINCT? ASTERISK PAR_END |
+    COUNT PAR_START DISTINCT subExpression=expression PAR_END |
     atomicExpression;
+unaryArithmeticExpression: ( PLUS | MINUS ) subExpression=expression;
+caseExpression: CASE (givenExpression=expression)? whenPart+ elsePart? END;
+whenPart: WHEN conditionExpression=expression THEN resultExpression=expression;
+elsePart: ELSE expression;
 atomicExpression:
     literal |
     variable |
     specialSelectable |
     scopeableFieldName |
     functionCall |
-    PAR_START paredExpression=expression PAR_END |
-    MINUS negatedExpression=expression;
+    PAR_START paredExpression=expression PAR_END;
 specialSelectable: specialSelectableName ( parentheses )?;
 specialSelectableName:
     CURRENT_USER |
@@ -117,7 +135,7 @@ variable: AT identifier;
 fieldName: identifier;
 tableName: identifier;
 identifier: TOKEN_SIMPLENAME | TOKEN_QUOTEDNAME | TOKEN_BACKTICKEDNAME;
-literal: NULL | TOKEN_STRING | TOKEN_INTEGER | booleanLiteral;
+literal: NULL | TOKEN_STRING | TOKEN_DECIMAL | TOKEN_INTEGER | booleanLiteral;
 booleanLiteral: TRUE | FALSE;
 likePart: LIKE TOKEN_STRING;
 schemaName: identifier;
@@ -149,7 +167,6 @@ FROM: F R O M;
 UNIT: U N I T;
 INTO: I N T O;
 WHERE: W H E R E;
-AND: A N D;
 BETWEEN: B E T W E E N;
 ORDER: O R D E R;
 BY: B Y;
@@ -169,16 +186,32 @@ VALUES: V A L U E S;
 IS: I S;
 NOT: N O T;
 NULL: N U L L;
+UNKNOWN: U N K N O W N;
 SCHEMAS: S C H E M A S;
 DATABASES: D A T A B A S E S;
 TABLES: T A B L E S;
-LIKE: L I K E;
 LEFT: L E F T;
 INNER: I N N E R;
 OUTER: O U T E R;
 JOIN: J O I N;
 ON: O N;
 UNION: U N I O N;
+
+LIKE: L I K E;
+ILIKE: I L I K E;
+ESCAPE: E S C A P E;
+RLIKE: R L I K E;
+REGEXP: R E G E X P;
+
+CASE: C A S E;
+WHEN: W H E N;
+THEN: T H E N;
+ELSE: E L S E;
+END: E N D;
+
+AND: A N D;
+OR: O R;
+XOR: X O R;
 
 MOD: M O D;
 DIV: D I V;
@@ -191,11 +224,14 @@ TOKEN_QUOTEDNAME: '"' ( '\\' . | '""' | ~[\\"] )* '"';
 TOKEN_BACKTICKEDNAME: '`' ( '``' | ~[`] )* '`';
 
 TOKEN_STRING: '\'' ( '\\' . | '\'\'' | ~[\\'] )* '\'';
+TOKEN_DECIMAL: MINUS? ( [0-9]+ '.' [0-9]* | '.' [0-9]+ );
 TOKEN_INTEGER: MINUS? [0-9]+;
 
 DOT: '.';
 COMMA: ',';
 AT: '@';
+
+CONCAT: '||';
 
 ASTERISK: '*';
 PERCENT: '%';
@@ -205,6 +241,9 @@ PLUS: '+';
 MINUS: '-';
 
 EQ: '=';
+NEQ_ANG: '<>';
+NEQ_BANG: '!=';
+
 LESS: '<';
 LESS_EQ: '<=';
 GREATER: '>';

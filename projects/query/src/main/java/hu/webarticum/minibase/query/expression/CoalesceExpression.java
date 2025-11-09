@@ -1,23 +1,37 @@
 package hu.webarticum.minibase.query.expression;
 
+import java.util.LinkedHashSet;
 import java.util.Optional;
+import java.util.Set;
 
-import hu.webarticum.minibase.query.util.NumberParser;
+import hu.webarticum.minibase.query.util.NumberUtil;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
 
-public class CoalesceExpression extends AbstractCompoundExpression {
+public class CoalesceExpression implements Expression {
 
-    public CoalesceExpression(ImmutableList<Expression> subExpressions) {
-        super(subExpressions);
+    protected ImmutableList<Expression> parameterExpressions;
+    
+
+    public CoalesceExpression(ImmutableList<Expression> parameterExpressions) {
+        this.parameterExpressions = parameterExpressions;
     }
     
     
     @Override
+    public ImmutableList<Parameter> parameters() {
+        Set<Parameter> subParameters = new LinkedHashSet<>();
+        for (Expression parameterExpression : parameterExpressions) {
+            subParameters.addAll(parameterExpression.parameters().asList());
+        }
+        return ImmutableList.fromCollection(subParameters);
+    }
+
+    @Override
     public Optional<Class<?>> type() {
         Class<?> currentType = Void.class;
-        for (Expression subExpression : subExpressions) {
-            Optional<Class<?>> subType = subExpression.type();
+        for (Expression parameterExpression : parameterExpressions) {
+            Optional<Class<?>> subType = parameterExpression.type();
             if (!subType.isPresent()) {
                 return Optional.empty();
             }
@@ -32,8 +46,8 @@ public class CoalesceExpression extends AbstractCompoundExpression {
     @Override
     public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
         Class<?> currentType = Void.class;
-        for (Expression subExpression : subExpressions) {
-            Class<?> subType = subExpression.type(types);
+        for (Expression parameterExpression : parameterExpressions) {
+            Class<?> subType = parameterExpression.type(types);
             currentType = mergeType(currentType, subType);
         }
         return currentType;
@@ -45,7 +59,7 @@ public class CoalesceExpression extends AbstractCompoundExpression {
         } else if (type == Void.class) {
             return currentType;
         } else if (Number.class.isAssignableFrom(type) && Number.class.isAssignableFrom(currentType)) {
-            return NumberParser.commonNumericTypeOf(currentType, type);
+            return NumberUtil.commonNumericTypeOf(currentType, type);
         } else if (CharSequence.class.isAssignableFrom(type) && CharSequence.class.isAssignableFrom(currentType)) {
             return String.class;
         } else {
@@ -55,28 +69,28 @@ public class CoalesceExpression extends AbstractCompoundExpression {
 
     @Override
     public boolean isNullable() {
-        for (Expression subExpression : subExpressions) {
-            if (subExpression.isNullable()) {
+        for (Expression parameterExpression : parameterExpressions) {
+            if (parameterExpression.isNullable()) {
                 return true;
             }
         }
-        return !subExpressions.isEmpty();
+        return !parameterExpressions.isEmpty();
     }
     
     @Override
     public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
-        for (Expression subExpression : subExpressions) {
-            if (subExpression.isNullable(nullabilities)) {
+        for (Expression parameterExpression : parameterExpressions) {
+            if (parameterExpression.isNullable(nullabilities)) {
                 return true;
             }
         }
-        return !subExpressions.isEmpty();
+        return !parameterExpressions.isEmpty();
     }
     
     @Override
     public Object evaluate(ImmutableMap<Parameter, Object> values) {
-        for (Expression subExpression : subExpressions) {
-            Object subValue = subExpression.evaluate(values);
+        for (Expression parameterExpression : parameterExpressions) {
+            Object subValue = parameterExpression.evaluate(values);
             if (subValue != null) {
                 return subValue;
             }
@@ -88,13 +102,13 @@ public class CoalesceExpression extends AbstractCompoundExpression {
     public String automaticName() {
         StringBuilder resultBuilder = new StringBuilder("COALESCE(");
         boolean first = true;
-        for (Expression subExpression : subExpressions) {
+        for (Expression parameterExpression : parameterExpressions) {
             if (first) {
                 first = false;
             } else {
                 resultBuilder.append(", ");
             }
-            resultBuilder.append(subExpression.automaticName());
+            resultBuilder.append(parameterExpression.automaticName());
         }
         resultBuilder.append(")");
         return resultBuilder.toString();

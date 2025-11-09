@@ -1,5 +1,6 @@
 package hu.webarticum.minibase.query.parser;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -15,16 +16,29 @@ import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
+import hu.webarticum.minibase.query.expression.AndExpression;
+import hu.webarticum.minibase.query.expression.BetweenExpression;
 import hu.webarticum.minibase.query.expression.BinaryArithmeticExpression;
+import hu.webarticum.minibase.query.expression.CaseExpression;
 import hu.webarticum.minibase.query.expression.CoalesceExpression;
 import hu.webarticum.minibase.query.expression.ColumnExpression;
 import hu.webarticum.minibase.query.expression.ConcatExpression;
 import hu.webarticum.minibase.query.expression.ConstantExpression;
+import hu.webarticum.minibase.query.expression.EqualsExpression;
 import hu.webarticum.minibase.query.expression.Expression;
+import hu.webarticum.minibase.query.expression.IsNotNullExpression;
+import hu.webarticum.minibase.query.expression.IsNullExpression;
+import hu.webarticum.minibase.query.expression.LikeExpression;
 import hu.webarticum.minibase.query.expression.NegateExpression;
+import hu.webarticum.minibase.query.expression.NotEqualsExpression;
+import hu.webarticum.minibase.query.expression.NotExpression;
+import hu.webarticum.minibase.query.expression.OrExpression;
+import hu.webarticum.minibase.query.expression.OrderRelationExpression;
+import hu.webarticum.minibase.query.expression.RegexpExpression;
 import hu.webarticum.minibase.query.expression.SpecialValueExpression;
 import hu.webarticum.minibase.query.expression.SpecialValueParameter;
 import hu.webarticum.minibase.query.expression.VariableExpression;
+import hu.webarticum.minibase.query.expression.XorExpression;
 import hu.webarticum.minibase.query.query.DeleteQuery;
 import hu.webarticum.minibase.query.query.InsertQuery;
 import hu.webarticum.minibase.query.query.JoinType;
@@ -58,8 +72,10 @@ import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.Aliasable
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.AtomicExpressionContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.BetweenRelationContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.BooleanLiteralContext;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.CaseExpressionContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.CommaLimitPartContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.DeleteQueryContext;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.ElsePartContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.ExpressionContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.ExtendedValueContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.FieldListContext;
@@ -95,12 +111,14 @@ import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.SqlQueryC
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.StandaloneSelectQueryContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.StandaloneSelectRowContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.TableNameContext;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.UnaryArithmeticExpressionContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.UpdateItemContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.UpdatePartContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.UpdateQueryContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.UseQueryContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.ValueListContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.VariableContext;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.WhenPartContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.WhereItemContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.WherePartContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.WildcardSelectItemContext;
@@ -494,32 +512,6 @@ public class AntlrSqlParser implements SqlParser {
         return new ExpressionSelectItem(expression, alias);
     }
 
-    private Expression parseExpressionNode(ExpressionContext expressionNode) {
-        AtomicExpressionContext atomicExpressionNode = expressionNode.atomicExpression();
-        if (atomicExpressionNode != null) {
-            return parseAtomicExpressionNode(atomicExpressionNode);
-        }
-
-        ExpressionContext leftExpressionNode = expressionNode.leftExpression;
-        if (leftExpressionNode == null) {
-            throw new IllegalArgumentException("Left expression is null in: " + expressionNode.getText());
-        }
-        
-        ExpressionContext rightExpressionNode = expressionNode.rightExpression;
-        if (rightExpressionNode == null) {
-            throw new IllegalArgumentException("Right expression is null in: " + expressionNode.getText());
-        }
-
-        BinaryArithmeticExpression.Operation operation = extractOperation(expressionNode);
-        if (operation == null) {
-            throw new IllegalArgumentException("Can not detect operation in: " + expressionNode.getText());
-        }
-
-        Expression leftExpression = parseExpressionNode(leftExpressionNode);
-        Expression rightExpression = parseExpressionNode(rightExpressionNode);
-        return new BinaryArithmeticExpression(operation, leftExpression, rightExpression);
-    }
-    
     private String parseAliasPartNode(AliasPartContext aliasPartNode) {
         if (aliasPartNode == null) {
             return null;
@@ -528,8 +520,118 @@ public class AntlrSqlParser implements SqlParser {
         return parseIdentifierNode(aliasPartNode.alias);
     }
     
-    private BinaryArithmeticExpression.Operation extractOperation(ExpressionContext expressionNode) {
-        if (expressionNode.ASTERISK() != null) {
+    private Expression parseExpressionNode(ExpressionContext expressionNode) {
+        AtomicExpressionContext atomicExpressionNode = expressionNode.atomicExpression();
+        if (atomicExpressionNode != null) {
+            return parseAtomicExpressionNode(atomicExpressionNode);
+        }
+
+        UnaryArithmeticExpressionContext unaryArithmeticExpressionNode = expressionNode.unaryArithmeticExpression();
+        if (unaryArithmeticExpressionNode != null) {
+            return parseUnaryArithmeticExpressionNode(unaryArithmeticExpressionNode);
+        }
+
+        if (expressionNode.notOperator != null) {
+            return new NotExpression(parseExpressionNode(expressionNode.subExpression));
+        }
+
+        if (expressionNode.isNullOperator != null) {
+            Expression subExpression = parseExpressionNode(expressionNode.subExpression);
+            if (expressionNode.NOT() == null) {
+                return new IsNullExpression(subExpression);
+            } else {
+                return new IsNotNullExpression(subExpression);
+            }
+        }
+
+        CaseExpressionContext caseExpressionNode = expressionNode.caseExpression();
+        if (caseExpressionNode != null) {
+            return parseCaseExpressionNode(caseExpressionNode);
+        }
+
+        if (expressionNode.likeOperator != null) {
+            Expression givenExpression = parseExpressionNode(expressionNode.givenExpression);
+            Expression patternExpression = parseExpressionNode(expressionNode.patternExpression);
+            Expression escapeExpression =
+                    expressionNode.escapeExpression != null ?
+                    parseExpressionNode(expressionNode.escapeExpression) :
+                    null;
+            boolean caseInsensitive = expressionNode.ILIKE() != null;
+            Expression likeExpression = new LikeExpression(givenExpression, patternExpression, escapeExpression, caseInsensitive);
+            if (expressionNode.NOT() == null) {
+                return likeExpression;
+            } else {
+                return new NotExpression(likeExpression);
+            }
+        }
+        
+        if (expressionNode.regexpOperator != null) {
+            Expression givenExpression = parseExpressionNode(expressionNode.givenExpression);
+            Expression patternExpression = parseExpressionNode(expressionNode.patternExpression);
+            Expression regexpExpression = new RegexpExpression(givenExpression, patternExpression);
+            if (expressionNode.NOT() == null) {
+                return regexpExpression;
+            } else {
+                return new NotExpression(regexpExpression);
+            }
+        }
+
+        if (expressionNode.BETWEEN() != null) {
+            Expression givenExpression = parseExpressionNode(expressionNode.givenExpression);
+            Expression minExpression = parseExpressionNode(expressionNode.minExpression);
+            Expression maxExpression = parseExpressionNode(expressionNode.maxExpression);
+            return new BetweenExpression(givenExpression, minExpression, maxExpression);
+        }
+
+        if (expressionNode.COUNT() != null) {
+            throw new UnsupportedOperationException("Aggregation currently not supported (COUNT)");
+        }
+
+        Object operation = extractOperation(expressionNode);
+        if (operation == null) {
+            throw new IllegalArgumentException("Unknown operation type in: " + expressionNode.getText());
+        }
+
+        Expression leftExpression = parseExpressionNode(expressionNode.leftExpression);
+        Expression rightExpression = parseExpressionNode(expressionNode.rightExpression);
+
+        if (operation == EqualsExpression.class) {
+            return new EqualsExpression(leftExpression, rightExpression);
+        } else if (operation == NotEqualsExpression.class) {
+            return new NotEqualsExpression(leftExpression, rightExpression);
+        } else if (operation instanceof OrderRelationExpression.Operation) {
+            OrderRelationExpression.Operation relationOperation = (OrderRelationExpression.Operation) operation;
+            return new OrderRelationExpression(relationOperation, leftExpression, rightExpression);
+        } else if (operation instanceof BinaryArithmeticExpression.Operation) {
+            BinaryArithmeticExpression.Operation arithmeticOperation = (BinaryArithmeticExpression.Operation) operation;
+            return new BinaryArithmeticExpression(arithmeticOperation, leftExpression, rightExpression);
+        } else if (operation == AndExpression.class) {
+            return new AndExpression(leftExpression, rightExpression);
+        } else if (operation == XorExpression.class) {
+            return new XorExpression(leftExpression, rightExpression);
+        } else if (operation == OrExpression.class) {
+            return new OrExpression(leftExpression, rightExpression);
+        } else if (operation == ConcatExpression.class) {
+            return new ConcatExpression(ImmutableList.of(leftExpression, rightExpression));
+        } else {
+            throw new IllegalArgumentException("Unknown operation: " + operation);
+        }
+    }
+    
+    private Object extractOperation(ExpressionContext expressionNode) {
+        if (expressionNode.EQ() != null) {
+            return EqualsExpression.class;
+        } else if (expressionNode.NEQ_ANG() != null || expressionNode.NEQ_BANG() != null) {
+            return NotEqualsExpression.class;
+        } else if (expressionNode.LESS() != null) {
+            return OrderRelationExpression.Operation.LESS;
+        } else if (expressionNode.LESS_EQ() != null) {
+            return OrderRelationExpression.Operation.LESS_EQ;
+        } else if (expressionNode.GREATER() != null) {
+            return OrderRelationExpression.Operation.GREATER;
+        } else if (expressionNode.GREATER_EQ() != null) {
+            return OrderRelationExpression.Operation.GREATER_EQ;
+        } else if (expressionNode.ASTERISK() != null) {
             return BinaryArithmeticExpression.Operation.MUL;
         } else if (expressionNode.MOD() != null) {
             return BinaryArithmeticExpression.Operation.MOD;
@@ -543,6 +645,14 @@ public class AntlrSqlParser implements SqlParser {
             return BinaryArithmeticExpression.Operation.ADD;
         } else if (expressionNode.MINUS() != null) {
             return BinaryArithmeticExpression.Operation.SUB;
+        } else if (expressionNode.AND() != null) {
+            return AndExpression.class;
+        } else if (expressionNode.XOR() != null) {
+            return XorExpression.class;
+        } else if (expressionNode.OR() != null) {
+            return OrExpression.class;
+        } else if (expressionNode.CONCAT() != null) {
+            return ConcatExpression.class;
         } else {
             return null;
         }
@@ -594,12 +704,39 @@ public class AntlrSqlParser implements SqlParser {
             }
         }
         
-        if (atomicExpressionNode.MINUS() != null) {
-            Expression subExpression = parseExpressionNode(atomicExpressionNode.negatedExpression);
+        throw new IllegalArgumentException("Unknown expression: " + atomicExpressionNode.getText());
+    }
+
+    private Expression parseUnaryArithmeticExpressionNode(UnaryArithmeticExpressionContext unaryArithmeticExpressionNode) {
+        Expression subExpression = parseExpressionNode(unaryArithmeticExpressionNode.subExpression);
+        if (unaryArithmeticExpressionNode.MINUS() != null) {
             return new NegateExpression(subExpression);
+        } else {
+            return subExpression;
+        }
+    }
+    
+    private Expression parseCaseExpressionNode(CaseExpressionContext caseExpressionNode) {
+        Expression givenExpression = null;
+        if (caseExpressionNode.givenExpression != null) {
+            givenExpression = parseExpressionNode(caseExpressionNode.givenExpression);
+        }
+        Expression elseExpression = null;
+        ElsePartContext elsePartNode = caseExpressionNode.elsePart();
+        if (elsePartNode != null) {
+            elseExpression = parseExpressionNode(elsePartNode.expression());
         }
         
-        throw new IllegalArgumentException("Unknown expression: " + atomicExpressionNode.getText());
+        ImmutableList<CaseExpression.WhenItem> whenItems =
+                ImmutableList.fromCollection(caseExpressionNode.whenPart()).map(this::parseCaseWhenItem);
+
+        return new CaseExpression(givenExpression, whenItems, elseExpression);
+    }
+
+    private CaseExpression.WhenItem parseCaseWhenItem(WhenPartContext whenPartNode) {
+        Expression conditionExpression = parseExpressionNode(whenPartNode.conditionExpression);
+        Expression resultExpression = parseExpressionNode(whenPartNode.resultExpression);
+        return new CaseExpression.WhenItem(conditionExpression, resultExpression);
     }
     
     private ImmutableList<JoinItem> parseJoinPartNodes(
@@ -727,7 +864,8 @@ public class AntlrSqlParser implements SqlParser {
         
         OrderByPositionContext orderByPositionNode = orderByItemNode.orderByPosition();
         if (orderByPositionNode != null) {
-            Integer orderByPosition = parseIntegerNode(orderByPositionNode.TOKEN_INTEGER());
+            LargeInteger largeOrderByPosition = parseIntegerNode(orderByPositionNode.TOKEN_INTEGER());
+            Integer orderByPosition = largeOrderByPosition != null ? largeOrderByPosition.intValueExact() : null;
             return new OrderByItem(null, null, orderByPosition, ascOrder, nullsOrderMode);
         }
         
@@ -777,7 +915,7 @@ public class AntlrSqlParser implements SqlParser {
     private Object parseLimitParameterNode(LimitParameterContext limitParameterNode) {
         TerminalNode integerToken = limitParameterNode.TOKEN_INTEGER();
         if (integerToken != null) {
-            return parseLargeIntegerNode(integerToken);
+            return parseIntegerNode(integerToken);
         }
 
         TerminalNode stringToken = limitParameterNode.TOKEN_STRING();
@@ -901,6 +1039,11 @@ public class AntlrSqlParser implements SqlParser {
             return parseIntegerNode(integerNode);
         }
         
+        TerminalNode decimalNode = literalNode.TOKEN_DECIMAL();
+        if (decimalNode != null) {
+            return parseDecimalNode(decimalNode);
+        }
+        
         TerminalNode stringNode = literalNode.TOKEN_STRING();
         if (stringNode != null) {
             return parseStringNode(stringNode);
@@ -914,12 +1057,12 @@ public class AntlrSqlParser implements SqlParser {
         throw new IllegalArgumentException("Invalid literal: " + literalNode.getText());
     }
     
-    private Integer parseIntegerNode(TerminalNode integerNode) {
-        return Integer.parseInt(integerNode.getText());
+    private LargeInteger parseIntegerNode(TerminalNode integerNode) {
+        return LargeInteger.of(integerNode.getText());
     }
 
-    private LargeInteger parseLargeIntegerNode(TerminalNode integerNode) {
-        return LargeInteger.of(integerNode.getText());
+    private BigDecimal parseDecimalNode(TerminalNode integerNode) {
+        return new BigDecimal(integerNode.getText());
     }
 
     private String parseStringNode(TerminalNode stringNode) {

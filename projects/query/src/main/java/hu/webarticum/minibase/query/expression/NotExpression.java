@@ -1,19 +1,17 @@
 package hu.webarticum.minibase.query.expression;
 
-import java.math.BigDecimal;
 import java.util.Optional;
 
-import hu.webarticum.minibase.query.util.NumberUtil;
+import hu.webarticum.minibase.query.util.BooleanUtil;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
-import hu.webarticum.miniconnect.lang.LargeInteger;
 
-public class NegateExpression implements Expression {
+public class NotExpression implements Expression {
     
     private final Expression subExpression;
     
 
-    public NegateExpression(Expression subExpression) {
+    public NotExpression(Expression subExpression) {
         this.subExpression = subExpression;
     }
 
@@ -25,13 +23,12 @@ public class NegateExpression implements Expression {
 
     @Override
     public Optional<Class<?>> type() {
-        return Optional.empty();
+        return Optional.of(Boolean.class);
     }
 
     @Override
     public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
-        Class<?> subType = subExpression.type(types);
-        return NumberUtil.numberifyType(subType);
+        return Boolean.class;
     }
     
     @Override
@@ -47,21 +44,17 @@ public class NegateExpression implements Expression {
     @Override
     public Object evaluate(ImmutableMap<Parameter, Object> values) {
         Object subValue = subExpression.evaluate(values);
-        Number subNumber = NumberUtil.numberify(subValue);
-        if (subNumber == null) {
+        Boolean subBoolean = BooleanUtil.boolify(subValue);
+        if (subBoolean == null) {
             return null;
-        } else if (subNumber instanceof LargeInteger) {
-            return ((LargeInteger) subNumber).negate();
-        } else if (subNumber instanceof BigDecimal) {
-            return ((BigDecimal) subNumber).negate();
         } else {
-            return -subNumber.doubleValue();
+            return !subBoolean;
         }
     }
 
     @Override
     public String automaticName() {
-        return "-" + subExpression.automaticName();
+        return "NOT " + subExpression.automaticName();
     }
     
 }
