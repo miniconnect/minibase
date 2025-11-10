@@ -252,7 +252,7 @@ GREATER_EQ: '>=';
 PAR_START: '(';
 PAR_END: ')';
 
-WHITESPACE: [ \n\t\r] -> skip;
+WHITESPACE: [ \n\t\r]+ -> channel(HIDDEN);
 
 ANY: .;
 
