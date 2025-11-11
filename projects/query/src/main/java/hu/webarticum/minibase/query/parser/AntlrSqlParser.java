@@ -14,12 +14,14 @@ import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
+import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 import hu.webarticum.minibase.query.expression.AndExpression;
 import hu.webarticum.minibase.query.expression.BetweenExpression;
 import hu.webarticum.minibase.query.expression.BinaryArithmeticExpression;
 import hu.webarticum.minibase.query.expression.CaseExpression;
+import hu.webarticum.minibase.query.expression.CastExpression;
 import hu.webarticum.minibase.query.expression.CoalesceExpression;
 import hu.webarticum.minibase.query.expression.ColumnExpression;
 import hu.webarticum.minibase.query.expression.ConcatExpression;
@@ -37,6 +39,8 @@ import hu.webarticum.minibase.query.expression.OrderRelationExpression;
 import hu.webarticum.minibase.query.expression.RegexpExpression;
 import hu.webarticum.minibase.query.expression.SpecialValueExpression;
 import hu.webarticum.minibase.query.expression.SpecialValueParameter;
+import hu.webarticum.minibase.query.expression.TypeConstruct;
+import hu.webarticum.minibase.query.expression.TypeConstruct.SymbolAlias;
 import hu.webarticum.minibase.query.expression.VariableExpression;
 import hu.webarticum.minibase.query.expression.XorExpression;
 import hu.webarticum.minibase.query.query.DeleteQuery;
@@ -73,6 +77,7 @@ import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.AtomicExp
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.BetweenRelationContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.BooleanLiteralContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.CaseExpressionContext;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.CastExpressionContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.CommaLimitPartContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.DeleteQueryContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.ElsePartContext;
@@ -106,11 +111,14 @@ import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.ShowSchem
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.ShowSpecialQueryContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.ShowTablesQueryContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.SimpleRelationContext;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.SizeParameterContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.SpecialSelectableContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.SqlQueryContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.StandaloneSelectQueryContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.StandaloneSelectRowContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.TableNameContext;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.TypeConstructContext;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.TypeNameContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.UnaryArithmeticExpressionContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.UpdateItemContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.UpdatePartContext;
@@ -531,6 +539,11 @@ public class AntlrSqlParser implements SqlParser {
             return parseUnaryArithmeticExpressionNode(unaryArithmeticExpressionNode);
         }
 
+        CastExpressionContext castExpressionNode = expressionNode.castExpression();
+        if (castExpressionNode != null) {
+            return parseCastExpressionNode(castExpressionNode);
+        }
+
         if (expressionNode.notOperator != null) {
             return new NotExpression(parseExpressionNode(expressionNode.subExpression));
         }
@@ -713,6 +726,48 @@ public class AntlrSqlParser implements SqlParser {
             return new NegateExpression(subExpression);
         } else {
             return subExpression;
+        }
+    }
+
+    private Expression parseCastExpressionNode(CastExpressionContext castExpressionNode) {
+        Expression subExpression = parseExpressionNode(castExpressionNode.expression());
+        TypeConstruct typeConstruct = parseTypeConstructNode(castExpressionNode.typeConstruct());
+        return new CastExpression(subExpression, typeConstruct);
+    }
+    
+    private TypeConstruct parseTypeConstructNode(TypeConstructContext typeConstructNode) {
+        TypeConstruct.SymbolAlias symbolAlias = parseTypeNameNode(typeConstructNode.typeName());
+        Integer size = typeConstructNode.size != null ? parseSizeParameterNode(typeConstructNode.size) : null;
+        Integer scale = typeConstructNode.scale != null ? parseSizeParameterNode(typeConstructNode.scale) : null;
+        return new TypeConstruct(symbolAlias, size, scale);
+    }
+
+    private SymbolAlias parseTypeNameNode(TypeNameContext typeNameNode) {
+        StringBuilder aliasNameBuilder = new StringBuilder();
+        boolean first = true;
+        for (ParseTree child : typeNameNode.children) {
+            if (first) {
+                first = false;
+            } else  {
+                aliasNameBuilder.append('_');
+            }
+            aliasNameBuilder.append(child.getText().toUpperCase());
+        }
+        return SymbolAlias.valueOf(aliasNameBuilder.toString());
+        
+    }
+
+    private Integer parseSizeParameterNode(SizeParameterContext sizeParameterNode) {
+        TerminalNode integerToken = sizeParameterNode.TOKEN_INTEGER();
+        if (integerToken != null) {
+            return parseIntegerNode(integerToken).intValueExact();
+        }
+
+        TerminalNode stringToken = sizeParameterNode.TOKEN_STRING();
+        if (stringToken != null) {
+            return Integer.parseInt(parseStringNode(stringToken));
+        } else {
+            return null;
         }
     }
     

@@ -107,11 +107,22 @@ expression:
     caseExpression |
     COUNT PAR_START DISTINCT? ASTERISK PAR_END |
     COUNT PAR_START DISTINCT subExpression=expression PAR_END |
+    castExpression |
     atomicExpression;
 unaryArithmeticExpression: ( PLUS | MINUS ) subExpression=expression;
 caseExpression: CASE (givenExpression=expression)? whenPart+ elsePart? END;
 whenPart: WHEN conditionExpression=expression THEN resultExpression=expression;
 elsePart: ELSE expression;
+castExpression:
+    CAST PAR_START expression AS typeConstruct PAR_END |
+    CONVERT PAR_START expression COMMA typeConstruct PAR_END |
+    CONVERT PAR_START typeConstruct COMMA expression PAR_END;
+typeConstruct: typeName ( PAR_START ( size=sizeParameter ( COMMA scale=sizeParameter )? )? PAR_END )?;
+sizeParameter: TOKEN_INTEGER | TOKEN_STRING;
+typeName:
+    BOOLEAN | INTEGER |BIGINT | DECIMAL | FLOAT | NVARCHAR | CLOB | BINARY | VARBINARY | BLOB | DATE | TIME | DATETIME |
+    TIMESTAMP ( WITHOUT TIME ZONE )? | TIMESTAMP WITH TIME ZONE |
+    BIT | TINYINT | SMALLINT | NUMERIC | REAL | DOUBLE PRECISION | CHAR | VARCHAR | NCHAR | TEXT;
 atomicExpression:
     literal |
     variable |
@@ -150,6 +161,38 @@ SHOW: S H O W;
 CALL: C A L L;
 USE: U S E;
 SET: S E T;
+
+CAST: C A S T;
+CONVERT: C O N V E R T;
+
+BOOLEAN: B O O L E A N;
+INTEGER: I N T E G E R;
+BIGINT: B I G I N T;
+DECIMAL: D E C I M A L;
+FLOAT: F L O A T;
+NVARCHAR: N V A R C H A R;
+CLOB: C L O B;
+BINARY: B I N A R Y;
+VARBINARY: V A R B I N A R Y;
+BLOB: B L O B;
+DATE: D A T E;
+TIME: T I M E;
+DATETIME: D A T E T I M E;
+TIMESTAMP: T I M E S T A M P;
+WITH: W I T H;
+WITHOUT: W I T H O U T;
+ZONE: Z O N E;
+BIT: B I T;
+TINYINT: T I N Y I N T;
+SMALLINT: S M A L L I N T;
+NUMERIC: N U M E R I C;
+REAL: R E A L;
+DOUBLE: D O U B L E;
+PRECISION: P R E C I S I O N;
+CHAR: C H A R;
+VARCHAR: V A R C H A R;
+NCHAR: N C H A R;
+TEXT: T E X T;
 
 CURRENT_USER: C U R R E N T UNDERSCORE U S E R;
 CURRENT_SCHEMA: C U R R E N T UNDERSCORE S C H E M A;
