@@ -3,6 +3,7 @@ package hu.webarticum.minibase.query.util;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -15,10 +16,10 @@ import hu.webarticum.miniconnect.lang.LargeInteger;
 
 class SimpleConversionUtilTest {
 
-    // FIXME: this is just a smoke  test
+    // FIXME: this is just a smoke test
     // TODO: unify the converter framework from miniconnect:record and use it
     @Test
-    void testtestSomeConversions() {
+    void testSomeConversions() {
         assertThat(SimpleConversionUtil.convert(
                 null, new TypeConstruct(TypeConstruct.Symbol.NULL, null, null)))
                 .isNull();
@@ -26,8 +27,14 @@ class SimpleConversionUtilTest {
                 "lorem", new TypeConstruct(TypeConstruct.Symbol.NULL, null, null)))
                 .isNull();
         assertThat(SimpleConversionUtil.convert(
+                null, new TypeConstruct(TypeConstruct.Symbol.NVARCHAR, null, null)))
+                .isNull();
+        assertThat(SimpleConversionUtil.convert(
                 "128", new TypeConstruct(TypeConstruct.Symbol.BIGINT, null, null)))
                 .isEqualTo(LargeInteger.of(128));
+        assertThat(SimpleConversionUtil.convert(
+                4, new TypeConstruct(TypeConstruct.Symbol.BOOLEAN, null, null)))
+                .isEqualTo(true);
         assertThat(SimpleConversionUtil.convert(
                 "lorem", new TypeConstruct(TypeConstruct.Symbol.NVARCHAR, 2, null)))
                 .isEqualTo("lo");
@@ -55,6 +62,9 @@ class SimpleConversionUtilTest {
         assertThat(SimpleConversionUtil.convert(
             "2025-11-12", new TypeConstruct(TypeConstruct.Symbol.DATE, 2, 5)))
                 .isEqualTo(LocalDate.of(2025, 11, 12));
+        assertThat(SimpleConversionUtil.convert(
+            "2025-11-12T01:02:03Z", new TypeConstruct(TypeConstruct.Symbol.TIMESTAMP_WITH_TIME_ZONE, 2, 5)))
+                .isEqualTo(Instant.ofEpochSecond(1762909323));
     }
 
 }
