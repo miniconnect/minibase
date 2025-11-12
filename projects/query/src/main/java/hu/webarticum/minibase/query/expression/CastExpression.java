@@ -2,6 +2,7 @@ package hu.webarticum.minibase.query.expression;
 
 import java.util.Optional;
 
+import hu.webarticum.minibase.query.util.SimpleConversionUtil;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
 
@@ -9,12 +10,12 @@ public class CastExpression implements Expression {
     
     private final Expression subExpression;
 
-    private final TypeConstruct targetType;
+    private final TypeConstruct targetTypeConstruct;
     
 
-    public CastExpression(Expression subExpression, TypeConstruct targetType) {
+    public CastExpression(Expression subExpression, TypeConstruct targetTypeConstruct) {
         this.subExpression = subExpression;
-        this.targetType = targetType;
+        this.targetTypeConstruct = targetTypeConstruct;
     }
 
 
@@ -25,20 +26,12 @@ public class CastExpression implements Expression {
 
     @Override
     public Optional<Class<?>> type() {
-        
-        // FIXME
-        //return Optional.of(targetType.symbol().type());
-        return Optional.of(String.class);
-
+        return Optional.of(targetTypeConstruct.symbol().type());
     }
 
     @Override
     public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
-        
-        // FIXME
-        //return targetType.symbol().type();
         return String.class;
-
     }
     
     @Override
@@ -54,18 +47,12 @@ public class CastExpression implements Expression {
     @Override
     public Object evaluate(ImmutableMap<Parameter, Object> values) {
         Object subValue = subExpression.evaluate(values);
-        if (subValue == null) {
-            return null;
-        }
-
-        // TODO
-        return subValue + " --> " + targetType.symbol().name() + "(" + targetType.size() + ", " + targetType.scale() + ")";
-
+        return SimpleConversionUtil.convert(subValue, targetTypeConstruct);
     }
 
     @Override
     public String automaticName() {
-        return "CAST(" + subExpression.automaticName() + " AS " + targetType.symbol().name() + ")";
+        return "CAST(" + subExpression.automaticName() + " AS " + targetTypeConstruct.symbol().name() + ")";
     }
     
 }

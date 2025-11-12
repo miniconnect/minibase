@@ -13,8 +13,9 @@ public class TypeConstruct {
     
     public enum Symbol {
 
+        NULL(Void.class),
         BOOLEAN(Boolean.class),
-        INTEGER(Long.class), BIGINT(LargeInteger.class),
+        INTEGER(LargeInteger.class), BIGINT(LargeInteger.class),
         DECIMAL(BigDecimal.class), FLOAT(Double.class),
         NVARCHAR(String.class), CLOB(String.class),
         BINARY(ByteString.class), VARBINARY(ByteString.class), BLOB(ByteString.class),
@@ -36,6 +37,7 @@ public class TypeConstruct {
     
     public enum SymbolAlias {
 
+        NULL(Symbol.NULL),
         BOOLEAN(Symbol.BOOLEAN),
         INTEGER(Symbol.INTEGER), BIGINT(Symbol.BIGINT),
         DECIMAL(Symbol.DECIMAL), FLOAT(Symbol.FLOAT),
