@@ -17,6 +17,10 @@ public class ConstantExpression implements Expression {
     }
     
 
+    public Object value() {
+        return value;
+    }
+
     @Override
     public ImmutableList<Parameter> parameters() {
         return ImmutableList.empty();

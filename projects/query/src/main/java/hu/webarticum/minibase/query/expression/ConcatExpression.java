@@ -17,6 +17,10 @@ public class ConcatExpression implements Expression {
     }
     
     
+    public ImmutableList<Expression> parameterExpressions() {
+        return parameterExpressions;
+    }
+
     @Override
     public ImmutableList<Parameter> parameters() {
         Set<Parameter> subParameters = new LinkedHashSet<>();

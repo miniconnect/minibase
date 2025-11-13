@@ -19,6 +19,14 @@ public class CastExpression implements Expression {
     }
 
 
+    public Expression subExpression() {
+        return subExpression;
+    }
+    
+    public TypeConstruct targetTypeConstruct() {
+        return targetTypeConstruct;
+    }
+    
     @Override
     public ImmutableList<Parameter> parameters() {
         return subExpression.parameters();

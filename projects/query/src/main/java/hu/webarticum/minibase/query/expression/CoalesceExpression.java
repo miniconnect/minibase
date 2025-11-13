@@ -10,7 +10,7 @@ import hu.webarticum.miniconnect.lang.ImmutableMap;
 
 public class CoalesceExpression implements Expression {
 
-    protected ImmutableList<Expression> parameterExpressions;
+    private ImmutableList<Expression> parameterExpressions;
     
 
     public CoalesceExpression(ImmutableList<Expression> parameterExpressions) {
@@ -18,6 +18,10 @@ public class CoalesceExpression implements Expression {
     }
     
     
+    public ImmutableList<Expression> parameterExpressions() {
+        return parameterExpressions;
+    }
+
     @Override
     public ImmutableList<Parameter> parameters() {
         Set<Parameter> subParameters = new LinkedHashSet<>();

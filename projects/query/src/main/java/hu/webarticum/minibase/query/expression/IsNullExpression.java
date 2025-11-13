@@ -15,6 +15,10 @@ public class IsNullExpression implements Expression {
     }
 
 
+    public Expression subExpression() {
+        return subExpression;
+    }
+    
     @Override
     public ImmutableList<Parameter> parameters() {
         return subExpression.parameters();
