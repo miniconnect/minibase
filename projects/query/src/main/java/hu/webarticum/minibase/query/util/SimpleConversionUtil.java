@@ -1,6 +1,7 @@
 package hu.webarticum.minibase.query.util;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -115,8 +116,11 @@ public final class SimpleConversionUtil {
     }
 
     private static BigDecimal convertToBigDecimal(Object value, Integer size, Integer scale) {
-        int effectiveScale = scale != null ? scale : 0;
-        BigDecimal bigDecimalValue = bigDecimalify(value).setScale(effectiveScale);
+        BigDecimal bigDecimalValue = bigDecimalify(value);
+        if (scale != null) {
+            bigDecimalValue = bigDecimalValue.setScale(scale, RoundingMode.FLOOR);
+        }
+        int effectiveScale = bigDecimalValue.scale();
 
         if (size == null) {
             return bigDecimalValue;

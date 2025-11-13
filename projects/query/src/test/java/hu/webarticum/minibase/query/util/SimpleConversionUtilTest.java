@@ -48,6 +48,9 @@ class SimpleConversionUtilTest {
                 "1.4", new TypeConstruct(TypeConstruct.Symbol.DECIMAL, 3, 2)))
                 .isEqualTo(new BigDecimal("1.40"));
         assertThat(SimpleConversionUtil.convert(
+                "2.34", new TypeConstruct(TypeConstruct.Symbol.DECIMAL, null, null)))
+                .isEqualTo(new BigDecimal("2.34"));
+        assertThat(SimpleConversionUtil.convert(
                 1024, new TypeConstruct(TypeConstruct.Symbol.DECIMAL, 2, null)))
                 .isEqualTo(new BigDecimal("99"));
         assertThat(SimpleConversionUtil.convert(
