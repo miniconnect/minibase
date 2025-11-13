@@ -45,7 +45,6 @@ public class TypeConstruct {
         BINARY(Symbol.BINARY), VARBINARY(Symbol.VARBINARY), BLOB(Symbol.BLOB),
         DATE(Symbol.DATE), TIME(Symbol.TIME), DATETIME(Symbol.DATETIME), TIMESTAMP_WITH_TIME_ZONE(Symbol.TIMESTAMP_WITH_TIME_ZONE),
 
-        BIT(Symbol.BOOLEAN),
         TINYINT(Symbol.INTEGER), SMALLINT(Symbol.INTEGER), INT(Symbol.INTEGER),
         NUMERIC(Symbol.DECIMAL), REAL(Symbol.FLOAT), DOUBLE_PRECISION(Symbol.FLOAT),
         CHAR(Symbol.NVARCHAR), VARCHAR(Symbol.NVARCHAR), NCHAR(Symbol.NVARCHAR), TEXT(Symbol.CLOB),
