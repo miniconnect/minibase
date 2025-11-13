@@ -73,22 +73,22 @@ public class CoalesceExpression implements Expression {
 
     @Override
     public boolean isNullable() {
-        for (Expression parameterExpression : parameterExpressions) {
-            if (parameterExpression.isNullable()) {
-                return true;
+        for (Expression parameterExpression : parameterExpressions.reverseOrder()) {
+            if (!parameterExpression.isNullable()) {
+                return false;
             }
         }
-        return !parameterExpressions.isEmpty();
+        return true;
     }
     
     @Override
     public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
-        for (Expression parameterExpression : parameterExpressions) {
-            if (parameterExpression.isNullable(nullabilities)) {
-                return true;
+        for (Expression parameterExpression : parameterExpressions.reverseOrder()) {
+            if (!parameterExpression.isNullable(nullabilities)) {
+                return false;
             }
         }
-        return !parameterExpressions.isEmpty();
+        return true;
     }
     
     @Override
