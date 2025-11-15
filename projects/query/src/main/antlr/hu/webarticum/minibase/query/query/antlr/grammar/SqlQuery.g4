@@ -140,8 +140,8 @@ specialSelectableName:
     IDENTITY |
     LAST_INSERT_ID;
 functionCall: functionName PAR_START expression ( COMMA expression )* PAR_END;
-functionName: identifier | functionToken;
-functionToken: LEFT | RIGHT;
+functionName: identifier | functionNameToken;
+functionNameToken: LEFT | RIGHT;
 scopeableFieldName: ( tableName DOT )? fieldName;
 extendedValue: literal | variable;
 variable: AT identifier;
