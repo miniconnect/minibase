@@ -4,6 +4,7 @@ import java.util.LinkedHashSet;
 import java.util.Optional;
 import java.util.Set;
 
+import hu.webarticum.minibase.query.util.StringUtil;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
 
@@ -57,7 +58,7 @@ public class ConcatExpression implements Expression {
         for (Expression parameterExpression : parameterExpressions) {
             Object value = parameterExpression.evaluate(values);
             if (value != null) {
-                resultBuilder.append(value.toString());
+                resultBuilder.append(StringUtil.stringify(value));
                 allNull = false;
             }
         }

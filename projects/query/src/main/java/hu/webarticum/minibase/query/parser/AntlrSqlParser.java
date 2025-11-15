@@ -30,13 +30,16 @@ import hu.webarticum.minibase.query.expression.EqualsExpression;
 import hu.webarticum.minibase.query.expression.Expression;
 import hu.webarticum.minibase.query.expression.IsNotNullExpression;
 import hu.webarticum.minibase.query.expression.IsNullExpression;
+import hu.webarticum.minibase.query.expression.LeftExpression;
 import hu.webarticum.minibase.query.expression.LikeExpression;
 import hu.webarticum.minibase.query.expression.NegateExpression;
 import hu.webarticum.minibase.query.expression.NotEqualsExpression;
 import hu.webarticum.minibase.query.expression.NotExpression;
+import hu.webarticum.minibase.query.expression.NullifExpression;
 import hu.webarticum.minibase.query.expression.OrExpression;
 import hu.webarticum.minibase.query.expression.OrderRelationExpression;
 import hu.webarticum.minibase.query.expression.RegexpExpression;
+import hu.webarticum.minibase.query.expression.RightExpression;
 import hu.webarticum.minibase.query.expression.SpecialValueExpression;
 import hu.webarticum.minibase.query.expression.SpecialValueParameter;
 import hu.webarticum.minibase.query.expression.TypeConstruct;
@@ -86,6 +89,7 @@ import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.ExtendedV
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.FieldListContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.FieldNameContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.FunctionCallContext;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.FunctionNameContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.IdentifierContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.InsertQueryContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.InsertValueContext;
@@ -704,20 +708,49 @@ public class AntlrSqlParser implements SqlParser {
         
         FunctionCallContext functionCallNode = atomicExpressionNode.functionCall();
         if (functionCallNode != null) {
-            String functionName = parseIdentifierNode(functionCallNode.identifier());
-            ImmutableList<Expression> parameters = functionCallNode.expression().stream()
-                    .map(this::parseExpressionNode)
-                    .collect(ImmutableList.createCollector());
-            if (functionName.equalsIgnoreCase("CONCAT")) {
-                return new ConcatExpression(parameters);
-            } else if (functionName.equalsIgnoreCase("COALESCE")) {
-                return new CoalesceExpression(parameters);
-            } else {
-                throw new IllegalArgumentException("Unknown function: " + functionName);
-            }
+            return parseFunctionCallNode(functionCallNode);
         }
         
         throw new IllegalArgumentException("Unknown expression: " + atomicExpressionNode.getText());
+    }
+
+    public Expression parseFunctionCallNode(FunctionCallContext functionCallNode) {
+        String functionName = parseFunctionNameNode(functionCallNode.functionName());
+        ImmutableList<Expression> parameters = functionCallNode.expression().stream()
+                .map(this::parseExpressionNode)
+                .collect(ImmutableList.createCollector());
+        if (functionName.equalsIgnoreCase("COALESCE")) {
+            return new CoalesceExpression(parameters);
+        } else if (functionName.equalsIgnoreCase("CONCAT")) {
+            return new ConcatExpression(parameters);
+        } else if (functionName.equalsIgnoreCase("NULLIF")) {
+            checkFunctionParameterCount("NULLIF", 2, parameters);
+            return new NullifExpression(parameters.get(0), parameters.get(1));
+        } else if (functionName.equalsIgnoreCase("LEFT")) {
+            checkFunctionParameterCount("LEFT", 2, parameters);
+            return new LeftExpression(parameters.get(0), parameters.get(1));
+        } else if (functionName.equalsIgnoreCase("RIGHT")) {
+            checkFunctionParameterCount("RIGHT", 2, parameters);
+            return new RightExpression(parameters.get(0), parameters.get(1));
+        } else {
+            throw new IllegalArgumentException("Unknown function: " + functionName);
+        }
+    }
+
+    private String parseFunctionNameNode(FunctionNameContext fuctionNameNode) {
+        IdentifierContext identifierNode = fuctionNameNode.identifier();
+        if (identifierNode != null) {
+            return parseIdentifierNode(identifierNode);
+        } else {
+            return fuctionNameNode.getText();
+        }
+    }
+
+    private void checkFunctionParameterCount(String name, int expectedCount, ImmutableList<Expression> actualParameters) {
+        int actualCount = actualParameters.size();
+        if (expectedCount != actualCount) {
+            throw new IllegalArgumentException("Function " + name + "expects " + expectedCount + "parameters, " + actualCount + " given");
+        }
     }
 
     private Expression parseUnaryArithmeticExpressionNode(UnaryArithmeticExpressionContext unaryArithmeticExpressionNode) {

@@ -139,7 +139,9 @@ specialSelectableName:
     AUTOCOMMIT |
     IDENTITY |
     LAST_INSERT_ID;
-functionCall: identifier PAR_START expression ( COMMA expression )* PAR_END;
+functionCall: functionName PAR_START expression ( COMMA expression )* PAR_END;
+functionName: identifier | functionToken;
+functionToken: LEFT | RIGHT;
 scopeableFieldName: ( tableName DOT )? fieldName;
 extendedValue: literal | variable;
 variable: AT identifier;
@@ -234,6 +236,7 @@ SCHEMAS: S C H E M A S;
 DATABASES: D A T A B A S E S;
 TABLES: T A B L E S;
 LEFT: L E F T;
+RIGHT: R I G H T;
 INNER: I N N E R;
 OUTER: O U T E R;
 JOIN: J O I N;

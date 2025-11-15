@@ -2,7 +2,6 @@ package hu.webarticum.minibase.query.util;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -10,7 +9,6 @@ import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.Temporal;
 
 import hu.webarticum.minibase.query.expression.TypeConstruct;
@@ -49,7 +47,7 @@ public final class SimpleConversionUtil {
     }
 
     private static String convertToString(Object value, TypeConstruct targetTypeConstruct) {
-        String stringValue = stringify(value);
+        String stringValue = StringUtil.stringify(value);
         Integer size = targetTypeConstruct.size();
         if (size == null) {
             return stringValue;
@@ -82,28 +80,10 @@ public final class SimpleConversionUtil {
         if (value instanceof ByteString) {
             return (ByteString) value;
         } else {
-            return ByteString.of(stringify(value));
+            return ByteString.of(StringUtil.stringify(value));
         }
     }
 
-    private static String stringify(Object value) {
-        if (value instanceof String) {
-            return (String) value;
-        } else if (value instanceof LocalDate) {
-            return ((LocalDate) value).format(DateTimeFormatter.ISO_LOCAL_DATE);
-        } else if (value instanceof LocalTime) {
-            return ((LocalTime) value).format(DateTimeFormatter.ISO_LOCAL_TIME);
-        } else if (value instanceof LocalDateTime) {
-            return ((LocalDateTime) value).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-        } else if (value instanceof Instant) {
-            return ((Instant) value).toString();
-        } else if (value instanceof ByteString) {
-            return ((ByteString) value).toString(StandardCharsets.UTF_8);
-        } else {
-            return value.toString();
-        }
-    }
-    
     private static Number convertToNumber(Object value, TypeConstruct targetTypeConstruct) {
         Class<?> targetType = targetTypeConstruct.symbol().type();
         if (targetType == BigDecimal.class) {

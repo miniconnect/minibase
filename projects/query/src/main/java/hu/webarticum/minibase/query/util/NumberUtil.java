@@ -239,6 +239,52 @@ public final class NumberUtil {
     }
 
     /**
+     * Converts the given object to int losslessly if possible.
+     * 
+     * @param object Any object
+     * @throws IllegalArgumentException if the lossless conversion is not possible
+     * @return the int value if applicable
+     */
+    public static int asInt(Object object) {
+        try {
+            return asIntInternal(object);
+        } catch (ArithmeticException e) {
+            throw new IllegalArgumentException(e.getMessage(), e);
+        }
+    }
+
+    private static int asIntInternal(Object object) {
+        if (object == null) {
+            throw new IllegalArgumentException("Null cannot be converted to int");
+        } else if (object instanceof LargeInteger) {
+            return ((LargeInteger) object).intValueExact();
+        } else if (object instanceof Integer) {
+            return (Integer) object;
+        } else if (object instanceof Long) {
+            return Math.toIntExact((Long) object);
+        } else if (object instanceof Short || object instanceof Byte) {
+            return ((Number) object).intValue();
+        } else if (object instanceof BigInteger) {
+            return ((BigInteger) object).intValueExact();
+        } else if (object instanceof BigDecimal) {
+            return ((BigDecimal) object).intValueExact();
+        } else if (object instanceof Number) {
+            double doubleValue = ((Number) object).doubleValue();
+            int intValue = (int) doubleValue;
+            if (doubleValue != (double) intValue) {
+                throw new IllegalArgumentException("Floating-point number can not be converted to int: " + object);
+            }
+            return intValue;
+        } else if (object instanceof Boolean) {
+            return ((Boolean) object) ? 1 : 0;
+        } else if (object instanceof CharSequence) {
+            return Integer.parseInt(object.toString());
+        } else {
+            throw new IllegalArgumentException("Value cannot be converted convert to int, type: " + object.getClass());
+        }
+    }
+
+    /**
      * Checks if the given number is zero.
      * 
      * <p>Appropriate for non-zero checks and boolean conversion.</p>

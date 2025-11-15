@@ -143,8 +143,50 @@ class NumberUtilTest {
 
     @Test
     void testNumberifyInvalid() {
-        assertThatThrownBy(() -> NumberUtil.numberify(Optional.empty()))
-                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> NumberUtil.numberify(Optional.empty())).isInstanceOf(IllegalArgumentException.class);
+    }
+    
+    @Test
+    void testToInt() {
+        assertThat(NumberUtil.asInt(0)).isZero();
+        assertThat(NumberUtil.asInt(15)).isEqualTo(15);
+        assertThat(NumberUtil.asInt(-42)).isEqualTo(-42);
+        assertThat(NumberUtil.asInt(73L)).isEqualTo(73);
+        assertThat(NumberUtil.asInt(-12L)).isEqualTo(-12);
+        assertThat(NumberUtil.asInt((byte) -27)).isEqualTo(-27);
+        assertThat(NumberUtil.asInt((short) 135)).isEqualTo(135);
+        assertThat(NumberUtil.asInt(LargeInteger.ZERO)).isZero();
+        assertThat(NumberUtil.asInt(LargeInteger.of(42))).isEqualTo(42);
+        assertThat(NumberUtil.asInt(LargeInteger.of(-11))).isEqualTo(-11);
+        assertThat(NumberUtil.asInt(LargeInteger.of(Integer.MAX_VALUE))).isEqualTo(Integer.MAX_VALUE);
+        assertThat(NumberUtil.asInt(LargeInteger.of(Integer.MIN_VALUE))).isEqualTo(Integer.MIN_VALUE);
+        assertThat(NumberUtil.asInt(BigInteger.valueOf(123))).isEqualTo(123);
+        assertThat(NumberUtil.asInt(BigInteger.valueOf(-401))).isEqualTo(-401);
+        assertThat(NumberUtil.asInt(2.0f)).isEqualTo(2);
+        assertThat(NumberUtil.asInt(-12.f)).isEqualTo(-12);
+        assertThat(NumberUtil.asInt(5.0)).isEqualTo(5);
+        assertThat(NumberUtil.asInt(-4.0)).isEqualTo(-4);
+        assertThat(NumberUtil.asInt(new BigDecimal("41223"))).isEqualTo(41223);
+        assertThat(NumberUtil.asInt(new BigDecimal("425.0"))).isEqualTo(425);
+        assertThat(NumberUtil.asInt(new BigDecimal("824.000"))).isEqualTo(824);
+        assertThat(NumberUtil.asInt(new BigDecimal("-12.0"))).isEqualTo(-12);
+        assertThat(NumberUtil.asInt(new BigDecimal("-55.00"))).isEqualTo(-55);
+    }
+    
+    @Test
+    void testToIntInvalid() {
+        assertThatThrownBy(() -> NumberUtil.asInt(null)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> NumberUtil.asInt(3.2)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> NumberUtil.asInt("")).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> NumberUtil.asInt("1.55")).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> NumberUtil.asInt("lorem")).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> NumberUtil.asInt(Float.POSITIVE_INFINITY)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> NumberUtil.asInt(Double.NaN)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> NumberUtil.asInt(new BigInteger("999999999999999999"))).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> NumberUtil.asInt(LargeInteger.of("999999999999999999"))).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> NumberUtil.asInt(LargeInteger.of("-999999999999999999"))).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> NumberUtil.asInt(new BigDecimal("1.3"))).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> NumberUtil.asInt(999999999999999999L)).isInstanceOf(IllegalArgumentException.class);
     }
     
     @Test
