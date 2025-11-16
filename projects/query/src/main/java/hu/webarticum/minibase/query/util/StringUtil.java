@@ -36,4 +36,18 @@ public final class StringUtil {
         }
     }
     
+    public static String stringify(Object value, Integer size) {
+        String stringValue = stringify(value);
+        if (stringValue == null || size == null) {
+            return stringValue;
+        }
+
+        int length = stringValue.length();
+        if (size >= length) {
+            return stringValue;
+        }
+
+        return stringValue.substring(0, size);
+    }
+
 }

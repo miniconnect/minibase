@@ -4,7 +4,7 @@ import java.util.LinkedHashSet;
 import java.util.Optional;
 import java.util.Set;
 
-import hu.webarticum.minibase.query.util.NumberUtil;
+import hu.webarticum.minibase.query.util.UnifyUtil;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
 
@@ -33,42 +33,15 @@ public class CoalesceExpression implements Expression {
 
     @Override
     public Optional<Class<?>> type() {
-        Class<?> currentType = Void.class;
-        for (Expression parameterExpression : parameterExpressions) {
-            Optional<Class<?>> subType = parameterExpression.type();
-            if (!subType.isPresent()) {
-                return Optional.empty();
-            }
-            currentType = mergeType(currentType, subType.get());
-            if (currentType == Object.class) {
-                break;
-            }
-        }
-        return Optional.of(currentType);
+        ImmutableList<Class<?>> parameterTypes = parameterExpressions.map(e -> e.type().orElse(null));
+        return Optional.ofNullable(UnifyUtil.unify(parameterTypes));
     }
     
     @Override
     public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
-        Class<?> currentType = Void.class;
-        for (Expression parameterExpression : parameterExpressions) {
-            Class<?> subType = parameterExpression.type(types);
-            currentType = mergeType(currentType, subType);
-        }
-        return currentType;
-    }
-
-    private Class<?> mergeType(Class<?> currentType, Class<?> type) {
-        if (type == currentType || currentType == Void.class) {
-            return type;
-        } else if (type == Void.class) {
-            return currentType;
-        } else if (Number.class.isAssignableFrom(type) && Number.class.isAssignableFrom(currentType)) {
-            return NumberUtil.commonNumericTypeOf(currentType, type);
-        } else if (CharSequence.class.isAssignableFrom(type) && CharSequence.class.isAssignableFrom(currentType)) {
-            return String.class;
-        } else {
-            return Object.class;
-        }
+        ImmutableList<Class<?>> parameterTypes = parameterExpressions.map(e -> e.type(types));
+        Class<?> result = UnifyUtil.unify(parameterTypes);
+        return result == null ? String.class : result;
     }
 
     @Override

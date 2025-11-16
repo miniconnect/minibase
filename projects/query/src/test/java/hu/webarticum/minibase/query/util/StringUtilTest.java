@@ -2,6 +2,7 @@ package hu.webarticum.minibase.query.util;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -63,6 +64,22 @@ class StringUtilTest {
         assertThat(StringUtil.stringify(12L)).isEqualTo("12");
         assertThat(StringUtil.stringify(LargeInteger.of("436780617018127680712"))).isEqualTo("436780617018127680712");
         assertThat(StringUtil.stringify(new Object() { @Override public String toString() { return "ipsum"; } })).isEqualTo("ipsum");
+    }
+
+    @Test
+    void testStringifyWithSize() {
+        assertThat(StringUtil.stringify(null, null)).isNull();
+        assertThat(StringUtil.stringify(null, 3)).isNull();
+        assertThat(StringUtil.stringify(123, null)).isEqualTo("123");
+        assertThat(StringUtil.stringify("lorem", null)).isEqualTo("lorem");
+        assertThat(StringUtil.stringify(4321, 3)).isEqualTo("432");
+        assertThat(StringUtil.stringify("ipsum", 3)).isEqualTo("ips");
+        assertThat(StringUtil.stringify("ipsum", 10)).isEqualTo("ipsum");
+        assertThat(StringUtil.stringify(new BigDecimal("12.34567"), 4)).isEqualTo("12.3");
+        assertThat(StringUtil.stringify(new BigDecimal("12.34567"), 20)).isEqualTo("12.34567");
+        assertThat(StringUtil.stringify(new Object() { @Override public String toString() { return "dolor"; } }, null)).isEqualTo("dolor");
+        assertThat(StringUtil.stringify(new Object() { @Override public String toString() { return "sit"; } }, 2)).isEqualTo("si");
+        assertThat(StringUtil.stringify(new Object() { @Override public String toString() { return "amet"; } }, 15)).isEqualTo("amet");
     }
 
 }

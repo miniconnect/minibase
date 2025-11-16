@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import hu.webarticum.minibase.query.util.BooleanUtil;
+import hu.webarticum.minibase.query.util.UnifyUtil;
 import hu.webarticum.minibase.query.util.ValueUtil;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
@@ -59,55 +60,21 @@ public class CaseExpression implements Expression {
 
     @Override
     public Optional<Class<?>> type() {
-        Optional<Class<?>> firstTypeOptional = whenItems.get(0).resultExpression.type();
-        if (!firstTypeOptional.isPresent()) {
-            return firstTypeOptional;
-        }
-
-        Class<?> type = firstTypeOptional.get();
-        int count = whenItems.size();
-        for (int i = 1; i < count; i++) {
-            Optional<Class<?>> nextTypeOptional = whenItems.get(0).resultExpression.type();
-            if (!nextTypeOptional.isPresent()) {
-                return nextTypeOptional;
-            }
-            Class<?> nextType = nextTypeOptional.get();
-            if (nextType != type) {
-                return Optional.empty();
-            }
-        }
-
+        ImmutableList<Class<?>> branchTypes = whenItems.map(w -> w.resultExpression.type().orElse(null));
         if (elseExpression != null) {
-            Optional<Class<?>> elseTypeOptional = whenItems.get(0).resultExpression.type();
-            if (!elseTypeOptional.isPresent()) {
-                return elseTypeOptional;
-            }
-            Class<?> elseType = elseTypeOptional.get();
-            if (elseType != type) {
-                return Optional.empty();
-            }
+            branchTypes = branchTypes.append(elseExpression.type().orElse(null));
         }
-
-        return Optional.of(type);
+        return Optional.ofNullable(UnifyUtil.unify(branchTypes));
     }
 
     @Override
     public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
+        ImmutableList<Class<?>> branchTypes = whenItems.map(w -> w.resultExpression.type(types));
         if (elseExpression != null) {
-            Class<?> elseType = elseExpression.type(types);
-            if (elseType != Void.class) {
-                return elseType;
-            }
+            branchTypes = branchTypes.append(elseExpression.type(types));
         }
-        
-        for (WhenItem whenItem : whenItems) {
-            Class<?> resultType = whenItem.resultExpression.type(types);
-            if (resultType != Void.class) {
-                return resultType;
-            }
-        }
-        
-        return Void.class;
+        Class<?> result = UnifyUtil.unify(branchTypes);
+        return result == null ? String.class : result;
     }
     
     @Override

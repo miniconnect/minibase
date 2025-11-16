@@ -1,5 +1,8 @@
 package hu.webarticum.minibase.query.util;
 
+import java.math.BigDecimal;
+import java.util.Arrays;
+
 public final class ValueUtil {
     
     private ValueUtil() {
@@ -9,13 +12,27 @@ public final class ValueUtil {
     public static Boolean evalEquality(Object value1, Object value2) {
         if (value1 == null || value2 == null) {
             return null;
-        } else if (value1 instanceof Number || value2 instanceof Number) {
-            Number[] unifiedValues = NumberUtil.unify(value1, value2);
-            return unifiedValues[0].equals(unifiedValues[1]);
-        } else if (value1 instanceof Boolean || value2 instanceof Boolean) {
-            boolean leftBool = BooleanUtil.boolify(value1);
-            boolean rightBool = BooleanUtil.boolify(value1);
-            return leftBool == rightBool;
+        }
+
+        Class<?> type1 = value1.getClass();
+        Class<?> type2 = value2.getClass();
+        if (type1 == type2) {
+            return evalEqualityForSameType(value1, value2);
+        }
+        
+        Class<?> commonType = UnifyUtil.unify(Arrays.asList(type1, type2));
+        if (commonType == null) {
+            commonType = String.class;
+        }
+
+        Object convertedValue1 = ConvertUtil.convert(value1, commonType);
+        Object convertedValue2 = ConvertUtil.convert(value2, commonType);
+        return evalEqualityForSameType(convertedValue1, convertedValue2);
+    }
+
+    private static Boolean evalEqualityForSameType(Object value1, Object value2) {
+        if (value1 instanceof BigDecimal) {
+            return ((BigDecimal) value1).compareTo((BigDecimal) value2) == 0;
         } else {
             return value1.equals(value2);
         }

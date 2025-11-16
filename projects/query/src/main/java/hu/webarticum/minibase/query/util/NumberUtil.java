@@ -2,6 +2,7 @@ package hu.webarticum.minibase.query.util;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -339,6 +340,27 @@ public final class NumberUtil {
         decimalBuilder.append(wholePart != null ? wholePart : "0");
         decimalBuilder.append(fracPart != null ? fracPart : "");
         return new BigDecimal(decimalBuilder.toString());
+    }
+
+    /**
+     * Converts the given object to {@link BigDecimal}.
+     */
+    public static BigDecimal bigDecimalify(Object value) {
+        Number numericValue = numberify(value);
+        if (numericValue instanceof BigDecimal) {
+            return (BigDecimal) numericValue;
+        } else if (numericValue instanceof LargeInteger) {
+            return ((LargeInteger) numericValue).bigDecimalValue();
+        } else if (value == null) {
+            return null;
+        } else {
+            BigDecimal candidate = new BigDecimal(numericValue.doubleValue());
+            if (candidate.scale() <= 14) {
+                return candidate;
+            } else {
+                return candidate.setScale(14, RoundingMode.HALF_UP).stripTrailingZeros();
+            }
+        }
     }
 
 }

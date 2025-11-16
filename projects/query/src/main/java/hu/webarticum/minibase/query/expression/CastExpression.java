@@ -2,7 +2,7 @@ package hu.webarticum.minibase.query.expression;
 
 import java.util.Optional;
 
-import hu.webarticum.minibase.query.util.SimpleConversionUtil;
+import hu.webarticum.minibase.query.util.ConvertUtil;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
 
@@ -55,7 +55,10 @@ public class CastExpression implements Expression {
     @Override
     public Object evaluate(ImmutableMap<Parameter, Object> values) {
         Object subValue = subExpression.evaluate(values);
-        return SimpleConversionUtil.convert(subValue, targetTypeConstruct);
+        Class<?> targetType = targetTypeConstruct.symbol().type();
+        Integer size = targetTypeConstruct.size();
+        Integer scale = targetTypeConstruct.scale();
+        return ConvertUtil.convert(subValue, targetType, size, scale);
     }
 
     @Override

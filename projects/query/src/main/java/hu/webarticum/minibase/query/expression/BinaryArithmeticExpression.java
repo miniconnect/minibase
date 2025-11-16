@@ -92,6 +92,7 @@ public class BinaryArithmeticExpression implements Expression {
         return leftOperand.isNullable(nullabilities) || rightOperand.isNullable(nullabilities);
     }
     
+    // TODO: support non-numbers (e.g. temporal values)
     @Override
     public Object evaluate(ImmutableMap<Parameter, Object> values) {
         Object leftValue = NumberUtil.numberify(leftOperand.evaluate(values));

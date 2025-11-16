@@ -192,7 +192,7 @@ class NumberUtilTest {
     @Test
     void testParse() {
         ImmutableList<BigDecimal> numbers = createStringValues().map(NumberUtil::parse);
-        ImmutableList<Number> exceptedNumbers = ImmutableList.of(
+        ImmutableList<BigDecimal> exceptedNumbers = ImmutableList.of(
                 BigDecimal.ZERO,
                 BigDecimal.ZERO,
                 BigDecimal.ZERO,
@@ -223,6 +223,27 @@ class NumberUtilTest {
                 new BigDecimal("0.340"),
                 new BigDecimal("-0.0210"),
                 new BigDecimal("0.0540"));
+        assertThat(numbers).isEqualTo(exceptedNumbers);
+    }
+    
+    @Test
+    void testBigDecimality() {
+        ImmutableList<BigDecimal> numbers = createValues().map(NumberUtil::bigDecimalify);
+        ImmutableList<BigDecimal> exceptedNumbers = ImmutableList.of(
+                null,
+                new BigDecimal("9"),
+                new BigDecimal("3"),
+                new BigDecimal("4.2"),
+                new BigDecimal("52"),
+                new BigDecimal("3.14"),
+                new BigDecimal("1"),
+                new BigDecimal("0"),
+                new BigDecimal("48"),
+                new BigDecimal("63"),
+                new BigDecimal("55"),
+                new BigDecimal("82.123"),
+                new BigDecimal("12"),
+                new BigDecimal("15"));
         assertThat(numbers).isEqualTo(exceptedNumbers);
     }
     
