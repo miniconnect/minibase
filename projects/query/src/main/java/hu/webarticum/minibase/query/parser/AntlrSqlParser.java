@@ -100,6 +100,7 @@ import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.LikePartC
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.LimitParameterContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.LimitPartContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.LiteralContext;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.NumberLiteralContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.OffsetLimitPartContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.OffsetPartContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.OrderByItemContext;
@@ -1128,16 +1129,11 @@ public class AntlrSqlParser implements SqlParser {
             return null;
         }
         
-        TerminalNode integerNode = literalNode.TOKEN_INTEGER();
-        if (integerNode != null) {
-            return parseIntegerNode(integerNode);
+        NumberLiteralContext numberLiteralNode = literalNode.numberLiteral();
+        if (numberLiteralNode != null) {
+            return parseNumberLiteralNode(numberLiteralNode);
         }
-        
-        TerminalNode decimalNode = literalNode.TOKEN_DECIMAL();
-        if (decimalNode != null) {
-            return parseDecimalNode(decimalNode);
-        }
-        
+
         TerminalNode stringNode = literalNode.TOKEN_STRING();
         if (stringNode != null) {
             return parseStringNode(stringNode);
@@ -1150,7 +1146,25 @@ public class AntlrSqlParser implements SqlParser {
         
         throw new IllegalArgumentException("Invalid literal: " + literalNode.getText());
     }
-    
+
+    private Number parseNumberLiteralNode(NumberLiteralContext numberLiteralNode) {
+        boolean negate = numberLiteralNode.MINUS() != null;
+        
+        TerminalNode integerNode = numberLiteralNode.TOKEN_INTEGER();
+        if (integerNode != null) {
+            LargeInteger largeIntegerValue = parseIntegerNode(integerNode);
+            return negate ? largeIntegerValue.negate() : largeIntegerValue;
+        }
+        
+        TerminalNode decimalNode = numberLiteralNode.TOKEN_DECIMAL();
+        if (decimalNode != null) {
+            BigDecimal bigDecimalValue = parseDecimalNode(decimalNode);
+            return negate ? bigDecimalValue.negate() : bigDecimalValue;
+        }
+        
+        throw new IllegalArgumentException("Invalid number literal: " + numberLiteralNode.getText());
+    }
+
     private LargeInteger parseIntegerNode(TerminalNode integerNode) {
         return LargeInteger.of(integerNode.getText());
     }

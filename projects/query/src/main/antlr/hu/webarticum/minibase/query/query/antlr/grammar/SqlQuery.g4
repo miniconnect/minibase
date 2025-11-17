@@ -148,7 +148,8 @@ variable: AT identifier;
 fieldName: identifier;
 tableName: identifier;
 identifier: TOKEN_SIMPLENAME | TOKEN_QUOTEDNAME | TOKEN_BACKTICKEDNAME;
-literal: NULL | TOKEN_STRING | TOKEN_DECIMAL | TOKEN_INTEGER | booleanLiteral;
+literal: NULL | TOKEN_STRING | numberLiteral | booleanLiteral;
+numberLiteral: ( MINUS | PLUS )? ( TOKEN_DECIMAL | TOKEN_INTEGER );
 booleanLiteral: TRUE | FALSE;
 likePart: LIKE TOKEN_STRING;
 schemaName: identifier;
@@ -270,8 +271,8 @@ TOKEN_QUOTEDNAME: '"' ( '\\' . | '""' | ~[\\"] )* '"';
 TOKEN_BACKTICKEDNAME: '`' ( '``' | ~[`] )* '`';
 
 TOKEN_STRING: '\'' ( '\\' . | '\'\'' | ~[\\'] )* '\'';
-TOKEN_DECIMAL: MINUS? ( [0-9]+ '.' [0-9]* | '.' [0-9]+ );
-TOKEN_INTEGER: MINUS? [0-9]+;
+TOKEN_DECIMAL: [0-9]+ '.' [0-9]* | '.' [0-9]+;
+TOKEN_INTEGER: [0-9]+;
 
 DOT: '.';
 COMMA: ',';
@@ -299,8 +300,6 @@ PAR_START: '(';
 PAR_END: ')';
 
 WHITESPACE: [ \n\t\r]+ -> channel(HIDDEN);
-
-ANY: .;
 
 fragment UNDERSCORE: [_];
 
