@@ -3,6 +3,7 @@ package hu.webarticum.minibase.query.util;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.temporal.Temporal;
+import java.util.Arrays;
 
 public final class UnifyUtil {
 
@@ -11,7 +12,11 @@ public final class UnifyUtil {
     }
 
     
-    public static Class<?> unify(Iterable<Class<?>> types) {
+    public static Class<?> unifyTypes(Class<?>... types) {
+        return unifyTypes(Arrays.asList(types));
+    }
+
+    public static Class<?> unifyTypes(Iterable<Class<?>> types) {
         Class<?> unifiedType = Void.class;
         for (Class<?> nextType : types) {
             if (nextType == null) {
@@ -48,7 +53,7 @@ public final class UnifyUtil {
         }
 
         if (Temporal.class.isAssignableFrom(type1) && Temporal.class.isAssignableFrom(type2)) {
-            return mergeTemporalTypes(type1, type2);
+            return TemporalUtil.unifyTemporalTypes(type1, type2);
         }
 
         return String.class;
@@ -69,20 +74,13 @@ public final class UnifyUtil {
     }
 
     private static Class<?> mergeNumericTypeWith(Class<?> numericType, Class<?> otherType) {
-        if (Temporal.class.isAssignableFrom(otherType)) {
-            return TemporalUtil.isTargetTypeSupported(otherType) ? otherType : Instant.class;
-        } else if (Number.class.isAssignableFrom(otherType)) {
+        if (Number.class.isAssignableFrom(otherType)) {
             return NumberUtil.commonNumericTypeOf(numericType, otherType);
+        } else if (Temporal.class.isAssignableFrom(otherType)) {
+            return BigDecimal.class;
         } else {
             return Double.class;
         }
-    }
-
-    private static Class<?> mergeTemporalTypes(Class<?> type1, Class<?> type2) {
-
-        // TODO
-        return null;
-        
     }
 
 }

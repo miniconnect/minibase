@@ -34,13 +34,13 @@ public class CoalesceExpression implements Expression {
     @Override
     public Optional<Class<?>> type() {
         ImmutableList<Class<?>> parameterTypes = parameterExpressions.map(e -> e.type().orElse(null));
-        return Optional.ofNullable(UnifyUtil.unify(parameterTypes));
+        return Optional.ofNullable(UnifyUtil.unifyTypes(parameterTypes));
     }
     
     @Override
     public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
         ImmutableList<Class<?>> parameterTypes = parameterExpressions.map(e -> e.type(types));
-        Class<?> result = UnifyUtil.unify(parameterTypes);
+        Class<?> result = UnifyUtil.unifyTypes(parameterTypes);
         return result == null ? String.class : result;
     }
 

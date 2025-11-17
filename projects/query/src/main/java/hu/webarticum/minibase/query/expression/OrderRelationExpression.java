@@ -2,7 +2,8 @@ package hu.webarticum.minibase.query.expression;
 
 import java.util.Optional;
 
-import hu.webarticum.minibase.query.util.NumberUtil;
+import hu.webarticum.minibase.query.util.ConvertUtil;
+import hu.webarticum.minibase.query.util.UnifyUtil;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
 
@@ -76,7 +77,6 @@ public class OrderRelationExpression implements Expression {
         return leftOperand.isNullable(nullabilities) || rightOperand.isNullable(nullabilities);
     }
     
-    // TODO: support non-numbers (e.g. temporal values)
     @Override
     public Object evaluate(ImmutableMap<Parameter, Object> values) {
         Object leftValue = leftOperand.evaluate(values);
@@ -84,19 +84,26 @@ public class OrderRelationExpression implements Expression {
         if (leftValue == null || rightValue == null) {
             return null;
         }
-        
-        if (
-            leftValue instanceof Number ||
-            leftValue instanceof Boolean ||
-            rightValue instanceof Number ||
-            rightValue instanceof Boolean) {
-                Number[] unifiedNumbers = NumberUtil.unify(leftValue, rightValue);
-                return compare(unifiedNumbers[0], unifiedNumbers[1]);
-        } else if (leftValue instanceof Comparable && leftValue.getClass() == rightValue.getClass()) {
-            return compare(leftValue, rightValue);
-        } else {
+
+        Class<?> commonType = UnifyUtil.unifyTypes(leftValue.getClass(), rightValue.getClass());
+        if (commonType == null) {
             return compare(leftValue.toString(), rightValue.toString());
         }
+
+        Object convertedLeftValue;
+        Object convertedRightValue;
+        try {
+            convertedLeftValue = ConvertUtil.convert(leftValue, commonType);
+            convertedRightValue = ConvertUtil.convert(rightValue, commonType);
+        } catch (IllegalArgumentException e) {
+            return compare(leftValue.toString(), rightValue.toString());
+        }
+        
+        if (!(convertedLeftValue instanceof Comparable)) {
+            return compare(leftValue.toString(), rightValue.toString());
+        }
+
+        return compare(convertedLeftValue, convertedRightValue);
     }
 
     private boolean compare(Object value1, Object value2) {

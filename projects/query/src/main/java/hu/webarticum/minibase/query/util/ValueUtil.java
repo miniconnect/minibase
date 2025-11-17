@@ -1,7 +1,6 @@
 package hu.webarticum.minibase.query.util;
 
 import java.math.BigDecimal;
-import java.util.Arrays;
 
 public final class ValueUtil {
     
@@ -20,7 +19,7 @@ public final class ValueUtil {
             return evalEqualityForSameType(value1, value2);
         }
         
-        Class<?> commonType = UnifyUtil.unify(Arrays.asList(type1, type2));
+        Class<?> commonType = UnifyUtil.unifyTypes(type1, type2);
         if (commonType == null) {
             commonType = String.class;
         }

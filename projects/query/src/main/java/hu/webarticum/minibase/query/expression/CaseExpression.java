@@ -64,7 +64,7 @@ public class CaseExpression implements Expression {
         if (elseExpression != null) {
             branchTypes = branchTypes.append(elseExpression.type().orElse(null));
         }
-        return Optional.ofNullable(UnifyUtil.unify(branchTypes));
+        return Optional.ofNullable(UnifyUtil.unifyTypes(branchTypes));
     }
 
     @Override
@@ -73,7 +73,7 @@ public class CaseExpression implements Expression {
         if (elseExpression != null) {
             branchTypes = branchTypes.append(elseExpression.type(types));
         }
-        Class<?> result = UnifyUtil.unify(branchTypes);
+        Class<?> result = UnifyUtil.unifyTypes(branchTypes);
         return result == null ? String.class : result;
     }
     

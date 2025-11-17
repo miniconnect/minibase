@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
@@ -22,6 +23,7 @@ class NumberUtilTest {
                 LargeInteger.class,
                 Double.class,
                 Double.class,
+                BigDecimal.class,
                 BigDecimal.class,
                 BigDecimal.class,
                 LargeInteger.class,
@@ -119,7 +121,7 @@ class NumberUtilTest {
         assertThat(NumberUtil.unify(new BigDecimal("0.47"), Integer.valueOf(7))).containsExactly(new BigDecimal("0.47"), new BigDecimal("7.00"));
         assertThat(NumberUtil.unify(Double.valueOf(7), new BigDecimal("0.32"))).containsExactly(Double.valueOf(7), Double.valueOf(0.32));
     }
-    
+
     @Test
     void testNumberify() {
         ImmutableList<Number> numbers = createValues().map(NumberUtil::numberify);
@@ -130,6 +132,7 @@ class NumberUtilTest {
                 Double.valueOf(4.2d),
                 new BigDecimal("52"),
                 new BigDecimal("3.14"),
+                new BigDecimal("-47084757718470983457098457834557490823479348570982384"),
                 LargeInteger.ONE,
                 LargeInteger.ZERO,
                 LargeInteger.of(48),
@@ -145,7 +148,7 @@ class NumberUtilTest {
     void testNumberifyInvalid() {
         assertThatThrownBy(() -> NumberUtil.numberify(Optional.empty())).isInstanceOf(IllegalArgumentException.class);
     }
-    
+
     @Test
     void testToInt() {
         assertThat(NumberUtil.asInt(0)).isZero();
@@ -172,7 +175,7 @@ class NumberUtilTest {
         assertThat(NumberUtil.asInt(new BigDecimal("-12.0"))).isEqualTo(-12);
         assertThat(NumberUtil.asInt(new BigDecimal("-55.00"))).isEqualTo(-55);
     }
-    
+
     @Test
     void testToIntInvalid() {
         assertThatThrownBy(() -> NumberUtil.asInt(null)).isInstanceOf(IllegalArgumentException.class);
@@ -188,7 +191,7 @@ class NumberUtilTest {
         assertThatThrownBy(() -> NumberUtil.asInt(new BigDecimal("1.3"))).isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> NumberUtil.asInt(999999999999999999L)).isInstanceOf(IllegalArgumentException.class);
     }
-    
+
     @Test
     void testParse() {
         ImmutableList<BigDecimal> numbers = createStringValues().map(NumberUtil::parse);
@@ -206,6 +209,7 @@ class NumberUtilTest {
                 new BigDecimal("54200000"),
                 new BigDecimal("6000000"),
                 new BigDecimal("284357293457348534754"),
+                new BigDecimal("-774780297457783883791082794711289472374793446882339413021"),
                 new BigDecimal("54352356"),
                 new BigDecimal("17.54"),
                 new BigDecimal("22.100"),
@@ -225,7 +229,7 @@ class NumberUtilTest {
                 new BigDecimal("0.0540"));
         assertThat(numbers).isEqualTo(exceptedNumbers);
     }
-    
+
     @Test
     void testBigDecimality() {
         ImmutableList<BigDecimal> numbers = createValues().map(NumberUtil::bigDecimalify);
@@ -236,6 +240,7 @@ class NumberUtilTest {
                 new BigDecimal("4.2"),
                 new BigDecimal("52"),
                 new BigDecimal("3.14"),
+                new BigDecimal("-47084757718470983457098457834557490823479348570982384"),
                 new BigDecimal("1"),
                 new BigDecimal("0"),
                 new BigDecimal("48"),
@@ -246,7 +251,274 @@ class NumberUtilTest {
                 new BigDecimal("15"));
         assertThat(numbers).isEqualTo(exceptedNumbers);
     }
-    
+
+    @Test
+    void testConvertToNumberByte() {
+        ImmutableList<Byte> numbers = createValues().map(v -> (Byte) NumberUtil.convertToNumber(v, Byte.class, null, null));
+        ImmutableList<Byte> exceptedNumbers = ImmutableList.of(
+                null,
+                (byte) 9,
+                (byte) 3,
+                (byte) 4,
+                (byte) 52,
+                (byte) 3,
+                (byte) 16,
+                (byte) 1,
+                (byte) 0,
+                (byte) 48,
+                (byte) 63,
+                (byte) 55,
+                (byte) 82,
+                (byte) 12,
+                (byte) 15);
+        assertThat(numbers).isEqualTo(exceptedNumbers);
+    }
+
+    @Test
+    void testConvertToNumberShort() {
+        ImmutableList<Short> numbers = createValues().map(v -> (Short) NumberUtil.convertToNumber(v, Short.class, null, null));
+        ImmutableList<Short> exceptedNumbers = ImmutableList.of(
+                null,
+                (short) 9,
+                (short) 3,
+                (short) 4,
+                (short) 52,
+                (short) 3,
+                (short) 30736,
+                (short) 1,
+                (short) 0,
+                (short) 48,
+                (short) 63,
+                (short) 55,
+                (short) 82,
+                (short) 12,
+                (short) 15);
+        assertThat(numbers).isEqualTo(exceptedNumbers);
+    }
+
+    @Test
+    void testConvertToNumberInteger() {
+        ImmutableList<Integer> numbers = createValues().map(v -> (Integer) NumberUtil.convertToNumber(v, Integer.class, null, null));
+        ImmutableList<Integer> exceptedNumbers = ImmutableList.of(
+                null,
+                9,
+                3,
+                4,
+                52,
+                3,
+                1258715152,
+                1,
+                0,
+                48,
+                63,
+                55,
+                82,
+                12,
+                15);
+        assertThat(numbers).isEqualTo(exceptedNumbers);
+    }
+
+    @Test
+    void testConvertToNumberLong() {
+        ImmutableList<Long> numbers = createValues().map(v -> (Long) NumberUtil.convertToNumber(v, Long.class, null, null));
+        ImmutableList<Long> exceptedNumbers = ImmutableList.of(
+                null,
+                9L,
+                3L,
+                4L,
+                52L,
+                3L,
+                5976643574295853072L,
+                1L,
+                0L,
+                48L,
+                63L,
+                55L,
+                82L,
+                12L,
+                15L);
+        assertThat(numbers).isEqualTo(exceptedNumbers);
+    }
+
+    @Test
+    void testConvertToNumberLargeInteger() {
+        ImmutableList<LargeInteger> numbers = createValues().map(v -> (LargeInteger) NumberUtil.convertToNumber(v, LargeInteger.class, null, null));
+        ImmutableList<LargeInteger> exceptedNumbers = ImmutableList.of(
+                null,
+                LargeInteger.of("9"),
+                LargeInteger.of("3"),
+                LargeInteger.of("4"),
+                LargeInteger.of("52"),
+                LargeInteger.of("3"),
+                LargeInteger.of("-47084757718470983457098457834557490823479348570982384"),
+                LargeInteger.of("1"),
+                LargeInteger.of("0"),
+                LargeInteger.of("48"),
+                LargeInteger.of("63"),
+                LargeInteger.of("55"),
+                LargeInteger.of("82"),
+                LargeInteger.of("12"),
+                LargeInteger.of("15"));
+        assertThat(numbers).isEqualTo(exceptedNumbers);
+    }
+
+    @Test
+    void testConvertToNumberLargeIntegerWithSize() {
+        assertThat(NumberUtil.convertToNumber("7529801", LargeInteger.class, 20, null)).isEqualTo(LargeInteger.of("7529801"));
+        assertThat(NumberUtil.convertToNumber("7529801", LargeInteger.class, 3, null)).isEqualTo(LargeInteger.of("999"));
+        assertThat(NumberUtil.convertToNumber("-12345", LargeInteger.class, 4, null)).isEqualTo(LargeInteger.of("-9999"));
+        assertThat(NumberUtil.convertToNumber("-12345", LargeInteger.class, 5, null)).isEqualTo(LargeInteger.of("-12345"));
+        assertThat(NumberUtil.convertToNumber("-12345", LargeInteger.class, 6, null)).isEqualTo(LargeInteger.of("-12345"));
+    }
+
+    @Test
+    void testConvertToNumberBigInteger() {
+        ImmutableList<BigInteger> numbers = createValues().map(v -> (BigInteger) NumberUtil.convertToNumber(v, BigInteger.class, null, null));
+        ImmutableList<BigInteger> exceptedNumbers = ImmutableList.of(
+                null,
+                new BigInteger("9"),
+                new BigInteger("3"),
+                new BigInteger("4"),
+                new BigInteger("52"),
+                new BigInteger("3"),
+                new BigInteger("-47084757718470983457098457834557490823479348570982384"),
+                new BigInteger("1"),
+                new BigInteger("0"),
+                new BigInteger("48"),
+                new BigInteger("63"),
+                new BigInteger("55"),
+                new BigInteger("82"),
+                new BigInteger("12"),
+                new BigInteger("15"));
+        assertThat(numbers).isEqualTo(exceptedNumbers);
+    }
+
+    @Test
+    void testConvertToNumberBigIntegerWithSize() {
+        assertThat(NumberUtil.convertToNumber("7529801", BigInteger.class, 20, null)).isEqualTo(new BigInteger("7529801"));
+        assertThat(NumberUtil.convertToNumber("7529801", BigInteger.class, 3, null)).isEqualTo(new BigInteger("999"));
+        assertThat(NumberUtil.convertToNumber("-12345", BigInteger.class, 4, null)).isEqualTo(new BigInteger("-9999"));
+        assertThat(NumberUtil.convertToNumber("-12345", BigInteger.class, 5, null)).isEqualTo(new BigInteger("-12345"));
+        assertThat(NumberUtil.convertToNumber("-12345", BigInteger.class, 6, null)).isEqualTo(new BigInteger("-12345"));
+    }
+
+    @Test
+    void testConvertToNumberBigDecimal() {
+        ImmutableList<BigDecimal> numbers = createValues().map(v -> (BigDecimal) NumberUtil.convertToNumber(v, BigDecimal.class, null, null));
+        ImmutableList<BigDecimal> exceptedNumbers = ImmutableList.of(
+                null,
+                new BigDecimal("9"),
+                new BigDecimal("3"),
+                new BigDecimal("4.2"),
+                new BigDecimal("52"),
+                new BigDecimal("3.14"),
+                new BigDecimal("-47084757718470983457098457834557490823479348570982384"),
+                new BigDecimal("1"),
+                new BigDecimal("0"),
+                new BigDecimal("48"),
+                new BigDecimal("63"),
+                new BigDecimal("55"),
+                new BigDecimal("82.123"),
+                new BigDecimal("12"),
+                new BigDecimal("15"));
+        assertThat(numbers).isEqualTo(exceptedNumbers);
+    }
+
+    @Test
+    void testConvertToNumberBigDecimalWithSize() {
+        assertThat(NumberUtil.convertToNumber("7529801", BigDecimal.class, 20, null)).isEqualTo(new BigDecimal("7529801"));
+        assertThat(NumberUtil.convertToNumber("7529801", BigDecimal.class, 3, null)).isEqualTo(new BigDecimal("999"));
+        assertThat(NumberUtil.convertToNumber("-12345", BigDecimal.class, 4, null)).isEqualTo(new BigDecimal("-9999"));
+        assertThat(NumberUtil.convertToNumber("-12345", BigDecimal.class, 5, null)).isEqualTo(new BigDecimal("-12345"));
+        assertThat(NumberUtil.convertToNumber("-12345", BigDecimal.class, 6, null)).isEqualTo(new BigDecimal("-12345"));
+    }
+
+    @Test
+    void testConvertToNumberBigDecimalWithScale() {
+        assertThat(NumberUtil.convertToNumber("0.3", BigDecimal.class, null, 0)).isEqualTo(new BigDecimal("0"));
+        assertThat(NumberUtil.convertToNumber("0.3", BigDecimal.class, null, 2)).isEqualTo(new BigDecimal("0.30"));
+        assertThat(NumberUtil.convertToNumber("0", BigDecimal.class, null, 0)).isEqualTo(new BigDecimal("0"));
+        assertThat(NumberUtil.convertToNumber("0", BigDecimal.class, null, 2)).isEqualTo(new BigDecimal("0.00"));
+        assertThat(NumberUtil.convertToNumber("12345", BigDecimal.class, null, 0)).isEqualTo(new BigDecimal("12345"));
+        assertThat(NumberUtil.convertToNumber("12345", BigDecimal.class, null, 3)).isEqualTo(new BigDecimal("12345.000"));
+        assertThat(NumberUtil.convertToNumber("-71", BigDecimal.class, null, 1)).isEqualTo(new BigDecimal("-71.0"));
+    }
+
+    @Test
+    void testConvertToNumberBigDecimalWithSizeAndScale() {
+        assertThat(NumberUtil.convertToNumber("0", BigDecimal.class, 0, 0)).isEqualTo(new BigDecimal("0"));
+        assertThat(NumberUtil.convertToNumber("0", BigDecimal.class, 0, 2)).isEqualTo(new BigDecimal("0.00"));
+        assertThat(NumberUtil.convertToNumber("0", BigDecimal.class, 3, 2)).isEqualTo(new BigDecimal("0.00"));
+        assertThat(NumberUtil.convertToNumber("12", BigDecimal.class, 3, 0)).isEqualTo(new BigDecimal("12"));
+        assertThat(NumberUtil.convertToNumber("12", BigDecimal.class, 3, 1)).isEqualTo(new BigDecimal("12.0"));
+        assertThat(NumberUtil.convertToNumber("12", BigDecimal.class, 3, 2)).isEqualTo(new BigDecimal("9.99"));
+        assertThat(NumberUtil.convertToNumber("-342.1", BigDecimal.class, 6, 0)).isEqualTo(new BigDecimal("-343"));
+        assertThat(NumberUtil.convertToNumber("-342.1", BigDecimal.class, 6, 2)).isEqualTo(new BigDecimal("-342.10"));
+        assertThat(NumberUtil.convertToNumber("-342.1", BigDecimal.class, 6, 4)).isEqualTo(new BigDecimal("-99.9999"));
+        assertThat(NumberUtil.convertToNumber("-342.1", BigDecimal.class, 6, 6)).isEqualTo(new BigDecimal("-0.999999"));
+        assertThat(NumberUtil.convertToNumber("-342.1", BigDecimal.class, 6, 8)).isEqualTo(new BigDecimal("-0.00999999"));
+    }
+
+    @Test
+    void testConvertToNumberFloat() {
+        ImmutableList<Float> numbers = createValues().map(v -> (Float) NumberUtil.convertToNumber(v, Float.class, null, null));
+        ImmutableList<Float> exceptedNumbers = ImmutableList.of(
+                null,
+                9f,
+                3f,
+                4.2f,
+                52f,
+                3.14f,
+                Float.POSITIVE_INFINITY,
+                1f,
+                0.000000000001f,
+                48f,
+                63f,
+                55f,
+                82.123f,
+                12f,
+                15f);
+        assertThat(numbers.map(this::normalizeFloat)).isEqualTo(exceptedNumbers.map(this::normalizeFloat));
+    }
+
+    private Number normalizeFloat(Float floatValue) {
+        if (floatValue == null || !Float.isFinite(floatValue)) {
+            return null;
+        } else {
+            return BigDecimal.valueOf(floatValue).setScale(10, RoundingMode.HALF_UP).stripTrailingZeros();
+        }
+    }
+
+    @Test
+    void testConvertToNumberDouble() {
+        ImmutableList<Double> numbers = createValues().map(v -> (Double) NumberUtil.convertToNumber(v, Double.class, null, null));
+        ImmutableList<Double> exceptedNumbers = ImmutableList.of(
+                null,
+                9d,
+                3d,
+                4.2d,
+                52d,
+                3.14d,
+                -47084757718470983457098457834557490823479348570982384d,
+                1d,
+                0d,
+                48d,
+                63d,
+                55d,
+                82.123d,
+                12d,
+                15d);
+        assertThat(numbers.map(this::normalizeDouble)).isEqualTo(exceptedNumbers.map(this::normalizeDouble));
+    }
+
+    private Number normalizeDouble(Double doubleValue) {
+        if (doubleValue == null || !Double.isFinite(doubleValue)) {
+            return null;
+        } else {
+            return BigDecimal.valueOf(doubleValue).setScale(10, RoundingMode.HALF_UP).stripTrailingZeros();
+        }
+    }
+
     private Class<?> classOf(Object object) {
         if (object == null) {
             return Void.class;
@@ -254,7 +526,7 @@ class NumberUtilTest {
             return object.getClass();
         }
     }
-    
+
     private ImmutableList<Object> createValues() {
         return ImmutableList.of(
                 null,
@@ -263,6 +535,7 @@ class NumberUtilTest {
                 4.2d,
                 "52",
                 "3.14",
+                "-47084757718470983457098457834557490823479348570982384",
                 true,
                 false,
                 '0',
@@ -272,7 +545,7 @@ class NumberUtilTest {
                 (short) 12,
                 (byte) 15);
     }
-    
+
     private ImmutableList<String> createStringValues() {
         return ImmutableList.of(
                 "",
@@ -288,6 +561,7 @@ class NumberUtilTest {
                 "54 200 000",
                 "6__000000",
                 "284357293457348534754",
+                "-774780297457783883791082794711289472374793446882339413021",
                 "+54352356",
                 "17.54",
                 "22.100",
