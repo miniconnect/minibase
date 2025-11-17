@@ -17,6 +17,7 @@ import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
+import hu.webarticum.minibase.query.expression.AddExpression;
 import hu.webarticum.minibase.query.expression.AndExpression;
 import hu.webarticum.minibase.query.expression.BetweenExpression;
 import hu.webarticum.minibase.query.expression.BinaryArithmeticExpression;
@@ -42,6 +43,7 @@ import hu.webarticum.minibase.query.expression.RegexpExpression;
 import hu.webarticum.minibase.query.expression.RightExpression;
 import hu.webarticum.minibase.query.expression.SpecialValueExpression;
 import hu.webarticum.minibase.query.expression.SpecialValueParameter;
+import hu.webarticum.minibase.query.expression.SubtractExpression;
 import hu.webarticum.minibase.query.expression.TypeConstruct;
 import hu.webarticum.minibase.query.expression.TypeConstruct.SymbolAlias;
 import hu.webarticum.minibase.query.expression.VariableExpression;
@@ -622,6 +624,10 @@ public class AntlrSqlParser implements SqlParser {
         } else if (operation instanceof BinaryArithmeticExpression.Operation) {
             BinaryArithmeticExpression.Operation arithmeticOperation = (BinaryArithmeticExpression.Operation) operation;
             return new BinaryArithmeticExpression(arithmeticOperation, leftExpression, rightExpression);
+        } else if (operation == AddExpression.class) {
+            return new AddExpression(leftExpression, rightExpression);
+        } else if (operation == SubtractExpression.class) {
+            return new SubtractExpression(leftExpression, rightExpression);
         } else if (operation == AndExpression.class) {
             return new AndExpression(leftExpression, rightExpression);
         } else if (operation == XorExpression.class) {
@@ -659,9 +665,9 @@ public class AntlrSqlParser implements SqlParser {
         } else if (expressionNode.SLASH() != null) {
             return BinaryArithmeticExpression.Operation.RAT;
         } else if (expressionNode.PLUS() != null) {
-            return BinaryArithmeticExpression.Operation.ADD;
+            return AddExpression.class;
         } else if (expressionNode.MINUS() != null) {
-            return BinaryArithmeticExpression.Operation.SUB;
+            return SubtractExpression.class;
         } else if (expressionNode.AND() != null) {
             return AndExpression.class;
         } else if (expressionNode.XOR() != null) {

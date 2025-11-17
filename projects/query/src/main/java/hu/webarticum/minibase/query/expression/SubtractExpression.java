@@ -8,43 +8,19 @@ import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
 import hu.webarticum.miniconnect.lang.LargeInteger;
 
-public class BinaryArithmeticExpression implements Expression {
-    
-    public enum Operation {
-        
-        MUL("*"), DIV("DIV"), MOD("%"), RAT("/");
-        
-        private final String operator;
-        
-        private Operation(String operator) {
-            this.operator = operator;
-        }
-        
-        public String operator() {
-            return operator;
-        }
-        
-    }
-
-    
-    private final Operation operation;
+public class SubtractExpression implements Expression {
     
     private final Expression leftOperand;
     
     private final Expression rightOperand;
     
     
-    public BinaryArithmeticExpression(Operation operation, Expression leftOperand, Expression rightOperand) {
-        this.operation = operation;
+    public SubtractExpression(Expression leftOperand, Expression rightOperand) {
         this.leftOperand = leftOperand;
         this.rightOperand = rightOperand;
     }
 
 
-    public Operation operation() {
-        return operation;
-    }
-    
     public Expression leftOperand() {
         return leftOperand;
     }
@@ -58,6 +34,7 @@ public class BinaryArithmeticExpression implements Expression {
         return leftOperand.parameters().concat(rightOperand.parameters());
     }
 
+    // TODO: support non-numbers (e.g. temporal values)
     @Override
     public Optional<Class<?>> type() {
         Optional<Class<?>> leftType = leftOperand.type();
@@ -69,8 +46,6 @@ public class BinaryArithmeticExpression implements Expression {
         Class<?> rightNumericType = NumberUtil.numberifyType(rightType.get());
         if (leftNumericType == Void.class || rightNumericType == Void.class) {
             return Optional.of(Void.class);
-        } else if (operation == Operation.RAT) {
-            return Optional.of(Double.class);
         } else if (leftNumericType == Double.class || rightNumericType == Double.class) {
             return Optional.of(Double.class);
         } else if (leftNumericType == BigDecimal.class || rightNumericType == BigDecimal.class) {
@@ -82,14 +57,13 @@ public class BinaryArithmeticExpression implements Expression {
         }
     }
 
+    // TODO: support non-numbers (e.g. temporal values)
     @Override
     public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
         Class<?> leftNumericType = NumberUtil.numberifyType(leftOperand.type(types));
         Class<?> rightNumericType = NumberUtil.numberifyType(rightOperand.type(types));
         if (leftNumericType == Void.class || rightNumericType == Void.class) {
             return Void.class;
-        } else if (operation == Operation.RAT) {
-            return Double.class;
         } else if (leftNumericType == Double.class || rightNumericType == Double.class) {
             return Double.class;
         } else if (leftNumericType == BigDecimal.class || rightNumericType == BigDecimal.class) {
@@ -118,13 +92,6 @@ public class BinaryArithmeticExpression implements Expression {
         Object rightValue = NumberUtil.numberify(rightOperand.evaluate(values));
         if (leftValue == null || rightValue == null) {
             return null;
-        } else if (isDivision(operation) && isZero(rightValue)) {
-            // TODO: raise SQL warning
-            return null;
-        } else if (operation == Operation.RAT) {
-            double leftDouble = (Double) NumberUtil.promote(leftValue, Double.class);
-            double rightDouble = (Double) NumberUtil.promote(rightValue, Double.class);
-            return leftDouble / rightDouble;
         } else if (leftValue instanceof Double || rightValue instanceof Double) {
             double leftDouble = (Double) NumberUtil.promote(leftValue, Double.class);
             double rightDouble = (Double) NumberUtil.promote(rightValue, Double.class);
@@ -142,52 +109,21 @@ public class BinaryArithmeticExpression implements Expression {
         }
     }
     
-    private boolean isDivision(Operation operation) {
-        return operation == Operation.DIV || operation == Operation.MOD || operation == Operation.RAT;
-    }
-    
-    private boolean isZero(Object convertedValue) {
-        if (convertedValue instanceof LargeInteger) {
-            return ((LargeInteger) convertedValue).equals(LargeInteger.ZERO);
-        } else if (convertedValue instanceof BigDecimal) {
-            return ((BigDecimal) convertedValue).equals(BigDecimal.ZERO);
-        } else if (convertedValue instanceof Double) {
-            return ((Double) convertedValue) == 0.0d;
-        } else {
-            return false;
-        }
-    }
-    
     private double operate(double left, double right) {
-        switch (operation) {
-            case MUL: return left * right;
-            case DIV: return Math.ceil(left / right);
-            case MOD: return left - (Math.ceil(left / right) * right);
-            default: throw new IllegalArgumentException("Invalid operation");
-        }
+        return left - right;
     }
 
     private BigDecimal operate(BigDecimal left, BigDecimal right) {
-        switch (operation) {
-            case MUL: return left.multiply(right);
-            case DIV: return left.divideToIntegralValue(right);
-            case MOD: return left.remainder(right);
-            default: throw new IllegalArgumentException("Invalid operation");
-        }
+        return left.subtract(right);
     }
 
     private LargeInteger operate(LargeInteger left, LargeInteger right) {
-        switch (operation) {
-            case MUL: return left.multiply(right);
-            case DIV: return left.divide(right);
-            case MOD: return left.remainder(right);
-            default: throw new IllegalArgumentException("Invalid operation");
-        }
+        return left.subtract(right);
     }
 
     @Override
     public String automaticName() {
-        return leftOperand.automaticName() + " " + operation.operator() + " " + rightOperand.automaticName();
+        return leftOperand.automaticName() + " - " + rightOperand.automaticName();
     }
     
 }
