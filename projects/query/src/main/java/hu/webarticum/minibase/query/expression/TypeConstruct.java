@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 import hu.webarticum.miniconnect.lang.ByteString;
+import hu.webarticum.miniconnect.lang.DateTimeDelta;
 import hu.webarticum.miniconnect.lang.LargeInteger;
 
 public class TypeConstruct {
@@ -20,6 +21,7 @@ public class TypeConstruct {
         NVARCHAR(String.class), CLOB(String.class),
         BINARY(ByteString.class), VARBINARY(ByteString.class), BLOB(ByteString.class),
         DATE(LocalDate.class), TIME(LocalTime.class), DATETIME(LocalDateTime.class), TIMESTAMP_WITH_TIME_ZONE(Instant.class),
+        INTERVAL(DateTimeDelta.class),
 
         ;
 
@@ -44,9 +46,10 @@ public class TypeConstruct {
         NVARCHAR(Symbol.NVARCHAR), CLOB(Symbol.CLOB),
         BINARY(Symbol.BINARY), VARBINARY(Symbol.VARBINARY), BLOB(Symbol.BLOB),
         DATE(Symbol.DATE), TIME(Symbol.TIME), DATETIME(Symbol.DATETIME), TIMESTAMP_WITH_TIME_ZONE(Symbol.TIMESTAMP_WITH_TIME_ZONE),
+        INTERVAL(Symbol.INTERVAL),
 
         TINYINT(Symbol.INTEGER), SMALLINT(Symbol.INTEGER), INT(Symbol.INTEGER),
-        NUMERIC(Symbol.DECIMAL), REAL(Symbol.FLOAT), DOUBLE_PRECISION(Symbol.FLOAT),
+        NUMERIC(Symbol.DECIMAL), REAL(Symbol.FLOAT), DOUBLE_PRECISION(Symbol.FLOAT), DOUBLE(Symbol.FLOAT),
         CHAR(Symbol.NVARCHAR), VARCHAR(Symbol.NVARCHAR), NCHAR(Symbol.NVARCHAR), TEXT(Symbol.CLOB),
         TIMESTAMP(Symbol.DATETIME), TIMESTAMP_WITHOUT_TIME_ZONE(Symbol.DATETIME),
 

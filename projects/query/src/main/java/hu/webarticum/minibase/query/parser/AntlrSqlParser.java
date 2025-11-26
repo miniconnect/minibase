@@ -1,6 +1,8 @@
 package hu.webarticum.minibase.query.parser;
 
 import java.math.BigDecimal;
+import java.time.Duration;
+import java.time.Period;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -72,6 +74,7 @@ import hu.webarticum.minibase.query.query.SelectQuery.SelectItem;
 import hu.webarticum.minibase.query.query.SelectQuery.ExpressionSelectItem;
 import hu.webarticum.minibase.query.query.SelectQuery.WildcardSelectItem;
 import hu.webarticum.minibase.query.query.SelectQuery.WhereItem;
+import hu.webarticum.miniconnect.lang.DateTimeDelta;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.LargeInteger;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryLexer;
@@ -84,6 +87,7 @@ import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.BooleanLi
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.CaseExpressionContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.CastExpressionContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.CommaLimitPartContext;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.DecimalLiteralContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.DeleteQueryContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.ElsePartContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.ExpressionContext;
@@ -95,12 +99,14 @@ import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.FunctionN
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.IdentifierContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.InsertQueryContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.InsertValueContext;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.IntegerLiteralContext;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.IntervalExpressionContext;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.IntervalFieldNameContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.JoinPartContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.LikePartContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.LimitParameterContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.LimitPartContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.LiteralContext;
-import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.NumberLiteralContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.OffsetLimitPartContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.OffsetPartContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.OrderByItemContext;
@@ -137,6 +143,7 @@ import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.WhenPartC
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.WhereItemContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.WherePartContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.WildcardSelectItemContext;
+import hu.webarticum.minibase.query.util.DateTimeDeltaUtil;
 
 public class AntlrSqlParser implements SqlParser {
 
@@ -546,6 +553,11 @@ public class AntlrSqlParser implements SqlParser {
             return parseUnaryArithmeticExpressionNode(unaryArithmeticExpressionNode);
         }
 
+        IntervalExpressionContext intervalExpressionNode = expressionNode.intervalExpression();
+        if (intervalExpressionNode != null) {
+            return parseIntervalExpressionNode(intervalExpressionNode);
+        }
+
         CastExpressionContext castExpressionNode = expressionNode.castExpression();
         if (castExpressionNode != null) {
             return parseCastExpressionNode(castExpressionNode);
@@ -601,6 +613,12 @@ public class AntlrSqlParser implements SqlParser {
             Expression minExpression = parseExpressionNode(expressionNode.minExpression);
             Expression maxExpression = parseExpressionNode(expressionNode.maxExpression);
             return new BetweenExpression(givenExpression, minExpression, maxExpression);
+        }
+
+        if (expressionNode.DOUBLE_COLON() != null) {
+            Expression subExpression = parseExpressionNode(expressionNode.subExpression);
+            TypeConstruct typeConstruct = parseTypeConstructNode(expressionNode.typeConstruct());
+            return new CastExpression(subExpression, typeConstruct);
         }
 
         if (expressionNode.COUNT() != null) {
@@ -675,7 +693,7 @@ public class AntlrSqlParser implements SqlParser {
             return XorExpression.class;
         } else if (expressionNode.OR() != null) {
             return OrExpression.class;
-        } else if (expressionNode.CONCAT() != null) {
+        } else if (expressionNode.DOUBLE_PIPE() != null) {
             return ConcatExpression.class;
         } else {
             return null;
@@ -767,6 +785,53 @@ public class AntlrSqlParser implements SqlParser {
         } else {
             return subExpression;
         }
+    }
+
+    private Expression parseIntervalExpressionNode(IntervalExpressionContext intervalExpressionNode) {
+        TerminalNode intervalStringNode = intervalExpressionNode.TOKEN_STRING();
+        if (intervalStringNode != null) {
+            String intervalString = parseStringNode(intervalStringNode);
+            return new ConstantExpression(DateTimeDelta.parse(intervalString));
+        }
+
+        if (intervalExpressionNode.SECOND() != null) {
+            BigDecimal seconds = parseDecimalLiteralNode(intervalExpressionNode.decimalLiteral());
+            return new ConstantExpression(DateTimeDeltaUtil.deltaify(seconds));
+        }
+
+        LargeInteger amount = parseIntegerLiteralNode(intervalExpressionNode.integerLiteral());
+        IntervalFieldNameContext intervalFieldNameNode = intervalExpressionNode.intervalFieldName();
+        if (intervalFieldNameNode.NANOSECOND() != null) {
+            return new ConstantExpression(DateTimeDelta.of(Duration.ofSeconds(0, amount.longValueExact())).normalized());
+        } else if (intervalFieldNameNode.MICROSECOND() != null) {
+            return new ConstantExpression(DateTimeDelta.of(Duration.ofSeconds(0, amount.multiply(1000).longValueExact())).normalized());
+        } else if (intervalFieldNameNode.MILLISECOND() != null) {
+            return new ConstantExpression(DateTimeDelta.of(Duration.ofSeconds(0, amount.multiply(1_000_000).longValueExact())).normalized());
+        } else if (intervalFieldNameNode.SECOND() != null) {
+            return new ConstantExpression(DateTimeDelta.of(Duration.ofSeconds(amount.longValueExact())).normalized());
+        } else if (intervalFieldNameNode.MINUTE() != null) {
+            return new ConstantExpression(DateTimeDelta.of(Duration.ofMinutes(amount.longValueExact())).normalized());
+        } else if (intervalFieldNameNode.HOUR() != null) {
+            return new ConstantExpression(DateTimeDelta.of(Duration.ofHours(amount.longValueExact())).normalized());
+        } else if (intervalFieldNameNode.DAY() != null) {
+            return new ConstantExpression(DateTimeDelta.of(Period.ofDays(amount.intValueExact())));
+        } else if (intervalFieldNameNode.WEEK() != null) {
+            return new ConstantExpression(DateTimeDelta.of(Period.ofDays(amount.multiply(7).intValueExact())));
+        } else if (intervalFieldNameNode.MONTH() != null) {
+            return new ConstantExpression(DateTimeDelta.of(Period.ofMonths(amount.intValueExact())).normalized());
+        } else if (intervalFieldNameNode.QUARTER() != null) {
+            return new ConstantExpression(DateTimeDelta.of(Period.ofMonths(amount.multiply(3).intValueExact())).normalized());
+        } else if (intervalFieldNameNode.YEAR() != null) {
+            return new ConstantExpression(DateTimeDelta.of(Period.ofYears(amount.intValueExact())));
+        } else if (intervalFieldNameNode.DECADE() != null) {
+            return new ConstantExpression(DateTimeDelta.of(Period.ofYears(amount.multiply(10).intValueExact())));
+        } else if (intervalFieldNameNode.CENTURY() != null) {
+            return new ConstantExpression(DateTimeDelta.of(Period.ofYears(amount.multiply(100).intValueExact())));
+        } else if (intervalFieldNameNode.MILLENNIUM() != null) {
+            return new ConstantExpression(DateTimeDelta.of(Period.ofYears(amount.multiply(1000).intValueExact())));
+        }
+        
+        throw new IllegalArgumentException("Unexpected expression: " + intervalExpressionNode.getText());
     }
 
     private Expression parseCastExpressionNode(CastExpressionContext castExpressionNode) {
@@ -1129,9 +1194,14 @@ public class AntlrSqlParser implements SqlParser {
             return null;
         }
         
-        NumberLiteralContext numberLiteralNode = literalNode.numberLiteral();
-        if (numberLiteralNode != null) {
-            return parseNumberLiteralNode(numberLiteralNode);
+        IntegerLiteralContext integerLiteralNode = literalNode.integerLiteral();
+        if (integerLiteralNode != null) {
+            return parseIntegerLiteralNode(integerLiteralNode);
+        }
+
+        DecimalLiteralContext decimalLiteralNode = literalNode.decimalLiteral();
+        if (decimalLiteralNode != null) {
+            return parseDecimalLiteralNode(decimalLiteralNode);
         }
 
         TerminalNode stringNode = literalNode.TOKEN_STRING();
@@ -1147,22 +1217,16 @@ public class AntlrSqlParser implements SqlParser {
         throw new IllegalArgumentException("Invalid literal: " + literalNode.getText());
     }
 
-    private Number parseNumberLiteralNode(NumberLiteralContext numberLiteralNode) {
-        boolean negate = numberLiteralNode.MINUS() != null;
-        
-        TerminalNode integerNode = numberLiteralNode.TOKEN_INTEGER();
-        if (integerNode != null) {
-            LargeInteger largeIntegerValue = parseIntegerNode(integerNode);
-            return negate ? largeIntegerValue.negate() : largeIntegerValue;
-        }
-        
-        TerminalNode decimalNode = numberLiteralNode.TOKEN_DECIMAL();
-        if (decimalNode != null) {
-            BigDecimal bigDecimalValue = parseDecimalNode(decimalNode);
-            return negate ? bigDecimalValue.negate() : bigDecimalValue;
-        }
-        
-        throw new IllegalArgumentException("Invalid number literal: " + numberLiteralNode.getText());
+    private LargeInteger parseIntegerLiteralNode(IntegerLiteralContext integerLiteralNode) {
+        boolean negate = integerLiteralNode.MINUS() != null;
+        LargeInteger largeIntegerValue = parseIntegerNode(integerLiteralNode.TOKEN_INTEGER());
+        return negate ? largeIntegerValue.negate() : largeIntegerValue;
+    }
+
+    private BigDecimal parseDecimalLiteralNode(DecimalLiteralContext decimalLiteralNode) {
+        boolean negate = decimalLiteralNode.MINUS() != null;
+        BigDecimal bigDecimalValue = parseDecimalNode(decimalLiteralNode.TOKEN_DECIMAL());
+        return negate ? bigDecimalValue.negate() : bigDecimalValue;
     }
 
     private LargeInteger parseIntegerNode(TerminalNode integerNode) {

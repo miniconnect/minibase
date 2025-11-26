@@ -8,7 +8,9 @@ import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.temporal.Temporal;
+import java.time.temporal.TemporalAmount;
 
 public final class TemporalUtil {
 
@@ -53,22 +55,6 @@ public final class TemporalUtil {
         }
     }
     
-    /**
-     * Converts the given value, considering the hintTargetType, to one of these:
-     * 
-     * <ul>
-     * <li><code>null</code> (if value was null)</li>
-     * <li>a <code>LocalTime</code> instance</li>
-     * <li>a <code>LocalDate</code> instance</li>
-     * <li>a <code>LocalDateTime</code> instance</li>
-     * <li>a <code>Instant</code> instance</li>
-     * </ul>
-     * 
-     * @param value the input value to be converted
-     * @param targetType expected type of the returning value
-     * @throws IllegalArgumentException if targetType is not supported
-     * @return a Temporal instance or null
-    */
     public static Temporal convert(Object value, Class<?> targetType) {
         if (value == null) {
             return null;
@@ -80,6 +66,12 @@ public final class TemporalUtil {
             return convertToLocalDateTime(value);
         } else if (targetType == Instant.class) {
             return convertToInstant(value);
+        } else if (targetType == OffsetTime.class) {
+            return convertToOffsetTime(value);
+        } else if (targetType == OffsetDateTime.class) {
+            return convertToOffsetDateTime(value);
+        } else if (targetType == ZonedDateTime.class) {
+            return convertToZonedDateTime(value);
         } else {
             throw new IllegalArgumentException("Unsupported targetType: " + targetType);
         }
@@ -90,20 +82,55 @@ public final class TemporalUtil {
             return (LocalTime) value;
         } else if (value instanceof LocalDateTime) {
             return ((LocalDateTime) value).toLocalTime();
-        } else if (value instanceof OffsetDateTime) {
-            return ((OffsetDateTime) value).toLocalTime();
         } else if (value instanceof Instant) {
             return LocalDateTime.ofInstant((Instant) value, ZoneOffset.UTC).toLocalTime();
+        } else if (value instanceof OffsetTime) {
+            return ((OffsetTime) value).toLocalTime();
+        } else if (value instanceof OffsetDateTime) {
+            return ((OffsetDateTime) value).toLocalTime();
+        } else if (value instanceof ZonedDateTime) {
+            return ((ZonedDateTime) value).toLocalTime();
         } else if (value instanceof Number) {
             BigDecimal bigDecimalValue = NumberUtil.bigDecimalify(value);
             long nanosOfDay= bigDecimalValue.unscaledValue().longValue();
             return LocalTime.ofNanoOfDay(nanosOfDay);
+        } else if (value instanceof TemporalAmount) {
+            return convertToLocalDateTime(value).toLocalTime();
         } else {
             String timeString = value.toString();
             if (timeString.indexOf('Z', 5) >= 0 || timeString.indexOf('+', 5) >= 0 || timeString.indexOf('-', 5) >= 0) {
                 return OffsetTime.parse(timeString).toLocalTime();
             } else {
                 return LocalTime.parse(timeString);
+            }
+        }
+    }
+
+    private static OffsetTime convertToOffsetTime(Object value) {
+        if (value instanceof OffsetTime) {
+            return (OffsetTime) value;
+        } else if (value instanceof OffsetDateTime) {
+            return ((OffsetDateTime) value).toOffsetTime();
+        } else if (value instanceof ZonedDateTime) {
+            return ((ZonedDateTime) value).toOffsetDateTime().toOffsetTime();
+        } else if (value instanceof LocalTime) {
+            return ((LocalTime) value).atOffset(ZoneOffset.UTC);
+        } else if (value instanceof LocalDateTime) {
+            return ((LocalDateTime) value).atOffset(ZoneOffset.UTC).toOffsetTime();
+        } else if (value instanceof Instant) {
+            return ((Instant) value).atOffset(ZoneOffset.UTC).toOffsetTime();
+        } else if (value instanceof Number) {
+            BigDecimal bigDecimalValue = NumberUtil.bigDecimalify(value);
+            long nanosOfDay= bigDecimalValue.unscaledValue().longValue();
+            return LocalTime.ofNanoOfDay(nanosOfDay).atOffset(ZoneOffset.UTC);
+        } else if (value instanceof TemporalAmount) {
+            return convertToLocalDateTime(value).atOffset(ZoneOffset.UTC).toOffsetTime();
+        } else {
+            String timeString = value.toString();
+            if (timeString.indexOf('Z', 5) >= 0 || timeString.indexOf('+', 5) >= 0 || timeString.indexOf('-', 5) >= 0) {
+                return OffsetTime.parse(timeString);
+            } else {
+                return LocalTime.parse(timeString).atOffset(ZoneOffset.UTC);
             }
         }
     }
@@ -119,6 +146,14 @@ public final class TemporalUtil {
             return LocalDate.ofEpochDay(((Number) value).longValue());
         } else if (value instanceof LocalTime) {
             return LocalDate.ofEpochDay(0);
+        } else if (value instanceof OffsetTime) {
+            return LocalDate.ofEpochDay(0);
+        } else if (value instanceof OffsetDateTime) {
+            return ((OffsetDateTime) value).toLocalDate();
+        } else if (value instanceof ZonedDateTime) {
+            return ((ZonedDateTime) value).toLocalDate();
+        } else if (value instanceof TemporalAmount) {
+            return convertToLocalDateTime(value).toLocalDate();
         } else {
             return LocalDate.parse(value.toString());
         }
@@ -139,12 +174,86 @@ public final class TemporalUtil {
             return instantValue.atOffset(ZoneOffset.UTC).toLocalDateTime();
         } else if (value instanceof LocalTime) {
             return LocalDate.ofEpochDay(0).atTime((LocalTime) value);
+        } else if (value instanceof OffsetTime) {
+            return LocalDate.ofEpochDay(0).atTime(((OffsetTime) value).toLocalTime());
+        } else if (value instanceof OffsetDateTime) {
+            return ((OffsetDateTime) value).toLocalDateTime();
+        } else if (value instanceof ZonedDateTime) {
+            return ((ZonedDateTime) value).toLocalDateTime();
+        } else if (value instanceof TemporalAmount) {
+            return LocalDateTime.MIN.plus((TemporalAmount) value);
         } else {
             String dateTimeString = value.toString();
             if (dateTimeString.indexOf('Z', 16) >= 0 || dateTimeString.indexOf('+', 16) >= 0 || dateTimeString.indexOf('-', 16) >= 0) {
                 return OffsetDateTime.parse(dateTimeString).toLocalDateTime();
             } else {
                 return LocalDateTime.parse(dateTimeString);
+            }
+        }
+    }
+
+    private static OffsetDateTime convertToOffsetDateTime(Object value) {
+        if (value instanceof OffsetDateTime) {
+            return (OffsetDateTime) value;
+        } else if (value instanceof ZonedDateTime) {
+            return ((ZonedDateTime) value).toOffsetDateTime();
+        } else if (value instanceof OffsetTime) {
+            return LocalDate.ofEpochDay(0).atTime(((OffsetTime) value));
+        } else if (value instanceof LocalDateTime) {
+            return ((LocalDateTime) value).atOffset(ZoneOffset.UTC);
+        } else if (value instanceof LocalDate) {
+            return ((LocalDate) value).atStartOfDay().atOffset(ZoneOffset.UTC);
+        } else if (value instanceof Instant) {
+            return ((Instant) value).atOffset(ZoneOffset.UTC);
+        } else if (value instanceof Number) {
+            BigDecimal bigDecimalValue = NumberUtil.bigDecimalify(value);
+            long secondsSinceEpoch = bigDecimalValue.toBigInteger().longValueExact();
+            int nanoOfSecond = bigDecimalValue.remainder(BigDecimal.ONE).movePointRight(9).intValue();
+            Instant instantValue = Instant.ofEpochSecond(secondsSinceEpoch, nanoOfSecond);
+            return instantValue.atOffset(ZoneOffset.UTC);
+        } else if (value instanceof LocalTime) {
+            return LocalDate.ofEpochDay(0).atTime((LocalTime) value).atOffset(ZoneOffset.UTC);
+        } else if (value instanceof TemporalAmount) {
+            return LocalDateTime.MIN.plus((TemporalAmount) value).atOffset(ZoneOffset.UTC);
+        } else {
+            String dateTimeString = value.toString();
+            if (dateTimeString.indexOf('Z', 16) >= 0 || dateTimeString.indexOf('+', 16) >= 0 || dateTimeString.indexOf('-', 16) >= 0) {
+                return OffsetDateTime.parse(dateTimeString);
+            } else {
+                return LocalDateTime.parse(dateTimeString).atOffset(ZoneOffset.UTC);
+            }
+        }
+    }
+
+    private static ZonedDateTime convertToZonedDateTime(Object value) {
+        if (value instanceof ZonedDateTime) {
+            return (ZonedDateTime) value;
+        } else if (value instanceof OffsetDateTime) {
+            return ((OffsetDateTime) value).atZoneSameInstant(ZoneOffset.UTC);
+        } else if (value instanceof OffsetTime) {
+            return LocalDate.ofEpochDay(0).atTime(((OffsetTime) value)).atZoneSameInstant(ZoneOffset.UTC);
+        } else if (value instanceof LocalDateTime) {
+            return ((LocalDateTime) value).atZone(ZoneOffset.UTC);
+        } else if (value instanceof LocalDate) {
+            return ((LocalDate) value).atStartOfDay().atZone(ZoneOffset.UTC);
+        } else if (value instanceof Instant) {
+            return ((Instant) value).atZone(ZoneOffset.UTC);
+        } else if (value instanceof Number) {
+            BigDecimal bigDecimalValue = NumberUtil.bigDecimalify(value);
+            long secondsSinceEpoch = bigDecimalValue.toBigInteger().longValueExact();
+            int nanoOfSecond = bigDecimalValue.remainder(BigDecimal.ONE).movePointRight(9).intValue();
+            Instant instantValue = Instant.ofEpochSecond(secondsSinceEpoch, nanoOfSecond);
+            return instantValue.atZone(ZoneOffset.UTC);
+        } else if (value instanceof LocalTime) {
+            return LocalDate.ofEpochDay(0).atTime((LocalTime) value).atZone(ZoneOffset.UTC);
+        } else if (value instanceof TemporalAmount) {
+            return LocalDateTime.MIN.plus((TemporalAmount) value).atZone(ZoneOffset.UTC);
+        } else {
+            String dateTimeString = value.toString();
+            if (dateTimeString.indexOf('Z', 16) >= 0 || dateTimeString.indexOf('+', 16) >= 0 || dateTimeString.indexOf('-', 16) >= 0) {
+                return OffsetDateTime.parse(dateTimeString).atZoneSameInstant(ZoneOffset.UTC);
+            } else {
+                return LocalDateTime.parse(dateTimeString).atZone(ZoneOffset.UTC);
             }
         }
     }
@@ -163,6 +272,14 @@ public final class TemporalUtil {
             return Instant.ofEpochSecond(secondsSinceEpoch, nanoOfSecond);
         } else if (value instanceof LocalTime) {
             return LocalDate.ofEpochDay(0).atTime((LocalTime) value).toInstant(ZoneOffset.UTC);
+        } else if (value instanceof OffsetTime) {
+            return LocalDate.ofEpochDay(0).atTime(((OffsetTime) value).toLocalTime()).toInstant(ZoneOffset.UTC);
+        } else if (value instanceof OffsetDateTime) {
+            return ((OffsetDateTime) value).toInstant();
+        } else if (value instanceof ZonedDateTime) {
+            return ((ZonedDateTime) value).toInstant();
+        } else if (value instanceof TemporalAmount) {
+            return convertToLocalDateTime(value).toInstant(ZoneOffset.UTC);
         } else {
             return Instant.parse(value.toString());
         }

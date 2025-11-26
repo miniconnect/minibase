@@ -3,16 +3,20 @@ package hu.webarticum.minibase.query.util;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.OffsetTime;
+import java.time.Period;
 import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import hu.webarticum.miniconnect.lang.DateTimeDelta;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.LargeInteger;
 
@@ -68,10 +72,14 @@ public final class NumberUtil {
                 type == OffsetTime.class ||
                 type == LocalDateTime.class ||
                 type == OffsetDateTime.class ||
-                type == Instant.class) {
+                type == ZonedDateTime.class ||
+                type == Instant.class ||
+                type == Period.class) {
             return LargeInteger.class;
         } else if (
                 type == BigDecimal.class ||
+                type == DateTimeDelta.class ||
+                type == Duration.class ||
                 type == String.class ||
                 CharSequence.class.isAssignableFrom(type)) {
             return BigDecimal.class;
@@ -230,13 +238,34 @@ public final class NumberUtil {
             return LargeInteger.of(((LocalDateTime) object).toEpochSecond(ZoneOffset.UTC));
         } else if (object instanceof OffsetDateTime) {
             return numberify(((OffsetDateTime) object).toInstant());
+        } else if (object instanceof ZonedDateTime) {
+            return numberify(((ZonedDateTime) object).toInstant());
         } else if (object instanceof Instant) {
             return LargeInteger.of(((Instant) object).getEpochSecond());
+        } else if (object instanceof DateTimeDelta) {
+            return durationToBigDecimal(((DateTimeDelta) object).toDuration());
+        } else if (object instanceof Duration) {
+            return durationToBigDecimal((Duration) object);
+        } else if (object instanceof Period) {
+            return periodToLargeInteger((Period) object);
         } else if (object instanceof CharSequence) {
             return parse(object.toString());
         } else {
             throw new IllegalArgumentException("Can not convert to number: " + object);
         }
+    }
+
+    private static BigDecimal durationToBigDecimal(Duration duration) {
+        BigDecimal result = BigDecimal.valueOf(duration.getSeconds());
+        result.add(new BigDecimal(BigInteger.valueOf(duration.getNano()), 9));
+        return result;
+    }
+
+    private static LargeInteger periodToLargeInteger(Period period) {
+        LargeInteger result = LargeInteger.of(period.getYears() * 365);
+        result = result.add(period.getMonths() * 30);
+        result = result.add(period.getDays());
+        return result;
     }
 
     /**

@@ -3,6 +3,7 @@ package hu.webarticum.minibase.query.util;
 import java.time.temporal.Temporal;
 
 import hu.webarticum.miniconnect.lang.ByteString;
+import hu.webarticum.miniconnect.lang.DateTimeDelta;
 
 public final class ConvertUtil {
 
@@ -30,6 +31,8 @@ public final class ConvertUtil {
             return value;
         } else if (Temporal.class.isAssignableFrom(targetType)) {
             return TemporalUtil.convert(value, targetType);
+        } else if (targetType == DateTimeDelta.class) {
+            return DateTimeDeltaUtil.deltaify(value);
         } else {
             throw new IllegalArgumentException("Can not convert value to " + targetType);
         }

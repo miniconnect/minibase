@@ -5,6 +5,9 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
 import hu.webarticum.miniconnect.lang.ByteString;
@@ -29,6 +32,12 @@ public final class StringUtil {
             return ((LocalDateTime) value).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
         } else if (value instanceof Instant) {
             return ((Instant) value).toString();
+        } else if (value instanceof OffsetTime) {
+            return ((OffsetTime) value).format(DateTimeFormatter.ISO_OFFSET_TIME);
+        } else if (value instanceof OffsetDateTime) {
+            return ((OffsetDateTime) value).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+        } else if (value instanceof ZonedDateTime) {
+            return ((ZonedDateTime) value).format(DateTimeFormatter.ISO_ZONED_DATE_TIME);
         } else if (value instanceof ByteString) {
             return ((ByteString) value).toString(StandardCharsets.UTF_8);
         } else {
