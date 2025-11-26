@@ -103,12 +103,25 @@ public class BinaryArithmeticExpression implements Expression {
     
     @Override
     public boolean isNullable() {
-        return leftOperand.isNullable() || rightOperand.isNullable();
+        return leftOperand.isNullable() || rightOperand.isNullable() || canBeDivisionByZero();
     }
 
     @Override
     public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
-        return leftOperand.isNullable(nullabilities) || rightOperand.isNullable(nullabilities);
+        return leftOperand.isNullable(nullabilities) || rightOperand.isNullable(nullabilities) || canBeDivisionByZero();
+    }
+
+    private boolean canBeDivisionByZero() {
+        if (!isDivision(operation)) {
+            return false;
+        }
+        
+        ImmutableList<Parameter> rightParameters = rightOperand.parameters();
+        if (!rightParameters.isEmpty()) {
+            return true;
+        }
+
+        return isZero(NumberUtil.numberify(rightOperand.evaluate(ImmutableMap.empty())));
     }
     
     // TODO: support non-numbers (e.g. temporal values)
