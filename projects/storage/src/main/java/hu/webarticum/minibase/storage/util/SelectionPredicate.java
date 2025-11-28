@@ -44,11 +44,11 @@ public class SelectionPredicate implements Predicate<ImmutableList<Object>> {
             return predicate;
         }
         
-        Predicate<ImmutableList<Object>> specialNullsModePredicate = v -> xxxxx(v, specialNullsModeMap);
+        Predicate<ImmutableList<Object>> specialNullsModePredicate = v -> testSpecialNullsMode(v, specialNullsModeMap);
         return predicate != null ? predicate.and(specialNullsModePredicate) : specialNullsModePredicate;
     }
 
-    private static boolean xxxxx(ImmutableList<Object> values, Map<Integer, NullsMode> specialNullsModeMap) {
+    private static boolean testSpecialNullsMode(ImmutableList<Object> values, Map<Integer, NullsMode> specialNullsModeMap) {
         for (Map.Entry<Integer, NullsMode> entry : specialNullsModeMap.entrySet()) {
             int i = entry.getKey();
             NullsMode nullsMode = entry.getValue();

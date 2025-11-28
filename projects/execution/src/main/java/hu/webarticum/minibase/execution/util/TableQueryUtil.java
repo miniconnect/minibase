@@ -470,6 +470,11 @@ public class TableQueryUtil {
             ImmutableList<String> columnNames = entry.getKey();
             TableIndex tableIndex = entry.getValue();
             ImmutableList<Object> values = columnNames.map(filter::get);
+
+            // FIXME: hotfix: this is an alignment to save MultiComparator from unexpected null values in SelectionPredicate
+            ImmutableList<Object> fromCondition = (values.get(0) != null) ? values.map(TableQueryUtil::rangeFromForValue) : null;
+            ImmutableList<Object> toCondition = (values.get(0) != null) ? values.map(TableQueryUtil::rangeToForValue) : null;
+
             ImmutableList<SortMode> sortModes;
             if (firstSelection == null && !orderBy.isEmpty()) {
                 sortModes = values.map((i, v) -> getIndexNthSortMode(i, orderBy));
@@ -477,9 +482,9 @@ public class TableQueryUtil {
                 sortModes = values.map(v -> SortMode.UNSORTED);
             }
             TableSelection selection = tableIndex.findMulti(
-                    values.map(TableQueryUtil::rangeFromForValue),
+                    fromCondition,
                     rangeFromInclusionModeForValues(values),
-                    values.map(TableQueryUtil::rangeToForValue),
+                    toCondition,
                     rangeToInclusionModeForValues(values),
                     values.map(TableQueryUtil::nullsModeForValue),
                     sortModes);
