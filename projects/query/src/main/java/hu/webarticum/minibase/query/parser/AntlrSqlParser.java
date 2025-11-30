@@ -8,8 +8,6 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.antlr.v4.runtime.BaseErrorListener;
 import org.antlr.v4.runtime.CharStreams;
@@ -90,6 +88,8 @@ import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.CommaLimi
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.DecimalLiteralContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.DeleteQueryContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.ElsePartContext;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.EscapeStringContinuationContext;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.EscapeStringTokenListContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.ExpressionContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.ExtendedValueContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.FieldListContext;
@@ -129,6 +129,8 @@ import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.SpecialSe
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.SqlQueryContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.StandaloneSelectQueryContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.StandaloneSelectRowContext;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.StringLiteralContext;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.StringTokenListContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.TableNameContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.TypeConstructContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.TypeNameContext;
@@ -147,9 +149,6 @@ import hu.webarticum.minibase.query.util.DateTimeDeltaUtil;
 
 public class AntlrSqlParser implements SqlParser {
 
-    private static final Pattern UNQUOTE_PATTERN = Pattern.compile("\\\\(.)");
-    
-    
     @Override
     public Query parse(String sql) {
         SqlQueryLexer lexer = new SqlQueryLexer(CharStreams.fromString(sql));
@@ -500,7 +499,7 @@ public class AntlrSqlParser implements SqlParser {
         if (likePartContext == null) {
             return null;
         }
-        return parseStringNode(likePartContext.TOKEN_STRING());
+        return parseStringLiteral(likePartContext.stringLiteral());
     }
 
     private ImmutableList<SelectItem> parseSelectPartNode(SelectPartContext selectPartNode) {
@@ -788,9 +787,9 @@ public class AntlrSqlParser implements SqlParser {
     }
 
     private Expression parseIntervalExpressionNode(IntervalExpressionContext intervalExpressionNode) {
-        TerminalNode intervalStringNode = intervalExpressionNode.TOKEN_STRING();
-        if (intervalStringNode != null) {
-            String intervalString = parseStringNode(intervalStringNode);
+        StringLiteralContext intervalStringLiteralNode = intervalExpressionNode.stringLiteral();
+        if (intervalStringLiteralNode != null) {
+            String intervalString = parseStringLiteral(intervalStringLiteralNode);
             return new ConstantExpression(DateTimeDelta.parse(intervalString));
         }
 
@@ -868,9 +867,9 @@ public class AntlrSqlParser implements SqlParser {
             return parseIntegerNode(integerToken).intValueExact();
         }
 
-        TerminalNode stringToken = sizeParameterNode.TOKEN_STRING();
-        if (stringToken != null) {
-            return Integer.parseInt(parseStringNode(stringToken));
+        StringLiteralContext stringLiteralNode = sizeParameterNode.stringLiteral();
+        if (stringLiteralNode != null) {
+            return Integer.parseInt(parseStringLiteral(stringLiteralNode));
         } else {
             return null;
         }
@@ -1078,9 +1077,9 @@ public class AntlrSqlParser implements SqlParser {
             return parseIntegerNode(integerToken);
         }
 
-        TerminalNode stringToken = limitParameterNode.TOKEN_STRING();
-        if (stringToken != null) {
-            return parseStringNode(stringToken);
+        StringLiteralContext stringLiteralNode = limitParameterNode.stringLiteral();
+        if (stringLiteralNode != null) {
+            return parseStringLiteral(stringLiteralNode);
         } else {
             VariableContext variableNode = limitParameterNode.variable();
             String variableName = parseIdentifierNode(variableNode.identifier());
@@ -1117,12 +1116,12 @@ public class AntlrSqlParser implements SqlParser {
         
         TerminalNode quotedNameNode = identifierNode.TOKEN_QUOTEDNAME();
         if (quotedNameNode != null) {
-            return unquote(quotedNameNode.getText());
+            return unquote(quotedNameNode.getText(), '"');
         }
         
         TerminalNode backtickedNameNode = identifierNode.TOKEN_BACKTICKEDNAME();
         if (backtickedNameNode != null) {
-            return unbacktick(backtickedNameNode.getText());
+            return unquote(backtickedNameNode.getText(), '`');
         }
         
         throw new IllegalArgumentException("Invalid identifier: " + identifierNode.getText());
@@ -1204,9 +1203,9 @@ public class AntlrSqlParser implements SqlParser {
             return parseDecimalLiteralNode(decimalLiteralNode);
         }
 
-        TerminalNode stringNode = literalNode.TOKEN_STRING();
-        if (stringNode != null) {
-            return parseStringNode(stringNode);
+        StringLiteralContext stringLiteralNode = literalNode.stringLiteral();
+        if (stringLiteralNode != null) {
+            return parseStringLiteral(stringLiteralNode);
         }
         
         BooleanLiteralContext booleanLiteralNode = literalNode.booleanLiteral();
@@ -1237,22 +1236,179 @@ public class AntlrSqlParser implements SqlParser {
         return new BigDecimal(integerNode.getText());
     }
 
+    private String parseStringLiteral(StringLiteralContext stringLiteralNode) {
+        StringTokenListContext stringTokenListNode = stringLiteralNode.stringTokenList();
+        if (stringTokenListNode != null) {
+            return parseStringTokenListNode(stringTokenListNode);
+        }
+
+        EscapeStringTokenListContext escapeStringTokenListNode = stringLiteralNode.escapeStringTokenList();
+        if (escapeStringTokenListNode != null) {
+            return parseEscapeStringTokenListNode(escapeStringTokenListNode);
+        }
+
+        throw new IllegalArgumentException("Unexpected string syntax: " + stringLiteralNode.getText());
+    }
+
+    private String parseStringTokenListNode(StringTokenListContext stringTokenListNode) {
+        StringBuilder resultBuilder = new StringBuilder();
+        for (TerminalNode stringNode : stringTokenListNode.TOKEN_STRING()) {
+            resultBuilder.append(parseStringNode(stringNode));
+        }
+        return resultBuilder.toString();
+    }
+
     private String parseStringNode(TerminalNode stringNode) {
-        return unquote(stringNode.getText());
+        return unquote(stringNode.getText(), '\'');
     }
 
-    private static String unquote(String token) {
-        int length = token.length();
-        String innerPart = token.substring(1, length - 1);
-        Matcher matcher = UNQUOTE_PATTERN.matcher(innerPart);
-        return matcher.replaceAll("$1");
+    private static String unquote(String quotedLiteralText, char quoteChar) {
+        StringBuilder resultBuilder = new StringBuilder();
+        int last = quotedLiteralText.length() - 1;
+        int pos = 1;
+        while (true) {
+            int index = quotedLiteralText.indexOf(quoteChar, pos);
+            if (index == last) {
+                resultBuilder.append(quotedLiteralText.substring(pos, index));
+                break;
+            }
+            resultBuilder.append(quotedLiteralText.substring(pos, index + 1));
+            pos = index + 2;
+        }
+        return resultBuilder.toString();
     }
 
-    public static String unbacktick(String token) {
-        int length = token.length();
-        return token.substring(1, length - 1).replace("``", "`");
+    private String parseEscapeStringTokenListNode(EscapeStringTokenListContext escapeStringTokenListNode) {
+        StringBuilder resultBuilder = new StringBuilder();
+        resultBuilder.append(parseEscapeStringNode(escapeStringTokenListNode.TOKEN_ESTRING()));
+        for (EscapeStringContinuationContext escapeStringContinuationNode : escapeStringTokenListNode.escapeStringContinuation()) {
+            resultBuilder.append(parseEscapeContinuationNode(escapeStringContinuationNode));
+        }
+        return resultBuilder.toString();
     }
-    
+
+    private String parseEscapeStringNode(TerminalNode estringNode) {
+        String text = estringNode.getText();
+        return unfoldEscapeStringContent(text.substring(2, text.length() - 1));
+    }
+
+    private String parseEscapeContinuationNode(EscapeStringContinuationContext escapeStringContinuationNode) {
+        String text = escapeStringContinuationNode.getText();
+        return unfoldEscapeStringContent(text.substring(1, text.length() - 1));
+    }
+
+    private String unfoldEscapeStringContent(String escapeStringContent) {
+        StringBuilder resultBuilder = new StringBuilder();
+        int length = escapeStringContent.length();
+        int pos = 0;
+        while (pos < length) {
+            char c = escapeStringContent.charAt(pos);
+            if (c == '\'') {
+                resultBuilder.append('\'');
+                pos += 2;
+            } else if (c == '\\') {
+                pos = resolveEscaped(escapeStringContent, pos + 1, resultBuilder);
+            } else {
+                resultBuilder.append(c);
+                pos++;
+            }
+        }
+        return resultBuilder.toString();
+    }
+
+    private int resolveEscaped(String escapeStringContent, int pos, StringBuilder resultBuilder) {
+        char nextChar = escapeStringContent.charAt(pos);
+        switch (nextChar) {
+            case 'n':
+                resultBuilder.append("\n");
+            case 't':
+                resultBuilder.append("\t");
+            case 'r':
+                resultBuilder.append("\r");
+            case 'f':
+                resultBuilder.append("\f");
+            case 'b':
+                resultBuilder.append("\b");
+                return pos + 1;
+            case 'u':
+                return resolveEscapedUnicodeFixed(escapeStringContent, pos + 1, 4, resultBuilder);
+            case 'U':
+                return resolveEscapedUnicodeFixed(escapeStringContent, pos + 1, 8, resultBuilder);
+            case 'x':
+                return resolveEscapedUnicodeShort(escapeStringContent, pos + 1, resultBuilder);
+            default:
+                if (nextChar >= '0' && nextChar <= '7') {
+                    return resolveEscapedOctal(escapeStringContent, pos, resultBuilder);
+                } else {
+                    resultBuilder.append(nextChar);
+                    return pos + 1;
+                }
+        }
+    }
+
+    private int resolveEscapedUnicodeFixed(String escapeStringContent, int pos, int length, StringBuilder resultBuilder) {
+        int inputLength = escapeStringContent.length();
+        int p = pos + length;
+        if (inputLength < p) {
+            throw new IllegalArgumentException("Invalid unicode literal at position " + pos);
+        }
+        int codePoint;
+        try {
+            codePoint = Integer.parseInt(escapeStringContent.substring(pos, p), 16);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Invalid unicode literal at position " + pos, e);
+        }
+        resultBuilder.append((char) codePoint);
+        return p;
+    }
+
+    private int resolveEscapedUnicodeShort(String escapeStringContent, int pos, StringBuilder resultBuilder) {
+        StringBuilder hexLiteralBuilder = new StringBuilder();
+        char c = escapeStringContent.charAt(pos);
+        if ((c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f')) {
+            hexLiteralBuilder.append(c);
+        } else {
+            throw new IllegalArgumentException("Invalid unicode literal at position " + pos);
+        }
+        int inputLength = escapeStringContent.length();
+        int p = pos + 1;
+        if (p < inputLength) {
+            c = escapeStringContent.charAt(p);
+            if ((c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f')) {
+                hexLiteralBuilder.append(c);
+                p++;
+            }
+        }
+        int codePoint = Integer.parseInt(hexLiteralBuilder.toString(), 16);
+        resultBuilder.append((char) codePoint);
+        return p;
+    }
+
+    private int resolveEscapedOctal(String escapeStringContent, int pos, StringBuilder resultBuilder) {
+        StringBuilder octalLiteralBuilder = new StringBuilder();
+        char c = escapeStringContent.charAt(pos);
+        octalLiteralBuilder.append(c);
+        int length = escapeStringContent.length();
+        int p = pos + 1;
+        if (p < length) {
+            c = escapeStringContent.charAt(p);
+            if (c >= '0' && c <= '7') {
+                octalLiteralBuilder.append(c);
+                p++;
+                if (p < length) {
+                    c = escapeStringContent.charAt(p);
+                    if (c >= '0' && c <= '7') {
+                        octalLiteralBuilder.append(c);
+                        p++;
+                    }
+                }
+            }
+        }
+        int codePoint = Integer.parseInt(octalLiteralBuilder.toString(), 8);
+        resultBuilder.append((char) codePoint);
+        return p;
+    }
+
     public static Boolean parseBooleanLiteralNode(BooleanLiteralContext booleanLiteralNode) {
         return booleanLiteralNode.TRUE() != null;
     }

@@ -49,7 +49,7 @@ offsetLimitPart: offsetPart limitPart?  | limitPart offsetPart? | commaLimitPart
 offsetPart: OFFSET limitParameter ( ROW | ROWS )?;
 limitPart: ( LIMIT | FETCH ( FIRST | NEXT ) ) limitParameter ( ( ROW | ROWS ) ONLY? )?;
 commaLimitPart: LIMIT offsetValue=limitParameter COMMA limitValue=limitParameter;
-limitParameter: TOKEN_INTEGER | TOKEN_STRING | variable;
+limitParameter: TOKEN_INTEGER | stringLiteral | variable;
 
 standaloneSelectQuery: standaloneSelectRow ( UNION standaloneSelectRow )*;
 standaloneSelectRow: SELECT aliasableExpression ( COMMA aliasableExpression )* ( FROM UNIT )?;
@@ -115,7 +115,7 @@ unaryArithmeticExpression: ( PLUS | MINUS ) subExpression=expression;
 caseExpression: CASE (givenExpression=expression)? whenPart+ elsePart? END;
 whenPart: WHEN conditionExpression=expression THEN resultExpression=expression;
 elsePart: ELSE expression;
-intervalExpression: INTERVAL TOKEN_STRING | INTERVAL integerLiteral intervalFieldName | INTERVAL decimalLiteral SECOND;
+intervalExpression: INTERVAL stringLiteral | INTERVAL integerLiteral intervalFieldName | INTERVAL decimalLiteral SECOND;
 intervalFieldName:
     NANOSECOND | MICROSECOND | MILLISECOND | SECOND | MINUTE | HOUR |
     DAY | WEEK | MONTH | QUARTER | YEAR | DECADE | CENTURY | MILLENNIUM;
@@ -124,7 +124,7 @@ castExpression:
     CONVERT PAR_START expression COMMA typeConstruct PAR_END |
     CONVERT PAR_START typeConstruct COMMA expression PAR_END;
 typeConstruct: typeName ( PAR_START ( size=sizeParameter ( COMMA scale=sizeParameter )? )? PAR_END )?;
-sizeParameter: TOKEN_INTEGER | TOKEN_STRING;
+sizeParameter: TOKEN_INTEGER | stringLiteral;
 typeName:
     NULL | BOOLEAN | INTEGER |BIGINT | DECIMAL | FLOAT | NVARCHAR | CLOB | BINARY | VARBINARY | BLOB | DATE | TIME | DATETIME |
     TIMESTAMP ( WITHOUT TIME ZONE )? | TIMESTAMP WITH TIME ZONE | INTERVAL |
@@ -154,11 +154,15 @@ variable: AT identifier;
 fieldName: identifier;
 tableName: identifier;
 identifier: TOKEN_SIMPLENAME | TOKEN_QUOTEDNAME | TOKEN_BACKTICKEDNAME;
-literal: NULL | TOKEN_STRING | integerLiteral | decimalLiteral | booleanLiteral;
+literal: NULL | stringLiteral | integerLiteral | decimalLiteral | booleanLiteral;
 integerLiteral: ( MINUS | PLUS )? TOKEN_INTEGER;
 decimalLiteral: ( MINUS | PLUS )? TOKEN_DECIMAL;
 booleanLiteral: TRUE | FALSE;
-likePart: LIKE TOKEN_STRING;
+likePart: LIKE stringLiteral;
+stringLiteral: stringTokenList | escapeStringTokenList;
+stringTokenList: TOKEN_STRING+;
+escapeStringTokenList: TOKEN_ESTRING escapeStringContinuation*;
+escapeStringContinuation: TOKEN_STRING | TOKEN_ECSTRING_CONTINUATION;
 schemaName: identifier;
 parentheses: PAR_START PAR_END;
 
@@ -289,10 +293,13 @@ TRUE: T R U E;
 FALSE: F A L S E;
 
 TOKEN_SIMPLENAME: [\p{L}_] [\p{N}\p{L}_]* ;
-TOKEN_QUOTEDNAME: '"' ( '\\' . | '""' | ~[\\"] )* '"';
+TOKEN_QUOTEDNAME: '"' ( '""' | ~["] )* '"';
 TOKEN_BACKTICKEDNAME: '`' ( '``' | ~[`] )* '`';
 
-TOKEN_STRING: '\'' ( '\\' . | '\'\'' | ~[\\'] )* '\'';
+TOKEN_STRING: '\'' ( '\'\'' | ~['] )* '\'';
+TOKEN_ESTRING: E FRAGMENT_ESTRING;
+TOKEN_ECSTRING_CONTINUATION: FRAGMENT_ESTRING;
+fragment FRAGMENT_ESTRING: '\'' ( '\\' . | '\'\'' | ~[\\'] )* '\'';
 TOKEN_DECIMAL: [0-9]+ '.' [0-9]* | '.' [0-9]+;
 TOKEN_INTEGER: [0-9]+;
 
