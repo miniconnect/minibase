@@ -5,8 +5,8 @@ package hu.webarticum.minibase.query.query.antlr.grammar;
 }
 
 sqlQuery: (
-    selectQuery |
     selectCountQuery |
+    selectQuery |
     standaloneSelectQuery |
     showSpecialQuery |
     updateQuery |
@@ -17,6 +17,13 @@ sqlQuery: (
     useQuery |
     setVariableQuery
 ) EOF ;
+
+selectCountQuery: (
+    SELECT COUNT PAR_START ( wildcardSelectItem | DISTINCT? scopeableFieldName ) PAR_END fieldAliasPart=aliasPart?
+    FROM ( schemaName DOT )? tableName tableAliasPart=aliasPart?
+    wherePart?
+    limitPart?
+);
 
 selectQuery: (
     SELECT selectPart
@@ -34,13 +41,6 @@ joinPart: (
 );
 innerJoin: INNER? JOIN;
 leftJoin: LEFT OUTER? JOIN;
-
-selectCountQuery: (
-    SELECT COUNT PAR_START ( wildcardSelectItem | DISTINCT? scopeableFieldName ) PAR_END fieldAliasPart=aliasPart?
-    FROM ( schemaName DOT )? tableName tableAliasPart=aliasPart?
-    wherePart?
-    limitPart?
-);
 
 selectPart: selectItem ( COMMA selectItem )*;
 selectItem: aliasableExpression | wildcardSelectItem;
