@@ -29,8 +29,10 @@ import hu.webarticum.minibase.query.expression.ConcatExpression;
 import hu.webarticum.minibase.query.expression.ConstantExpression;
 import hu.webarticum.minibase.query.expression.EqualsExpression;
 import hu.webarticum.minibase.query.expression.Expression;
+import hu.webarticum.minibase.query.expression.GreatestExpression;
 import hu.webarticum.minibase.query.expression.IsNotNullExpression;
 import hu.webarticum.minibase.query.expression.IsNullExpression;
+import hu.webarticum.minibase.query.expression.LeastExpression;
 import hu.webarticum.minibase.query.expression.LeftExpression;
 import hu.webarticum.minibase.query.expression.LikeExpression;
 import hu.webarticum.minibase.query.expression.NegateExpression;
@@ -756,6 +758,10 @@ public class AntlrSqlParser implements SqlParser {
         } else if (functionName.equalsIgnoreCase("RIGHT")) {
             checkFunctionParameterCount("RIGHT", 2, parameters);
             return new RightExpression(parameters.get(0), parameters.get(1));
+        } else if (functionName.equalsIgnoreCase("LEAST")) {
+            return new LeastExpression(parameters);
+        } else if (functionName.equalsIgnoreCase("GREATEST")) {
+            return new GreatestExpression(parameters);
         } else {
             throw new IllegalArgumentException("Unknown function: " + functionName);
         }
