@@ -162,7 +162,7 @@ likePart: LIKE stringLiteral;
 stringLiteral: stringTokenList | escapeStringTokenList;
 stringTokenList: TOKEN_STRING+;
 escapeStringTokenList: TOKEN_ESTRING escapeStringContinuation*;
-escapeStringContinuation: TOKEN_STRING | TOKEN_ECSTRING_CONTINUATION;
+escapeStringContinuation: TOKEN_STRING | TOKEN_ESTRING_CONTINUATION;
 schemaName: identifier;
 parentheses: PAR_START PAR_END;
 
@@ -298,7 +298,7 @@ TOKEN_BACKTICKEDNAME: '`' ( '``' | ~[`] )* '`';
 
 TOKEN_STRING: '\'' ( '\'\'' | ~['] )* '\'';
 TOKEN_ESTRING: E FRAGMENT_ESTRING;
-TOKEN_ECSTRING_CONTINUATION: FRAGMENT_ESTRING;
+TOKEN_ESTRING_CONTINUATION: FRAGMENT_ESTRING;
 fragment FRAGMENT_ESTRING: '\'' ( '\\' . | '\'\'' | ~[\\'] )* '\'';
 TOKEN_DECIMAL: ( [0-9]+ '.' [0-9]* | '.' [0-9]+ ) FRAGMENT_EXPONENT? | [0-9]+ FRAGMENT_EXPONENT;
 fragment FRAGMENT_EXPONENT: E [-+]? [0-9]+;
