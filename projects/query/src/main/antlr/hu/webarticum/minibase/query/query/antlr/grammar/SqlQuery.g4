@@ -300,7 +300,8 @@ TOKEN_STRING: '\'' ( '\'\'' | ~['] )* '\'';
 TOKEN_ESTRING: E FRAGMENT_ESTRING;
 TOKEN_ECSTRING_CONTINUATION: FRAGMENT_ESTRING;
 fragment FRAGMENT_ESTRING: '\'' ( '\\' . | '\'\'' | ~[\\'] )* '\'';
-TOKEN_DECIMAL: [0-9]+ '.' [0-9]* | '.' [0-9]+;
+TOKEN_DECIMAL: ( [0-9]+ '.' [0-9]* | '.' [0-9]+ ) FRAGMENT_EXPONENT? | [0-9]+ FRAGMENT_EXPONENT;
+fragment FRAGMENT_EXPONENT: E [-+]? [0-9]+;
 TOKEN_INTEGER: [0-9]+;
 
 DOT: '.';
