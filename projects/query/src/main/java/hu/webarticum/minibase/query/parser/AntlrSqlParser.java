@@ -157,6 +157,8 @@ public class AntlrSqlParser implements SqlParser {
     @Override
     public Query parse(String sql) {
         SqlQueryLexer lexer = new SqlQueryLexer(CharStreams.fromString(sql));
+        lexer.removeErrorListeners();
+        lexer.addErrorListener(new ParseErrorListener());
         SqlQueryParser parser = new SqlQueryParser(new CommonTokenStream(lexer));
         parser.removeErrorListeners();
         parser.addErrorListener(new ParseErrorListener());
@@ -1444,7 +1446,7 @@ public class AntlrSqlParser implements SqlParser {
                     message);
             throw new IllegalArgumentException(fullMessage, e);
         }
-        
+
     }
 
 }
