@@ -90,6 +90,7 @@ orderByPosition: TOKEN_INTEGER;
 aliasableExpression: expression aliasPart?;
 aliasPart: AS? alias=identifier;
 expression:
+    subExpression=expression DOUBLE_COLON typeConstruct |
     unaryArithmeticExpression |
     leftExpression=expression binaryOperator=( ASTERISK | MOD | PERCENT | DIV | SLASH ) rightExpression=expression |
     leftExpression=expression binaryOperator=( PLUS | MINUS ) rightExpression=expression |
@@ -107,7 +108,6 @@ expression:
     caseExpression |
     COUNT PAR_START DISTINCT? ASTERISK PAR_END |
     COUNT PAR_START DISTINCT subExpression=expression PAR_END |
-    subExpression=expression DOUBLE_COLON typeConstruct |
     intervalExpression |
     castExpression |
     atomicExpression;
