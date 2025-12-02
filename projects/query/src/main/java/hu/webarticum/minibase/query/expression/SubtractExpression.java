@@ -1,9 +1,21 @@
 package hu.webarticum.minibase.query.expression;
 
 import java.math.BigDecimal;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
+import java.time.Period;
+import java.time.temporal.Temporal;
+import java.time.temporal.TemporalAmount;
 import java.util.Optional;
 
+import hu.webarticum.minibase.query.util.DateTimeDeltaUtil;
 import hu.webarticum.minibase.query.util.NumberUtil;
+import hu.webarticum.miniconnect.lang.DateTimeDelta;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
 import hu.webarticum.miniconnect.lang.LargeInteger;
@@ -34,16 +46,21 @@ public class SubtractExpression implements Expression {
         return leftOperand.parameters().concat(rightOperand.parameters());
     }
 
-    // TODO: support non-numbers (e.g. temporal values)
     @Override
     public Optional<Class<?>> type() {
-        Optional<Class<?>> leftType = leftOperand.type();
-        Optional<Class<?>> rightType = rightOperand.type();
-        if (!leftType.isPresent() || !rightType.isPresent()) {
+        Class<?> leftType = leftOperand.type().orElse(null);
+        Class<?> rightType = rightOperand.type().orElse(null);
+        if (leftType != null && Temporal.class.isAssignableFrom(leftType)) {
+            return typeForTemporal(leftType, rightOperand);
+        } else if (leftType == null) {
+            return Optional.empty();
+        } else if (TemporalAmount.class.isAssignableFrom(leftType)) {
+            return Optional.of(DateTimeDelta.class);
+        } else if (rightType == null) {
             return Optional.empty();
         }
-        Class<?> leftNumericType = NumberUtil.numberifyType(leftType.get());
-        Class<?> rightNumericType = NumberUtil.numberifyType(rightType.get());
+        Class<?> leftNumericType = NumberUtil.numberifyType(leftType);
+        Class<?> rightNumericType = NumberUtil.numberifyType(rightType);
         if (leftNumericType == Void.class || rightNumericType == Void.class) {
             return Optional.of(Void.class);
         } else if (leftNumericType == Double.class || rightNumericType == Double.class) {
@@ -57,11 +74,33 @@ public class SubtractExpression implements Expression {
         }
     }
 
-    // TODO: support non-numbers (e.g. temporal values)
+    private Optional<Class<?>> typeForTemporal(Class<?> temporalType, Expression temporalAmountExpression) {
+        if (temporalType != LocalDate.class && temporalType != LocalTime.class && temporalType != OffsetTime.class) {
+            return Optional.of(temporalType);
+        } else if (temporalType == null || temporalAmountExpression.isNullable() || !temporalAmountExpression.parameters().isEmpty()) {
+            return Optional.empty();
+        }
+        DateTimeDelta delta = DateTimeDeltaUtil.deltaify(temporalAmountExpression.evaluate(ImmutableMap.empty()));
+        if (temporalType == LocalDate.class) {
+            return delta.getDuration().isZero() ? Optional.of(LocalDate.class) : Optional.of(LocalDateTime.class);
+        } else if (temporalType == LocalTime.class) {
+            return delta.getPeriod().isZero() ? Optional.of(LocalTime.class) : Optional.of(LocalDateTime.class);
+        } else {
+            return delta.getPeriod().isZero() ? Optional.of(OffsetTime.class) : Optional.of(OffsetDateTime.class);
+        }
+    }
+
     @Override
     public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
-        Class<?> leftNumericType = NumberUtil.numberifyType(leftOperand.type(types));
-        Class<?> rightNumericType = NumberUtil.numberifyType(rightOperand.type(types));
+        Class<?> leftType = leftOperand.type(types);
+        Class<?> rightType = rightOperand.type(types);
+        if (Temporal.class.isAssignableFrom(leftType)) {
+            return typeForTemporal(leftType, rightOperand, types);
+        } else if (TemporalAmount.class.isAssignableFrom(leftType)) {
+            return DateTimeDelta.class;
+        }
+        Class<?> leftNumericType = NumberUtil.numberifyType(leftType);
+        Class<?> rightNumericType = NumberUtil.numberifyType(rightType);
         if (leftNumericType == Void.class || rightNumericType == Void.class) {
             return Void.class;
         } else if (leftNumericType == Double.class || rightNumericType == Double.class) {
@@ -75,6 +114,40 @@ public class SubtractExpression implements Expression {
         }
     }
     
+    private Class<?> typeForTemporal(Class<?> temporalType, Expression temporalAmountExpression, ImmutableMap<Parameter, Class<?>> types) {
+        if (temporalType != LocalDate.class && temporalType != LocalTime.class && temporalType != OffsetTime.class) {
+            return temporalType;
+        }
+        boolean hasPeriod = true;
+        boolean hasDuration = true;
+        if (temporalAmountExpression.parameters().isEmpty()) {
+            Object value = temporalAmountExpression.evaluate(ImmutableMap.empty());
+            if (value == null) {
+                return Void.class;
+            }
+            DateTimeDelta delta = DateTimeDeltaUtil.deltaify(value);
+            hasPeriod = !delta.getPeriod().isZero();
+            hasDuration = !delta.getDuration().isZero();
+        } else {
+            Class<?> temporalAmountType = temporalAmountExpression.type(types);
+            if (temporalAmountType == Period.class) {
+                hasDuration = false;
+            } else if (temporalAmountType == Duration.class) {
+                hasPeriod = false;
+            } else {
+                // final fallback
+                return Instant.class;
+            }
+        }
+        if (temporalType == LocalDate.class) {
+            return hasDuration ? LocalDateTime.class : LocalDate.class;
+        } else if (temporalType == LocalTime.class) {
+            return hasPeriod ? LocalDateTime.class : LocalTime.class;
+        } else {
+            return hasPeriod ? OffsetDateTime.class : OffsetTime.class;
+        }
+    }
+
     @Override
     public boolean isNullable() {
         return leftOperand.isNullable() || rightOperand.isNullable();
@@ -85,27 +158,35 @@ public class SubtractExpression implements Expression {
         return leftOperand.isNullable(nullabilities) || rightOperand.isNullable(nullabilities);
     }
     
-    // TODO: support non-numbers (e.g. temporal values)
     @Override
     public Object evaluate(ImmutableMap<Parameter, Object> values) {
-        Object leftValue = NumberUtil.numberify(leftOperand.evaluate(values));
-        Object rightValue = NumberUtil.numberify(rightOperand.evaluate(values));
+        Object leftValue = leftOperand.evaluate(values);
+        Object rightValue = rightOperand.evaluate(values);
         if (leftValue == null || rightValue == null) {
             return null;
-        } else if (leftValue instanceof Double || rightValue instanceof Double) {
-            double leftDouble = (Double) NumberUtil.promote(leftValue, Double.class);
-            double rightDouble = (Double) NumberUtil.promote(rightValue, Double.class);
+        } else if (leftValue instanceof Temporal) {
+            return DateTimeDeltaUtil.deltaify(rightValue).subtractFromWidening((Temporal) leftValue);
+        } else if (leftValue instanceof TemporalAmount) {
+            return DateTimeDeltaUtil.deltaify(leftValue).minus(DateTimeDeltaUtil.deltaify(rightValue));
+        }
+        Object leftNumericValue = NumberUtil.numberify(leftValue);
+        Object rightNumericValue = NumberUtil.numberify(rightValue);
+        if (leftNumericValue == null || rightNumericValue == null) {
+            return null;
+        } else if (leftNumericValue instanceof Double || rightNumericValue instanceof Double) {
+            double leftDouble = (Double) NumberUtil.promote(leftNumericValue, Double.class);
+            double rightDouble = (Double) NumberUtil.promote(rightNumericValue, Double.class);
             return operate(leftDouble, rightDouble);
-        } else if (leftValue instanceof BigDecimal || rightValue instanceof BigDecimal) {
-            BigDecimal leftBigDecimal = (BigDecimal) NumberUtil.promote(leftValue, BigDecimal.class);
-            BigDecimal rightBigDecimal = (BigDecimal) NumberUtil.promote(rightValue, BigDecimal.class);
+        } else if (leftNumericValue instanceof BigDecimal || rightNumericValue instanceof BigDecimal) {
+            BigDecimal leftBigDecimal = (BigDecimal) NumberUtil.promote(leftNumericValue, BigDecimal.class);
+            BigDecimal rightBigDecimal = (BigDecimal) NumberUtil.promote(rightNumericValue, BigDecimal.class);
             return operate(leftBigDecimal, rightBigDecimal);
-        } else if (leftValue instanceof LargeInteger || rightValue instanceof LargeInteger) {
-            LargeInteger leftLargeInteger = (LargeInteger) NumberUtil.promote(leftValue, LargeInteger.class);
-            LargeInteger rightLargeInteger = (LargeInteger) NumberUtil.promote(rightValue, LargeInteger.class);
+        } else if (leftNumericValue instanceof LargeInteger || rightNumericValue instanceof LargeInteger) {
+            LargeInteger leftLargeInteger = (LargeInteger) NumberUtil.promote(leftNumericValue, LargeInteger.class);
+            LargeInteger rightLargeInteger = (LargeInteger) NumberUtil.promote(rightNumericValue, LargeInteger.class);
             return operate(leftLargeInteger, rightLargeInteger);
         } else {
-            throw new IllegalArgumentException("Operation failed");
+            throw new IllegalArgumentException("Can not unify values for subtraction");
         }
     }
     

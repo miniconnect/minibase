@@ -27,6 +27,8 @@ import hu.webarticum.miniconnect.lang.LargeInteger;
  */
 public final class NumberUtil {
     
+    private static final int UNEXACT_DIVISION_SCALE = 14;
+    
     private static final Pattern NUMBER_CLEAN_PATTERN = Pattern.compile("[ _]");
     
     private static final Pattern NUMBER_PREFIX_PATTERN = Pattern.compile(
@@ -192,6 +194,32 @@ public final class NumberUtil {
         }
     }
     
+    public static boolean isZero(Object value) {
+        Number convertedValue = numberify(value);
+        if (convertedValue instanceof LargeInteger) {
+            return ((LargeInteger) convertedValue).equals(LargeInteger.ZERO);
+        } else if (convertedValue instanceof BigDecimal) {
+            return ((BigDecimal) convertedValue).equals(BigDecimal.ZERO);
+        } else if (convertedValue instanceof Double) {
+            return ((Double) convertedValue) == 0.0d;
+        } else {
+            return false;
+        }
+    }
+    
+    public static boolean isPositive(Object value) {
+        Number convertedValue = numberify(value);
+        if (convertedValue instanceof LargeInteger) {
+            return ((LargeInteger) convertedValue).isPositive();
+        } else if (convertedValue instanceof BigDecimal) {
+            return ((BigDecimal) convertedValue).signum() > 0;
+        } else if (convertedValue instanceof Double) {
+            return ((Double) convertedValue) > 0.0d;
+        } else {
+            return false;
+        }
+    }
+    
     /**
      * Converts an object to one of the following types:
      * 
@@ -243,7 +271,7 @@ public final class NumberUtil {
         } else if (object instanceof Instant) {
             return LargeInteger.of(((Instant) object).getEpochSecond());
         } else if (object instanceof DateTimeDelta) {
-            return durationToBigDecimal(((DateTimeDelta) object).toDuration());
+            return durationToBigDecimal(((DateTimeDelta) object).toCollapsedDuration());
         } else if (object instanceof Duration) {
             return durationToBigDecimal((Duration) object);
         } else if (object instanceof Period) {
@@ -496,6 +524,30 @@ public final class NumberUtil {
             resultBuilder.append(c);
         }
         return resultBuilder.toString();
+    }
+
+    public static BigDecimal divideBigDecimals(BigDecimal divident, BigDecimal divisor) {
+        if (divisor.signum() == 0) {
+            throw new ArithmeticException("Division by zero");
+        } else if (isExactDecimalDivisor(divisor)) {
+            return divident.divide(divisor);
+        } else if (divident.signum() == 0) {
+            return BigDecimal.ZERO;
+        } else {
+            int scale = Math.max(0, divident.scale()) + UNEXACT_DIVISION_SCALE;
+            return divident.divide(divisor, scale, RoundingMode.HALF_UP);
+        }
+    }
+
+    private static boolean isExactDecimalDivisor(BigDecimal divisor) {
+        LargeInteger n = LargeInteger.of(divisor.unscaledValue());
+        while (n.isDivisibleBy(2)) {
+            n = n.half();
+        }
+        while (n.isDivisibleBy(5)) {
+            n = n.divide(5);
+        }
+        return n.abs().isEqualTo(LargeInteger.ONE);
     }
 
 }

@@ -20,13 +20,13 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 import hu.webarticum.minibase.query.expression.AddExpression;
 import hu.webarticum.minibase.query.expression.AndExpression;
 import hu.webarticum.minibase.query.expression.BetweenExpression;
-import hu.webarticum.minibase.query.expression.BinaryArithmeticExpression;
 import hu.webarticum.minibase.query.expression.CaseExpression;
 import hu.webarticum.minibase.query.expression.CastExpression;
 import hu.webarticum.minibase.query.expression.CoalesceExpression;
 import hu.webarticum.minibase.query.expression.ColumnExpression;
 import hu.webarticum.minibase.query.expression.ConcatExpression;
 import hu.webarticum.minibase.query.expression.ConstantExpression;
+import hu.webarticum.minibase.query.expression.DivideExpression;
 import hu.webarticum.minibase.query.expression.EqualsExpression;
 import hu.webarticum.minibase.query.expression.Expression;
 import hu.webarticum.minibase.query.expression.GreatestExpression;
@@ -35,6 +35,8 @@ import hu.webarticum.minibase.query.expression.IsNullExpression;
 import hu.webarticum.minibase.query.expression.LeastExpression;
 import hu.webarticum.minibase.query.expression.LeftExpression;
 import hu.webarticum.minibase.query.expression.LikeExpression;
+import hu.webarticum.minibase.query.expression.ModExpression;
+import hu.webarticum.minibase.query.expression.MultiplyExpression;
 import hu.webarticum.minibase.query.expression.NegateExpression;
 import hu.webarticum.minibase.query.expression.NotEqualsExpression;
 import hu.webarticum.minibase.query.expression.NotExpression;
@@ -42,6 +44,7 @@ import hu.webarticum.minibase.query.expression.NullifExpression;
 import hu.webarticum.minibase.query.expression.OrExpression;
 import hu.webarticum.minibase.query.expression.OrderRelationExpression;
 import hu.webarticum.minibase.query.expression.RegexpExpression;
+import hu.webarticum.minibase.query.expression.RemainderExpression;
 import hu.webarticum.minibase.query.expression.RightExpression;
 import hu.webarticum.minibase.query.expression.SpecialValueExpression;
 import hu.webarticum.minibase.query.expression.SpecialValueParameter;
@@ -641,9 +644,12 @@ public class AntlrSqlParser implements SqlParser {
         } else if (operation instanceof OrderRelationExpression.Operation) {
             OrderRelationExpression.Operation relationOperation = (OrderRelationExpression.Operation) operation;
             return new OrderRelationExpression(relationOperation, leftExpression, rightExpression);
-        } else if (operation instanceof BinaryArithmeticExpression.Operation) {
-            BinaryArithmeticExpression.Operation arithmeticOperation = (BinaryArithmeticExpression.Operation) operation;
-            return new BinaryArithmeticExpression(arithmeticOperation, leftExpression, rightExpression);
+        } else if (operation == MultiplyExpression.class) {
+            return new MultiplyExpression(leftExpression, rightExpression);
+        } else if (operation == RemainderExpression.class) {
+            return new RemainderExpression(leftExpression, rightExpression);
+        } else if (operation == DivideExpression.class) {
+            return new DivideExpression(leftExpression, rightExpression);
         } else if (operation == AddExpression.class) {
             return new AddExpression(leftExpression, rightExpression);
         } else if (operation == SubtractExpression.class) {
@@ -675,15 +681,16 @@ public class AntlrSqlParser implements SqlParser {
         } else if (expressionNode.GREATER_EQ() != null) {
             return OrderRelationExpression.Operation.GREATER_EQ;
         } else if (expressionNode.ASTERISK() != null) {
-            return BinaryArithmeticExpression.Operation.MUL;
+            return MultiplyExpression.class;
         } else if (expressionNode.MOD() != null) {
-            return BinaryArithmeticExpression.Operation.MOD;
+            return ModExpression.class;
         } else if (expressionNode.PERCENT() != null) {
-            return BinaryArithmeticExpression.Operation.MOD;
+            return RemainderExpression.class;
         } else if (expressionNode.DIV() != null) {
-            return BinaryArithmeticExpression.Operation.DIV;
+            // FIXME
+            return DivideExpression.class;
         } else if (expressionNode.SLASH() != null) {
-            return BinaryArithmeticExpression.Operation.RAT;
+            return DivideExpression.class;
         } else if (expressionNode.PLUS() != null) {
             return AddExpression.class;
         } else if (expressionNode.MINUS() != null) {

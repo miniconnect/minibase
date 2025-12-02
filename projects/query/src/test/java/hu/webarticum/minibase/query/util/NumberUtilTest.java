@@ -511,6 +511,35 @@ class NumberUtilTest {
         assertThat(numbers.map(this::normalizeDouble)).isEqualTo(exceptedNumbers.map(this::normalizeDouble));
     }
 
+    @Test
+    void testDivideBigDecimalsExact() {
+        assertThat(NumberUtil.divideBigDecimals(BigDecimal.ZERO, BigDecimal.ONE)).isEqualTo(BigDecimal.ZERO);
+        assertThat(NumberUtil.divideBigDecimals(BigDecimal.ZERO, BigDecimal.valueOf(2))).isEqualTo(BigDecimal.ZERO);
+        assertThat(NumberUtil.divideBigDecimals(BigDecimal.ZERO, BigDecimal.valueOf(3))).isEqualTo(BigDecimal.ZERO);
+        assertThat(NumberUtil.divideBigDecimals(BigDecimal.ONE, BigDecimal.valueOf(4))).isEqualTo(new BigDecimal("0.25"));
+        assertThat(NumberUtil.divideBigDecimals(BigDecimal.ONE, BigDecimal.valueOf(-20))).isEqualTo(new BigDecimal("-0.05"));
+        assertThat(NumberUtil.divideBigDecimals(BigDecimal.valueOf(14), BigDecimal.valueOf(-20))).isEqualTo(new BigDecimal("-0.7"));
+        assertThat(NumberUtil.divideBigDecimals(new BigDecimal("-5.6"), BigDecimal.valueOf(10))).isEqualTo(new BigDecimal("-0.56"));
+        assertThat(NumberUtil.divideBigDecimals(new BigDecimal("93"), new BigDecimal("-1.6"))).isEqualTo(new BigDecimal("-58.125"));
+    }
+
+    @Test
+    void testDivideBigDecimalsNonExact() {
+        assertThat(NumberUtil.divideBigDecimals(BigDecimal.ONE, BigDecimal.valueOf(3))).isEqualTo(new BigDecimal("0.33333333333333"));
+        assertThat(NumberUtil.divideBigDecimals(BigDecimal.valueOf(2), BigDecimal.valueOf(3))).isEqualTo(new BigDecimal("0.66666666666667"));
+        assertThat(NumberUtil.divideBigDecimals(BigDecimal.valueOf(-2), BigDecimal.valueOf(3))).isEqualTo(new BigDecimal("-0.66666666666667"));
+        assertThat(NumberUtil.divideBigDecimals(BigDecimal.valueOf(2), BigDecimal.valueOf(-3))).isEqualTo(new BigDecimal("-0.66666666666667"));
+        assertThat(NumberUtil.divideBigDecimals(BigDecimal.valueOf(-2), BigDecimal.valueOf(-3))).isEqualTo(new BigDecimal("0.66666666666667"));
+        assertThat(NumberUtil.divideBigDecimals(new BigDecimal("-93"), new BigDecimal("1.7"))).isEqualTo(new BigDecimal("-54.70588235294118"));
+    }
+
+    @Test
+    void testDivideBigDecimalsByZero() {
+        assertThatThrownBy(() -> NumberUtil.divideBigDecimals(BigDecimal.ZERO, BigDecimal.ZERO)).isInstanceOf(ArithmeticException.class);
+        assertThatThrownBy(() -> NumberUtil.divideBigDecimals(BigDecimal.valueOf(12), BigDecimal.ZERO)).isInstanceOf(ArithmeticException.class);
+        assertThatThrownBy(() -> NumberUtil.divideBigDecimals(BigDecimal.valueOf(-21), BigDecimal.ZERO)).isInstanceOf(ArithmeticException.class);
+    }
+
     private Number normalizeDouble(Double doubleValue) {
         if (doubleValue == null || !Double.isFinite(doubleValue)) {
             return null;
