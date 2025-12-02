@@ -257,7 +257,7 @@ public final class NumberUtil {
 
     private static BigDecimal durationToBigDecimal(Duration duration) {
         BigDecimal result = BigDecimal.valueOf(duration.getSeconds());
-        result.add(new BigDecimal(BigInteger.valueOf(duration.getNano()), 9));
+        result = result.add(new BigDecimal(BigInteger.valueOf(duration.getNano()), 9));
         return result;
     }
 
