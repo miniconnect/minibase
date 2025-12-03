@@ -219,7 +219,7 @@ public final class NumberUtil {
             return false;
         }
     }
-    
+
     /**
      * Converts an object to one of the following types:
      * 

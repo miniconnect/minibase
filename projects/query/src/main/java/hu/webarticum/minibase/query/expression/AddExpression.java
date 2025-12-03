@@ -80,6 +80,15 @@ public class AddExpression implements Expression {
         } else if (temporalType == null || temporalAmountExpression.isNullable() || !temporalAmountExpression.parameters().isEmpty()) {
             return Optional.empty();
         }
+        if (temporalType == LocalDate.class) {
+            Class<?> temporalAmountType = temporalAmountExpression.type().orElse(null);
+            if (
+                    temporalAmountType != null &&
+                    !TemporalAmount.class.isAssignableFrom(temporalAmountType) &&
+                    NumberUtil.numberifyType(temporalAmountType) == LargeInteger.class) {
+                return Optional.of(LocalDate.class);
+            }
+        }
         DateTimeDelta delta = DateTimeDeltaUtil.deltaify(temporalAmountExpression.evaluate(ImmutableMap.empty()));
         if (temporalType == LocalDate.class) {
             return delta.getDuration().isZero() ? Optional.of(LocalDate.class) : Optional.of(LocalDateTime.class);
@@ -119,6 +128,14 @@ public class AddExpression implements Expression {
     private Class<?> typeForTemporal(Class<?> temporalType, Expression temporalAmountExpression, ImmutableMap<Parameter, Class<?>> types) {
         if (temporalType != LocalDate.class && temporalType != LocalTime.class && temporalType != OffsetTime.class) {
             return temporalType;
+        }
+        if (temporalType == LocalDate.class) {
+            Class<?> temporalAmountType = temporalAmountExpression.type(types);
+            if (
+                    !TemporalAmount.class.isAssignableFrom(temporalAmountType) &&
+                    NumberUtil.numberifyType(temporalAmountType) == LargeInteger.class) {
+                return LocalDate.class;
+            }
         }
         boolean hasPeriod = true;
         boolean hasDuration = true;
@@ -167,9 +184,9 @@ public class AddExpression implements Expression {
         if (leftValue == null || rightValue == null) {
             return null;
         } else if (leftValue instanceof Temporal) {
-            return DateTimeDeltaUtil.deltaify(rightValue).addToWidening((Temporal) leftValue);
+            return operate((Temporal) leftValue, rightValue);
         } else if (rightValue instanceof Temporal) {
-            return DateTimeDeltaUtil.deltaify(leftValue).addToWidening((Temporal) rightValue);
+            return operate((Temporal) rightValue, leftValue);
         } else if (leftValue instanceof TemporalAmount || rightValue instanceof TemporalAmount) {
             return DateTimeDeltaUtil.deltaify(leftValue).plus(DateTimeDeltaUtil.deltaify(rightValue));
         }
@@ -192,6 +209,21 @@ public class AddExpression implements Expression {
         }
     }
     
+    private Temporal operate(Temporal temporal, Object deltaValue) {
+        DateTimeDelta delta;
+        if (deltaValue instanceof TemporalAmount || !(temporal instanceof LocalDate)) {
+            delta = DateTimeDeltaUtil.deltaify(deltaValue);
+        } else {
+            Number deltaNumber = NumberUtil.numberify(deltaValue);
+            if (deltaNumber instanceof LargeInteger) {
+                delta = DateTimeDelta.of(Period.ofDays(((LargeInteger) deltaNumber).intValueExact()));
+            } else {
+                delta = DateTimeDeltaUtil.deltaifyDays(NumberUtil.bigDecimalify(deltaNumber));
+            }
+        }
+        return delta.addToWidening(temporal);
+    }
+
     private double operate(double left, double right) {
         return left + right;
     }
