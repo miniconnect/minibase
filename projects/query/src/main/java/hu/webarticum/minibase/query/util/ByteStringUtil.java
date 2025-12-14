@@ -8,7 +8,7 @@ public final class ByteStringUtil {
         // utility class
     }
 
-    
+
     public static ByteString byteStringify(Object value) {
         if (value == null) {
             return null;

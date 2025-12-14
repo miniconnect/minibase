@@ -19,13 +19,13 @@ import hu.webarticum.miniconnect.record.type.StandardValueType;
 public class ShowSchemasExecutor implements ThrowingQueryExecutor {
 
     private static final String COLUMN_NAME = "Schemas";
-    
+
 
     @Override
     public MiniResult executeThrowing(StorageAccess storageAccess, SessionState state, Query query) {
         return executeInternal(storageAccess, state, (ShowSchemasQuery) query);
     }
-    
+
     private MiniResult executeInternal(
             StorageAccess storageAccess, SessionState state, ShowSchemasQuery showSchemasQuery) {
         ImmutableList<String> schemaNames = storageAccess.schemas().names();
@@ -47,5 +47,5 @@ public class ShowSchemasExecutor implements ThrowingQueryExecutor {
     private boolean match(String like, String tableName) {
         return new LikeMatcher(like).test(tableName);
     }
-    
+
 }

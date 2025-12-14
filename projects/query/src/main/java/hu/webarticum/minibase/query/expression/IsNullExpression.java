@@ -6,9 +6,9 @@ import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
 
 public class IsNullExpression implements Expression {
-    
+
     private final Expression subExpression;
-    
+
 
     public IsNullExpression(Expression subExpression) {
         this.subExpression = subExpression;
@@ -18,7 +18,7 @@ public class IsNullExpression implements Expression {
     public Expression subExpression() {
         return subExpression;
     }
-    
+
     @Override
     public ImmutableList<Parameter> parameters() {
         return subExpression.parameters();
@@ -33,12 +33,12 @@ public class IsNullExpression implements Expression {
     public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
         return Boolean.class;
     }
-    
+
     @Override
     public boolean isNullable() {
         return false;
     }
-    
+
     @Override
     public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
         return false;
@@ -54,5 +54,5 @@ public class IsNullExpression implements Expression {
     public String automaticName() {
         return subExpression.automaticName() + " IS NULL";
     }
-    
+
 }

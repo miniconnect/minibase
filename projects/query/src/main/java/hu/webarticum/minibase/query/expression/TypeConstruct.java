@@ -11,7 +11,7 @@ import hu.webarticum.miniconnect.lang.DateTimeDelta;
 import hu.webarticum.miniconnect.lang.LargeInteger;
 
 public class TypeConstruct {
-    
+
     public enum Symbol {
 
         NULL(Void.class),
@@ -36,7 +36,7 @@ public class TypeConstruct {
         }
 
     }
-    
+
     public enum SymbolAlias {
 
         NULL(Symbol.NULL),
@@ -73,7 +73,7 @@ public class TypeConstruct {
     private final Integer size;
 
     private final Integer scale;
- 
+
 
     public TypeConstruct(SymbolAlias symbolAlias, Integer size, Integer scale) {
         this(symbolAlias.symbol(), size, scale);

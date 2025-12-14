@@ -6,14 +6,14 @@ import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
 
 public class BetweenExpression implements Expression {
-    
+
     private final Expression givenExpression;
-    
+
     private final Expression minExpression;
-    
+
     private final Expression maxExpression;
-    
-    
+
+
     public BetweenExpression(Expression givenExpression, Expression minExpression, Expression maxExpression) {
         this.givenExpression = givenExpression;
         this.minExpression = minExpression;
@@ -24,11 +24,11 @@ public class BetweenExpression implements Expression {
     public Expression givenExpression() {
         return givenExpression;
     }
-    
+
     public Expression minExpression() {
         return minExpression;
     }
-    
+
     public Expression maxExpression() {
         return maxExpression;
     }
@@ -47,7 +47,7 @@ public class BetweenExpression implements Expression {
     public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
         return Boolean.class;
     }
-    
+
     @Override
     public boolean isNullable() {
         return givenExpression.isNullable() || minExpression.isNullable() || maxExpression.isNullable();
@@ -60,7 +60,7 @@ public class BetweenExpression implements Expression {
             minExpression.isNullable(nullabilities) ||
             maxExpression.isNullable(nullabilities);
     }
-    
+
     @Override
     public Object evaluate(ImmutableMap<Parameter, Object> values) {
         Expression subExpression1 = new OrderRelationExpression(
@@ -75,5 +75,5 @@ public class BetweenExpression implements Expression {
     public String automaticName() {
         return givenExpression.automaticName() + " BETWEEN " + minExpression.automaticName() + " AND " + maxExpression.automaticName();
     }
-    
+
 }

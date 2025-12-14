@@ -7,7 +7,7 @@ public interface Table extends NamedResource {
     public NamedResourceStore<Column> columns();
 
     public NamedResourceStore<TableIndex> indexes();
-    
+
     public LargeInteger size();
 
     public Row row(LargeInteger rowIndex);
@@ -17,5 +17,5 @@ public interface Table extends NamedResource {
     public void applyPatch(TablePatch patch);
 
     public Sequence sequence();
-    
+
 }

@@ -16,11 +16,11 @@ public final class LikeUtil {
 
     private static final char REGEX_ESCAPE_CHAR = '\\';
 
-    
+
     private LikeUtil() {
         // utility class
     }
-    
+
 
     public static String buildRegexString(String patternString, Character escapeCharacter) {
         StringBuilder resultBuilder = new StringBuilder("^");

@@ -11,13 +11,13 @@ import hu.webarticum.miniconnect.lang.ImmutableMap;
 public class CoalesceExpression implements Expression {
 
     private ImmutableList<Expression> parameterExpressions;
-    
+
 
     public CoalesceExpression(ImmutableList<Expression> parameterExpressions) {
         this.parameterExpressions = parameterExpressions;
     }
-    
-    
+
+
     public ImmutableList<Expression> parameterExpressions() {
         return parameterExpressions;
     }
@@ -36,7 +36,7 @@ public class CoalesceExpression implements Expression {
         ImmutableList<Class<?>> parameterTypes = parameterExpressions.map(e -> e.type().orElse(null));
         return Optional.ofNullable(UnifyUtil.unifyTypes(parameterTypes));
     }
-    
+
     @Override
     public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
         ImmutableList<Class<?>> parameterTypes = parameterExpressions.map(e -> e.type(types));
@@ -53,7 +53,7 @@ public class CoalesceExpression implements Expression {
         }
         return true;
     }
-    
+
     @Override
     public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
         for (Expression parameterExpression : parameterExpressions.reverseOrder()) {
@@ -63,7 +63,7 @@ public class CoalesceExpression implements Expression {
         }
         return true;
     }
-    
+
     @Override
     public Object evaluate(ImmutableMap<Parameter, Object> values) {
         for (Expression parameterExpression : parameterExpressions) {
@@ -90,5 +90,5 @@ public class CoalesceExpression implements Expression {
         resultBuilder.append(")");
         return resultBuilder.toString();
     }
-    
+
 }

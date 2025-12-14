@@ -7,12 +7,12 @@ import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
 
 public class AndExpression implements Expression {
-    
+
     private final Expression leftOperand;
-    
+
     private final Expression rightOperand;
-    
-    
+
+
     public AndExpression(Expression leftOperand, Expression rightOperand) {
         this.leftOperand = leftOperand;
         this.rightOperand = rightOperand;
@@ -22,7 +22,7 @@ public class AndExpression implements Expression {
     public Expression leftOperand() {
         return leftOperand;
     }
-    
+
     public Expression rightOperand() {
         return rightOperand;
     }
@@ -41,7 +41,7 @@ public class AndExpression implements Expression {
     public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
         return Boolean.class;
     }
-    
+
     @Override
     public boolean isNullable() {
         return leftOperand.isNullable() || rightOperand.isNullable();
@@ -51,7 +51,7 @@ public class AndExpression implements Expression {
     public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
         return leftOperand.isNullable(nullabilities) || rightOperand.isNullable(nullabilities);
     }
-    
+
     @Override
     public Object evaluate(ImmutableMap<Parameter, Object> values) {
         Boolean leftValue = BooleanUtil.boolify(leftOperand.evaluate(values));
@@ -63,10 +63,10 @@ public class AndExpression implements Expression {
 
         return BooleanUtil.boolify(rightOperand.evaluate(values));
     }
-    
+
     @Override
     public String automaticName() {
         return leftOperand.automaticName() + " AND " + rightOperand.automaticName();
     }
-    
+
 }

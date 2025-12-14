@@ -16,12 +16,12 @@ import hu.webarticum.miniconnect.lang.ImmutableMap;
 import hu.webarticum.miniconnect.lang.LargeInteger;
 
 public class MultiplyExpression implements Expression {
-    
+
     private final Expression leftOperand;
-    
+
     private final Expression rightOperand;
-    
-    
+
+
     public MultiplyExpression(Expression leftOperand, Expression rightOperand) {
         this.leftOperand = leftOperand;
         this.rightOperand = rightOperand;
@@ -31,7 +31,7 @@ public class MultiplyExpression implements Expression {
     public Expression leftOperand() {
         return leftOperand;
     }
-    
+
     public Expression rightOperand() {
         return rightOperand;
     }
@@ -133,5 +133,5 @@ public class MultiplyExpression implements Expression {
     public String automaticName() {
         return leftOperand.automaticName() + " * " + rightOperand.automaticName();
     }
-    
+
 }

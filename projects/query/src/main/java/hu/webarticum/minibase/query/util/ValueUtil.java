@@ -3,11 +3,11 @@ package hu.webarticum.minibase.query.util;
 import java.math.BigDecimal;
 
 public final class ValueUtil {
-    
+
     private ValueUtil() {
         // utility class
     }
-    
+
     public static Boolean evalEquality(Object value1, Object value2) {
         if (value1 == null || value2 == null) {
             return null;
@@ -18,7 +18,7 @@ public final class ValueUtil {
         if (type1 == type2) {
             return evalEqualityForSameType(value1, value2);
         }
-        
+
         Class<?> commonType = UnifyUtil.unifyTypes(type1, type2);
         if (commonType == null) {
             commonType = String.class;

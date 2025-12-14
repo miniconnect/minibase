@@ -11,18 +11,18 @@ import hu.webarticum.minibase.storage.api.StorageAccessLockManager;
 import hu.webarticum.miniconnect.lang.CheckableCloseable;
 
 public class SimpleStorageAccessLockManager implements StorageAccessLockManager {
-    
+
     private enum LockStatus { WAITING, ACTIVE, CLOSED }
-    
-    
+
+
     private final Set<ManagedLock> waitingSharedLocks = new HashSet<>();
-    
+
     private final Set<ManagedLock> activeSharedLocks = new HashSet<>();
-    
+
     private final Queue<ManagedLock> exclusiveLockQueue = new LinkedList<>();
-    
+
     private ManagedLock activeExclusiveLock = null;
-    
+
 
     @Override
     public CheckableCloseable lockShared() throws InterruptedException {
@@ -80,30 +80,30 @@ public class SimpleStorageAccessLockManager implements StorageAccessLockManager 
         return resultLock;
     }
 
-    
+
     private class ManagedLock implements CheckableCloseable {
 
         private volatile LockStatus status = LockStatus.WAITING;
-        
-        
+
+
         private synchronized void waitForStart() throws InterruptedException {
             while (status == LockStatus.WAITING) {
                 wait();
             }
         }
-        
+
         @Override
         public void close() {
             if (status == LockStatus.CLOSED) {
                 return;
             }
-            
+
             synchronized (this) {
                 status = LockStatus.CLOSED;
             }
-            
+
             List<ManagedLock> locksToStart = new ArrayList<>(0);
-            
+
             synchronized (SimpleStorageAccessLockManager.this) {
                 boolean mustHandleExclusiveQueue = false;
                 if (activeExclusiveLock == this) {
@@ -129,7 +129,7 @@ public class SimpleStorageAccessLockManager implements StorageAccessLockManager 
                     }
                 }
             }
-            
+
             for (ManagedLock lockToStart : locksToStart) {
                 synchronized (lockToStart) {
                     lockToStart.status = LockStatus.ACTIVE;
@@ -142,7 +142,7 @@ public class SimpleStorageAccessLockManager implements StorageAccessLockManager 
         public boolean isClosed() {
             return status == LockStatus.CLOSED;
         }
-        
+
     }
 
 }

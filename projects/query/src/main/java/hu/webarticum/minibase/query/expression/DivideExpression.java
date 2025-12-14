@@ -16,12 +16,12 @@ import hu.webarticum.miniconnect.lang.ImmutableMap;
 import hu.webarticum.miniconnect.lang.LargeInteger;
 
 public class DivideExpression implements Expression {
-    
+
     private final Expression leftOperand;
-    
+
     private final Expression rightOperand;
-    
-    
+
+
     public DivideExpression(Expression leftOperand, Expression rightOperand) {
         this.leftOperand = leftOperand;
         this.rightOperand = rightOperand;
@@ -31,7 +31,7 @@ public class DivideExpression implements Expression {
     public Expression leftOperand() {
         return leftOperand;
     }
-    
+
     public Expression rightOperand() {
         return rightOperand;
     }
@@ -61,7 +61,7 @@ public class DivideExpression implements Expression {
         }
         return NumberUtil.commonNumericTypeOf(leftType, rightOperand.type(types));
     }
-    
+
     @Override
     public boolean isNullable() {
         return leftOperand.isNullable() || rightOperand.isNullable() || canResultInZero(rightOperand);
@@ -79,7 +79,7 @@ public class DivideExpression implements Expression {
 
         return NumberUtil.isZero(expression.evaluate(ImmutableMap.empty()));
     }
-    
+
     @Override
     public Object evaluate(ImmutableMap<Parameter, Object> values) {
         Object leftValue = leftOperand.evaluate(values);
@@ -124,5 +124,5 @@ public class DivideExpression implements Expression {
     public String automaticName() {
         return leftOperand.automaticName() + " / " + rightOperand.automaticName();
     }
-    
+
 }

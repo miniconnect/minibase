@@ -47,20 +47,20 @@ import hu.webarticum.miniconnect.util.FilteringIterator;
 import hu.webarticum.miniconnect.util.IteratorAdapter;
 
 public class DiffTable extends AbstractTableDecorator {
-    
+
     private final DiffTableColumnStore columnStore;
-    
+
     private final DiffTableIndexStore indexStore;
-    
+
     private final List<ImmutableList<Object>> insertedRows = new ArrayList<>();
-    
+
     private final NavigableMap<LargeInteger, ImmutableMap<Integer, Object>> updates = new TreeMap<>();
-    
+
     private final NavigableSet<LargeInteger> deletions = new TreeSet<>();
-    
+
     private final SimpleSequence sequence;
 
-    
+
     public DiffTable(Table baseTable) {
         super(baseTable);
         this.columnStore = new DiffTableColumnStore();
@@ -90,22 +90,22 @@ public class DiffTable extends AbstractTableDecorator {
     public synchronized Row row(LargeInteger rowIndex) {
         LargeInteger baseTableSize = baseTable.size();
         LargeInteger adjustedRowIndex = adjustByDeletions(LargeInteger.ZERO, rowIndex);
-        
+
         if (adjustedRowIndex.isGreaterThanOrEqualTo(baseTableSize)) {
             ImmutableList<Object> rowData =
                     insertedRows.get(adjustedRowIndex.subtract(baseTableSize).intValueExact());
             return new SimpleRow(baseTable.columns().names(), rowData);
         }
-        
+
         Row originalRow = baseTable.row(adjustedRowIndex);
         ImmutableMap<Integer, Object> rowUpdates = updates.get(adjustedRowIndex);
         if (rowUpdates == null) {
             return originalRow;
         }
-        
+
         return new UpdatedRow(originalRow, rowUpdates);
     }
-    
+
     @Override
     public boolean isWritable() {
         return true;
@@ -115,7 +115,7 @@ public class DiffTable extends AbstractTableDecorator {
     public void applyPatch(TablePatch patch) {
         TablePatchUtil.checkIndividualValues(this, patch);
         checkUniqueInPatch(patch);
-        
+
         insertedRows.addAll(patch.insertedRows());
         applyUpdates(patch.updates());
         applyDeletions(patch.deletions());
@@ -147,17 +147,17 @@ public class DiffTable extends AbstractTableDecorator {
                 checkAndAddUniqueValue(columnIndex, insertedRow.get(columnIndex), uniqueColumnValues);
             }
         }
-        
+
         for (Map.Entry<Integer, Set<Object>> entry : uniqueColumnValues.entrySet()) {
             checkUniqueColumnPatch(entry.getKey(), entry.getValue(), patch);
         }
     }
-    
+
     private void checkUniqueColumnPatch(int columnIndex, Set<Object> newValues, TablePatch patch) {
         if (newValues.isEmpty()) {
             return;
         }
-        
+
         String columnName = columnStore.resources().get(columnIndex).name();
         ImmutableList<String> columnNameList = ImmutableList.of(columnName);
         TableIndex index = null;
@@ -202,29 +202,29 @@ public class DiffTable extends AbstractTableDecorator {
             }
         }
     }
-    
+
     private boolean isFieldUpdatedIn(LargeInteger rowIndex, Integer columnIndex, TablePatch patch) {
         if (patch.deletions().contains(rowIndex)) {
             return true;
         }
-        
+
         ImmutableMap<Integer, Object> updatedRow = patch.updates().get(rowIndex);
         return updatedRow != null && updatedRow.containsKey(columnIndex);
     }
-    
+
     private void checkAndAddUniqueValue(
             int columnIndex, Object newValue, Map<Integer, Set<Object>> uniqueColumnValues) {
         if (newValue == null) {
             return;
         }
-        
+
         Set<Object> values = uniqueColumnValues.get(columnIndex);
         if (values != null && !values.add(newValue)) {
             String columnName = columnStore.resources().get(columnIndex).name();
             throw PredefinedError.COLUMN_VALUE_NOT_UNIQUE.toException(columnName, newValue);
         }
     }
-    
+
     private void applyUpdates(
             NavigableMap<LargeInteger, ImmutableMap<Integer, Object>> patchUpdates) {
         LargeInteger baseTableSize = baseTable.size();
@@ -238,7 +238,7 @@ public class DiffTable extends AbstractTableDecorator {
             LargeInteger adjustedRowIndex = adjustByDeletions(internalPosition, remainingCount);
 
             applyUpdate(adjustedRowIndex, rowUpdates, baseTableSize);
-            
+
             internalPosition = adjustedRowIndex.add(LargeInteger.ONE);
             viewPosition = rowIndex.add(LargeInteger.ONE);
         }
@@ -264,7 +264,7 @@ public class DiffTable extends AbstractTableDecorator {
             insertedRows.set(insertIndex, updatedRow);
         }
     }
-    
+
     private void applyDeletions(NavigableSet<LargeInteger> patchDeletions) {
         LargeInteger baseTableSize = baseTable.size();
         LargeInteger currentDeletionCount = LargeInteger.of(deletions.size());
@@ -272,7 +272,7 @@ public class DiffTable extends AbstractTableDecorator {
         applyInnerDeletions(patchDeletions.headSet(reducedSize));
         applyOuterDeletions(patchDeletions.tailSet(reducedSize, true), reducedSize);
     }
-    
+
     private void applyInnerDeletions(SortedSet<LargeInteger> innerDeletions) {
         LargeInteger internalPosition = LargeInteger.ZERO;
         LargeInteger viewPosition = LargeInteger.ZERO;
@@ -282,7 +282,7 @@ public class DiffTable extends AbstractTableDecorator {
 
             deletions.add(adjustedRowIndex);
             updates.remove(adjustedRowIndex);
-            
+
             internalPosition = adjustedRowIndex.add(LargeInteger.ONE);
             viewPosition = rowIndex.add(LargeInteger.ONE);
         }
@@ -300,7 +300,7 @@ public class DiffTable extends AbstractTableDecorator {
 
     private LargeInteger adjustByDeletions(LargeInteger start, LargeInteger count) {
         LargeInteger targetPosition;
-        
+
         LargeInteger position = start;
         LargeInteger remaining = count;
         do {
@@ -309,11 +309,11 @@ public class DiffTable extends AbstractTableDecorator {
             remaining = LargeInteger.of(foundItems.size());
             position = targetPosition;
         } while (!remaining.equals(LargeInteger.ZERO));
-        
+
         while (deletions.contains(targetPosition)) {
             targetPosition = targetPosition.add(LargeInteger.ONE);
         }
-        
+
         return targetPosition;
     }
 
@@ -322,20 +322,20 @@ public class DiffTable extends AbstractTableDecorator {
         LargeInteger deletionCount = LargeInteger.of(subDeletions.size());
         return baseRowIndex.subtract(deletionCount);
     }
-    
+
     @Override
     public Sequence sequence() {
         return sequence;
     }
-    
-    
+
+
     private static class UpdatedRow implements Row {
-        
+
         private final Row baseRow;
-        
+
         private final ImmutableMap<Integer, Object> updates;
-        
-        
+
+
         private UpdatedRow(Row baseRow, ImmutableMap<Integer, Object> updates) {
             this.baseRow = baseRow;
             this.updates = updates;
@@ -385,16 +385,16 @@ public class DiffTable extends AbstractTableDecorator {
             }
             return ImmutableMap.fromMap(resultBuilder);
         }
-        
+
     }
-    
-    
+
+
     private class DiffTableColumnStore extends AbstractNamedResourceStoreDecorator<Column> {
-        
+
         private DiffTableColumnStore() {
             super(baseTable.columns());
         }
-        
+
 
         @Override
         public Column get(String name) {
@@ -426,17 +426,17 @@ public class DiffTable extends AbstractTableDecorator {
                 return new SimpleColumn(name, columnDefinition, mergedPossibleValues);
             }
         }
-        
+
     }
-    
-    
+
+
     private class DiffTableIndexStore extends AbstractNamedResourceStoreDecorator<TableIndex> {
-        
+
         private DiffTableIndexStore() {
             super(baseTable.indexes());
         }
-        
-        
+
+
         @Override
         public TableIndex get(String name) {
             TableIndex baseIndex = baseStore.get(name);
@@ -446,35 +446,35 @@ public class DiffTable extends AbstractTableDecorator {
                 return new DiffTableIndex(baseIndex);
             }
         }
-        
+
     }
-    
-    
+
+
     private class DiffTableIndex implements TableIndex {
-        
+
         private final TableIndex baseIndex;
-        
+
         private final Set<LargeInteger> updatedRowIndexes;
-        
+
         private final ArrayList<DiffTableIndexEntry> indexEntries;
-        
+
 
         public DiffTableIndex(TableIndex baseIndex) {
             this.baseIndex = baseIndex;
-            
+
             ImmutableList<String> tableColumnNames = baseTable.columns().names();
             ImmutableList<Integer> columnIndexes =
                     baseIndex.columnNames().map(tableColumnNames::indexOf);
-            
+
             int fullUpdateCount = updates.size() + insertedRows.size();
             this.updatedRowIndexes = new HashSet<>(fullUpdateCount);
             this.indexEntries = new ArrayList<>(fullUpdateCount);
-            
+
             LargeInteger position = LargeInteger.ZERO;
             LargeInteger fullDeletionCount = LargeInteger.ZERO;
             for (Map.Entry<LargeInteger, ImmutableMap<Integer, Object>> entry : updates.entrySet()) {
                 LargeInteger baseRowIndex = entry.getKey();
-                
+
                 Collection<LargeInteger> subDeletions = deletions.subSet(position, baseRowIndex);
                 LargeInteger subDeletionCount = LargeInteger.of(subDeletions.size());
                 fullDeletionCount = fullDeletionCount.add(subDeletionCount);
@@ -488,7 +488,7 @@ public class DiffTable extends AbstractTableDecorator {
                         break;
                     }
                 }
-                
+
                 if (updated) {
                     this.updatedRowIndexes.add(rowIndex);
                     Row baseRow = baseTable.row(baseRowIndex);
@@ -497,14 +497,14 @@ public class DiffTable extends AbstractTableDecorator {
                     DiffTableIndexEntry indexEntry = new DiffTableIndexEntry(rowIndex, updatedData);
                     this.indexEntries.add(indexEntry);
                 }
-                
+
                 position = baseRowIndex.add(LargeInteger.ONE);
             }
             Collection<LargeInteger> tailDeletions = deletions.tailSet(position);
             LargeInteger tailDeletionCount = LargeInteger.of(tailDeletions.size());
             fullDeletionCount = fullDeletionCount.add(tailDeletionCount);
             LargeInteger innerSize = baseTable.size().subtract(fullDeletionCount);
-            
+
             int insertionCount = insertedRows.size();
             for (int i = 0; i < insertionCount; i++) {
                 ImmutableList<Object> insertedRow = insertedRows.get(i);
@@ -514,11 +514,11 @@ public class DiffTable extends AbstractTableDecorator {
                 this.updatedRowIndexes.add(rowIndex);
                 this.indexEntries.add(indexEntry);
             }
-            
+
             this.indexEntries.trimToSize();
         }
-        
-        
+
+
         @Override
         public String name() {
             return baseIndex.name();
@@ -543,7 +543,7 @@ public class DiffTable extends AbstractTableDecorator {
                 ImmutableList<NullsMode> nullsModes,
                 ImmutableList<SortMode> sortModes) {
             boolean sort = !sortModes.isEmpty() && sortModes.get(0).isSorted();
-            
+
             TableSelection baseSelection = baseIndex.findMulti(
                     from, fromInclusionMode, to, toInclusionMode, nullsModes, sortModes);
             MultiComparator multiComparator = ComparatorUtil.createMultiComparator(
@@ -565,17 +565,17 @@ public class DiffTable extends AbstractTableDecorator {
                 return new UnsortedDiffTableSelection(baseSelection, predicate);
             }
         }
-    
+
 
         private abstract class AbstractDiffTableSelection implements TableSelection {
-    
+
             protected final TableSelection baseSelection;
-    
+
             protected final Set<LargeInteger> filteredUpdatedRowIndexes;
-    
+
             protected final ArrayList<DiffTableIndexEntry> filteredIndexEntries;
-            
-            
+
+
             protected AbstractDiffTableSelection(
                     TableSelection baseSelection,
                     Predicate<ImmutableList<Object>> predicate) {
@@ -590,8 +590,8 @@ public class DiffTable extends AbstractTableDecorator {
                 }
                 this.filteredIndexEntries.trimToSize();
             }
-            
-            
+
+
             @Override
             public boolean containsRow(LargeInteger rowIndex) {
                 if (updatedRowIndexes.contains(rowIndex)) {
@@ -611,25 +611,25 @@ public class DiffTable extends AbstractTableDecorator {
                                 DiffTable.this::deadjustByDeletions),
                         v -> !updatedRowIndexes.contains(v));
             }
-    
+
         }
-        
-    
+
+
         private class SortedDiffTableSelection extends AbstractDiffTableSelection {
-            
+
             private final ImmutableList<?> from;
-            
+
             private final InclusionMode fromInclusionMode;
-            
+
             private final ImmutableList<?> to;
-            
+
             private final InclusionMode toInclusionMode;
-            
+
             private final ImmutableList<NullsMode> nullsModes;
-            
+
             private final ImmutableList<SortMode> sortModes;
-            
-    
+
+
             public SortedDiffTableSelection( // NOSONAR currently these many parameters are OK
                     TableSelection baseSelection,
                     Predicate<ImmutableList<Object>> predicate,
@@ -651,8 +651,8 @@ public class DiffTable extends AbstractTableDecorator {
                 this.nullsModes = nullsModes;
                 this.sortModes = sortModes;
             }
-            
-            
+
+
             @Override
             public Iterator<LargeInteger> iterator() {
                 if (filteredIndexEntries.isEmpty()) {
@@ -660,9 +660,9 @@ public class DiffTable extends AbstractTableDecorator {
                 }
 
                 List<Iterator<LargeInteger>> iterators = new LinkedList<>();
-                
+
                 DiffTableIndexEntry firstEntry = filteredIndexEntries.get(0);
-                
+
                 TableSelection leadingBaseSelection = baseIndex.findMulti(
                         from,
                         fromInclusionMode,
@@ -671,13 +671,13 @@ public class DiffTable extends AbstractTableDecorator {
                         nullsModes,
                         sortModes);
                 iterators.add(wrapIterator(leadingBaseSelection.iterator()));
-                
+
                 iterators.add(createMiddleIterator());
 
                 DiffTableIndexEntry lastEntry = filteredIndexEntries.get(
                         filteredIndexEntries.size() - 1);
                 iterators.add(Collections.singleton(lastEntry.rowIndex).iterator());
-                
+
                 TableSelection trailingBaseSelection = baseIndex.findMulti(
                         lastEntry.values,
                         InclusionMode.EXCLUDE,
@@ -686,7 +686,7 @@ public class DiffTable extends AbstractTableDecorator {
                         nullsModes,
                         sortModes);
                 iterators.add(wrapIterator(trailingBaseSelection.iterator()));
-                
+
                 return ChainedIterator.allOf(iterators);
             }
 
@@ -709,43 +709,43 @@ public class DiffTable extends AbstractTableDecorator {
                                     wrapIterator(betweenBaseSelection.iterator()));
                         }));
             }
-            
+
         }
-        
-        
+
+
         private class UnsortedDiffTableSelection extends AbstractDiffTableSelection {
-    
+
             public UnsortedDiffTableSelection(
                     TableSelection baseSelection,
                     Predicate<ImmutableList<Object>> predicate) {
                 super(baseSelection, predicate);
             }
-            
-            
+
+
             @Override
             public Iterator<LargeInteger> iterator() {
                 return ChainedIterator.of(
                         wrapIterator(baseSelection.iterator()),
                         new IteratorAdapter<>(filteredIndexEntries.iterator(), e -> e.rowIndex));
             }
-    
+
         }
-        
+
     }
-    
-    
+
+
     private static class DiffTableIndexEntry {
-        
+
         private final LargeInteger rowIndex;
-        
+
         private final ImmutableList<Object> values;
-        
-        
+
+
         private DiffTableIndexEntry(LargeInteger rowIndex, ImmutableList<Object> values) {
             this.rowIndex = rowIndex;
             this.values = values;
         }
-        
+
     }
 
 }

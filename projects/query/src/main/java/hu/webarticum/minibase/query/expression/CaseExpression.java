@@ -11,14 +11,14 @@ import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
 
 public class CaseExpression implements Expression {
-    
+
     private final Expression givenExpression;
-    
+
     private final ImmutableList<WhenItem> whenItems;
-    
+
     private final Expression elseExpression;
-    
-    
+
+
     public CaseExpression(Expression givenExpression, ImmutableList<WhenItem> whenItems, Expression elseExpression) {
         if (whenItems.isEmpty()) {
             throw new IllegalArgumentException("At least one when branch is required");
@@ -33,11 +33,11 @@ public class CaseExpression implements Expression {
     public Expression givenExpression() {
         return givenExpression;
     }
-    
+
     public ImmutableList<WhenItem> whenItems() {
         return whenItems;
     }
-    
+
     public Expression elseExpression() {
         return elseExpression;
     }
@@ -76,7 +76,7 @@ public class CaseExpression implements Expression {
         Class<?> result = UnifyUtil.unifyTypes(branchTypes);
         return result == null ? String.class : result;
     }
-    
+
     @Override
     public boolean isNullable() {
         if (elseExpression == null || elseExpression.isNullable()) {
@@ -102,7 +102,7 @@ public class CaseExpression implements Expression {
         }
         return false;
     }
-    
+
     @Override
     public Object evaluate(ImmutableMap<Parameter, Object> values) {
         boolean hasGiven = givenExpression != null;
@@ -127,17 +127,17 @@ public class CaseExpression implements Expression {
 
         return elseExpression.evaluate(values);
     }
-    
+
     @Override
     public String automaticName() {
         return "WHEN expression";
     }
-    
+
 
     public static class WhenItem {
 
         private final Expression conditionExpression;
-    
+
         private final Expression resultExpression;
 
 
@@ -150,7 +150,7 @@ public class CaseExpression implements Expression {
         public Expression conditionExpression() {
             return conditionExpression;
         }
-    
+
         public Expression resultExpression() {
             return resultExpression;
         }

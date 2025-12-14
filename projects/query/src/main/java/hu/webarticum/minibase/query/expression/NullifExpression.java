@@ -7,12 +7,12 @@ import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
 
 public class NullifExpression implements Expression {
-    
+
     private final Expression firstExpression;
-    
+
     private final Expression secondExpression;
-    
-    
+
+
     public NullifExpression(Expression firstExpression, Expression secondExpression) {
         this.firstExpression = firstExpression;
         this.secondExpression = secondExpression;
@@ -22,7 +22,7 @@ public class NullifExpression implements Expression {
     public Expression firstExpression() {
         return firstExpression;
     }
-    
+
     public Expression secondExpression() {
         return secondExpression;
     }
@@ -41,7 +41,7 @@ public class NullifExpression implements Expression {
     public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
         return firstExpression.type(types);
     }
-    
+
     @Override
     public boolean isNullable() {
         return true;
@@ -51,7 +51,7 @@ public class NullifExpression implements Expression {
     public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
         return true;
     }
-    
+
     @Override
     public Object evaluate(ImmutableMap<Parameter, Object> values) {
         Object value1 = firstExpression.evaluate(values);
@@ -59,10 +59,10 @@ public class NullifExpression implements Expression {
         boolean areEqual = ValueUtil.evalEquality(value1, value2);
         return areEqual ? null : value1;
     }
-    
+
     @Override
     public String automaticName() {
         return "NULLIF(" + firstExpression.automaticName() + ", " + secondExpression.automaticName() + ")";
     }
-    
+
 }

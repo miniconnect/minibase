@@ -18,11 +18,11 @@ public final class DateTimeDeltaUtil {
     private static final BigDecimal BIGDECIMAL_SECONDS_PER_DAY = new BigDecimal("86400");
 
     private static final BigDecimal BIGDECIMAL_NANOS_PER_SECONDS = new BigDecimal("1000000000");
-    
+
     private DateTimeDeltaUtil() {
         // utility class
     }
-    
+
     public static DateTimeDelta deltaify(Object object) {
         if (object == null) {
             return null;

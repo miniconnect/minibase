@@ -12,9 +12,9 @@ import hu.webarticum.miniconnect.lang.ImmutableMap;
 import hu.webarticum.miniconnect.lang.LargeInteger;
 
 public class NegateExpression implements Expression {
-    
+
     private final Expression subExpression;
-    
+
 
     public NegateExpression(Expression subExpression) {
         this.subExpression = subExpression;
@@ -24,7 +24,7 @@ public class NegateExpression implements Expression {
     public Expression subExpression() {
         return subExpression;
     }
-    
+
     @Override
     public ImmutableList<Parameter> parameters() {
         return subExpression.parameters();
@@ -50,12 +50,12 @@ public class NegateExpression implements Expression {
         }
         return NumberUtil.numberifyType(subType);
     }
-    
+
     @Override
     public boolean isNullable() {
         return subExpression.isNullable();
     }
-    
+
     @Override
     public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
         return subExpression.isNullable(nullabilities);
@@ -84,5 +84,5 @@ public class NegateExpression implements Expression {
     public String automaticName() {
         return "-" + subExpression.automaticName();
     }
-    
+
 }

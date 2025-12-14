@@ -13,13 +13,13 @@ import hu.webarticum.miniconnect.lang.ImmutableMap;
 public class GreatestExpression implements Expression {
 
     private ImmutableList<Expression> parameterExpressions;
-    
+
 
     public GreatestExpression(ImmutableList<Expression> parameterExpressions) {
         this.parameterExpressions = parameterExpressions;
     }
-    
-    
+
+
     public ImmutableList<Expression> parameterExpressions() {
         return parameterExpressions;
     }
@@ -38,7 +38,7 @@ public class GreatestExpression implements Expression {
         ImmutableList<Class<?>> parameterTypes = parameterExpressions.map(e -> e.type().orElse(null));
         return Optional.ofNullable(UnifyUtil.unifyTypes(parameterTypes));
     }
-    
+
     @Override
     public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
         ImmutableList<Class<?>> parameterTypes = parameterExpressions.map(e -> e.type(types));
@@ -55,7 +55,7 @@ public class GreatestExpression implements Expression {
         }
         return true;
     }
-    
+
     @Override
     public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
         for (Expression parameterExpression : parameterExpressions.reverseOrder()) {
@@ -65,7 +65,7 @@ public class GreatestExpression implements Expression {
         }
         return true;
     }
-    
+
     @Override
     public Object evaluate(ImmutableMap<Parameter, Object> values) {
         ImmutableList<Object> rawValues = parameterExpressions.map(e -> e.evaluate(values)).filter(Objects::nonNull);
@@ -111,5 +111,5 @@ public class GreatestExpression implements Expression {
         resultBuilder.append(")");
         return resultBuilder.toString();
     }
-    
+
 }

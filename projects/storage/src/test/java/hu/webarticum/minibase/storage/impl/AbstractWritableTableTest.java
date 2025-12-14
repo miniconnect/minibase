@@ -274,7 +274,7 @@ public abstract class AbstractWritableTableTest {
     @Test
     protected void testThreeDeletes() {
         Table table = createSubjectTable();
-        
+
         TablePatch delete1Patch = TablePatch.builder()
                 .delete(LargeInteger.of(1))
                 .delete(LargeInteger.of(6))
@@ -291,7 +291,7 @@ public abstract class AbstractWritableTableTest {
                         ImmutableList.of(LargeInteger.of(10), "ffff", 1));
         assertThat(table.size()).isEqualTo(LargeInteger.of(expectedContent1.size()));
         assertThat(contentOf(table)).isEqualTo(expectedContent1);
-        
+
         TablePatch delete2Patch = TablePatch.builder()
                 .delete(LargeInteger.ZERO)
                 .delete(LargeInteger.of(2))
@@ -305,7 +305,7 @@ public abstract class AbstractWritableTableTest {
                 ImmutableList.of(LargeInteger.of(10), "ffff", 1));
         assertThat(table.size()).isEqualTo(LargeInteger.of(expectedContent2.size()));
         assertThat(contentOf(table)).isEqualTo(expectedContent2);
-        
+
         TablePatch delete3Patch = TablePatch.builder()
                 .delete(LargeInteger.of(1))
                 .delete(LargeInteger.of(4))
@@ -344,7 +344,7 @@ public abstract class AbstractWritableTableTest {
                 InclusionMode.INCLUDE,
                 NullsMode.NO_NULLS,
                 SortMode.UNSORTED);
-        
+
         assertThat(selection).containsExactlyInAnyOrder(LargeInteger.arrayOf(0, 2, 9));
         assertThat(new RangeSelection(LargeInteger.ZERO, table.size()))
                 .filteredOn(selection::containsRow)
@@ -378,7 +378,7 @@ public abstract class AbstractWritableTableTest {
                 InclusionMode.EXCLUDE,
                 NullsMode.NO_NULLS,
                 SortMode.UNSORTED);
-        
+
         assertThat(selection).containsExactlyInAnyOrder(LargeInteger.arrayOf(0, 1, 2, 3, 6, 7));
         assertThat(new RangeSelection(LargeInteger.ZERO, table.size()))
                 .filteredOn(selection::containsRow)
@@ -430,7 +430,7 @@ public abstract class AbstractWritableTableTest {
                 InclusionMode.INCLUDE,
                 NullsMode.NO_NULLS,
                 SortMode.ASC_NULLS_LAST);
-        
+
         assertThatContainsUnstable(selection, new LargeInteger[][] {
             LargeInteger.arrayOf(7, 11),
             LargeInteger.arrayOf(0, 9),
@@ -451,7 +451,7 @@ public abstract class AbstractWritableTableTest {
                 InclusionMode.INCLUDE,
                 NullsMode.WITH_NULLS,
                 SortMode.ASC_NULLS_FIRST);
-        
+
         assertThatContainsUnstable(selection, new LargeInteger[][] {
             LargeInteger.arrayOf(1, 2, 4, 5, 8, 10),
             LargeInteger.arrayOf(3),
@@ -475,7 +475,7 @@ public abstract class AbstractWritableTableTest {
                 InclusionMode.INCLUDE,
                 NullsMode.NULLS_ONLY,
                 SortMode.ASC_NULLS_FIRST);
-        
+
         assertThat(selection).containsExactlyInAnyOrder((LargeInteger.arrayOf(1, 2, 4, 5, 8, 10)));
         assertThat(new RangeSelection(LargeInteger.ZERO, table.size()))
                 .filteredOn(selection::containsRow)
@@ -502,18 +502,18 @@ public abstract class AbstractWritableTableTest {
                 ImmutableList.of(LargeInteger.of(103), "YYY", 3),
                 ImmutableList.of(LargeInteger.of(104), null, 5),
                 ImmutableList.of(LargeInteger.of(105), "ZZZ", 2));
-        
+
         assertThat(table.size()).isEqualTo(LargeInteger.of(expectedContent.size()));
         assertThat(contentOf(table)).isEqualTo(expectedContent);
     }
-    
+
     @Test
     protected void testIndexFindExcludeNullsAfterModifications() {
         Table table = tableFrom(defaultColumnNames(), nullableColumnDefinitions(), contentWithNulls());
-        
+
         TablePatch complexPatchWithNulls = createComplexTablePatchWithNulls();
         table.applyPatch(complexPatchWithNulls);
-        
+
         TableIndex index = table.indexes().get("idx_label");
         TableSelection selection = index.find(
                 "BBB",
@@ -532,10 +532,10 @@ public abstract class AbstractWritableTableTest {
     @Test
     protected void testIndexFindIncludeNullsAfterModifications() {
         Table table = tableFrom(defaultColumnNames(), nullableColumnDefinitions(), contentWithNulls());
-        
+
         TablePatch complexPatchWithNulls = createComplexTablePatchWithNulls();
         table.applyPatch(complexPatchWithNulls);
-        
+
         TableIndex index = table.indexes().get("idx_label");
         TableSelection selection = index.find(
                 null,
@@ -562,10 +562,10 @@ public abstract class AbstractWritableTableTest {
     @Test
     protected void testIndexFindNullsOnlyAfterModifications() {
         Table table = tableFrom(defaultColumnNames(), nullableColumnDefinitions(), contentWithNulls());
-        
+
         TablePatch complexPatchWithNulls = createComplexTablePatchWithNulls();
         table.applyPatch(complexPatchWithNulls);
-        
+
         TableIndex index = table.indexes().get("idx_label");
         TableSelection selection = index.find(
                 null,
@@ -584,75 +584,75 @@ public abstract class AbstractWritableTableTest {
     @Test
     protected void testIllegalNullUpdate() {
         Table table = createSubjectTable();
-        
+
         TablePatch patch = TablePatch.builder()
                 .update(LargeInteger.of(4), ImmutableMap.of(1, "ii", 2, 0))
                 .update(LargeInteger.of(6), ImmutableMap.of(1, null, 2, 5))
                 .build();
-        
+
         assertThatThrownBy(() -> table.applyPatch(patch)).isInstanceOf(MiniErrorException.class);
     }
 
     @Test
     protected void testIllegalNullInsert() {
         Table table = createSubjectTable();
-        
+
         TablePatch patch = TablePatch.builder()
                 .insert(ImmutableList.of(LargeInteger.of(104), null, 5))
                 .insert(ImmutableList.of(LargeInteger.of(105), "ZZZ", 2))
                 .build();
-        
+
         assertThatThrownBy(() -> table.applyPatch(patch)).isInstanceOf(MiniErrorException.class);
     }
 
     @Test
     protected void testIllegalNonUniqueUpdate() {
         Table table = createSubjectTable();
-        
+
         TablePatch patch = TablePatch.builder()
                 .update(LargeInteger.of(4), ImmutableMap.of(0, LargeInteger.of(1), 1, "UUUU"))
                 .build();
-        
+
         assertThatThrownBy(() -> table.applyPatch(patch)).isInstanceOf(MiniErrorException.class);
     }
 
     @Test
     protected void testIllegalNonUniqueInsert() {
         Table table = createSubjectTable();
-        
+
         TablePatch patch = TablePatch.builder()
                 .insert(ImmutableList.of(LargeInteger.of(1), "UUUUU", 1))
                 .build();
-        
+
         assertThatThrownBy(() -> table.applyPatch(patch)).isInstanceOf(MiniErrorException.class);
     }
 
     @Test
     protected void testIllegalNonUniqueDoubleInsert() {
         Table table = createSubjectTable();
-        
+
         TablePatch patch = TablePatch.builder()
                 .insert(ImmutableList.of(LargeInteger.of(1111), "UUUUU", 1))
                 .build();
-        
+
         table.applyPatch(patch); // apply in advance
-        
+
         assertThatThrownBy(() -> table.applyPatch(patch)).isInstanceOf(MiniErrorException.class);
     }
 
     @Test
     protected void testIllegalNonUniqueUpdateAndInsert() {
         Table table = createSubjectTable();
-        
+
         TablePatch patch = TablePatch.builder()
                 .update(LargeInteger.of(4), ImmutableMap.of(0, LargeInteger.of(1111), 1, "UUUU"))
                 .insert(ImmutableList.of(LargeInteger.of(1111), "UUUUU", 1))
                 .build();
-        
+
         assertThatThrownBy(() -> table.applyPatch(patch)).isInstanceOf(MiniErrorException.class);
     }
 
-    
+
     protected Table createSubjectTable() {
         return tableFrom(defaultColumnNames(), defaultColumnDefinitions(), defaultContent());
     }
@@ -660,7 +660,7 @@ public abstract class AbstractWritableTableTest {
     protected SimpleTable createSimpleTable() {
         return simpleTableFrom(defaultColumnNames(), defaultColumnDefinitions(), defaultContent());
     }
-    
+
     protected ImmutableList<String> defaultColumnNames() {
         return ImmutableList.of("id", "label", "level");
     }
@@ -708,7 +708,7 @@ public abstract class AbstractWritableTableTest {
                 ImmutableList.of(LargeInteger.of(11), null, 1),
                 ImmutableList.of(LargeInteger.of(12), "CCC", 1));
     }
-    
+
     protected ImmutableList<ImmutableList<Object>> contentOf(Table table) {
         List<ImmutableList<Object>> resultBuilder = new ArrayList<>();
         LargeInteger size = table.size();
@@ -722,7 +722,7 @@ public abstract class AbstractWritableTableTest {
             ImmutableList<String> columnNames,
             ImmutableList<? extends ColumnDefinition> columnDefinitions,
             ImmutableList<ImmutableList<Object>> content);
-    
+
     protected SimpleTable simpleTableFrom(
             ImmutableList<String> columnNames,
             ImmutableList<? extends ColumnDefinition> columnDefinitions,
@@ -733,7 +733,7 @@ public abstract class AbstractWritableTableTest {
         columnNames.forEach(n -> builder.addIndex("idx_" + n, ImmutableList.of(n)));
         return builder.build();
     }
-    
+
     protected TablePatch createDefaultComplexTablePatch() {
         return TablePatch.builder()
                 .insert(ImmutableList.of(LargeInteger.of(101), "dd", 2))
@@ -764,7 +764,7 @@ public abstract class AbstractWritableTableTest {
                 .delete(LargeInteger.of(10))
                 .build();
     }
-    
+
     protected void assertThatContainsUnstable(Iterable<LargeInteger> selection, LargeInteger[][] equalGroups) {
         Iterator<LargeInteger> iterator = selection.iterator();
         for (LargeInteger[] equalGroup : equalGroups) {
@@ -778,5 +778,5 @@ public abstract class AbstractWritableTableTest {
         }
         assertThat(iterator).isExhausted();
     }
-    
+
 }

@@ -17,18 +17,18 @@ public class ShowSpecialExecutor implements ThrowingQueryExecutor {
     public MiniResult executeThrowing(StorageAccess storageAccess, SessionState state, Query query) {
         return executeInternal(state, (ShowSpecialQuery) query);
     }
-    
+
     private MiniResult executeInternal(SessionState state, ShowSpecialQuery showSpecialQuery) {
         SpecialValueExpression expression = showSpecialQuery.specialValueExpression();
         SpecialValueParameter parameter = expression.specialValueParameter();
-        
+
         String alias = showSpecialQuery.alias();
         if (alias == null) {
             alias = expression.automaticName();
         }
-        
+
         Object value = TableQueryUtil.getSpecialValue(parameter, state);
-        
+
         return ResultUtil.createSingleValueResult(alias, value);
     }
 

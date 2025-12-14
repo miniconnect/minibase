@@ -8,18 +8,18 @@ import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
 
 public class LikeExpression implements Expression {
-    
+
     private final Expression givenExpression;
-    
+
     private final Expression patternExpression;
-    
+
     private final Expression escapeExpression;
-    
+
     private final boolean caseInsensitive;
 
     private final Pattern precompiledPattern;
-    
-    
+
+
     public LikeExpression(
             Expression givenExpression, Expression patternExpression, Expression escapeExpression, boolean caseInsensitive) {
         this.givenExpression = givenExpression;
@@ -49,7 +49,7 @@ public class LikeExpression implements Expression {
         if (patternValue == null) {
             return null;
         }
-        
+
         String patternString = patternValue.toString();
         Character escapeCharacter = getEscapeCharacter(escapeValue);
 
@@ -80,7 +80,7 @@ public class LikeExpression implements Expression {
     public Expression givenExpression() {
         return givenExpression;
     }
-    
+
     public Expression patternExpression() {
         return patternExpression;
     }
@@ -112,7 +112,7 @@ public class LikeExpression implements Expression {
     public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
         return Boolean.class;
     }
-    
+
     @Override
     public boolean isNullable() {
         return givenExpression.isNullable() || patternExpression.isNullable();
@@ -122,7 +122,7 @@ public class LikeExpression implements Expression {
     public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
         return givenExpression.isNullable(nullabilities) || patternExpression.isNullable(nullabilities);
     }
-    
+
     @Override
     public Object evaluate(ImmutableMap<Parameter, Object> values) {
         Object givenValue = givenExpression.evaluate(values);
@@ -148,11 +148,11 @@ public class LikeExpression implements Expression {
         Object escapeValue = escapeExpression != null ? escapeExpression.evaluate(values) : null;
         return compilePattern(patternValue, escapeValue, caseInsensitive);
     }
-    
+
     @Override
     public String automaticName() {
         String op = caseInsensitive ? "ILIKE" : "LIKE";
         return givenExpression.automaticName() + " " + op + " " + patternExpression.automaticName();
     }
-    
+
 }

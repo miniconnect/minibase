@@ -8,17 +8,17 @@ import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
 
 public class SimpleRow implements Row {
-    
+
     private final ImmutableList<String> columnNames;
-    
+
     ImmutableList<Object> values;
-    
-    
+
+
     public SimpleRow(ImmutableList<String> columnNames, ImmutableList<Object> values) {
         this.columnNames = columnNames;
         this.values = values;
     }
-    
+
 
     @Override
     public ImmutableList<String> columnNames() {
@@ -53,5 +53,5 @@ public class SimpleRow implements Row {
         }
         return ImmutableMap.fromMap(resultBuilder);
     }
-    
+
 }

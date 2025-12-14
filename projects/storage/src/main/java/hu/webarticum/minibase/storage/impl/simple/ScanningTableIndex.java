@@ -15,23 +15,23 @@ import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.LargeInteger;
 
 public class ScanningTableIndex implements TableIndex {
-    
+
     private final Table table;
-    
+
     private final String name;
-    
+
     private final ImmutableList<String> columnNames;
-    
+
     private final ImmutableList<Integer> columnIndexes;
-    
-    
+
+
     public ScanningTableIndex(Table table, String name, ImmutableList<String> columnNames) {
         this.table = table;
         this.name = name;
         this.columnNames = columnNames;
         this.columnIndexes = collectColumnIndexes(table, columnNames);
     }
-    
+
     private static ImmutableList<Integer> collectColumnIndexes(
             Table table,
             ImmutableList<String> columnNames) {
@@ -53,7 +53,7 @@ public class ScanningTableIndex implements TableIndex {
     public Table table() {
         return table;
     }
-    
+
     @Override
     public String name() {
         return name;
@@ -68,7 +68,7 @@ public class ScanningTableIndex implements TableIndex {
     public boolean isUnique() {
         return table.columns().get(name).definition().isUnique();
     }
-    
+
     @Override
     public TableSelection findMulti(
             ImmutableList<?> from,
@@ -82,10 +82,10 @@ public class ScanningTableIndex implements TableIndex {
         boolean sort = !sortModes.filter(m -> m != SortMode.UNSORTED).isEmpty();
         MultiComparator multiComparator =
                 ComparatorUtil.createMultiComparator(table, columnNames, sortModes);
-        
+
         List<SortHelper> foundEntries = collectEntries(
                 from, fromInclusive, to, toInclusive, nullsModes, multiComparator);
-        
+
         if (sort) {
             Collections.sort(foundEntries, Comparator.comparing(e -> e.values, multiComparator));
         }
@@ -124,7 +124,7 @@ public class ScanningTableIndex implements TableIndex {
         }
         return foundRowEntries;
     }
-    
+
     private boolean areEqual(
             ImmutableList<?> from, ImmutableList<?> to, MultiComparator multiComparator) {
         if (from == to) {
@@ -141,7 +141,7 @@ public class ScanningTableIndex implements TableIndex {
         int cmp = multiComparator.compare((ImmutableList<Object>) from, (ImmutableList<Object>) to);
         return cmp == 0;
     }
-    
+
     private ImmutableList<Object> extractValues(ImmutableList<Object> row) {
         List<Object> resultBuilder = new ArrayList<>(columnIndexes.size());
         for (int columnIndex : columnIndexes) {
@@ -150,7 +150,7 @@ public class ScanningTableIndex implements TableIndex {
         }
         return ImmutableList.fromCollection(resultBuilder);
     }
-    
+
     private boolean checkValues(
             ImmutableList<Object> values,
             ImmutableList<?> from,
@@ -163,7 +163,7 @@ public class ScanningTableIndex implements TableIndex {
         if (!checkNulls(values, nullsModes)) {
             return false;
         }
-        
+
         if (fromAndToAreEqual) {
             if (from == null) {
                 return true;
@@ -173,14 +173,14 @@ public class ScanningTableIndex implements TableIndex {
             }
             return isPrefixOf(from, values);
         }
-        
+
         if (!checkFrom(values, from, fromInclusive, multiComparator)) {
             return false;
         }
 
         return checkTo(values, to, toInclusive, multiComparator);
     }
-    
+
     private boolean checkNulls(ImmutableList<Object> values, ImmutableList<NullsMode> nullsModes) {
         int size = Math.min(values.size(), nullsModes.size());
         for (int i = 0; i < size; i++) {
@@ -210,44 +210,44 @@ public class ScanningTableIndex implements TableIndex {
             MultiComparator multiComparator) {
         return checkBound(values, to, toInclusive, false, multiComparator);
     }
-    
+
     private boolean checkBound(
             ImmutableList<Object> values,
             ImmutableList<?> bound,
             boolean boundInclusive,
             boolean isFrom,
             MultiComparator multiComparator) {
-        
+
         if (bound == null) {
             return true;
         }
-        
+
         int valuesSize = values.size();
         int boundSize = bound.size();
-        
+
         if (boundSize > valuesSize) {
             return checkBound(
                     values, bound.section(0, valuesSize), boundInclusive, isFrom, multiComparator);
         }
-        
+
         if (boundInclusive && isPrefixOf(bound, values)) {
             return true;
         }
-        
+
         ImmutableList<Object> leftValues = values.section(0, boundSize);
         @SuppressWarnings("unchecked")
         ImmutableList<Object> comparableTo = (ImmutableList<Object>) bound;
         int cmp = multiComparator.compare(comparableTo, leftValues);
-        
+
         return isFrom ? (cmp < 0) : (cmp > 0);
     }
-    
+
     private boolean isPrefixOf(ImmutableList<?> prefix, ImmutableList<?> values) {
         int prefixWidth = prefix.size();
         if (prefixWidth > values.size()) {
             return false;
         }
-        
+
         NamedResourceStore<Column> columns = table.columns();
         for (int i = 0; i < prefixWidth; i++) {
             @SuppressWarnings("unchecked")
@@ -259,31 +259,31 @@ public class ScanningTableIndex implements TableIndex {
                 return false;
             }
         }
-        
+
         return true;
     }
-    
+
     private boolean areEqualByComparing(Object value1, Object value2, Comparator<Object> comparator) {
         if (value1 == null || value2 == null) {
             return value1 == value2;
         }
-        
+
         return comparator.compare(value1, value2) == 0;
     }
-    
-    
+
+
     private static class SortHelper {
-        
+
         private final LargeInteger index;
-        
+
         private final ImmutableList<Object> values;
 
-        
+
         private SortHelper(LargeInteger index, ImmutableList<Object> values) {
             this.index = index;
             this.values = values;
         }
 
     }
-    
+
 }

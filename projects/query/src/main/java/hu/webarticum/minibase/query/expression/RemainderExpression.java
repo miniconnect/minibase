@@ -10,12 +10,12 @@ import hu.webarticum.miniconnect.lang.ImmutableMap;
 import hu.webarticum.miniconnect.lang.LargeInteger;
 
 public class RemainderExpression implements Expression {
-    
+
     private final Expression leftOperand;
-    
+
     private final Expression rightOperand;
-    
-    
+
+
     public RemainderExpression(Expression leftOperand, Expression rightOperand) {
         this.leftOperand = leftOperand;
         this.rightOperand = rightOperand;
@@ -25,7 +25,7 @@ public class RemainderExpression implements Expression {
     public Expression leftOperand() {
         return leftOperand;
     }
-    
+
     public Expression rightOperand() {
         return rightOperand;
     }
@@ -49,7 +49,7 @@ public class RemainderExpression implements Expression {
     public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
         return NumberUtil.commonNumericTypeOf(leftOperand.type(types), rightOperand.type(types));
     }
-    
+
     @Override
     public boolean isNullable() {
         return leftOperand.isNullable() || rightOperand.isNullable() || canResultInZero(rightOperand);
@@ -67,7 +67,7 @@ public class RemainderExpression implements Expression {
 
         return NumberUtil.isZero(expression.evaluate(ImmutableMap.empty()));
     }
-    
+
     @Override
     public Object evaluate(ImmutableMap<Parameter, Object> values) {
         Object leftValue = leftOperand.evaluate(values);
@@ -93,10 +93,10 @@ public class RemainderExpression implements Expression {
             throw new IllegalArgumentException("Can not unify values for remainder operation");
         }
     }
-    
+
     @Override
     public String automaticName() {
         return leftOperand.automaticName() + " % " + rightOperand.automaticName();
     }
-    
+
 }

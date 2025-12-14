@@ -27,23 +27,23 @@ public class DeleteExecutor implements ThrowingQueryExecutor {
     public MiniResult executeThrowing(StorageAccess storageAccess, SessionState state, Query query) {
         return executeInternal(storageAccess, state, (DeleteQuery) query);
     }
-    
+
     private MiniResult executeInternal(StorageAccess storageAccess, SessionState state, DeleteQuery deleteQuery) {
         String schemaName = deleteQuery.schemaName();
         String tableName = deleteQuery.tableName();
-        
+
         if (schemaName == null) {
             schemaName = state.getCurrentSchema();
         }
         if (schemaName == null) {
             throw PredefinedError.SCHEMA_NOT_SELECTED.toException();
         }
-        
+
         Schema schema = storageAccess.schemas().get(schemaName);
         if (schema == null) {
             throw PredefinedError.SCHEMA_NOT_FOUND.toException(schemaName);
         }
-        
+
         Table table = schema.tables().get(tableName);
         if (table == null) {
             throw PredefinedError.TABLE_NOT_FOUND.toException(tableName);
@@ -55,16 +55,16 @@ public class DeleteExecutor implements ThrowingQueryExecutor {
         ImmutableList<WhereItem> queryWhere = deleteQuery.where();
         Map<String, Object> convertedQueryWhere = TableQueryUtil.mergeAndConvertFilters(queryWhere, table, state);
         TableQueryUtil.checkFields(table, convertedQueryWhere.keySet());
-        
+
         List<LargeInteger> rowIndexes = TableQueryUtil.filterRowsToList(
                 table, convertedQueryWhere, Collections.emptyList(), null);
-        
+
         TablePatchBuilder patchBuilder = TablePatch.builder();
         rowIndexes.forEach(patchBuilder::delete);
         TablePatch patch = patchBuilder.build();
 
         table.applyPatch(patch);
-        
+
         return new StoredResult();
     }
 

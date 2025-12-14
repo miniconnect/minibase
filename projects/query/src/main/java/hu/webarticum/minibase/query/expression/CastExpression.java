@@ -7,11 +7,11 @@ import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
 
 public class CastExpression implements Expression {
-    
+
     private final Expression subExpression;
 
     private final TypeConstruct targetTypeConstruct;
-    
+
 
     public CastExpression(Expression subExpression, TypeConstruct targetTypeConstruct) {
         this.subExpression = subExpression;
@@ -22,11 +22,11 @@ public class CastExpression implements Expression {
     public Expression subExpression() {
         return subExpression;
     }
-    
+
     public TypeConstruct targetTypeConstruct() {
         return targetTypeConstruct;
     }
-    
+
     @Override
     public ImmutableList<Parameter> parameters() {
         return subExpression.parameters();
@@ -41,12 +41,12 @@ public class CastExpression implements Expression {
     public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
         return String.class;
     }
-    
+
     @Override
     public boolean isNullable() {
         return subExpression.isNullable();
     }
-    
+
     @Override
     public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
         return subExpression.isNullable(nullabilities);
@@ -65,5 +65,5 @@ public class CastExpression implements Expression {
     public String automaticName() {
         return "CAST(" + subExpression.automaticName() + " AS " + targetTypeConstruct.symbol().name() + ")";
     }
-    
+
 }

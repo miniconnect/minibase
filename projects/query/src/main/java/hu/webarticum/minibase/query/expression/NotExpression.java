@@ -7,9 +7,9 @@ import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
 
 public class NotExpression implements Expression {
-    
+
     private final Expression subExpression;
-    
+
 
     public NotExpression(Expression subExpression) {
         this.subExpression = subExpression;
@@ -19,7 +19,7 @@ public class NotExpression implements Expression {
     public Expression subExpression() {
         return subExpression;
     }
-    
+
     @Override
     public ImmutableList<Parameter> parameters() {
         return subExpression.parameters();
@@ -34,12 +34,12 @@ public class NotExpression implements Expression {
     public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
         return Boolean.class;
     }
-    
+
     @Override
     public boolean isNullable() {
         return subExpression.isNullable();
     }
-    
+
     @Override
     public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
         return subExpression.isNullable(nullabilities);
@@ -60,5 +60,5 @@ public class NotExpression implements Expression {
     public String automaticName() {
         return "NOT " + subExpression.automaticName();
     }
-    
+
 }

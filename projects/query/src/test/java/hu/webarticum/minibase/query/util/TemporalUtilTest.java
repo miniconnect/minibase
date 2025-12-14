@@ -57,7 +57,7 @@ class TemporalUtilTest {
         assertThat(TemporalUtil.convert(LocalDateTime.of(2025, 12, 6, 2, 30), LocalTime.class)).isEqualTo(LocalTime.of(2, 30, 0));
         assertThat(TemporalUtil.convert(Instant.ofEpochSecond(1763237345), LocalTime.class)).isEqualTo(LocalTime.of(20, 9, 5));
     }
-    
+
     @Test
     void testConvertToLocalDate() {
         assertThat(TemporalUtil.convert(null, LocalDate.class)).isNull();

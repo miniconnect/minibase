@@ -42,5 +42,5 @@ class RangeSelectionTest {
         assertThat(selection.containsRow(LargeInteger.of(10L))).isFalse();
         assertThat(selection.containsRow(LargeInteger.of(15L))).isFalse();
     }
-    
+
 }

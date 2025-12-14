@@ -6,21 +6,21 @@ import java.util.Objects;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 
 public final class InsertQuery implements Query {
-    
+
     private final boolean replace;
 
     private final String schemaName;
 
     private final String tableName;
-    
+
     private final ImmutableList<String> fields;
-    
+
     private final ImmutableList<Object> values;
-    
-    
+
+
     private InsertQuery(InsertQueryBuilder builder) {
         Objects.requireNonNull(builder.values);
-        
+
         if (builder.fields != null && builder.values.size() != builder.fields.size()) {
             throw new IllegalArgumentException("Count of fields and values must be the same");
         }
@@ -30,11 +30,11 @@ public final class InsertQuery implements Query {
         this.fields = builder.fields;
         this.values = builder.values;
     }
-    
+
     public static InsertQueryBuilder builder() {
         return new InsertQueryBuilder();
     }
-    
+
 
     public boolean replace() {
         return replace;
@@ -47,7 +47,7 @@ public final class InsertQuery implements Query {
     public String tableName() {
         return tableName;
     }
-    
+
     public ImmutableList<String> fields() {
         return fields;
     }
@@ -55,25 +55,25 @@ public final class InsertQuery implements Query {
     public ImmutableList<Object> values() {
         return values;
     }
-    
-    
+
+
     public static final class InsertQueryBuilder {
-        
+
         private boolean replace = false;
-        
+
         private String schemaName = null;
-        
+
         private String tableName = null;
-        
+
         private ImmutableList<String> fields = null;
-        
+
         private ImmutableList<Object> values = null;
 
-        
+
         private InsertQueryBuilder() {
             // use builder()
         }
-        
+
 
         public InsertQueryBuilder replace(boolean replace) {
             this.replace = replace;
@@ -105,12 +105,12 @@ public final class InsertQuery implements Query {
             this.values = ImmutableList.fromCollection(values.values());
             return this;
         }
-        
-        
+
+
         public InsertQuery build() {
             return new InsertQuery(this);
         }
-        
+
     }
-    
+
 }

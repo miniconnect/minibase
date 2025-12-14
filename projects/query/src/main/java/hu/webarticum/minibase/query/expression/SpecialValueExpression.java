@@ -6,15 +6,15 @@ import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
 
 public class SpecialValueExpression implements Expression {
-    
+
     private final SpecialValueParameter specialValueParameter;
-    
+
 
     public SpecialValueExpression(SpecialValueParameter specialValueParameter) {
         this.specialValueParameter = specialValueParameter;
     }
 
-    
+
     public SpecialValueParameter specialValueParameter() {
         return specialValueParameter;
     }
@@ -33,22 +33,22 @@ public class SpecialValueExpression implements Expression {
     public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
         return specialValueParameter.type();
     }
-    
+
     @Override
     public boolean isNullable() {
         return true;
     }
-    
+
     @Override
     public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
         return nullabilities.get(specialValueParameter);
     }
-    
+
     @Override
     public Object evaluate(ImmutableMap<Parameter, Object> values) {
         return values.get(specialValueParameter);
     }
-    
+
     @Override
     public String automaticName() {
         return specialValueParameter.name();

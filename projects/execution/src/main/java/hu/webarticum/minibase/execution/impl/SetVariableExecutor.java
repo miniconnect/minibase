@@ -15,14 +15,14 @@ public class SetVariableExecutor implements ThrowingQueryExecutor {
     public MiniResult executeThrowing(StorageAccess storageAccess, SessionState state, Query query) {
         return executeInternal(state, (SetVariableQuery) query);
     }
-    
+
     private MiniResult executeInternal(SessionState state, SetVariableQuery setVariableQuery) {
         String variableName = setVariableQuery.name();
         Object value = setVariableQuery.value();
         Object resolvedValue = ResultUtil.resolveValue(value, state);
-        
+
         state.setUserVariable(variableName, resolvedValue);
-        
+
         return new StoredResult();
     }
 

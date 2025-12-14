@@ -3,14 +3,14 @@ package hu.webarticum.minibase.storage.api;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 
 public abstract class AbstractNamedResourceStoreDecorator<T extends NamedResource> implements NamedResourceStore<T> {
-    
+
     protected final NamedResourceStore<T> baseStore;
 
-    
+
     protected AbstractNamedResourceStoreDecorator(NamedResourceStore<T> baseStore) {
         this.baseStore = baseStore;
     }
-    
+
 
     @Override
     public ImmutableList<String> names() {
@@ -31,5 +31,5 @@ public abstract class AbstractNamedResourceStoreDecorator<T extends NamedResourc
     public T get(String name) {
         return baseStore.get(name);
     }
-    
+
 }

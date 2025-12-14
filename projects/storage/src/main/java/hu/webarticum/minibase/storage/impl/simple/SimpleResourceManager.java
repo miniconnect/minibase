@@ -10,9 +10,9 @@ import hu.webarticum.minibase.storage.api.NamedResourceStore;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 
 public class SimpleResourceManager<T extends NamedResource> implements NamedResourceStore<T> {
-    
+
     private Map<String, T> resourcesByName = Collections.synchronizedMap(new TreeMap<>());
-    
+
 
     @Override
     public ImmutableList<String> names() {
@@ -28,17 +28,17 @@ public class SimpleResourceManager<T extends NamedResource> implements NamedReso
     public boolean contains(String name) {
         return resourcesByName.containsKey(name);
     }
-    
+
     @Override
     public T get(String name) {
         return resourcesByName.get(name);
     }
-    
+
     public void register(T resource) {
         String name = resource.name();
         resourcesByName.compute(name, (n, t) -> checkRegister(n, t, resource));
     }
-    
+
     private T checkRegister(String name, T existingResource, T resource) {
         if (existingResource != null) {
             throw new IllegalArgumentException("Resource exists: " + name);

@@ -42,7 +42,7 @@ class NumberUtilTest {
         assertThatThrownBy(() -> NumberUtil.numberifyType(Optional.class))
                 .isInstanceOf(IllegalArgumentException.class);
     }
-    
+
     @Test
     void testCommonNumericTypeOf1() {
         Class<?> commonType = NumberUtil.commonNumericTypeOf(
@@ -98,7 +98,7 @@ class NumberUtilTest {
         assertThatThrownBy(() -> NumberUtil.promote(BigDecimal.valueOf(33L), LargeInteger.class))
                 .isInstanceOf(IllegalArgumentException.class);
     }
-    
+
     @Test
     void testPromote() {
         assertThat(NumberUtil.promote(null, Void.class)).isNull();

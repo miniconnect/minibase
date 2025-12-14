@@ -21,12 +21,12 @@ import hu.webarticum.miniconnect.lang.ImmutableMap;
 import hu.webarticum.miniconnect.lang.LargeInteger;
 
 public class SubtractExpression implements Expression {
-    
+
     private final Expression leftOperand;
-    
+
     private final Expression rightOperand;
-    
-    
+
+
     public SubtractExpression(Expression leftOperand, Expression rightOperand) {
         this.leftOperand = leftOperand;
         this.rightOperand = rightOperand;
@@ -36,7 +36,7 @@ public class SubtractExpression implements Expression {
     public Expression leftOperand() {
         return leftOperand;
     }
-    
+
     public Expression rightOperand() {
         return rightOperand;
     }
@@ -122,7 +122,7 @@ public class SubtractExpression implements Expression {
             throw new IllegalArgumentException("Type detection failed");
         }
     }
-    
+
     private Class<?> typeForTemporal(Class<?> temporalType, Expression temporalAmountExpression, ImmutableMap<Parameter, Class<?>> types) {
         if (temporalType != LocalDate.class && temporalType != LocalTime.class && temporalType != OffsetTime.class) {
             return temporalType;
@@ -174,7 +174,7 @@ public class SubtractExpression implements Expression {
     public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
         return leftOperand.isNullable(nullabilities) || rightOperand.isNullable(nullabilities);
     }
-    
+
     @Override
     public Object evaluate(ImmutableMap<Parameter, Object> values) {
         Object leftValue = leftOperand.evaluate(values);
@@ -206,7 +206,7 @@ public class SubtractExpression implements Expression {
             throw new IllegalArgumentException("Can not unify values for subtraction");
         }
     }
-    
+
     private Temporal operate(Temporal temporal, Object deltaValue) {
         DateTimeDelta delta;
         if (deltaValue instanceof TemporalAmount || !(temporal instanceof LocalDate)) {
@@ -238,5 +238,5 @@ public class SubtractExpression implements Expression {
     public String automaticName() {
         return leftOperand.automaticName() + " - " + rightOperand.automaticName();
     }
-    
+
 }

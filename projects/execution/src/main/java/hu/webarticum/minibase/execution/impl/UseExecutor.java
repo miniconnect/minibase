@@ -15,13 +15,13 @@ public class UseExecutor implements ThrowingQueryExecutor {
     public MiniResult executeThrowing(StorageAccess storageAccess, SessionState state, Query query) {
         return executeInternal(storageAccess, state, (UseQuery) query);
     }
-    
+
     private MiniResult executeInternal(StorageAccess storageAccess, SessionState state, UseQuery useQuery) {
         String schemaName = useQuery.schema();
         if (!storageAccess.schemas().contains(schemaName)) {
             throw PredefinedError.SCHEMA_NOT_FOUND.toException(schemaName);
         }
-        
+
         state.setCurrentSchema(schemaName);
         return new StoredResult();
     }

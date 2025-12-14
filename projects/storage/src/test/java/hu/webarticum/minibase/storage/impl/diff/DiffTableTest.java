@@ -18,7 +18,7 @@ class DiffTableTest extends AbstractWritableTableTest {
     void testBaseTableUntouched() {
         Table baseTable = createSimpleTable();
         DiffTable diffTable = new DiffTable(baseTable);
-        
+
         TablePatch patch1 = TablePatch.builder()
                 .insert(ImmutableList.of(LargeInteger.of(11), "AAA", true))
                 .insert(ImmutableList.of(LargeInteger.of(12), "BBB", false))
@@ -47,5 +47,5 @@ class DiffTableTest extends AbstractWritableTableTest {
             ImmutableList<ImmutableList<Object>> content) {
         return new DiffTable(simpleTableFrom(columnNames, columnDefinitions, content));
     }
-    
+
 }

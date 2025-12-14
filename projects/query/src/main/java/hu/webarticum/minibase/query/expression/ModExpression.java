@@ -10,12 +10,12 @@ import hu.webarticum.miniconnect.lang.ImmutableMap;
 import hu.webarticum.miniconnect.lang.LargeInteger;
 
 public class ModExpression implements Expression {
-    
+
     private final Expression leftOperand;
-    
+
     private final Expression rightOperand;
-    
-    
+
+
     public ModExpression(Expression leftOperand, Expression rightOperand) {
         this.leftOperand = leftOperand;
         this.rightOperand = rightOperand;
@@ -25,7 +25,7 @@ public class ModExpression implements Expression {
     public Expression leftOperand() {
         return leftOperand;
     }
-    
+
     public Expression rightOperand() {
         return rightOperand;
     }
@@ -49,7 +49,7 @@ public class ModExpression implements Expression {
     public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
         return NumberUtil.commonNumericTypeOf(leftOperand.type(types), rightOperand.type(types));
     }
-    
+
     @Override
     public boolean isNullable() {
         return leftOperand.isNullable() || rightOperand.isNullable() || canResultInNonPositive(rightOperand);
@@ -67,7 +67,7 @@ public class ModExpression implements Expression {
 
         return !NumberUtil.isPositive(expression.evaluate(ImmutableMap.empty()));
     }
-    
+
     @Override
     public Object evaluate(ImmutableMap<Parameter, Object> values) {
         Object leftValue = leftOperand.evaluate(values);
@@ -102,7 +102,7 @@ public class ModExpression implements Expression {
             return rightDouble + remainder;
         }
     }
-    
+
     public BigDecimal mod(BigDecimal leftBigDecimal, BigDecimal rightBigDecimal) {
         BigDecimal remainder = leftBigDecimal.remainder(rightBigDecimal);
         if (remainder.signum() >= 0) {
@@ -116,5 +116,5 @@ public class ModExpression implements Expression {
     public String automaticName() {
         return leftOperand.automaticName() + " % " + rightOperand.automaticName();
     }
-    
+
 }

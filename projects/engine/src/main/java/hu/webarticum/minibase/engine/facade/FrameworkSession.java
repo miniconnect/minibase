@@ -23,29 +23,29 @@ import hu.webarticum.miniconnect.impl.result.StoredResult;
 import hu.webarticum.miniconnect.lang.ByteString;
 
 public class FrameworkSession implements MiniSession {
-    
+
     private static final long NANO_FACTOR = 1_000_000_000L;
-    
+
     private static final int NANO_DIGITS = 9;
-    
+
     private static final int DISPLAY_DIGITS = 6;
-    
-    
+
+
     private static final Logger logger = LoggerFactory.getLogger(FrameworkSession.class);
-    
-    
+
+
     private final EngineSession engineSession;
-    
-    
+
+
     public FrameworkSession(EngineSession engineSession) {
         this.engineSession = engineSession;
     }
-    
-    
+
+
     public EngineSession engineSession() {
         return engineSession;
     }
-    
+
     @Override
     public MiniResult execute(String sql) {
         checkClosed();
@@ -58,7 +58,7 @@ public class FrameworkSession implements MiniSession {
         }
         return execute(query);
     }
-    
+
     private Query parseAndMeasure(SqlParser sqlParser, String sql) {
         long startNanoTime = -1;
         if (logger.isDebugEnabled()) {
@@ -89,7 +89,7 @@ public class FrameworkSession implements MiniSession {
         SessionState state = engineSession.state();
         return executeAndMeasure(queryExecutor, storageAccess, state, query);
     }
-    
+
     private MiniResult executeAndMeasure(
             QueryExecutor queryExecutor, StorageAccess storageAccess, SessionState state, Query query) {
         long startNanoTime = -1;
@@ -104,7 +104,7 @@ public class FrameworkSession implements MiniSession {
         }
         return result;
     }
-    
+
     private String formatNanoSeconds(long nanoSeconds) {
         long seconds = nanoSeconds / NANO_FACTOR;
         long fractionNanoSeconds = nanoSeconds % NANO_FACTOR;
@@ -138,16 +138,16 @@ public class FrameworkSession implements MiniSession {
         }
         return new StoredLargeDataSaveResult(errorOfException(exception));
     }
-    
+
     private MiniLargeDataSaveResult putLargeDataThrowing(
             String variableName, long length, InputStream dataSource) throws InterruptedException, ExecutionException {
         if (length > Integer.MAX_VALUE) {
             return new StoredLargeDataSaveResult(false, new StoredError(100, "00100", "Too large data"));
         }
-        
+
         ByteString content = ByteString.fromInputStream(dataSource, (int) length);
         engineSession.state().setUserVariable(variableName, content);
-        
+
         return new StoredLargeDataSaveResult();
     }
 
@@ -166,29 +166,29 @@ public class FrameworkSession implements MiniSession {
             String message = extractMessage(exception);
             return new StoredError(99999, "99999", message);
         }
-        
+
         MiniErrorException errorException = (MiniErrorException) exception;
         return new StoredError(
                 errorException.code(),
                 errorException.sqlState(),
                 errorException.getMessage());
     }
-    
+
     private String extractMessage(Throwable exception) {
         if (exception == null) {
             return "Unknown error";
         }
-        
+
         String message = exception.getMessage();
         if (message != null) {
             return message;
         }
-        
+
         Throwable cause = exception.getCause();
         if (cause != null) {
             return extractMessage(cause);
         }
-        
+
         return exception.getClass().getName();
     }
 

@@ -3,14 +3,14 @@ package hu.webarticum.minibase.storage.api;
 import hu.webarticum.miniconnect.lang.LargeInteger;
 
 public abstract class AbstractTableDecorator implements Table {
-    
+
     protected final Table baseTable;
-    
+
 
     protected AbstractTableDecorator(Table baseTable) {
         this.baseTable = baseTable;
     }
-    
+
 
     @Override
     public String name() {

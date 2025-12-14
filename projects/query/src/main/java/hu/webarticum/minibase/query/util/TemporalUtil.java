@@ -26,7 +26,7 @@ public final class TemporalUtil {
             targetType == LocalDateTime.class ||
             targetType == Instant.class);
     }
-    
+
     public static Class<?> unifyTemporalTypes(Class<?> type1, Class<?> type2) {
         if (type1 == LocalTime.class) {
             if (type2 == LocalTime.class) {
@@ -54,7 +54,7 @@ public final class TemporalUtil {
             return Instant.class;
         }
     }
-    
+
     public static Temporal convert(Object value, Class<?> targetType) {
         if (value == null) {
             return null;

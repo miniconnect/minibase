@@ -66,7 +66,7 @@ public class SelectExecutor implements ThrowingQueryExecutor {
 
     private MiniResult executeInternal(StorageAccess storageAccess, SessionState state, SelectQuery selectQuery) {
         LinkedHashMap<String, TableEntry> tableEntries = collectTableEntries(selectQuery, storageAccess, state);
-        
+
         List<SelectItemEntry> selectItemEntries = collectSelectItemEntries(
                 selectQuery, tableEntries, storageAccess, state);
         List<OrderByEntry> orderByEntries = collectOrderByEntries(selectQuery, selectItemEntries, tableEntries);
@@ -76,7 +76,7 @@ public class SelectExecutor implements ThrowingQueryExecutor {
 
         LinkedHashMap<String, TableEntry> reorderedTableEntries = applyOrderByToTableEntries(
                 tableEntries, uniqueOrderedAliases, normalizedOrderByEntries);
-        
+
         ImmutableList<MiniColumnHeader> columnHeaders = selectItemEntries.stream()
                 .map(e -> columnHeaderOf(e, reorderedTableEntries))
                 .collect(ImmutableList.createCollector());
@@ -95,7 +95,7 @@ public class SelectExecutor implements ThrowingQueryExecutor {
         if (hasOffset) {
             limit = offset.add(limit);
         }
-        
+
         List<Map<String, LargeInteger>> joinedRowIndices = collectRows(
                 reorderedTableEntries, normalizedOrderByEntries, limit, state);
 
@@ -116,14 +116,14 @@ public class SelectExecutor implements ThrowingQueryExecutor {
                 joinedRowIndices = joinedRowIndices.subList(offsetInt, rowCount);
             }
         }
-        
+
         ImmutableList<ImmutableList<MiniValue>> data = joinedRowIndices.stream()
                 .map(r -> selectRow(r, selectItemEntries, reorderedTableEntries, state))
                 .collect(ImmutableList.createCollector());
-        
+
         return new StoredResult(new StoredResultSetData(columnHeaders, data));
     }
-    
+
     private LinkedHashMap<String, TableEntry> collectTableEntries(
             SelectQuery selectQuery, StorageAccess storageAccess, SessionState state) {
         LinkedHashMap<String, TableEntry> result = new LinkedHashMap<>();
@@ -147,7 +147,7 @@ public class SelectExecutor implements ThrowingQueryExecutor {
         }
         return result;
     }
-    
+
     private List<OrderByEntry> normalizeOrderByEntries(
             LinkedHashMap<String, TableEntry> tableEntries,
             List<OrderByEntry> orderByEntries,
@@ -158,11 +158,11 @@ public class SelectExecutor implements ThrowingQueryExecutor {
             if(tableAlias == null) {
                 tableAlias = tableEntries.keySet().iterator().next();
             }
-            
+
             if (uniqueOrderedAliasesOut.contains(tableAlias)) {
                 continue;
             }
-            
+
             String fieldName = orderByEntry.fieldName;
             ColumnDefinition definition = tableEntries.get(tableAlias).table.columns().get(fieldName).definition();
             if (definition.isUnique() && !definition.isNullable()) {
@@ -187,11 +187,11 @@ public class SelectExecutor implements ThrowingQueryExecutor {
         if (prefixOrderableTableNames.isEmpty()) {
             return tableEntries;
         }
-        
+
         boolean allPreorderable = prefixOrderableTableNames.size() == orderByEntries.size();
-        
+
         LinkedHashMap<String, TableEntry> result = new LinkedHashMap<>();
-        
+
         addTableEntriesFollowingAliases(tableEntries, prefixOrderableTableNames, true, result);
         List<String> preorderableAliases = new ArrayList<>(result.keySet());
 
@@ -208,7 +208,7 @@ public class SelectExecutor implements ThrowingQueryExecutor {
 
         return result;
     }
-    
+
     private List<String> collectPrefixOrderableTableNames(
             Set<String> uniqueOrderedAliases, List<OrderByEntry> orderByEntries) {
         List<String> result = new ArrayList<>();
@@ -245,7 +245,7 @@ public class SelectExecutor implements ThrowingQueryExecutor {
             if (!possibleNexts.contains(tableName)) {
                 return result;
             }
-            
+
             result.add(tableName);
             possibleNexts.clear();
             for (String tableAlias : tableEntries.keySet()) {
@@ -256,7 +256,7 @@ public class SelectExecutor implements ThrowingQueryExecutor {
         }
         return result;
     }
-    
+
     private Set<String> collectInitialPossibleNextTableNames(LinkedHashMap<String, TableEntry> tableEntries) {
         Set<String> result = new HashSet<>();
         String baseTableName = tableEntries.keySet().iterator().next();
@@ -284,7 +284,7 @@ public class SelectExecutor implements ThrowingQueryExecutor {
             return null;
         }
     }
-    
+
     private void addTableEntriesFollowingAliases(
             LinkedHashMap<String, TableEntry> tableEntries,
             Collection<String> tableAliases,
@@ -312,14 +312,14 @@ public class SelectExecutor implements ThrowingQueryExecutor {
         newTableEntry.subFilter.putAll(originalTableEntry.subFilter);
         return newTableEntry;
     }
-    
+
     private JoinItem flipJoinItemIfNecessary(JoinItem joinItem, TableEntry targetEntry, String targetAlias) {
         if (joinItem == null) {
             return null;
         } else if (joinItem.targetTableAlias().equals(targetAlias)) {
             return joinItem;
         }
-        
+
         return new JoinItem(
                 joinItem.joinType(),
                 targetEntry.schemaName,
@@ -340,7 +340,7 @@ public class SelectExecutor implements ThrowingQueryExecutor {
         }
         return null;
     }
-    
+
     private JoinItem findJoinBetween(
             LinkedHashMap<String, TableEntry> tableEntries, String previousAlias, String nextAlias) {
         TableEntry targetTableEntry = tableEntries.get(nextAlias);
@@ -360,18 +360,18 @@ public class SelectExecutor implements ThrowingQueryExecutor {
 
         return null;
     }
-    
+
     private List<String> exploreJoinPath(
             LinkedHashMap<String, TableEntry> tableEntries, List<String> preorderableAliases, String baseAlias) {
         if (preorderableAliases.contains(baseAlias)) {
             return new LinkedList<>();
         }
-        
+
         List<String> innerJoinedAliases = tableEntries.values().stream()
                 .filter(e -> isInnerJoinFrom(e, baseAlias))
                 .map(e -> e.joinItem.targetTableAlias())
                 .collect(Collectors.toList());
-        
+
         for (String targetAlias : innerJoinedAliases) {
             List<String> subJoinPath = exploreJoinPath(tableEntries, preorderableAliases, targetAlias);
             if (subJoinPath != null) {
@@ -379,10 +379,10 @@ public class SelectExecutor implements ThrowingQueryExecutor {
                 return subJoinPath;
             }
         }
-        
+
         return null;
     }
-    
+
     private boolean isInnerJoinFrom(TableEntry tableEntry, String baseAlias) {
         JoinItem joinItem = tableEntry.joinItem;
         return
@@ -390,7 +390,7 @@ public class SelectExecutor implements ThrowingQueryExecutor {
                 joinItem.joinType() == JoinType.INNER &&
                 joinItem.sourceTableAlias().equals(baseAlias);
     }
-    
+
     private List<SelectItemEntry> collectSelectItemEntries(
             SelectQuery selectQuery,
             LinkedHashMap<String, TableEntry> tableEntries,
@@ -403,7 +403,7 @@ public class SelectExecutor implements ThrowingQueryExecutor {
         }
         return result;
     }
-    
+
     private List<OrderByEntry> collectOrderByEntries(
             SelectQuery selectQuery,
             List<SelectItemEntry> selectItemEntries,
@@ -415,7 +415,7 @@ public class SelectExecutor implements ThrowingQueryExecutor {
         }
         return result;
     }
-    
+
     private void addTableInfo(
             LinkedHashMap<String, TableEntry> tableEntries,
             String alias,
@@ -430,35 +430,35 @@ public class SelectExecutor implements ThrowingQueryExecutor {
         if (schemaName == null) {
             throw PredefinedError.SCHEMA_NOT_SELECTED.toException();
         }
-        
+
         Schema schema = storageAccess.schemas().get(schemaName);
         if (schema == null) {
             throw PredefinedError.SCHEMA_NOT_FOUND.toException(schemaName);
         }
-        
+
         Table table = schema.tables().get(tableName);
         if (table == null) {
             throw PredefinedError.TABLE_NOT_FOUND.toException(tableName);
         }
-        
+
         if (alias == null) {
             alias = tableName;
         }
-        
+
         if (tableEntries.containsKey(alias)) {
             throw PredefinedError.TABLE_ALIAS_DUPLICATED.toException(alias);
         }
-        
+
         tableEntries.put(alias, new TableEntry(schemaName, table, joinItem));
 
         checkJoinItem(joinItem, tableEntries);
     }
-    
+
     private void checkJoinItem(JoinItem joinItem, Map<String, TableEntry> tableEntries) {
         if (joinItem == null) {
             return;
         }
-        
+
         Table sourceTable = tableEntries.get(joinItem.sourceTableAlias()).table;
         String sourceFieldName = joinItem.sourceFieldName();
         checkColumn(sourceTable, sourceFieldName);
@@ -476,23 +476,23 @@ public class SelectExecutor implements ThrowingQueryExecutor {
             addFilter(whereItem, tableEntries, state);
         }
     }
-    
+
     private void addFilter(WhereItem whereItem, Map<String, TableEntry> tableEntries, SessionState state) {
         String tableName = whereItem.tableName();
         if (tableName == null) {
             tableName = tableEntries.keySet().iterator().next();
         }
-        
+
         TableEntry tableEntry = findTableEntryOrThrow(tableEntries, tableName);
         String fieldName = whereItem.fieldName();
         checkColumn(tableEntry.table, fieldName);
-        
+
         Object value = whereItem.value();
         ColumnDefinition columnDefinition = tableEntry.table.columns().get(fieldName).definition();
-        
+
         TableQueryUtil.applyFilterValue(tableEntry.subFilter, fieldName, value, columnDefinition, state);
     }
-    
+
     private void addSelectItemEntries(
             List<SelectItemEntry> selectItemEntries,
             SelectItem querySelectItem,
@@ -513,7 +513,7 @@ public class SelectExecutor implements ThrowingQueryExecutor {
             selectItemEntries.add(selectItemEntry);
             return;
         }
-        
+
         throw new IllegalArgumentException("Unknown select item type: " + querySelectItem.getClass());
     }
 
@@ -544,7 +544,7 @@ public class SelectExecutor implements ThrowingQueryExecutor {
         }
         return new SelectItemEntry(expressionSelectItem, valueTranslator, columnDefinition);
     }
-    
+
     private Class<?> detectExpressionParameterType(
             Parameter parameter, LinkedHashMap<String, TableEntry> tableEntries, SessionState state) {
         if (parameter instanceof VariableParameter) {
@@ -598,7 +598,7 @@ public class SelectExecutor implements ThrowingQueryExecutor {
             throw new IllegalArgumentException("Unknown parameter type: " + parameter.getClass());
         }
     }
-    
+
     private void checkExpressionColumns(Expression expression, LinkedHashMap<String, TableEntry> tableEntries) {
         for (Parameter parameter : expression.parameters()) {
             if (parameter instanceof ColumnParameter) {
@@ -608,7 +608,7 @@ public class SelectExecutor implements ThrowingQueryExecutor {
             }
         }
     }
-    
+
     private void addSelectItemEntriesForWildcard(
             List<SelectItemEntry> selectItemEntries,
             String tableName,
@@ -620,12 +620,12 @@ public class SelectExecutor implements ThrowingQueryExecutor {
             }
             return;
         }
-        
+
         TableEntry tableEntry = tableEntries.get(tableName);
         if (tableEntry == null) {
             throw PredefinedError.TABLE_NOT_FOUND.toException(tableName);
         }
-        
+
         Table table = tableEntry.table;
         NamedResourceStore<Column> columns = table.columns();
         for (String columnName : columns.names()) {
@@ -636,13 +636,13 @@ public class SelectExecutor implements ThrowingQueryExecutor {
             selectItemEntries.add(new SelectItemEntry(columnSelectItem, valueTranslator, columnDefinition));
         }
     }
-    
+
     private OrderByEntry toOrderByEntry(
             OrderByItem orderByItem,
             List<SelectItemEntry> selectItemEntries,
             LinkedHashMap<String, TableEntry> tableEntries) {
         String defaultTableAlias = tableEntries.keySet().iterator().next();
-        
+
         Integer position = orderByItem.position();
         if (orderByItem.position() != null) {
             if (position < 1 || position > selectItemEntries.size()) {
@@ -660,10 +660,10 @@ public class SelectExecutor implements ThrowingQueryExecutor {
             return new OrderByEntry(
                     columnTableAlias, columnParameter.columnName(), orderByItem.ascOrder(), orderByItem.nullsOrderMode());
         }
-        
+
         String tableName = orderByItem.tableName();
         String fieldName = orderByItem.fieldName();
-        
+
         if (tableName == null) {
             ColumnParameter matchingColumnParameter = findMatchingColumnParameter(selectItemEntries, fieldName);
             if (matchingColumnParameter != null) {
@@ -680,10 +680,10 @@ public class SelectExecutor implements ThrowingQueryExecutor {
 
         TableEntry tableEntry = findTableEntryOrThrow(tableEntries, tableName);
         checkColumn(tableEntry.table, fieldName);
-        
+
         return new OrderByEntry(tableName, fieldName, orderByItem.ascOrder(), orderByItem.nullsOrderMode());
     }
-    
+
     private TableEntry findTableEntryOrThrow(Map<String, TableEntry> tableEntries, String tableAlias) {
         if (tableAlias == null) {
             tableAlias = tableEntries.keySet().iterator().next();
@@ -693,10 +693,10 @@ public class SelectExecutor implements ThrowingQueryExecutor {
         if (tableEntry == null) {
             throw PredefinedError.TABLE_NOT_FOUND.toException(tableAlias);
         }
-        
+
         return tableEntry;
     }
-    
+
     private ColumnParameter findMatchingColumnParameter(List<SelectItemEntry> selectItemEntries, String fieldName) {
         for (SelectItemEntry selectItemEntry : selectItemEntries) {
             ColumnParameter columnParameter = columnParameterOf(selectItemEntry);
@@ -711,7 +711,7 @@ public class SelectExecutor implements ThrowingQueryExecutor {
         }
         return null;
     }
-    
+
     private ColumnParameter columnParameterOf(SelectItemEntry selectItemEntry) {
         SelectItem selectItem = selectItemEntry.selectItem;
         if (!(selectItem instanceof ExpressionSelectItem)) {
@@ -723,13 +723,13 @@ public class SelectExecutor implements ThrowingQueryExecutor {
         }
         return ((ColumnExpression) expression).columnParameter();
     }
-    
+
     private void checkColumn(Table table, String columnName) {
         if (!table.columns().contains(columnName)) {
             throw PredefinedError.COLUMN_NOT_FOUND.toException(table.name(), columnName);
         }
     }
-    
+
     private ValueTranslator getValueTranslator(TableEntry tableEntry, String fieldName) {
         return tableEntry.valueTranslators.computeIfAbsent(
                 fieldName, k -> createValueTranslator(tableEntry.table, fieldName));
@@ -749,7 +749,7 @@ public class SelectExecutor implements ThrowingQueryExecutor {
         }
         return JavaTranslator.of(clazz);
     }
-    
+
     private MiniColumnHeader columnHeaderOf(SelectItemEntry selectItemEntry, Map<String, TableEntry> tableEntries) {
         MiniValueDefinition valueDefinition = selectItemEntry.valueTranslator.definition();
         SelectItem selectItem = selectItemEntry.selectItem;
@@ -764,13 +764,13 @@ public class SelectExecutor implements ThrowingQueryExecutor {
                 (tableAlias != null && isTransitivelyLeftJoined(tableAlias, tableEntries));
         return new StoredColumnHeader(fieldAlias, isNullable, valueDefinition);
     }
-    
+
     private String tableAliasOf(ExpressionSelectItem expressionSelectItem) {
         Expression expression = expressionSelectItem.expression();
         if (!(expression instanceof ColumnExpression)) {
             return null;
         }
-        
+
         return ((ColumnExpression) expression).columnParameter().tableAlias();
     }
 
@@ -786,7 +786,7 @@ public class SelectExecutor implements ThrowingQueryExecutor {
     private boolean isTransitivelyLeftJoined(String tableAlias, Map<String, TableEntry> tableEntries) {
         return isTransitivelyLeftJoined(tableAlias, tableEntries, 0);
     }
-    
+
     private boolean isTransitivelyLeftJoined(String tableAlias, Map<String, TableEntry> tableEntries, int i) {
         JoinItem joinItem = tableEntries.get(tableAlias).joinItem;
         if (joinItem == null) {
@@ -797,7 +797,7 @@ public class SelectExecutor implements ThrowingQueryExecutor {
             return isTransitivelyLeftJoined(joinItem.sourceTableAlias(), tableEntries, i + 1);
         }
     }
-    
+
     private ImmutableList<MiniValue> selectRow(
             Map<String, LargeInteger> joinedRow,
             List<SelectItemEntry> selectItemEntries,
@@ -810,7 +810,7 @@ public class SelectExecutor implements ThrowingQueryExecutor {
         }
         return ImmutableList.fromCollection(resultBuilder);
     }
-    
+
     private MiniValue selectRowValue(
             Map<String, LargeInteger> joinedRow,
             SelectItemEntry selectItemEntry,
@@ -828,7 +828,7 @@ public class SelectExecutor implements ThrowingQueryExecutor {
         Object value = expression.evaluate(parameterValues);
         return selectItemEntry.valueTranslator.encodeFully(value);
     }
-    
+
     private Object selectExpressionParameter(
             Map<String, LargeInteger> joinedRow,
             Map<String, TableEntry> tableEntries,
@@ -844,7 +844,7 @@ public class SelectExecutor implements ThrowingQueryExecutor {
             throw new IllegalArgumentException("Unknown parameter type: " + parameter.getClass());
         }
     }
-    
+
     private Object selectExpressionColumnParameter(
             Map<String, LargeInteger> joinedRow,
             Map<String, TableEntry> tableEntries,
@@ -912,7 +912,7 @@ public class SelectExecutor implements ThrowingQueryExecutor {
         String tableAlias = remainingTableAliasList.get(0);
         TableEntry tableEntry = tableEntries.get(tableAlias);
         Map<String, Object> subFilter = new HashMap<>(tableEntry.subFilter);
-        
+
         boolean baseIsNull = false;
         if (tableEntry.joinItem != null) {
             String sourceTableAlias = tableEntry.joinItem.sourceTableAlias();
@@ -945,7 +945,7 @@ public class SelectExecutor implements ThrowingQueryExecutor {
             subRemainingOrderByEntries.addAll(
                     remainingOrderByEntries.subList(currentOrderByEntries.size(), remainingOrderByEntries.size()));
         }
-        
+
         int intLimit = Integer.MAX_VALUE;
         if (limit != null) {
             try {
@@ -954,20 +954,20 @@ public class SelectExecutor implements ThrowingQueryExecutor {
                 // XXX: falls back to Integer.MAX_VALUE
             }
         }
-        
+
         boolean found = false;
         if (previousAlias == null || !baseIsNull) {
             int previousSize = result.size();
-            
+
             List<Map<String, LargeInteger>> subResult = new ArrayList<>();
-            
+
             LargeInteger preappliedLimit = prelimitable ? limit : null;
             List<OrderByEntry> subOrderByEntries =
                     tableEntry.preorderable ? currentOrderByEntries : Collections.emptyList();
-            
+
             Iterator<LargeInteger> rowIndexIterator = TableQueryUtil.filterRows(
                         tableEntry.table, subFilter, subOrderByEntries, preappliedLimit);
-            
+
             found = rowIndexIterator.hasNext();
             while (rowIndexIterator.hasNext()) {
                 LargeInteger rowIndex = rowIndexIterator.next();
@@ -1011,7 +1011,7 @@ public class SelectExecutor implements ThrowingQueryExecutor {
             if ((previousAlias == null || prelimitable) && limit != null && subResult.size() > intLimit) {
                 subResult = subResult.subList(0, intLimit);
             }
-            
+
             result.addAll(subResult);
         }
         if (
@@ -1037,5 +1037,5 @@ public class SelectExecutor implements ThrowingQueryExecutor {
             }
         }
     }
-    
+
 }

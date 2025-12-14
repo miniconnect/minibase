@@ -7,9 +7,9 @@ public interface NamedResourceStore<T extends NamedResource> {
     public ImmutableList<String> names();
 
     public ImmutableList<T> resources();
-    
+
     public boolean contains(String name);
-    
+
     public T get(String name);
-    
+
 }

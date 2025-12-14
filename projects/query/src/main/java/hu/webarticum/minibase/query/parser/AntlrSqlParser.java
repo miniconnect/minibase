@@ -176,12 +176,12 @@ public class AntlrSqlParser implements SqlParser {
         if (selectCountQueryNode != null) {
             return parseSelectCountNode(selectCountQueryNode);
         }
-        
+
         StandaloneSelectQueryContext standaloneSelectQueryNode = rootNode.standaloneSelectQuery();
         if (standaloneSelectQueryNode != null) {
             return parseStandaloneSelectNode(standaloneSelectQueryNode);
         }
-        
+
         ShowSpecialQueryContext showSpecialQueryNode = rootNode.showSpecialQuery();
         if (showSpecialQueryNode != null) {
             return parseShowSpecialNode(showSpecialQueryNode);
@@ -191,17 +191,17 @@ public class AntlrSqlParser implements SqlParser {
         if (insertQueryNode != null) {
             return parseInsertNode(insertQueryNode);
         }
-        
+
         UpdateQueryContext updateQueryNode = rootNode.updateQuery();
         if (updateQueryNode != null) {
             return parseUpdateNode(updateQueryNode);
         }
-        
+
         DeleteQueryContext deleteQueryNode = rootNode.deleteQuery();
         if (deleteQueryNode != null) {
             return parseDeleteNode(deleteQueryNode);
         }
-        
+
         ShowSchemasQueryContext showSchemasQueryNode = rootNode.showSchemasQuery();
         if (showSchemasQueryNode != null) {
             return parseShowSchemasNode(showSchemasQueryNode);
@@ -216,12 +216,12 @@ public class AntlrSqlParser implements SqlParser {
         if (useQueryNode != null) {
             return parseUseNode(useQueryNode);
         }
-        
+
         SetVariableQueryContext setVariableNode = rootNode.setVariableQuery();
         if (setVariableNode != null) {
             return parseSetVariableNode(setVariableNode);
         }
-        
+
         throw new IllegalArgumentException("Query type not supported");
     }
 
@@ -233,12 +233,12 @@ public class AntlrSqlParser implements SqlParser {
                 null;
         IdentifierContext identifierNode = selectQueryNode.tableName().identifier();
         String tableName = parseIdentifierNode(identifierNode);
-        
+
         String tableAlias = parseAliasPartNode(selectQueryNode.tableAliasPart);
         if (tableAlias == null) {
             tableAlias = tableName;
         }
-        
+
         ImmutableList<SelectItem> selectItems = parseSelectPartNode(selectPartNode);
         List<JoinPartContext> joinParts = selectQueryNode.joinPart();
         ImmutableList<JoinItem> joins = parseJoinPartNodes(joinParts, tableAlias);
@@ -250,7 +250,7 @@ public class AntlrSqlParser implements SqlParser {
         Object[] offsetAndLimit = parseOffsetLimitPartNode(offsetLimitNode);
         Object offset = offsetAndLimit[0];
         Object limit = offsetAndLimit[1];
-        
+
         return Queries.select()
                 .selectItems(selectItems)
                 .inSchema(schemaName)
@@ -263,7 +263,7 @@ public class AntlrSqlParser implements SqlParser {
                 .limit(limit)
                 .build();
     }
-    
+
     private SelectCountQuery parseSelectCountNode(SelectCountQueryContext selectCountQueryNode) {
         SchemaNameContext schemaNameNode = selectCountQueryNode.schemaName();
         String schemaName = schemaNameNode != null ?
@@ -276,21 +276,21 @@ public class AntlrSqlParser implements SqlParser {
         if (tableAlias == null) {
             tableAlias = tableName;
         }
-        
+
         TableNameContext tableNameNode = extractTableNameNode(selectCountQueryNode);
         if (tableNameNode != null) {
             checkTableNameNode(tableNameNode, tableAlias);
         }
-        
+
         String fieldName = extractFieldName(selectCountQueryNode);
         String alias = extractAlias(selectCountQueryNode);
-        
+
         WherePartContext wherePartNode = selectCountQueryNode.wherePart();
         ImmutableList<WhereItem> where = parseWherePartNode(wherePartNode);
-        
+
         LimitPartContext limitPartNode = selectCountQueryNode.limitPart();
         Object limit = parseLimitPartNode(limitPartNode);
-        
+
         return Queries.selectCount()
                 .inSchema(schemaName)
                 .from(tableName)
@@ -300,18 +300,18 @@ public class AntlrSqlParser implements SqlParser {
                 .limit(limit)
                 .build();
     }
-    
+
     private TableNameContext extractTableNameNode(SelectCountQueryContext selectCountQueryNode) {
         WildcardSelectItemContext wildcardSelectItemNode = selectCountQueryNode.wildcardSelectItem();
         if (wildcardSelectItemNode != null) {
             return wildcardSelectItemNode.tableName();
         }
-        
+
         ScopeableFieldNameContext scopeableFieldNameNode = selectCountQueryNode.scopeableFieldName();
         if (scopeableFieldNameNode != null) {
             return scopeableFieldNameNode.tableName();
         }
-        
+
         return null;
     }
 
@@ -320,14 +320,14 @@ public class AntlrSqlParser implements SqlParser {
         if (scopeableFieldNameNode != null) {
             return parseIdentifierNode(scopeableFieldNameNode.fieldName().identifier());
         }
-        
+
         return null;
     }
 
     private String extractAlias(SelectCountQueryContext selectCountQueryNode) {
         return parseAliasPartNode(selectCountQueryNode.fieldAliasPart);
     }
-    
+
     private StandaloneSelectQuery parseStandaloneSelectNode(StandaloneSelectQueryContext standaloneSelectQueryNode) {
         List<String> aliases = new ArrayList<>();
         StandaloneSelectRowContext firstRowNode = standaloneSelectQueryNode.standaloneSelectRow(0);
@@ -336,7 +336,7 @@ public class AntlrSqlParser implements SqlParser {
             aliases.add(alias);
         }
         int columnCount = aliases.size();
-        
+
         List<List<Expression>> expressionMatrix = new ArrayList<>();
         for (StandaloneSelectRowContext standaloneSelectRowNode : standaloneSelectQueryNode.standaloneSelectRow()) {
             List<Expression> expressionRow = new ArrayList<>();
@@ -351,21 +351,21 @@ public class AntlrSqlParser implements SqlParser {
             }
             expressionMatrix.add(expressionRow);
         }
-        
+
         return Queries.standaloneSelect()
                 .aliases(aliases)
                 .expressionMatrix(expressionMatrix)
                 .build();
     }
-    
+
     private ShowSpecialQuery parseShowSpecialNode(ShowSpecialQueryContext selectSpecialQueryNode) {
         String alias = parseAliasPartNode(selectSpecialQueryNode.aliasPart());
-        
+
         SpecialSelectableContext specialSelectableNode = selectSpecialQueryNode.specialSelectable();
         String specialSelectableName = specialSelectableNode.specialSelectableName().getText().toUpperCase();
         SpecialValueExpression expression =
                 new SpecialValueExpression(SpecialValueParameter.valueOf(specialSelectableName));
-        
+
         return Queries.showSpecial()
                 .specialValueExpression(expression)
                 .alias(alias)
@@ -384,7 +384,7 @@ public class AntlrSqlParser implements SqlParser {
         ImmutableList<String> fields = parseInsertFieldListNode(fieldListNode);
         ValueListContext valueListNode = insertQueryNode.valueList();
         ImmutableList<Object> values = parseInsertValueListNode(valueListNode);
-        
+
         return Queries.insert()
                 .replace(replace)
                 .inSchema(schemaName)
@@ -398,7 +398,7 @@ public class AntlrSqlParser implements SqlParser {
         if (fieldListNode == null) {
             return null;
         }
-        
+
         List<String> resultBuilder = new ArrayList<>();
         for (FieldNameContext fieldNameNode : fieldListNode.fieldName()) {
             String fieldName = parseIdentifierNode(fieldNameNode.identifier());
@@ -450,18 +450,18 @@ public class AntlrSqlParser implements SqlParser {
         String tableName = parseIdentifierNode(identifierNode);
         WherePartContext wherePartNode = deleteQueryNode.wherePart();
         ImmutableList<WhereItem> where = parseWherePartNode(wherePartNode);
-        
+
         return Queries.delete()
                 .inSchema(schemaName)
                 .from(tableName)
                 .where(where)
                 .build();
     }
-    
+
     private ShowSchemasQuery parseShowSchemasNode(ShowSchemasQueryContext showSchemasNode) {
         LikePartContext likePartContext = showSchemasNode.likePart();
         String like = parseLikePart(likePartContext);
-        
+
         return Queries.showSchemas()
                 .like(like)
                 .build();
@@ -474,7 +474,7 @@ public class AntlrSqlParser implements SqlParser {
                 null;
         LikePartContext likePartContext = showTablesNode.likePart();
         String like = parseLikePart(likePartContext);
-        
+
         return Queries.showTables()
                 .from(schemaName)
                 .like(like)
@@ -484,24 +484,24 @@ public class AntlrSqlParser implements SqlParser {
     private UseQuery parseUseNode(UseQueryContext useNode) {
         IdentifierContext identifierNode = useNode.schemaName().identifier();
         String schemaName = parseIdentifierNode(identifierNode);
-        
+
         return Queries.use()
                 .schema(schemaName)
                 .build();
     }
-    
+
     private SetVariableQuery parseSetVariableNode(SetVariableQueryContext setVariableNode) {
         IdentifierContext identifierNode = setVariableNode.variable().identifier();
         String variableName = parseIdentifierNode(identifierNode);
         ExtendedValueContext valueNode = setVariableNode.extendedValue();
         Object value = parseExtendedValueNode(valueNode);
-        
+
         return Queries.setVariable()
                 .name(variableName)
                 .value(value)
                 .build();
     }
-    
+
     private String parseLikePart(LikePartContext likePartContext) {
         if (likePartContext == null) {
             return null;
@@ -526,7 +526,7 @@ public class AntlrSqlParser implements SqlParser {
             return parseAliasableExpressionNode(selectItemNode.aliasableExpression());
         }
     }
-    
+
     private WildcardSelectItem parseWildcardSelectItemNode(WildcardSelectItemContext wildcardSelectItemNode) {
         TableNameContext tableNameNode = wildcardSelectItemNode.tableName();
         String tableName = tableNameNode != null ? parseIdentifierNode(tableNameNode.identifier()) : null;
@@ -544,10 +544,10 @@ public class AntlrSqlParser implements SqlParser {
         if (aliasPartNode == null) {
             return null;
         }
-        
+
         return parseIdentifierNode(aliasPartNode.alias);
     }
-    
+
     private Expression parseExpressionNode(ExpressionContext expressionNode) {
         AtomicExpressionContext atomicExpressionNode = expressionNode.atomicExpression();
         if (atomicExpressionNode != null) {
@@ -602,7 +602,7 @@ public class AntlrSqlParser implements SqlParser {
                 return new NotExpression(likeExpression);
             }
         }
-        
+
         if (expressionNode.regexpOperator != null) {
             Expression givenExpression = parseExpressionNode(expressionNode.givenExpression);
             Expression patternExpression = parseExpressionNode(expressionNode.patternExpression);
@@ -668,7 +668,7 @@ public class AntlrSqlParser implements SqlParser {
             throw new IllegalArgumentException("Unknown operation: " + operation);
         }
     }
-    
+
     private Object extractOperation(ExpressionContext expressionNode) {
         if (expressionNode.EQ() != null) {
             return EqualsExpression.class;
@@ -709,30 +709,30 @@ public class AntlrSqlParser implements SqlParser {
             return null;
         }
     }
-    
+
     private Expression parseAtomicExpressionNode(AtomicExpressionContext atomicExpressionNode) {
         if (atomicExpressionNode.paredExpression != null) {
             return parseExpressionNode(atomicExpressionNode.paredExpression);
         }
-        
+
         LiteralContext literalNode = atomicExpressionNode.literal();
         if (literalNode != null) {
             Object literalValue = parseLiteralNode(literalNode);
             return new ConstantExpression(literalValue);
         }
-        
+
         VariableContext variableNode = atomicExpressionNode.variable();
         if (variableNode != null) {
             String variableName = parseIdentifierNode(variableNode.identifier());
             return new VariableExpression(variableName);
         }
-        
+
         SpecialSelectableContext specialSelectableNode = atomicExpressionNode.specialSelectable();
         if (specialSelectableNode != null) {
             String specialSelectableName = specialSelectableNode.specialSelectableName().getText().toUpperCase();
             return new SpecialValueExpression(SpecialValueParameter.valueOf(specialSelectableName));
         }
-        
+
         ScopeableFieldNameContext scopeableFieldNameNode = atomicExpressionNode.scopeableFieldName();
         if (scopeableFieldNameNode != null) {
             TableNameContext tableNameNode = scopeableFieldNameNode.tableName();
@@ -740,12 +740,12 @@ public class AntlrSqlParser implements SqlParser {
             String columnName = parseIdentifierNode(scopeableFieldNameNode.fieldName().identifier());
             return new ColumnExpression(tableAlias, columnName);
         }
-        
+
         FunctionCallContext functionCallNode = atomicExpressionNode.functionCall();
         if (functionCallNode != null) {
             return parseFunctionCallNode(functionCallNode);
         }
-        
+
         throw new IllegalArgumentException("Unknown expression: " + atomicExpressionNode.getText());
     }
 
@@ -844,7 +844,7 @@ public class AntlrSqlParser implements SqlParser {
         } else if (intervalFieldNameNode.MILLENNIUM() != null) {
             return new ConstantExpression(DateTimeDelta.of(Period.ofYears(amount.multiply(1000).intValueExact())));
         }
-        
+
         throw new IllegalArgumentException("Unexpected expression: " + intervalExpressionNode.getText());
     }
 
@@ -853,7 +853,7 @@ public class AntlrSqlParser implements SqlParser {
         TypeConstruct typeConstruct = parseTypeConstructNode(castExpressionNode.typeConstruct());
         return new CastExpression(subExpression, typeConstruct);
     }
-    
+
     private TypeConstruct parseTypeConstructNode(TypeConstructContext typeConstructNode) {
         TypeConstruct.SymbolAlias symbolAlias = parseTypeNameNode(typeConstructNode.typeName());
         Integer size = typeConstructNode.size != null ? parseSizeParameterNode(typeConstructNode.size) : null;
@@ -873,7 +873,7 @@ public class AntlrSqlParser implements SqlParser {
             aliasNameBuilder.append(child.getText().toUpperCase());
         }
         return SymbolAlias.valueOf(aliasNameBuilder.toString());
-        
+
     }
 
     private Integer parseSizeParameterNode(SizeParameterContext sizeParameterNode) {
@@ -889,7 +889,7 @@ public class AntlrSqlParser implements SqlParser {
             return null;
         }
     }
-    
+
     private Expression parseCaseExpressionNode(CaseExpressionContext caseExpressionNode) {
         Expression givenExpression = null;
         if (caseExpressionNode.givenExpression != null) {
@@ -900,7 +900,7 @@ public class AntlrSqlParser implements SqlParser {
         if (elsePartNode != null) {
             elseExpression = parseExpressionNode(elsePartNode.expression());
         }
-        
+
         ImmutableList<CaseExpression.WhenItem> whenItems =
                 ImmutableList.fromCollection(caseExpressionNode.whenPart()).map(this::parseCaseWhenItem);
 
@@ -912,7 +912,7 @@ public class AntlrSqlParser implements SqlParser {
         Expression resultExpression = parseExpressionNode(whenPartNode.resultExpression);
         return new CaseExpression.WhenItem(conditionExpression, resultExpression);
     }
-    
+
     private ImmutableList<JoinItem> parseJoinPartNodes(
             List<JoinPartContext> joinPartNodes, String tableAlias) {
         Set<String> previousTableAliases = new HashSet<>(joinPartNodes.size() + 1);
@@ -931,21 +931,21 @@ public class AntlrSqlParser implements SqlParser {
                 parseIdentifierNode(targetSchemaNameNode.identifier()) :
                 null;
         String targetTableName = parseIdentifierNode(joinPartNode.targetTableName.identifier());
-        
+
         String targetTableAlias = parseAliasPartNode(joinPartNode.tableAliasPart);
         if (targetTableAlias == null) {
             targetTableAlias = targetTableName;
         }
-        
+
         String scope1 = parseIdentifierNode(joinPartNode.scope1.identifier());
         String field1 = parseIdentifierNode(joinPartNode.field1.identifier());
         String scope2 = parseIdentifierNode(joinPartNode.scope2.identifier());
         String field2 = parseIdentifierNode(joinPartNode.field2.identifier());
-        
+
         if (scope1.equals(scope2)) {
             throw new IllegalArgumentException("Can not join to the same table alias: " + scope1);
         }
-        
+
         String targetFieldName;
         String sourceTableAlias;
         String sourceFieldName;
@@ -966,13 +966,13 @@ public class AntlrSqlParser implements SqlParser {
         if (!previousTableAliases.contains(sourceTableAlias)) {
             throw new IllegalArgumentException("Unknown table alias: " + sourceTableAlias);
         }
-        
+
         if (!previousTableAliases.add(targetTableAlias)) {
             throw new IllegalArgumentException("Duplicated table alias: " + targetTableAlias);
         }
-        
+
         JoinType joinType = joinPartNode.leftJoin() != null ? JoinType.LEFT_OUTER : JoinType.INNER;
-        
+
         return new JoinItem(
                 joinType,
                 targetSchemaName,
@@ -982,12 +982,12 @@ public class AntlrSqlParser implements SqlParser {
                 sourceTableAlias,
                 sourceFieldName);
     }
-    
+
     private ImmutableList<WhereItem> parseWherePartNode(WherePartContext wherePartNode) {
         if (wherePartNode == null) {
             return ImmutableList.empty();
         }
-        
+
         List<WhereItemContext> whereItemNodes = wherePartNode.whereItem();
         List<WhereItem> resultBuilder = new ArrayList<>(whereItemNodes.size());
         for (WhereItemContext whereItemNode : whereItemNodes) {
@@ -995,7 +995,7 @@ public class AntlrSqlParser implements SqlParser {
         }
         return ImmutableList.fromCollection(resultBuilder);
     }
-    
+
     private WhereItem parseWhereItemNode(WhereItemContext whereItemNode) {
         WhereItemContext subItemNode = whereItemNode.whereItem();
         if (subItemNode != null) {
@@ -1009,7 +1009,7 @@ public class AntlrSqlParser implements SqlParser {
         Object value = parsePostfixConditionNode(whereItemNode.postfixCondition());
         return new WhereItem(tableName, fieldName, value);
     }
-    
+
     private ImmutableList<OrderByItem> parseOrderByPartNode(OrderByPartContext orderByPartNode) {
         if (orderByPartNode == null) {
             return ImmutableList.empty();
@@ -1023,10 +1023,10 @@ public class AntlrSqlParser implements SqlParser {
         }
         return ImmutableList.fromCollection(resultBuilder);
     }
-    
+
     private OrderByItem parseOrderByItemNode(OrderByItemContext orderByItemNode) {
         boolean ascOrder = (orderByItemNode.DESC() == null);
-        
+
         NullsOrderMode nullsOrderMode;
         if (orderByItemNode.nullsFirst() != null) {
             nullsOrderMode = NullsOrderMode.NULLS_FIRST;
@@ -1035,53 +1035,53 @@ public class AntlrSqlParser implements SqlParser {
         } else {
             nullsOrderMode = NullsOrderMode.NULLS_AUTO;
         }
-        
+
         OrderByPositionContext orderByPositionNode = orderByItemNode.orderByPosition();
         if (orderByPositionNode != null) {
             LargeInteger largeOrderByPosition = parseIntegerNode(orderByPositionNode.TOKEN_INTEGER());
             Integer orderByPosition = largeOrderByPosition != null ? largeOrderByPosition.intValueExact() : null;
             return new OrderByItem(null, null, orderByPosition, ascOrder, nullsOrderMode);
         }
-        
+
         ScopeableFieldNameContext scopeableFieldNameNode = orderByItemNode.scopeableFieldName();
         String fieldName = parseIdentifierNode(scopeableFieldNameNode.fieldName().identifier());
-        
+
         TableNameContext tableNameNode = scopeableFieldNameNode.tableName();
         String tableName = tableNameNode != null ? parseIdentifierNode(tableNameNode.identifier()) : null;
-        
+
         return new OrderByItem(tableName, fieldName, null, ascOrder, nullsOrderMode);
     }
-    
+
     private Object[] parseOffsetLimitPartNode(OffsetLimitPartContext offsetLimitPartNode) {
         Object[] result = new Object[] { null, null };
         if (offsetLimitPartNode == null) {
             return result;
         }
-        
+
         OffsetPartContext offsetPartNode = offsetLimitPartNode.offsetPart();
         if (offsetPartNode != null) {
             result[0] = parseLimitParameterNode(offsetPartNode.limitParameter());
         }
-        
+
         LimitPartContext limitPartNode = offsetLimitPartNode.limitPart();
         if (limitPartNode != null) {
             result[1] = parseLimitParameterNode(limitPartNode.limitParameter());
         }
-        
+
         CommaLimitPartContext commaLimitPartNode = offsetLimitPartNode.commaLimitPart();
         if (commaLimitPartNode != null) {
             result[0] = parseLimitParameterNode(commaLimitPartNode.offsetValue);
             result[1] = parseLimitParameterNode(commaLimitPartNode.limitValue);
         }
-        
+
         return result;
     }
-    
+
     private Object parseLimitPartNode(LimitPartContext limitPartNode) {
         if (limitPartNode == null) {
             return null;
         }
-        
+
         LimitParameterContext limitParameterNode = limitPartNode.limitParameter();
         return parseLimitParameterNode(limitParameterNode);
     }
@@ -1101,7 +1101,7 @@ public class AntlrSqlParser implements SqlParser {
             return new VariableValue(variableName);
         }
     }
-    
+
     private LinkedHashMap<String, Object> parseUpdatePartNode(UpdatePartContext updatePartNode) {
         LinkedHashMap<String, Object> result = new LinkedHashMap<>();
         for (UpdateItemContext updateItemNode : updatePartNode.updateItem()) {
@@ -1111,12 +1111,12 @@ public class AntlrSqlParser implements SqlParser {
         }
         return result;
     }
-    
+
     private void checkTableNameNode(TableNameContext tableNameNode, String expectedTableName) {
         if (tableNameNode == null) {
             return;
         }
-        
+
         String fieldTableName = parseIdentifierNode(tableNameNode.identifier());
         if (!fieldTableName.equals(expectedTableName)) {
             throw new IllegalArgumentException("Unknown table: " + fieldTableName);
@@ -1128,17 +1128,17 @@ public class AntlrSqlParser implements SqlParser {
         if (simpleNameNode != null) {
             return simpleNameNode.getText();
         }
-        
+
         TerminalNode quotedNameNode = identifierNode.TOKEN_QUOTEDNAME();
         if (quotedNameNode != null) {
             return unquote(quotedNameNode.getText(), '"');
         }
-        
+
         TerminalNode backtickedNameNode = identifierNode.TOKEN_BACKTICKEDNAME();
         if (backtickedNameNode != null) {
             return unquote(backtickedNameNode.getText(), '`');
         }
-        
+
         throw new IllegalArgumentException("Invalid identifier: " + identifierNode.getText());
     }
 
@@ -1153,21 +1153,21 @@ public class AntlrSqlParser implements SqlParser {
                 return buildHalfRangeCondition(simpleRelationNode, value);
             }
         }
-        
+
         BetweenRelationContext betweenRelationNode = postfixConditionNode.betweenRelation();
         if (betweenRelationNode != null) {
             return parseBetweenRelationNode(betweenRelationNode);
         }
-        
+
         if (postfixConditionNode.isNull() != null) {
             return NullCondition.IS_NULL;
         } else if (postfixConditionNode.isNotNull() != null) {
             return NullCondition.IS_NOT_NULL;
         }
-        
+
         throw new IllegalArgumentException("Invalid postfix condition: " + postfixConditionNode.getText());
     }
-    
+
     private Object buildHalfRangeCondition(SimpleRelationContext simpleRelationNode, Object value) {
         if (simpleRelationNode.LESS() != null) {
             return new RangeCondition(null, false, value, false);
@@ -1187,7 +1187,7 @@ public class AntlrSqlParser implements SqlParser {
         if (literalNode != null) {
             return parseLiteralNode(literalNode);
         }
-        
+
         VariableContext variableNode = extendedValueNode.variable();
         if (variableNode != null) {
             String variableName = parseIdentifierNode(variableNode.identifier());
@@ -1202,12 +1202,12 @@ public class AntlrSqlParser implements SqlParser {
         Object secondValue = parseExtendedValueNode(betweenRelationNode.secondValue);
         return new RangeCondition(firstValue, true, secondValue, true);
     }
-    
+
     private Object parseLiteralNode(LiteralContext literalNode) {
         if (literalNode.NULL() != null) {
             return null;
         }
-        
+
         IntegerLiteralContext integerLiteralNode = literalNode.integerLiteral();
         if (integerLiteralNode != null) {
             return parseIntegerLiteralNode(integerLiteralNode);
@@ -1222,12 +1222,12 @@ public class AntlrSqlParser implements SqlParser {
         if (stringLiteralNode != null) {
             return parseStringLiteral(stringLiteralNode);
         }
-        
+
         BooleanLiteralContext booleanLiteralNode = literalNode.booleanLiteral();
         if (booleanLiteralNode != null) {
             return parseBooleanLiteralNode(booleanLiteralNode);
         }
-        
+
         throw new IllegalArgumentException("Invalid literal: " + literalNode.getText());
     }
 
@@ -1428,9 +1428,9 @@ public class AntlrSqlParser implements SqlParser {
         return booleanLiteralNode.TRUE() != null;
     }
 
-    
+
     private static class ParseErrorListener extends BaseErrorListener {
-        
+
         @Override
         public void syntaxError(
                 Recognizer<?, ?> recognizer,

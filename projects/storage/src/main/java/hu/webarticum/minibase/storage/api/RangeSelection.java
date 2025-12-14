@@ -6,21 +6,21 @@ import java.util.NoSuchElementException;
 import hu.webarticum.miniconnect.lang.LargeInteger;
 
 public class RangeSelection implements TableSelection {
-    
+
     private final LargeInteger from;
-    
+
     private final LargeInteger until;
-    
+
     private final boolean ascOrder;
 
     public RangeSelection(long from, long until) {
         this(LargeInteger.of(from), LargeInteger.of(until));
     }
-    
+
     public RangeSelection(LargeInteger from, LargeInteger until) {
         this(from, until, true);
     }
-    
+
     public RangeSelection(
             LargeInteger from,
             LargeInteger until,
@@ -36,7 +36,7 @@ public class RangeSelection implements TableSelection {
         this.until = until;
         this.ascOrder = ascOrder;
     }
-    
+
 
     @Override
     public Iterator<LargeInteger> iterator() {
@@ -56,12 +56,12 @@ public class RangeSelection implements TableSelection {
         return ascOrder;
     }
 
-    
+
     private class AscIterator implements Iterator<LargeInteger> {
 
         private LargeInteger next = from;
-        
-        
+
+
         @Override
         public boolean hasNext() {
             return next.compareTo(until) < 0;
@@ -76,15 +76,15 @@ public class RangeSelection implements TableSelection {
             next = next.add(LargeInteger.ONE);
             return result;
         }
-        
+
     }
-    
-    
+
+
     private class DescIterator implements Iterator<LargeInteger> {
 
         private LargeInteger next = until.subtract(LargeInteger.ONE);
-        
-        
+
+
         @Override
         public boolean hasNext() {
             return next.compareTo(from) >= 0;
@@ -99,8 +99,8 @@ public class RangeSelection implements TableSelection {
             next = next.subtract(LargeInteger.ONE);
             return result;
         }
-        
+
     }
-    
-    
+
+
 }

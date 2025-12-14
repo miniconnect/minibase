@@ -26,19 +26,19 @@ import hu.webarticum.miniconnect.lang.LargeInteger;
  * <p>One of the main goals is to prevent arithmetic overflows.</p>
  */
 public final class NumberUtil {
-    
+
     private static final int UNEXACT_DIVISION_SCALE = 14;
-    
+
     private static final Pattern NUMBER_CLEAN_PATTERN = Pattern.compile("[ _]");
-    
+
     private static final Pattern NUMBER_PREFIX_PATTERN = Pattern.compile(
             "^(?<sign>[+\\-]?)(?<whole>\\d+)?(?<frac>\\.\\d+)?");
-    
+
 
     private NumberUtil() {
         // utility class
     }
-    
+
 
     /**
      * Searches the best fitting numeric type for the given type.
@@ -117,7 +117,7 @@ public final class NumberUtil {
         }
         return Void.class;
     }
-    
+
     public static Number promote(Object convertedValue, Class<?> targetType) {
         if (convertedValue == null) {
             if (targetType == Void.class) {
@@ -193,7 +193,7 @@ public final class NumberUtil {
             return new Number[] { bigDecimal1.setScale(scale2), value2 };
         }
     }
-    
+
     public static boolean isZero(Object value) {
         Number convertedValue = numberify(value);
         if (convertedValue instanceof LargeInteger) {
@@ -206,7 +206,7 @@ public final class NumberUtil {
             return false;
         }
     }
-    
+
     public static boolean isPositive(Object value) {
         Number convertedValue = numberify(value);
         if (convertedValue instanceof LargeInteger) {
@@ -371,7 +371,7 @@ public final class NumberUtil {
             return number.doubleValue() == 0.0;
         }
     }
-    
+
     /**
      * Parses the given {@link String} to {@link BigDecimal}.
      * 
@@ -381,7 +381,7 @@ public final class NumberUtil {
         if (numberString == null) {
             return null;
         }
-        
+
         String cleanNumberString = NUMBER_CLEAN_PATTERN.matcher(numberString).replaceAll("");
         Matcher prefixMatcher = NUMBER_PREFIX_PATTERN.matcher(cleanNumberString);
         if (!prefixMatcher.find()) {
@@ -391,7 +391,7 @@ public final class NumberUtil {
         String signPart = prefixMatcher.group("sign");
         String wholePart = prefixMatcher.group("whole");
         String fracPart = prefixMatcher.group("frac");
-        
+
         StringBuilder decimalBuilder = new StringBuilder();
         decimalBuilder.append(signPart);
         decimalBuilder.append(wholePart != null ? wholePart : "0");

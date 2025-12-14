@@ -6,20 +6,20 @@ import java.util.regex.Pattern;
 
 // TODO: extend functionality, add escape support (XXX: escaped sql string literals?)
 public class LikeMatcher implements Predicate<String> {
-    
+
     private static final Pattern WILDCARD_PATTERN = Pattern.compile(
             "(?<fixed>.*?)(?:(?<single>_)|(?<any>%)|$)");
-    
+
     private static final String FIXED_GROUPNAME = "fixed";
-    
+
     private static final String SINGLE_GROUPNAME = "single";
-    
+
     private static final String ANY_GROUPNAME = "any";
-    
+
 
     private final Pattern pattern;
-    
-    
+
+
     public LikeMatcher(String likePattern) {
         StringBuilder patternBuilder = new StringBuilder();
         Matcher matcher = WILDCARD_PATTERN.matcher(likePattern);
@@ -40,5 +40,5 @@ public class LikeMatcher implements Predicate<String> {
     public boolean test(String value) {
         return pattern.matcher(value).matches();
     }
-    
+
 }

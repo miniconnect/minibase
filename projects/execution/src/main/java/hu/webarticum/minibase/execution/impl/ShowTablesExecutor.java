@@ -24,23 +24,23 @@ public class ShowTablesExecutor implements ThrowingQueryExecutor {
     public MiniResult executeThrowing(StorageAccess storageAccess, SessionState state, Query query) {
         return executeInternal(storageAccess, state, (ShowTablesQuery) query);
     }
-    
+
     private MiniResult executeInternal(
             StorageAccess storageAccess, SessionState state, ShowTablesQuery showTablesQuery) {
         String schemaName = showTablesQuery.from();
-        
+
         if (schemaName == null) {
             schemaName = state.getCurrentSchema();
         }
         if (schemaName == null) {
             throw PredefinedError.SCHEMA_NOT_SELECTED.toException();
         }
-        
+
         Schema schema = storageAccess.schemas().get(schemaName);
         if (schema == null) {
             throw PredefinedError.SCHEMA_NOT_FOUND.toException(schemaName);
         }
-        
+
         ImmutableList<String> tableNames = schema.tables().names();
         String like = showTablesQuery.like();
         if (like != null) {
@@ -60,5 +60,5 @@ public class ShowTablesExecutor implements ThrowingQueryExecutor {
     private boolean match(String like, String tableName) {
         return new LikeMatcher(like).test(tableName);
     }
-    
+
 }

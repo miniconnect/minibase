@@ -7,12 +7,12 @@ import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
 
 public class OrExpression implements Expression {
-    
+
     private final Expression leftOperand;
-    
+
     private final Expression rightOperand;
-    
-    
+
+
     public OrExpression(Expression leftOperand, Expression rightOperand) {
         this.leftOperand = leftOperand;
         this.rightOperand = rightOperand;
@@ -22,7 +22,7 @@ public class OrExpression implements Expression {
     public Expression leftOperand() {
         return leftOperand;
     }
-    
+
     public Expression rightOperand() {
         return rightOperand;
     }
@@ -41,7 +41,7 @@ public class OrExpression implements Expression {
     public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
         return Boolean.class;
     }
-    
+
     @Override
     public boolean isNullable() {
         return leftOperand.isNullable() || rightOperand.isNullable();
@@ -63,10 +63,10 @@ public class OrExpression implements Expression {
 
         return BooleanUtil.boolify(rightOperand.evaluate(values));
     }
-    
+
     @Override
     public String automaticName() {
         return leftOperand.automaticName() + " OR " + rightOperand.automaticName();
     }
-    
+
 }

@@ -8,31 +8,31 @@ import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
 
 public class OrderRelationExpression implements Expression {
-    
+
     public enum Operation {
-        
+
         LESS("<"), LESS_EQ("<="), GREATER(">"), GREATER_EQ(">=");
-        
+
         private final String operator;
-        
+
         private Operation(String operator) {
             this.operator = operator;
         }
-        
+
         public String operator() {
             return operator;
         }
-        
+
     }
 
-    
+
     private final Operation operation;
-    
+
     private final Expression leftOperand;
-    
+
     private final Expression rightOperand;
-    
-    
+
+
     public OrderRelationExpression(Operation operation, Expression leftOperand, Expression rightOperand) {
         this.operation = operation;
         this.leftOperand = leftOperand;
@@ -43,11 +43,11 @@ public class OrderRelationExpression implements Expression {
     public Operation operation() {
         return operation;
     }
-    
+
     public Expression leftOperand() {
         return leftOperand;
     }
-    
+
     public Expression rightOperand() {
         return rightOperand;
     }
@@ -66,7 +66,7 @@ public class OrderRelationExpression implements Expression {
     public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
         return Boolean.class;
     }
-    
+
     @Override
     public boolean isNullable() {
         return leftOperand.isNullable() || rightOperand.isNullable();
@@ -76,7 +76,7 @@ public class OrderRelationExpression implements Expression {
     public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
         return leftOperand.isNullable(nullabilities) || rightOperand.isNullable(nullabilities);
     }
-    
+
     @Override
     public Object evaluate(ImmutableMap<Parameter, Object> values) {
         Object leftValue = leftOperand.evaluate(values);
@@ -98,7 +98,7 @@ public class OrderRelationExpression implements Expression {
         } catch (IllegalArgumentException e) {
             return compare(leftValue.toString(), rightValue.toString());
         }
-        
+
         if (!(convertedLeftValue instanceof Comparable)) {
             return compare(leftValue.toString(), rightValue.toString());
         }
@@ -121,10 +121,10 @@ public class OrderRelationExpression implements Expression {
                 return cmp >= 0;
         }
     }
-    
+
     @Override
     public String automaticName() {
         return leftOperand.automaticName() + " " + operation.operator() + " " + rightOperand.automaticName();
     }
-    
+
 }

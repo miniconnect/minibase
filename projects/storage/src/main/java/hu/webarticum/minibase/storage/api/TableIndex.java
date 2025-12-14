@@ -3,36 +3,36 @@ package hu.webarticum.minibase.storage.api;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 
 public interface TableIndex extends NamedResource {
-    
+
     public enum InclusionMode { INCLUDE, EXCLUDE }
-    
+
     public enum NullsMode { WITH_NULLS, NO_NULLS, NULLS_ONLY }
-    
+
     public enum SortMode {
-        
+
         UNSORTED(false, true, true),
         ASC_NULLS_FIRST(true, true, true),
         ASC_NULLS_LAST(true, true, false),
         DESC_NULLS_LAST(true, false, false),
         DESC_NULLS_FIRST(true, false, true),
-        
+
         ;
-        
-        
+
+
         private final boolean sorted;
 
         private final boolean asc;
-        
+
         private final boolean nullsFirst;
-        
-        
+
+
         private SortMode(boolean sorted, boolean asc, boolean nullsFirst) {
             this.sorted = sorted;
             this.asc = asc;
             this.nullsFirst = nullsFirst;
         }
 
-        
+
         public boolean isSorted() {
             return sorted;
         }
@@ -44,9 +44,9 @@ public interface TableIndex extends NamedResource {
         public boolean isNullsFirst() {
             return nullsFirst;
         }
-        
+
     }
-    
+
 
     public boolean isUnique();
 
@@ -93,5 +93,5 @@ public interface TableIndex extends NamedResource {
     public default TableSelection find(Object value) {
         return findMulti(ImmutableList.of(value));
     }
-    
+
 }

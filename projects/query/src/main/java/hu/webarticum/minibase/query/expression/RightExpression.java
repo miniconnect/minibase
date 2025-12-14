@@ -8,18 +8,18 @@ import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
 
 public class RightExpression implements Expression {
-    
+
     private final Expression inputExpression;
-    
+
     private final Expression lengthExpression;
-    
-    
+
+
     public RightExpression(Expression inputExpression, Expression lengthExpression) {
         this.inputExpression = inputExpression;
         this.lengthExpression = lengthExpression;
     }
-    
-    
+
+
     public Expression inputExpression() {
         return inputExpression;
     }
@@ -42,7 +42,7 @@ public class RightExpression implements Expression {
     public Class<?> type(ImmutableMap<Parameter, Class<?>> values) {
         return String.class;
     }
-    
+
     @Override
     public boolean isNullable() {
         return inputExpression.isNullable() || lengthExpression.isNullable();
@@ -52,7 +52,7 @@ public class RightExpression implements Expression {
     public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
         return inputExpression.isNullable(nullabilities) || lengthExpression.isNullable(nullabilities);
     }
-    
+
     @Override
     public Object evaluate(ImmutableMap<Parameter, Object> values) {
         Object inputValue = inputExpression.evaluate(values);
@@ -64,7 +64,7 @@ public class RightExpression implements Expression {
         if (lengthValue == null) {
             return null;
         }
-        
+
         String inputString = StringUtil.stringify(inputValue);
         int inputLength = inputString.length();
         int length = NumberUtil.asInt(lengthValue);
@@ -82,10 +82,10 @@ public class RightExpression implements Expression {
 
         return inputString.substring(inputLength - length);
     }
-    
+
     @Override
     public String automaticName() {
         return "RIGHT(" + inputExpression.automaticName() + ", " + lengthExpression.automaticName() + ")";
     }
-    
+
 }

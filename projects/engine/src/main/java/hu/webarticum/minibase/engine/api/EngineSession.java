@@ -7,7 +7,7 @@ import hu.webarticum.minibase.storage.api.StorageAccess;
 import hu.webarticum.miniconnect.lang.CheckableCloseable;
 
 public interface EngineSession extends CheckableCloseable {
-    
+
     public Engine engine();
 
     public SessionState state();
@@ -17,5 +17,5 @@ public interface EngineSession extends CheckableCloseable {
     public QueryExecutor queryExecutor();
 
     public StorageAccess storageAccess();
-    
+
 }

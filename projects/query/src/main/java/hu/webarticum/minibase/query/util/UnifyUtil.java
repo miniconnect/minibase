@@ -11,7 +11,7 @@ public final class UnifyUtil {
         // utility class
     }
 
-    
+
     public static Class<?> unifyTypes(Class<?>... types) {
         return unifyTypes(Arrays.asList(types));
     }

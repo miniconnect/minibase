@@ -18,7 +18,7 @@ public final class StringUtil {
         // utility class
     }
 
-    
+
     public static String stringify(Object value) {
         if (value == null) {
             return null;
@@ -44,7 +44,7 @@ public final class StringUtil {
             return value.toString();
         }
     }
-    
+
     public static String stringify(Object value, Integer size) {
         String stringValue = stringify(value);
         if (stringValue == null || size == null) {

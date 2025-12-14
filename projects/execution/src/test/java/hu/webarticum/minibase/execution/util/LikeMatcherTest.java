@@ -47,5 +47,5 @@ class LikeMatcherTest {
                 "lar", "lorem", "larlar");
         assertThat(input.filter(matcher)).isEqualTo(expectedOutput);
     }
-    
+
 }

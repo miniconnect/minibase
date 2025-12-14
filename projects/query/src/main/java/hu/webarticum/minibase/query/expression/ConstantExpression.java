@@ -10,12 +10,12 @@ import hu.webarticum.miniconnect.lang.LargeInteger;
 public class ConstantExpression implements Expression {
 
     private final Object value;
-    
-    
+
+
     public ConstantExpression(Object value) {
         this.value = value;
     }
-    
+
 
     public Object value() {
         return value;
@@ -34,17 +34,17 @@ public class ConstantExpression implements Expression {
         Class<?> clazz = value != null ? value.getClass() : Void.class;
         return Optional.of(clazz);
     }
-    
+
     @Override
     public boolean isNullable() {
         return value == null;
     }
-    
+
     @Override
     public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
         return value == null;
     }
-    
+
     @Override
     public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
         if (value instanceof LargeInteger) {
@@ -63,7 +63,7 @@ public class ConstantExpression implements Expression {
         if (value == null) {
             return "NULL";
         }
-        
+
         String stringValue = value.toString();
         boolean stringLike = (value instanceof CharSequence) || (value instanceof ByteString);
         return stringLike ? "'" + stringValue + "'" : stringValue;

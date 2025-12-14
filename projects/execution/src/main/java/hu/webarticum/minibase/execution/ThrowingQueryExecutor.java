@@ -23,7 +23,7 @@ public interface ThrowingQueryExecutor extends QueryExecutor {
             return PredefinedError.QUERY_INTERRUPTED.toResult();
         }
     }
-    
+
     public MiniResult executeThrowing(StorageAccess storageAccess, SessionState state, Query query);
 
 }

@@ -8,18 +8,18 @@ import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.LargeInteger;
 
 public class SimpleSelection implements TableSelection {
-    
+
     private final Predicate<LargeInteger> containmentPredicate;
-    
+
     private final Iterable<LargeInteger> rowIndexes;
-    
+
     private final Iterable<LargeInteger> reverseRowIndexes;
-    
+
 
     public SimpleSelection(LargeInteger... rowIndexes) {
         this(ImmutableList.of(rowIndexes));
     }
-    
+
     public SimpleSelection(ImmutableList<LargeInteger> rowIndexes) {
         this(
                 rowIndexes::contains,
@@ -35,7 +35,7 @@ public class SimpleSelection implements TableSelection {
         this.rowIndexes = rowIndexes;
         this.reverseRowIndexes = reverseRowIndexes;
     }
-    
+
 
     @Override
     public Iterator<LargeInteger> iterator() {
@@ -46,12 +46,12 @@ public class SimpleSelection implements TableSelection {
     public boolean containsRow(LargeInteger rowIndex) {
         return containmentPredicate.test(rowIndex);
     }
-    
+
     public SimpleSelection reversed() {
         return new SimpleSelection(
                 containmentPredicate,
                 reverseRowIndexes,
                 rowIndexes);
     }
-    
+
 }

@@ -7,14 +7,14 @@ import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
 
 public class RegexpExpression implements Expression {
-    
+
     private final Expression givenExpression;
-    
+
     private final Expression patternExpression;
 
     private final Pattern precompiledPattern;
-    
-    
+
+
     public RegexpExpression(Expression givenExpression, Expression patternExpression) {
         this.givenExpression = givenExpression;
         this.patternExpression = patternExpression;
@@ -44,7 +44,7 @@ public class RegexpExpression implements Expression {
     public Expression givenExpression() {
         return givenExpression;
     }
-    
+
     public Expression patternExpression() {
         return patternExpression;
     }
@@ -63,7 +63,7 @@ public class RegexpExpression implements Expression {
     public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
         return Boolean.class;
     }
-    
+
     @Override
     public boolean isNullable() {
         return givenExpression.isNullable() || patternExpression.isNullable();
@@ -73,7 +73,7 @@ public class RegexpExpression implements Expression {
     public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
         return givenExpression.isNullable(nullabilities) || patternExpression.isNullable(nullabilities);
     }
-    
+
     @Override
     public Object evaluate(ImmutableMap<Parameter, Object> values) {
         Object givenValue = givenExpression.evaluate(values);
@@ -98,10 +98,10 @@ public class RegexpExpression implements Expression {
         Object patternValue = patternExpression.evaluate(values);
         return compilePattern(patternValue);
     }
-    
+
     @Override
     public String automaticName() {
         return givenExpression.automaticName() + " REGEXP " + patternExpression.automaticName();
     }
-    
+
 }
