@@ -64,9 +64,11 @@ public class MultiComparator implements Comparator<ImmutableList<Object>> {
                 Comparator<?> comparator, boolean nullable, boolean asc, boolean nullsLow) {
             Comparator<?> transformedComparator = comparator;
             if (nullable) {
+                @SuppressWarnings("unchecked")
+                Comparator<Object> objectComparator = (Comparator<Object>) transformedComparator;
                 transformedComparator = nullsLow ?
-                        Comparator.nullsFirst(comparator) :
-                        Comparator.nullsLast(comparator);
+                        Comparator.nullsFirst(objectComparator) :
+                        Comparator.nullsLast(objectComparator);
             }
             if (!asc) {
                 transformedComparator = transformedComparator.reversed();
