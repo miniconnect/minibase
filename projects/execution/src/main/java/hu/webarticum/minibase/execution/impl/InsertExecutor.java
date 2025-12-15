@@ -110,7 +110,7 @@ public class InsertExecutor implements ThrowingQueryExecutor {
             state.setLastInsertId(lastInsertId);
         }
 
-        return new StoredResult();
+        return StoredResult.ofSuccess();
     }
 
     private LargeInteger includeDefaultValues(Map<String, Object> insertValueMap, Table table, SessionState state) {

@@ -34,14 +34,11 @@ public class ShowSchemasExecutor implements ThrowingQueryExecutor {
             schemaNames = schemaNames.filter(schemaName -> match(like, schemaName));
         }
         ValueTranslator stringTranslator = StandardValueType.STRING.defaultTranslator();
-        MiniColumnHeader columnHeader = new StoredColumnHeader(
-                COLUMN_NAME,
-                false,
-                stringTranslator.definition());
+        MiniColumnHeader columnHeader = StoredColumnHeader.from(COLUMN_NAME, false, stringTranslator.definition());
         ImmutableList<MiniColumnHeader> columnHeaders = ImmutableList.of(columnHeader);
         ImmutableList<ImmutableList<MiniValue>> data = schemaNames.map(
                 tableName -> ImmutableList.of(stringTranslator.encodeFully(tableName)));
-        return new StoredResult(new StoredResultSetData(columnHeaders, data));
+        return StoredResult.of(StoredResultSetData.from(columnHeaders, data));
     }
 
     private boolean match(String like, String tableName) {

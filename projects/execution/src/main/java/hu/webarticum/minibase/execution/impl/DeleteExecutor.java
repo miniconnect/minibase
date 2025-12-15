@@ -65,7 +65,7 @@ public class DeleteExecutor implements ThrowingQueryExecutor {
 
         table.applyPatch(patch);
 
-        return new StoredResult();
+        return StoredResult.ofSuccess();
     }
 
 }

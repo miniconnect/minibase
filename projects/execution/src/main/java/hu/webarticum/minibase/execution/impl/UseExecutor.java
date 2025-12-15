@@ -23,7 +23,7 @@ public class UseExecutor implements ThrowingQueryExecutor {
         }
 
         state.setCurrentSchema(schemaName);
-        return new StoredResult();
+        return StoredResult.ofSuccess();
     }
 
 }

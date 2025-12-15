@@ -69,12 +69,12 @@ public enum PredefinedError {
         return parameters.length > 0 ? String.format(messageFormat, parameters) : messageFormat;
     }
 
-    public MiniError toError(Object... messageParameters) {
-        return new StoredError(code, sqlState, message(messageParameters));
+    public StoredError toError(Object... messageParameters) {
+        return StoredError.of(code, sqlState, message(messageParameters));
     }
 
-    public MiniResult toResult(Object... messageParameters) {
-        return new StoredResult(toError(messageParameters));
+    public StoredResult toResult(Object... messageParameters) {
+        return StoredResult.ofError(toError(messageParameters));
     }
 
     public MiniErrorException toException(Object... messageParameters) {

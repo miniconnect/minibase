@@ -46,7 +46,7 @@ public class StandaloneSelectExecutor implements ThrowingQueryExecutor {
                 .map((i, a) -> createColumnHeader(a, types.get(i), nullabilities.get(i)));
         ImmutableList<ImmutableList<MiniValue>> values = standaloneSelectQuery.expressionMatrix()
                 .map(r -> r.map((i, e) -> craftValue(e, types.get(i), state)));
-        return new StoredResult(new StoredResultSetData(columnHeaders, values));
+        return StoredResult.of(StoredResultSetData.from(columnHeaders, values));
     }
 
     private String ensureAlias(String alias, Expression firstExpression) {
@@ -134,7 +134,7 @@ public class StandaloneSelectExecutor implements ThrowingQueryExecutor {
     private MiniColumnHeader createColumnHeader(String alias, Class<?> type, boolean nullable) {
         ValueTranslator translator = ResultUtil.createValueTranslatorFor(type);
         MiniValueDefinition columnDefinition = translator.definition();
-        return new StoredColumnHeader(alias, nullable, columnDefinition);
+        return StoredColumnHeader.from(alias, nullable, columnDefinition);
     }
 
     private MiniValue craftValue(Expression expression, Class<?> type, SessionState state) {

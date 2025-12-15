@@ -12,7 +12,6 @@ import hu.webarticum.minibase.query.parser.SqlParser;
 import hu.webarticum.minibase.query.query.Query;
 import hu.webarticum.minibase.query.state.SessionState;
 import hu.webarticum.minibase.storage.api.StorageAccess;
-import hu.webarticum.miniconnect.api.MiniError;
 import hu.webarticum.miniconnect.api.MiniErrorException;
 import hu.webarticum.miniconnect.api.MiniLargeDataSaveResult;
 import hu.webarticum.miniconnect.api.MiniResult;
@@ -54,7 +53,7 @@ public class FrameworkSession implements MiniSession {
             query = parseAndMeasure(engineSession.sqlParser(), sql);
         } catch (Exception e) {
             logger.error("Unable to parse query string: " + sql, e);
-            return new StoredResult(errorOfException(e));
+            return StoredResult.ofError(errorOfException(e));
         }
         return execute(query);
     }
@@ -79,7 +78,7 @@ public class FrameworkSession implements MiniSession {
             return executeThrowing(query);
         } catch (Exception e) {
             logger.error("Query execution failed", e);
-            return new StoredResult(errorOfException(e));
+            return StoredResult.ofError(errorOfException(e));
         }
     }
 
@@ -136,19 +135,19 @@ public class FrameworkSession implements MiniSession {
         } catch (Exception e) {
             exception = e;
         }
-        return new StoredLargeDataSaveResult(errorOfException(exception));
+        return StoredLargeDataSaveResult.ofError(errorOfException(exception));
     }
 
     private MiniLargeDataSaveResult putLargeDataThrowing(
             String variableName, long length, InputStream dataSource) throws InterruptedException, ExecutionException {
         if (length > Integer.MAX_VALUE) {
-            return new StoredLargeDataSaveResult(false, new StoredError(100, "00100", "Too large data"));
+            return StoredLargeDataSaveResult.ofError(StoredError.of(100, "00100", "Too large data"));
         }
 
         ByteString content = ByteString.fromInputStream(dataSource, (int) length);
         engineSession.state().setUserVariable(variableName, content);
 
-        return new StoredLargeDataSaveResult();
+        return StoredLargeDataSaveResult.ofSuccess();
     }
 
     @Override
@@ -161,17 +160,13 @@ public class FrameworkSession implements MiniSession {
         return engineSession.isClosed();
     }
 
-    private MiniError errorOfException(Throwable exception) {
+    private StoredError errorOfException(Throwable exception) {
         if (!(exception instanceof MiniErrorException)) {
             String message = extractMessage(exception);
-            return new StoredError(99999, "99999", message);
+            return StoredError.of(99999, "99999", message);
         }
 
-        MiniErrorException errorException = (MiniErrorException) exception;
-        return new StoredError(
-                errorException.code(),
-                errorException.sqlState(),
-                errorException.getMessage());
+        return StoredError.from((MiniErrorException) exception);
     }
 
     private String extractMessage(Throwable exception) {

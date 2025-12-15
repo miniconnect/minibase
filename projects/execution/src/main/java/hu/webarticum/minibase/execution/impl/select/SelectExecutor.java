@@ -84,7 +84,7 @@ public class SelectExecutor implements ThrowingQueryExecutor {
         try {
             addFilters(selectQuery.where(), reorderedTableEntries, state);
         } catch (IncompatibleFiltersException e) {
-            return new StoredResult(new StoredResultSetData(columnHeaders, ImmutableList.empty()));
+            return StoredResult.of(StoredResultSetData.from(columnHeaders, ImmutableList.empty()));
         }
 
         LargeInteger offset = TableQueryUtil.resolveLimitParameter(selectQuery.offset(), state);
@@ -121,7 +121,7 @@ public class SelectExecutor implements ThrowingQueryExecutor {
                 .map(r -> selectRow(r, selectItemEntries, reorderedTableEntries, state))
                 .collect(ImmutableList.createCollector());
 
-        return new StoredResult(new StoredResultSetData(columnHeaders, data));
+        return StoredResult.of(StoredResultSetData.from(columnHeaders, data));
     }
 
     private LinkedHashMap<String, TableEntry> collectTableEntries(
@@ -762,7 +762,7 @@ public class SelectExecutor implements ThrowingQueryExecutor {
         boolean isNullable =
                 selectItemEntry.columnDefinition.isNullable() ||
                 (tableAlias != null && isTransitivelyLeftJoined(tableAlias, tableEntries));
-        return new StoredColumnHeader(fieldAlias, isNullable, valueDefinition);
+        return StoredColumnHeader.from(fieldAlias, isNullable, valueDefinition);
     }
 
     private String tableAliasOf(ExpressionSelectItem expressionSelectItem) {

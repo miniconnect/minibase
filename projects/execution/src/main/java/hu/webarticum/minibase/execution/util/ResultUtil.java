@@ -26,8 +26,8 @@ public final class ResultUtil {
     public static MiniResult createEmptySingleColumnResult(String columnName, Class<?> clazz) {
         ValueTranslator translator = createValueTranslatorFor(clazz);
         MiniValueDefinition columnDefinition = translator.definition();
-        MiniColumnHeader columnHeader = new StoredColumnHeader(columnName, false, columnDefinition);
-        return new StoredResult(new StoredResultSetData(ImmutableList.of(columnHeader), ImmutableList.empty()));
+        MiniColumnHeader columnHeader = StoredColumnHeader.from(columnName, false, columnDefinition);
+        return StoredResult.of(StoredResultSetData.from(ImmutableList.of(columnHeader), ImmutableList.empty()));
     }
 
     public static MiniResult createSingleValueResult(String columnName, Object content) {
@@ -35,9 +35,9 @@ public final class ResultUtil {
         ValueTranslator translator = createValueTranslatorFor(clazz);
         MiniValueDefinition columnDefinition = translator.definition();
         boolean nullable = content == null;
-        MiniColumnHeader columnHeader = new StoredColumnHeader(columnName, nullable, columnDefinition);
+        MiniColumnHeader columnHeader = StoredColumnHeader.from(columnName, nullable, columnDefinition);
         MiniValue value = translator.encodeFully(content);
-        return new StoredResult(new StoredResultSetData(ImmutableList.of(columnHeader), ImmutableList.of(ImmutableList.of(value))));
+        return StoredResult.of(StoredResultSetData.from(ImmutableList.of(columnHeader), ImmutableList.of(ImmutableList.of(value))));
     }
 
     // FIXME: custom translators?

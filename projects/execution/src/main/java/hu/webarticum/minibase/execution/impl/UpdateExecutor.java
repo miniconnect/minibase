@@ -84,7 +84,7 @@ public class UpdateExecutor implements ThrowingQueryExecutor {
             }
         }
 
-        return new StoredResult();
+        return StoredResult.ofSuccess();
     }
 
 }

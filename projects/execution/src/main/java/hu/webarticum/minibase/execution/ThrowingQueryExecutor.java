@@ -17,7 +17,7 @@ public interface ThrowingQueryExecutor extends QueryExecutor {
         try (CheckableCloseable lock = storageAccess.lockManager().lockExclusively()) {
             return executeThrowing(storageAccess, state, query);
         } catch (MiniErrorException e) {
-            return new StoredResult(StoredError.of(e));
+            return StoredResult.ofError(StoredError.from(e));
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             return PredefinedError.QUERY_INTERRUPTED.toResult();

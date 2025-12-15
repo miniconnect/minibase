@@ -23,7 +23,7 @@ public class SetVariableExecutor implements ThrowingQueryExecutor {
 
         state.setUserVariable(variableName, resolvedValue);
 
-        return new StoredResult();
+        return StoredResult.ofSuccess();
     }
 
 }
