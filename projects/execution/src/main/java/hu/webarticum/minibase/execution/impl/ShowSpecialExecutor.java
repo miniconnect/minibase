@@ -1,6 +1,6 @@
 package hu.webarticum.minibase.execution.impl;
 
-import hu.webarticum.minibase.execution.ThrowingQueryExecutor;
+import hu.webarticum.minibase.execution.SharedThrowingQueryExecutor;
 import hu.webarticum.minibase.execution.util.ResultUtil;
 import hu.webarticum.minibase.execution.util.TableQueryUtil;
 import hu.webarticum.minibase.query.expression.SpecialValueExpression;
@@ -11,7 +11,7 @@ import hu.webarticum.minibase.query.state.SessionState;
 import hu.webarticum.minibase.storage.api.StorageAccess;
 import hu.webarticum.miniconnect.api.MiniResult;
 
-public class ShowSpecialExecutor implements ThrowingQueryExecutor {
+public class ShowSpecialExecutor implements SharedThrowingQueryExecutor {
 
     @Override
     public MiniResult executeThrowing(StorageAccess storageAccess, SessionState state, Query query) {

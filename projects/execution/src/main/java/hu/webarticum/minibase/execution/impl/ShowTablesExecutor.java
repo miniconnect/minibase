@@ -1,7 +1,7 @@
 package hu.webarticum.minibase.execution.impl;
 
 import hu.webarticum.minibase.common.error.PredefinedError;
-import hu.webarticum.minibase.execution.ThrowingQueryExecutor;
+import hu.webarticum.minibase.execution.SharedThrowingQueryExecutor;
 import hu.webarticum.minibase.execution.util.LikeMatcher;
 import hu.webarticum.minibase.query.query.Query;
 import hu.webarticum.minibase.query.query.ShowTablesQuery;
@@ -18,7 +18,7 @@ import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.record.translator.ValueTranslator;
 import hu.webarticum.miniconnect.record.type.StandardValueType;
 
-public class ShowTablesExecutor implements ThrowingQueryExecutor {
+public class ShowTablesExecutor implements SharedThrowingQueryExecutor {
 
     @Override
     public MiniResult executeThrowing(StorageAccess storageAccess, SessionState state, Query query) {

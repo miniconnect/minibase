@@ -17,7 +17,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import hu.webarticum.minibase.common.error.PredefinedError;
-import hu.webarticum.minibase.execution.ThrowingQueryExecutor;
+import hu.webarticum.minibase.execution.SharedThrowingQueryExecutor;
 import hu.webarticum.minibase.execution.util.TableQueryUtil;
 import hu.webarticum.minibase.query.expression.ColumnExpression;
 import hu.webarticum.minibase.query.expression.ColumnParameter;
@@ -57,7 +57,7 @@ import hu.webarticum.miniconnect.record.translator.JavaTranslator;
 import hu.webarticum.miniconnect.record.translator.ValueTranslator;
 import hu.webarticum.miniconnect.record.type.StandardValueType;
 
-public class SelectExecutor implements ThrowingQueryExecutor {
+public class SelectExecutor implements SharedThrowingQueryExecutor {
 
     @Override
     public MiniResult executeThrowing(StorageAccess storageAccess, SessionState state, Query query) {

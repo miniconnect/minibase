@@ -3,7 +3,7 @@ package hu.webarticum.minibase.execution.impl;
 import java.util.Map;
 
 import hu.webarticum.minibase.common.error.PredefinedError;
-import hu.webarticum.minibase.execution.ThrowingQueryExecutor;
+import hu.webarticum.minibase.execution.SharedThrowingQueryExecutor;
 import hu.webarticum.minibase.execution.util.ResultUtil;
 import hu.webarticum.minibase.execution.util.TableQueryUtil;
 import hu.webarticum.minibase.query.query.Query;
@@ -19,7 +19,7 @@ import hu.webarticum.miniconnect.api.MiniResult;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.LargeInteger;
 
-public class SelectCountExecutor implements ThrowingQueryExecutor {
+public class SelectCountExecutor implements SharedThrowingQueryExecutor {
 
     private static final String DEFAULT_RESULT_COLUMN_NAME = "COUNT";
 

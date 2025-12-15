@@ -2,7 +2,7 @@ package hu.webarticum.minibase.execution.impl;
 
 import java.util.Optional;
 
-import hu.webarticum.minibase.execution.ThrowingQueryExecutor;
+import hu.webarticum.minibase.execution.SharedThrowingQueryExecutor;
 import hu.webarticum.minibase.execution.util.ResultUtil;
 import hu.webarticum.minibase.execution.util.TableQueryUtil;
 import hu.webarticum.minibase.query.expression.ColumnParameter;
@@ -26,7 +26,7 @@ import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
 import hu.webarticum.miniconnect.record.translator.ValueTranslator;
 
-public class StandaloneSelectExecutor implements ThrowingQueryExecutor {
+public class StandaloneSelectExecutor implements SharedThrowingQueryExecutor {
 
     @Override
     public MiniResult executeThrowing(StorageAccess storageAccess, SessionState state, Query query) {

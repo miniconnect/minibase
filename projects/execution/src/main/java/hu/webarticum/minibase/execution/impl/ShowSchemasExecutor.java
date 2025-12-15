@@ -1,6 +1,6 @@
 package hu.webarticum.minibase.execution.impl;
 
-import hu.webarticum.minibase.execution.ThrowingQueryExecutor;
+import hu.webarticum.minibase.execution.SharedThrowingQueryExecutor;
 import hu.webarticum.minibase.execution.util.LikeMatcher;
 import hu.webarticum.minibase.query.query.Query;
 import hu.webarticum.minibase.query.query.ShowSchemasQuery;
@@ -16,7 +16,7 @@ import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.record.translator.ValueTranslator;
 import hu.webarticum.miniconnect.record.type.StandardValueType;
 
-public class ShowSchemasExecutor implements ThrowingQueryExecutor {
+public class ShowSchemasExecutor implements SharedThrowingQueryExecutor {
 
     private static final String COLUMN_NAME = "Schemas";
 
