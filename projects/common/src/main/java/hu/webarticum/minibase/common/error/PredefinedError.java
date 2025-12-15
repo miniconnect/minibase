@@ -1,8 +1,6 @@
 package hu.webarticum.minibase.common.error;
 
-import hu.webarticum.miniconnect.api.MiniError;
 import hu.webarticum.miniconnect.api.MiniErrorException;
-import hu.webarticum.miniconnect.api.MiniResult;
 import hu.webarticum.miniconnect.impl.result.StoredError;
 import hu.webarticum.miniconnect.impl.result.StoredResult;
 
