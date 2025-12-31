@@ -22,7 +22,7 @@ import hu.webarticum.miniconnect.lang.LargeInteger;
 
 /**
  * Utility class for transforming objects to numbers for using them in arithmetic operations.
- * 
+ *
  * <p>One of the main goals is to prevent arithmetic overflows.</p>
  */
 public final class NumberUtil {
@@ -42,18 +42,18 @@ public final class NumberUtil {
 
     /**
      * Searches the best fitting numeric type for the given type.
-     * 
+     *
      * <p>Returns with one of the following class types:</p>
-     * 
+     *
      * <ul>
      * <li><code>Void.class</code></li>
      * <li><code>LargeInteger.class</code></li>
      * <li><code>BigDecimal.class</code></li>
      * <li><code>Double.class</code></li>
      * </ul>
-     * 
+     *
      * <p>This method is consistent with {@link #numberify(Object)}.</p>
-     * 
+     *
      * @param type Any object
      * @return the Class instance
      */
@@ -94,16 +94,16 @@ public final class NumberUtil {
 
     /**
      * Searches the best fitting common numeric type for the given types.
-     * 
+     *
      * <p>Returns with one of the following class types:</p>
-     * 
+     *
      * <ul>
      * <li><code>Void.class</code></li>
      * <li><code>LargeInteger.class</code></li>
      * <li><code>BigDecimal.class</code></li>
      * <li><code>Double.class</code></li>
      * </ul>
-     * 
+     *
      * @param types Any types
      * @return The common class
      */
@@ -222,16 +222,16 @@ public final class NumberUtil {
 
     /**
      * Converts an object to one of the following types:
-     * 
+     *
      * <ul>
      * <li><code>null</code></li>
      * <li><code>LargeInteger</code></li>
      * <li><code>BigDecimal</code></li>
      * <li><code>Double</code></li>
      * </ul>
-     * 
+     *
      * <p>This method is consistent with {@link #numberifyType(Class)}.</p>
-     * 
+     *
      * @param object Any object
      * @return the Number instance
      */
@@ -298,7 +298,7 @@ public final class NumberUtil {
 
     /**
      * Converts the given object to int losslessly if possible.
-     * 
+     *
      * @param object Any object
      * @throws IllegalArgumentException if the lossless conversion is not possible
      * @return the int value if applicable
@@ -344,11 +344,11 @@ public final class NumberUtil {
 
     /**
      * Checks if the given number is zero.
-     * 
+     *
      * <p>Appropriate for non-zero checks and boolean conversion.</p>
      * <p>In this context, null is not zero.</p>
      * <p>Possible <code>numberify()</code> results are handled first for performance reasons.</p>
-     * 
+     *
      * @param number A numberic object
      * @return true if the given number is zero, false otherwise
      */
@@ -374,7 +374,7 @@ public final class NumberUtil {
 
     /**
      * Parses the given {@link String} to {@link BigDecimal}.
-     * 
+     *
      * <p>Works for any input (cleans the text first).</p>
      */
     public static BigDecimal parse(String numberString) {

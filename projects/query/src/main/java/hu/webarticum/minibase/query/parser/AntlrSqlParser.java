@@ -917,7 +917,7 @@ public class AntlrSqlParser implements SqlParser {
             List<JoinPartContext> joinPartNodes, String tableAlias) {
         Set<String> previousTableAliases = new HashSet<>(joinPartNodes.size() + 1);
         previousTableAliases.add(tableAlias);
-        List<JoinItem> resultBuilder = new ArrayList<>(joinPartNodes.size()); 
+        List<JoinItem> resultBuilder = new ArrayList<>(joinPartNodes.size());
         for (JoinPartContext joinPartNode : joinPartNodes) {
             resultBuilder.add(parseJoinPartNode(joinPartNode, previousTableAliases));
         }

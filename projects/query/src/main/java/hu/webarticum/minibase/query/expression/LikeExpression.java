@@ -39,7 +39,7 @@ public class LikeExpression implements Expression {
 
         Object patternValue = ((ConstantExpression) patternExpression).evaluate(ImmutableMap.empty());
         Object escapeValue =
-                escapeExpression != null ? 
+                escapeExpression != null ?
                 ((ConstantExpression) escapeExpression).evaluate(ImmutableMap.empty()) :
                 null;
         return compilePattern(patternValue, escapeValue, caseInsensitive);
