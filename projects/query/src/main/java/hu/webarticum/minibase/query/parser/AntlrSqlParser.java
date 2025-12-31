@@ -1126,7 +1126,7 @@ public class AntlrSqlParser implements SqlParser {
     private String parseIdentifierNode(IdentifierContext identifierNode) {
         TerminalNode simpleNameNode = identifierNode.TOKEN_SIMPLENAME();
         if (simpleNameNode != null) {
-            return simpleNameNode.getText();
+            return simpleNameNode.getText().toLowerCase();
         }
 
         TerminalNode quotedNameNode = identifierNode.TOKEN_QUOTEDNAME();
