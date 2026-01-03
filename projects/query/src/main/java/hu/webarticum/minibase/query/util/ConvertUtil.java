@@ -32,7 +32,7 @@ public final class ConvertUtil {
         } else if (Temporal.class.isAssignableFrom(targetType)) {
             return TemporalUtil.convert(value, targetType);
         } else if (targetType == DateTimeDelta.class) {
-            return DateTimeDeltaUtil.deltaify(value);
+            return DateTimeDeltaUtil.deltaify(value, scale);
         } else {
             throw new IllegalArgumentException("Can not convert value to " + targetType);
         }

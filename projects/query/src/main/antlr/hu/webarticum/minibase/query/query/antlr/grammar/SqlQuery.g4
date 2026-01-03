@@ -115,15 +115,14 @@ unaryArithmeticExpression: ( PLUS | MINUS ) subExpression=expression;
 caseExpression: CASE (givenExpression=expression)? whenPart+ elsePart? END;
 whenPart: WHEN conditionExpression=expression THEN resultExpression=expression;
 elsePart: ELSE expression;
-intervalExpression: INTERVAL stringLiteral | INTERVAL integerLiteral intervalFieldName | INTERVAL decimalLiteral SECOND;
-intervalFieldName:
-    NANOSECOND | MICROSECOND | MILLISECOND | SECOND | MINUTE | HOUR |
-    DAY | WEEK | MONTH | QUARTER | YEAR | DECADE | CENTURY | MILLENNIUM;
+intervalExpression: INTERVAL ( integerLiteral | decimalLiteral | stringLiteral ) intervalSpecifier?;
 castExpression:
     CAST PAR_START expression AS typeConstruct PAR_END |
     CONVERT PAR_START expression COMMA typeConstruct PAR_END |
     CONVERT PAR_START typeConstruct COMMA expression PAR_END;
-typeConstruct: typeName ( PAR_START ( size=sizeParameter ( COMMA scale=sizeParameter )? )? PAR_END )?;
+typeConstruct: simpleTypeConstruct | intervalTypeConstruct;
+simpleTypeConstruct: typeName ( PAR_START ( size=sizeParameter ( COMMA scale=sizeParameter )? )? PAR_END )?;
+intervalTypeConstruct: INTERVAL intervalSpecifier;
 sizeParameter: TOKEN_INTEGER | stringLiteral;
 typeName:
     NULL | BOOLEAN | INTEGER |BIGINT | DECIMAL | FLOAT | NVARCHAR | CLOB | BINARY | VARBINARY | BLOB | DATE | TIME | DATETIME |
@@ -148,6 +147,9 @@ specialSelectableName:
 functionCall: functionName PAR_START expression ( COMMA expression )* PAR_END;
 functionName: identifier | functionNameToken;
 functionNameToken: LEFT | RIGHT;
+intervalSpecifier: ( fromItem=intervalSpecifierItem TO )? toItem=intervalSpecifierItem;
+intervalSpecifierItem: intervalFieldName ( PAR_START integerLiteral PAR_END )?;
+intervalFieldName: YEAR | MONTH | DAY | HOUR | MINUTE | SECOND;
 scopeableFieldName: ( tableName DOT )? fieldName;
 extendedValue: literal | variable;
 variable: AT identifier;
@@ -194,20 +196,12 @@ TIME: T I M E;
 DATETIME: D A T E T I M E;
 TIMESTAMP: T I M E S T A M P;
 INTERVAL: I N T E R V A L;
-NANOSECOND: N A N O S E C O N D;
-MICROSECOND: M I C R O S E C O N D;
-MILLISECOND: M I L L I S E C O N D;
 SECOND: S E C O N D;
 MINUTE: M I N U T E;
 HOUR: H O U R;
 DAY: D A Y;
-WEEK: W E E K;
 MONTH: M O N T H;
-QUARTER: Q U A R T E R;
 YEAR: Y E A R;
-DECADE: D E C A D E;
-CENTURY: C E N T U R Y;
-MILLENNIUM: M I L L E N N I U M;
 WITH: W I T H;
 WITHOUT: W I T H O U T;
 ZONE: Z O N E;
@@ -291,6 +285,8 @@ DIV: D I V;
 
 TRUE: T R U E;
 FALSE: F A L S E;
+
+TO: T O;
 
 TOKEN_SIMPLENAME: [\p{L}_] [\p{N}\p{L}_]* ;
 TOKEN_QUOTEDNAME: '"' ( '""' | ~["] )* '"';

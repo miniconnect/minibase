@@ -31,6 +31,9 @@ public final class NumberUtil {
 
     private static final Pattern NUMBER_CLEAN_PATTERN = Pattern.compile("[ _]");
 
+    private static final Pattern NUMBER_PATTERN = Pattern.compile(
+            "[+\\-]?(?:\\d+(?:\\.\\d*)?|\\.\\d+)(?:[eE][+\\-]?\\d+)?");
+
     private static final Pattern NUMBER_PREFIX_PATTERN = Pattern.compile(
             "^(?<sign>[+\\-]?)(?<whole>\\d+)?(?<frac>\\.\\d+)?");
 
@@ -373,6 +376,13 @@ public final class NumberUtil {
     }
 
     /**
+     * Checks that the given {@link String} is numeric (basically, can be directly parsed as {@link BigDecimal}).
+     */
+    public static boolean isNumericString(String numberString) {
+        return NUMBER_PATTERN.matcher(numberString).matches();
+    }
+
+    /**
      * Parses the given {@link String} to {@link BigDecimal}.
      *
      * <p>Works for any input (cleans the text first).</p>
@@ -499,13 +509,18 @@ public final class NumberUtil {
     }
 
     private static LargeInteger largeIntegerify(Object value) {
-        Number numericValue = NumberUtil.numberify(value);
-        if (numericValue instanceof LargeInteger) {
-            return (LargeInteger) numericValue;
-        } else if (numericValue instanceof BigDecimal) {
-            return LargeInteger.of(((BigDecimal) numericValue).toBigInteger());
+        return floorUnifiedNumber(NumberUtil.numberify(value));
+    }
+
+    public static LargeInteger floorUnifiedNumber(Number number) {
+        if (number instanceof LargeInteger) {
+            return (LargeInteger) number;
+        } else if (number instanceof BigDecimal) {
+            return LargeInteger.of(((BigDecimal) number).toBigInteger());
+        } else if (number != null) {
+            return LargeInteger.of(number.longValue());
         } else {
-            return LargeInteger.of(numericValue.longValue());
+            return null;
         }
     }
 

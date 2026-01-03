@@ -193,6 +193,51 @@ class NumberUtilTest {
     }
 
     @Test
+    void isNumericString() {
+        assertThat(NumberUtil.isNumericString("0")).isTrue();
+        assertThat(NumberUtil.isNumericString("-0")).isTrue();
+        assertThat(NumberUtil.isNumericString("+0")).isTrue();
+        assertThat(NumberUtil.isNumericString(".0")).isTrue();
+        assertThat(NumberUtil.isNumericString("0.")).isTrue();
+        assertThat(NumberUtil.isNumericString("0.0")).isTrue();
+        assertThat(NumberUtil.isNumericString("0.000")).isTrue();
+        assertThat(NumberUtil.isNumericString("5")).isTrue();
+        assertThat(NumberUtil.isNumericString("1672")).isTrue();
+        assertThat(NumberUtil.isNumericString("-423")).isTrue();
+        assertThat(NumberUtil.isNumericString("+9701")).isTrue();
+        assertThat(NumberUtil.isNumericString("12.23")).isTrue();
+        assertThat(NumberUtil.isNumericString("1.")).isTrue();
+        assertThat(NumberUtil.isNumericString(".34")).isTrue();
+        assertThat(NumberUtil.isNumericString("-7.3")).isTrue();
+        assertThat(NumberUtil.isNumericString("+14.00")).isTrue();
+        assertThat(NumberUtil.isNumericString("-.1")).isTrue();
+        assertThat(NumberUtil.isNumericString("+45.")).isTrue();
+        assertThat(NumberUtil.isNumericString("3e2")).isTrue();
+        assertThat(NumberUtil.isNumericString("3e-2")).isTrue();
+        assertThat(NumberUtil.isNumericString("3e+2")).isTrue();
+        assertThat(NumberUtil.isNumericString("-3e2")).isTrue();
+        assertThat(NumberUtil.isNumericString("-3e-2")).isTrue();
+        assertThat(NumberUtil.isNumericString("+3e+2")).isTrue();
+        assertThat(NumberUtil.isNumericString("+3e+2")).isTrue();
+        assertThat(NumberUtil.isNumericString("1.2e2")).isTrue();
+        assertThat(NumberUtil.isNumericString(".3e2")).isTrue();
+        assertThat(NumberUtil.isNumericString("-.3e2")).isTrue();
+        assertThat(NumberUtil.isNumericString("-.3e-2")).isTrue();
+        assertThat(NumberUtil.isNumericString("+1.e+9")).isTrue();
+    }
+
+    @Test
+    void isNumericStringInvalid() {
+        assertThat(NumberUtil.isNumericString("")).isFalse();
+        assertThat(NumberUtil.isNumericString(".")).isFalse();
+        assertThat(NumberUtil.isNumericString("e")).isFalse();
+        assertThat(NumberUtil.isNumericString("E")).isFalse();
+        assertThat(NumberUtil.isNumericString(".e")).isFalse();
+        assertThat(NumberUtil.isNumericString("-.")).isFalse();
+        assertThat(NumberUtil.isNumericString("-e2")).isFalse();
+    }
+
+    @Test
     void testParse() {
         ImmutableList<BigDecimal> numbers = createStringValues().map(NumberUtil::parse);
         ImmutableList<BigDecimal> exceptedNumbers = ImmutableList.of(
@@ -509,6 +554,21 @@ class NumberUtilTest {
                 12d,
                 15d);
         assertThat(numbers.map(this::normalizeDouble)).isEqualTo(exceptedNumbers.map(this::normalizeDouble));
+    }
+
+    @Test
+    void testFloorUnifiedNumber() {
+        assertThat(NumberUtil.floorUnifiedNumber(null)).isNull();
+        assertThat(NumberUtil.floorUnifiedNumber(LargeInteger.ZERO)).isEqualTo(LargeInteger.ZERO);
+        assertThat(NumberUtil.floorUnifiedNumber(LargeInteger.THREE)).isEqualTo(LargeInteger.THREE);
+        assertThat(NumberUtil.floorUnifiedNumber(new BigDecimal("23"))).isEqualTo(LargeInteger.of(23));
+        assertThat(NumberUtil.floorUnifiedNumber(new BigDecimal("17.2"))).isEqualTo(LargeInteger.of(17));
+        assertThat(NumberUtil.floorUnifiedNumber(new BigDecimal("32.67"))).isEqualTo(LargeInteger.of(32));
+        assertThat(NumberUtil.floorUnifiedNumber(new BigDecimal("-27.12"))).isEqualTo(LargeInteger.of(-27));
+        assertThat(NumberUtil.floorUnifiedNumber(new BigDecimal("-27.73"))).isEqualTo(LargeInteger.of(-27));
+        assertThat(NumberUtil.floorUnifiedNumber(34.0)).isEqualTo(LargeInteger.of(34));
+        assertThat(NumberUtil.floorUnifiedNumber(41.6)).isEqualTo(LargeInteger.of(41));
+        assertThat(NumberUtil.floorUnifiedNumber(-15.55)).isEqualTo(LargeInteger.of(-15));
     }
 
     @Test
