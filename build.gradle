@@ -4,7 +4,7 @@ plugins {
     id 'nebula.lint' version '20.6.2'
 }
 
-description = 'RDBBS framework for miniConnect'
+description = 'RDBMS framework for miniConnect'
 
 def groupName = 'hu.webarticum.minibase'
 
