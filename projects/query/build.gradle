@@ -26,8 +26,8 @@ dependencies {
     testImplementation "hu.webarticum.miniconnect.api:lang-assertj:${miniConnectApiVersion}"
 }
 
-afterEvaluate {
-    sourcesJar.dependsOn generateGrammarSource
+tasks.named("sourcesJar") {
+    dependsOn(tasks.named("generateGrammarSource"))
 }
 
 generateGrammarSource {
