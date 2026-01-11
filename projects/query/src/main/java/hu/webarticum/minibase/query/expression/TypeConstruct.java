@@ -49,7 +49,8 @@ public class TypeConstruct {
         INTERVAL(Symbol.INTERVAL),
 
         TINYINT(Symbol.INTEGER), SMALLINT(Symbol.INTEGER), INT(Symbol.INTEGER),
-        NUMERIC(Symbol.DECIMAL), REAL(Symbol.FLOAT), DOUBLE_PRECISION(Symbol.FLOAT), DOUBLE(Symbol.FLOAT),
+        NUMERIC(Symbol.DECIMAL), DEC(Symbol.DECIMAL),
+        REAL(Symbol.FLOAT), DOUBLE_PRECISION(Symbol.FLOAT), DOUBLE(Symbol.FLOAT),
         CHAR(Symbol.NVARCHAR), VARCHAR(Symbol.NVARCHAR), NCHAR(Symbol.NVARCHAR), TEXT(Symbol.CLOB),
         TIMESTAMP(Symbol.DATETIME), TIMESTAMP_WITHOUT_TIME_ZONE(Symbol.DATETIME),
 
