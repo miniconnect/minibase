@@ -752,29 +752,37 @@ public class AntlrSqlParser implements SqlParser {
 
     public Expression parseFunctionCallNode(FunctionCallContext functionCallNode) {
         String functionName = parseFunctionNameNode(functionCallNode.functionName());
+        String functionNameUpper = functionName.toUpperCase();
         ImmutableList<Expression> parameters = functionCallNode.expression().stream()
                 .map(this::parseExpressionNode)
                 .collect(ImmutableList.createCollector());
-        if (functionName.equalsIgnoreCase("COALESCE")) {
+        if (functionNameUpper.equals("COALESCE")) {
             return new CoalesceExpression(parameters);
-        } else if (functionName.equalsIgnoreCase("CONCAT")) {
+        } else if (functionNameUpper.equals("CONCAT")) {
             return new ConcatExpression(parameters);
-        } else if (functionName.equalsIgnoreCase("NULLIF")) {
+        } else if (functionNameUpper.equals("NULLIF")) {
             checkFunctionParameterCount("NULLIF", 2, parameters);
             return new NullifExpression(parameters.get(0), parameters.get(1));
-        } else if (functionName.equalsIgnoreCase("LEFT")) {
+        } else if (functionNameUpper.equals("LEFT")) {
             checkFunctionParameterCount("LEFT", 2, parameters);
             return new LeftExpression(parameters.get(0), parameters.get(1));
-        } else if (functionName.equalsIgnoreCase("RIGHT")) {
+        } else if (functionNameUpper.equals("RIGHT")) {
             checkFunctionParameterCount("RIGHT", 2, parameters);
             return new RightExpression(parameters.get(0), parameters.get(1));
-        } else if (functionName.equalsIgnoreCase("LEAST")) {
+        } else if (functionNameUpper.equals("LEAST")) {
             return new LeastExpression(parameters);
-        } else if (functionName.equalsIgnoreCase("GREATEST")) {
+        } else if (functionNameUpper.equals("GREATEST")) {
             return new GreatestExpression(parameters);
-        } else {
+        }
+
+        checkFunctionParameterCount(functionNameUpper, 1, parameters);
+        TypeConstruct.SymbolAlias symbolAlias;
+        try {
+            symbolAlias = TypeConstruct.SymbolAlias.valueOf(functionNameUpper);
+        } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("Unknown function: " + functionName);
         }
+        return new CastExpression(parameters.get(0), new TypeConstruct(symbolAlias, null, null));
     }
 
     private String parseFunctionNameNode(FunctionNameContext fuctionNameNode) {

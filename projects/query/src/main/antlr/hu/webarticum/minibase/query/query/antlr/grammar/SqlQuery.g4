@@ -124,10 +124,6 @@ typeConstruct: simpleTypeConstruct | intervalTypeConstruct;
 simpleTypeConstruct: typeName ( PAR_START ( size=sizeParameter ( COMMA scale=sizeParameter )? )? PAR_END )?;
 intervalTypeConstruct: INTERVAL intervalSpecifier;
 sizeParameter: TOKEN_INTEGER | stringLiteral;
-typeName:
-    NULL | BOOLEAN | INTEGER | BIGINT | DEC | DECIMAL | FLOAT | NVARCHAR | CLOB | BINARY | VARBINARY | BLOB | DATE | TIME | DATETIME |
-    TIMESTAMP ( WITHOUT TIME ZONE )? | TIMESTAMP WITH TIME ZONE | INTERVAL |
-    TINYINT | SMALLINT | INT | NUMERIC | REAL | DOUBLE PRECISION? | CHAR | VARCHAR | NCHAR | TEXT;
 atomicExpression:
     literal |
     variable |
@@ -146,7 +142,11 @@ specialSelectableName:
     LAST_INSERT_ID;
 functionCall: functionName PAR_START expression ( COMMA expression )* PAR_END;
 functionName: identifier | functionNameToken;
-functionNameToken: LEFT | RIGHT;
+functionNameToken: LEFT | RIGHT | typeName;
+typeName:
+    NULL | BOOLEAN | INTEGER | BIGINT | DEC | DECIMAL | FLOAT | NVARCHAR | CLOB | BINARY | VARBINARY | BLOB | DATE | TIME | DATETIME |
+    TIMESTAMP ( WITHOUT TIME ZONE )? | TIMESTAMP WITH TIME ZONE | INTERVAL |
+    TINYINT | SMALLINT | INT | NUMERIC | REAL | DOUBLE PRECISION? | CHAR | VARCHAR | NCHAR | TEXT;
 intervalSpecifier: ( fromItem=intervalSpecifierItem TO )? toItem=intervalSpecifierItem;
 intervalSpecifierItem: intervalFieldName ( PAR_START integerLiteral PAR_END )?;
 intervalFieldName: YEAR | MONTH | DAY | HOUR | MINUTE | SECOND;
