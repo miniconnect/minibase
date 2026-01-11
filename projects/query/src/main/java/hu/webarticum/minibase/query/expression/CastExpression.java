@@ -39,7 +39,7 @@ public class CastExpression implements Expression {
 
     @Override
     public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
-        return String.class;
+        return targetTypeConstruct.symbol().type();
     }
 
     @Override
