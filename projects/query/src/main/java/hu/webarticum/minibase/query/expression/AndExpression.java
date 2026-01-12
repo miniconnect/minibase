@@ -55,13 +55,22 @@ public class AndExpression implements Expression {
     @Override
     public Object evaluate(ImmutableMap<Parameter, Object> values) {
         Boolean leftValue = BooleanUtil.boolify(leftOperand.evaluate(values));
-        if (leftValue == null) {
-            return null;
-        } else if (leftValue == false) {
+        boolean leftIsNull = (leftValue == null);
+        if (!leftIsNull && leftValue == false) {
             return false;
         }
 
-        return BooleanUtil.boolify(rightOperand.evaluate(values));
+        Boolean rightValue = BooleanUtil.boolify(rightOperand.evaluate(values));
+        boolean rightIsNull = (rightValue == null);
+        if (!rightIsNull && rightValue == false) {
+            return false;
+        }
+
+        if (leftIsNull || rightIsNull) {
+            return null;
+        }
+
+        return true;
     }
 
     @Override

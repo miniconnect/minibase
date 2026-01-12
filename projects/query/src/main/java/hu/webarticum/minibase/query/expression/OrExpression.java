@@ -55,13 +55,22 @@ public class OrExpression implements Expression {
     @Override
     public Object evaluate(ImmutableMap<Parameter, Object> values) {
         Boolean leftValue = BooleanUtil.boolify(leftOperand.evaluate(values));
-        if (leftValue == null) {
-            return null;
-        } else if (leftValue == true) {
+        boolean leftIsNull = (leftValue == null);
+        if (!leftIsNull && leftValue == true) {
             return true;
         }
 
-        return BooleanUtil.boolify(rightOperand.evaluate(values));
+        Boolean rightValue = BooleanUtil.boolify(rightOperand.evaluate(values));
+        boolean rightIsNull = (rightValue == null);
+        if (!rightIsNull && rightValue == true) {
+            return true;
+        }
+
+        if (leftIsNull || rightIsNull) {
+            return null;
+        }
+
+        return false;
     }
 
     @Override
