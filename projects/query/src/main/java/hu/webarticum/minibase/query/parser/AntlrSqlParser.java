@@ -41,6 +41,7 @@ import hu.webarticum.minibase.query.expression.NotExpression;
 import hu.webarticum.minibase.query.expression.NullifExpression;
 import hu.webarticum.minibase.query.expression.OrExpression;
 import hu.webarticum.minibase.query.expression.OrderRelationExpression;
+import hu.webarticum.minibase.query.expression.OverlapsExpression;
 import hu.webarticum.minibase.query.expression.RegexpExpression;
 import hu.webarticum.minibase.query.expression.RemainderExpression;
 import hu.webarticum.minibase.query.expression.RightExpression;
@@ -620,6 +621,14 @@ public class AntlrSqlParser implements SqlParser {
             Expression minExpression = parseExpressionNode(expressionNode.minExpression);
             Expression maxExpression = parseExpressionNode(expressionNode.maxExpression);
             return new BetweenExpression(givenExpression, minExpression, maxExpression);
+        }
+
+        if (expressionNode.OVERLAPS() != null) {
+            Expression start1Expression = parseExpressionNode(expressionNode.start1Expression);
+            Expression end1Expression = parseExpressionNode(expressionNode.end1Expression);
+            Expression start2Expression = parseExpressionNode(expressionNode.start2Expression);
+            Expression end2Expression = parseExpressionNode(expressionNode.end2Expression);
+            return new OverlapsExpression(start1Expression, end1Expression, start2Expression, end2Expression);
         }
 
         if (expressionNode.DOUBLE_COLON() != null) {
