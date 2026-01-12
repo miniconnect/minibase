@@ -1,6 +1,7 @@
 package hu.webarticum.minibase.query.util;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -12,12 +13,73 @@ import java.time.ZonedDateTime;
 import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAmount;
 
+import hu.webarticum.miniconnect.lang.ByteString;
+
 public final class TemporalUtil {
 
     private TemporalUtil() {
         // utility class
     }
 
+
+    public static Temporal convert(Object value, Class<?> targetType) {
+        Object nonStringValue;
+        if (value instanceof CharSequence) {
+            nonStringValue = parse(value.toString());
+        } else if (value instanceof ByteString) {
+            nonStringValue = parse(((ByteString) value).toString(StandardCharsets.UTF_8));
+        } else {
+            nonStringValue = value;
+        }
+        return convertNonString(nonStringValue, targetType);
+    }
+
+    public static Temporal temporalify(Object value) {
+        if (value instanceof Temporal) {
+            return (Temporal) value;
+        } else if (value instanceof CharSequence) {
+            return parse(value.toString());
+        } else if (value instanceof ByteString) {
+            return parse(((ByteString) value).toString(StandardCharsets.UTF_8));
+        } else if (value == null) {
+            return null;
+        } else {
+            return convertToInstant(value);
+        }
+    }
+
+    private static Temporal parse(String dateString) {
+        int firstColonPos = dateString.lastIndexOf(':');
+        if (firstColonPos < 0) {
+            return LocalDate.parse(dateString);
+        }
+        int lastDashPos = dateString.lastIndexOf('-');
+        int lastPlusPos = dateString.lastIndexOf('+');
+        if (lastDashPos < 0 && lastPlusPos < 0) {
+            return LocalTime.parse(dateString);
+        }
+        if (dateString.lastIndexOf('/') >= 0 || dateString.lastIndexOf('Z') > 0 || dateString.lastIndexOf('z') > 0) {
+            return ZonedDateTime.parse(normalizeDateTimeString(dateString));
+        }
+        boolean hasOffset = (lastPlusPos >= 0 || lastDashPos > firstColonPos);
+        if (!hasOffset) {
+            return LocalDateTime.parse(normalizeDateTimeString(dateString));
+        }
+        if (lastDashPos < 0 || dateString.indexOf('-') > firstColonPos) {
+            return OffsetTime.parse(dateString);
+        } else {
+            return OffsetDateTime.parse(normalizeDateTimeString(dateString));
+        }
+    }
+
+    private static String normalizeDateTimeString(String dateTimeString) {
+        int pos = dateTimeString.indexOf(' ', 5);
+        if (pos < 0) {
+            return dateTimeString;
+        }
+
+        return dateTimeString.substring(0, pos) + 'T' + dateTimeString.substring(pos + 1);
+    }
 
     public static boolean isTargetTypeSupported(Class<?> targetType) {
         return (
@@ -55,7 +117,7 @@ public final class TemporalUtil {
         }
     }
 
-    public static Temporal convert(Object value, Class<?> targetType) {
+    private static Temporal convertNonString(Object value, Class<?> targetType) {
         if (value == null) {
             return null;
         } else if (targetType == LocalTime.class) {
@@ -90,6 +152,8 @@ public final class TemporalUtil {
             return ((OffsetDateTime) value).toLocalTime();
         } else if (value instanceof ZonedDateTime) {
             return ((ZonedDateTime) value).toLocalTime();
+        } else if (value instanceof LocalDate) {
+            return LocalTime.of(0, 0, 0);
         } else if (value instanceof Number) {
             BigDecimal bigDecimalValue = NumberUtil.bigDecimalify(value);
             long nanosOfDay= bigDecimalValue.unscaledValue().longValue();
@@ -97,12 +161,7 @@ public final class TemporalUtil {
         } else if (value instanceof TemporalAmount) {
             return convertToLocalDateTime(value).toLocalTime();
         } else {
-            String timeString = value.toString();
-            if (timeString.indexOf('Z', 5) >= 0 || timeString.indexOf('+', 5) >= 0 || timeString.indexOf('-', 5) >= 0) {
-                return OffsetTime.parse(timeString).toLocalTime();
-            } else {
-                return LocalTime.parse(timeString);
-            }
+            throw new IllegalArgumentException("Cannot convert to LocalTime");
         }
     }
 
@@ -117,6 +176,8 @@ public final class TemporalUtil {
             return ((LocalTime) value).atOffset(ZoneOffset.UTC);
         } else if (value instanceof LocalDateTime) {
             return ((LocalDateTime) value).atOffset(ZoneOffset.UTC).toOffsetTime();
+        } else if (value instanceof LocalDate) {
+            return LocalTime.of(0, 0, 0).atOffset(ZoneOffset.UTC);
         } else if (value instanceof Instant) {
             return ((Instant) value).atOffset(ZoneOffset.UTC).toOffsetTime();
         } else if (value instanceof Number) {
@@ -126,12 +187,7 @@ public final class TemporalUtil {
         } else if (value instanceof TemporalAmount) {
             return convertToLocalDateTime(value).atOffset(ZoneOffset.UTC).toOffsetTime();
         } else {
-            String timeString = value.toString();
-            if (timeString.indexOf('Z', 5) >= 0 || timeString.indexOf('+', 5) >= 0 || timeString.indexOf('-', 5) >= 0) {
-                return OffsetTime.parse(timeString);
-            } else {
-                return LocalTime.parse(timeString).atOffset(ZoneOffset.UTC);
-            }
+            throw new IllegalArgumentException("Cannot convert to OffsetTime");
         }
     }
 
@@ -155,7 +211,7 @@ public final class TemporalUtil {
         } else if (value instanceof TemporalAmount) {
             return convertToLocalDateTime(value).toLocalDate();
         } else {
-            return LocalDate.parse(value.toString());
+            throw new IllegalArgumentException("Cannot convert to LocalDate");
         }
     }
 
@@ -183,12 +239,7 @@ public final class TemporalUtil {
         } else if (value instanceof TemporalAmount) {
             return LocalDateTime.MIN.plus((TemporalAmount) value);
         } else {
-            String dateTimeString = value.toString();
-            if (dateTimeString.indexOf('Z', 16) >= 0 || dateTimeString.indexOf('+', 16) >= 0 || dateTimeString.indexOf('-', 16) >= 0) {
-                return OffsetDateTime.parse(dateTimeString).toLocalDateTime();
-            } else {
-                return LocalDateTime.parse(dateTimeString);
-            }
+            throw new IllegalArgumentException("Cannot convert to LocalDateTime");
         }
     }
 
@@ -216,12 +267,7 @@ public final class TemporalUtil {
         } else if (value instanceof TemporalAmount) {
             return LocalDateTime.MIN.plus((TemporalAmount) value).atOffset(ZoneOffset.UTC);
         } else {
-            String dateTimeString = value.toString();
-            if (dateTimeString.indexOf('Z', 16) >= 0 || dateTimeString.indexOf('+', 16) >= 0 || dateTimeString.indexOf('-', 16) >= 0) {
-                return OffsetDateTime.parse(dateTimeString);
-            } else {
-                return LocalDateTime.parse(dateTimeString).atOffset(ZoneOffset.UTC);
-            }
+            throw new IllegalArgumentException("Cannot convert to OffsetDateTime");
         }
     }
 
@@ -249,12 +295,7 @@ public final class TemporalUtil {
         } else if (value instanceof TemporalAmount) {
             return LocalDateTime.MIN.plus((TemporalAmount) value).atZone(ZoneOffset.UTC);
         } else {
-            String dateTimeString = value.toString();
-            if (dateTimeString.indexOf('Z', 16) >= 0 || dateTimeString.indexOf('+', 16) >= 0 || dateTimeString.indexOf('-', 16) >= 0) {
-                return OffsetDateTime.parse(dateTimeString).atZoneSameInstant(ZoneOffset.UTC);
-            } else {
-                return LocalDateTime.parse(dateTimeString).atZone(ZoneOffset.UTC);
-            }
+            throw new IllegalArgumentException("Cannot convert to ZonedDateTime");
         }
     }
 
@@ -281,7 +322,7 @@ public final class TemporalUtil {
         } else if (value instanceof TemporalAmount) {
             return convertToLocalDateTime(value).toInstant(ZoneOffset.UTC);
         } else {
-            return Instant.parse(value.toString());
+            throw new IllegalArgumentException("Cannot convert to Instant");
         }
     }
 

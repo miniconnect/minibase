@@ -8,6 +8,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
+import java.time.OffsetTime;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 
 import org.junit.jupiter.api.Test;
@@ -15,6 +17,34 @@ import org.junit.jupiter.api.Test;
 import hu.webarticum.miniconnect.lang.LargeInteger;
 
 class TemporalUtilTest {
+
+    @Test
+    void testTemporalify() {
+        assertThat(TemporalUtil.temporalify(null)).isNull();
+        assertThat(TemporalUtil.temporalify(LocalTime.of(1, 2, 3))).isEqualTo(LocalTime.of(1, 2, 3));
+        assertThat(TemporalUtil.temporalify(LocalDate.of(2026, 1, 2))).isEqualTo(LocalDate.of(2026, 1, 2));
+        assertThat(TemporalUtil.temporalify(LocalDateTime.of(2026, 1, 2, 4, 5, 6)))
+                .isEqualTo(LocalDateTime.of(2026, 1, 2, 4, 5, 6));
+        assertThat(TemporalUtil.temporalify(LocalTime.of(1, 2, 3).atOffset(ZoneOffset.UTC)))
+                .isEqualTo(LocalTime.of(1, 2, 3).atOffset(ZoneOffset.UTC));
+        assertThat(TemporalUtil.temporalify(LocalTime.of(1, 2, 3).atOffset(ZoneOffset.UTC)))
+                .isEqualTo(LocalTime.of(1, 2, 3).atOffset(ZoneOffset.UTC));
+        assertThat(TemporalUtil.temporalify(LocalDateTime.of(2026, 1, 2, 3, 4, 5).atOffset(ZoneOffset.UTC)))
+                .isEqualTo(LocalDateTime.of(2026, 1, 2, 3, 4, 5).atOffset(ZoneOffset.UTC));
+        assertThat(TemporalUtil.temporalify(LocalDateTime.of(2026, 1, 2, 3, 4, 5).atZone(ZoneOffset.UTC)))
+                .isEqualTo(LocalDateTime.of(2026, 1, 2, 3, 4, 5).atZone(ZoneOffset.UTC));
+        assertThat(TemporalUtil.temporalify(Instant.ofEpochSecond(1768176123))).isEqualTo(Instant.ofEpochSecond(1768176123));
+        assertThat(TemporalUtil.temporalify(1768176123)).isEqualTo(Instant.ofEpochSecond(1768176123));
+        assertThat(TemporalUtil.temporalify("01:02:03")).isEqualTo(LocalTime.of(1, 2, 3));
+        assertThat(TemporalUtil.temporalify("2026-05-06")).isEqualTo(LocalDate.of(2026, 5, 6));
+        assertThat(TemporalUtil.temporalify("2026-05-06T01:02:09")).isEqualTo(LocalDateTime.of(2026, 5, 6, 1, 2, 9));
+        assertThat(TemporalUtil.temporalify("2026-02-06 01:02:09")).isEqualTo(LocalDateTime.of(2026, 2, 6, 1, 2, 9));
+        assertThat(TemporalUtil.temporalify("01:02:07+01:00")).isEqualTo(LocalTime.of(1, 2, 7).atOffset(ZoneOffset.ofHours(1)));
+        assertThat(TemporalUtil.temporalify("2026-04-01T01:00:00+02:00"))
+                .isEqualTo(LocalDateTime.of(2026, 4, 1, 1, 0, 0).atOffset(ZoneOffset.ofHours(2)));
+        assertThat(TemporalUtil.temporalify("2026-04-12 01:00:00+02:00"))
+                .isEqualTo(LocalDateTime.of(2026, 4, 12, 1, 0, 0).atOffset(ZoneOffset.ofHours(2)));
+    }
 
     @Test
     void testUnifyTemporalTypesSupportedOnly() {
@@ -94,6 +124,24 @@ class TemporalUtilTest {
                 .isEqualTo(Instant.ofEpochSecond(1763247043, 173826574));
         assertThat(TemporalUtil.convert(Instant.ofEpochSecond(1763241222, 96134385), Instant.class))
                 .isEqualTo(Instant.ofEpochSecond(1763241222, 96134385));
+    }
+
+    @Test
+    void testConvertWithLenientParsing() {
+        assertThat(TemporalUtil.convert("12:20", OffsetTime.class)).isEqualTo(LocalTime.of(12, 20).atOffset(ZoneOffset.UTC));
+        assertThat(TemporalUtil.convert("12:20+01:00", LocalTime.class)).isEqualTo(LocalTime.of(12, 20));
+        assertThat(TemporalUtil.convert("2025-10-12 01:02:03", LocalDateTime.class)).isEqualTo(LocalDateTime.of(2025, 10, 12, 1, 2, 3));
+        assertThat(TemporalUtil.convert("2025-10-12 01:02:03", LocalDateTime.class)).isEqualTo(LocalDateTime.of(2025, 10, 12, 1, 2, 3));
+        assertThat(TemporalUtil.convert("2025-10-12T01:02:03", LocalDate.class)).isEqualTo(LocalDate.of(2025, 10, 12));
+        assertThat(TemporalUtil.convert("2025-10-12 01:02:03Z", LocalDate.class)).isEqualTo(LocalDate.of(2025, 10, 12));
+        assertThat(TemporalUtil.convert("2025-07-12", LocalTime.class)).isEqualTo(LocalTime.of(0, 0, 0));
+        assertThat(TemporalUtil.convert("2025-10-11T12:12:13+00:00:07", LocalTime.class)).isEqualTo(LocalTime.of(12, 12, 13));
+        assertThat(TemporalUtil.convert("2025-10-11T12:12:13", OffsetTime.class))
+                .isEqualTo(LocalTime.of(12, 12, 13).atOffset(ZoneOffset.UTC));
+        assertThat(TemporalUtil.convert("2025-10-11T12:12:13+01:00", OffsetTime.class))
+                .isEqualTo(LocalTime.of(12, 12, 13).atOffset(ZoneOffset.ofHours(1)));
+        assertThat(TemporalUtil.convert("2025-07-12", Instant.class))
+                .isEqualTo(LocalDateTime.of(2025, 7, 12, 0, 0, 0).toInstant(ZoneOffset.UTC));
     }
 
 }

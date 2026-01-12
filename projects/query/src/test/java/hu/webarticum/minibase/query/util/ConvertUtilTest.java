@@ -32,6 +32,8 @@ class ConvertUtilTest {
         assertThat(ConvertUtil.convert(1762976004, LocalDateTime.class, 2, 5)).isEqualTo(LocalDateTime.of(2025, 11, 12, 19, 33, 24));
         assertThat(ConvertUtil.convert(53916000000000L, LocalTime.class, 2, 5)).isEqualTo(LocalTime.of(14, 58, 36));
         assertThat(ConvertUtil.convert("2025-11-12", LocalDate.class, 2, 5)).isEqualTo(LocalDate.of(2025, 11, 12));
+        assertThat(ConvertUtil.convert("2025-11-12 01:02:03", LocalDateTime.class, 2, 5)).isEqualTo(LocalDateTime.of(2025, 11, 12, 1, 2, 3));
+        assertThat(ConvertUtil.convert("2025-11-12 01:02:03", LocalDate.class, 2, 5)).isEqualTo(LocalDate.of(2025, 11, 12));
         assertThat(ConvertUtil.convert("2025-11-12T01:02:03Z", Instant.class, 2, 5)).isEqualTo(Instant.ofEpochSecond(1762909323));
     }
 
