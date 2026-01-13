@@ -50,10 +50,14 @@ public class SubtractExpression implements Expression {
     public Optional<Class<?>> type() {
         Class<?> leftType = leftOperand.type().orElse(null);
         Class<?> rightType = rightOperand.type().orElse(null);
-        if (leftType != null && Temporal.class.isAssignableFrom(leftType)) {
-            return typeForTemporal(leftType, rightOperand);
-        } else if (leftType == null) {
+        if (leftType == null) {
             return Optional.empty();
+        } else if (Temporal.class.isAssignableFrom(leftType)) {
+            if (rightType != null && Temporal.class.isAssignableFrom(rightType)) {
+                return Optional.of(DateTimeDelta.class);
+            } else {
+                return typeForTemporalWithDeltaWithDelta(leftType, rightOperand);
+            }
         } else if (TemporalAmount.class.isAssignableFrom(leftType)) {
             return Optional.of(DateTimeDelta.class);
         } else if (rightType == null) {
@@ -74,7 +78,7 @@ public class SubtractExpression implements Expression {
         }
     }
 
-    private Optional<Class<?>> typeForTemporal(Class<?> temporalType, Expression temporalAmountExpression) {
+    private Optional<Class<?>> typeForTemporalWithDeltaWithDelta(Class<?> temporalType, Expression temporalAmountExpression) {
         if (temporalType != LocalDate.class && temporalType != LocalTime.class && temporalType != OffsetTime.class) {
             return Optional.of(temporalType);
         } else if (temporalType == null || temporalAmountExpression.isNullable() || !temporalAmountExpression.parameters().isEmpty()) {
@@ -104,7 +108,11 @@ public class SubtractExpression implements Expression {
         Class<?> leftType = leftOperand.type(types);
         Class<?> rightType = rightOperand.type(types);
         if (Temporal.class.isAssignableFrom(leftType)) {
-            return typeForTemporal(leftType, rightOperand, types);
+            if (rightType != null && Temporal.class.isAssignableFrom(rightType)) {
+                return DateTimeDelta.class;
+            } else {
+                return typeForTemporalWithDelta(leftType, rightOperand, types);
+            }
         } else if (TemporalAmount.class.isAssignableFrom(leftType)) {
             return DateTimeDelta.class;
         }
@@ -123,7 +131,7 @@ public class SubtractExpression implements Expression {
         }
     }
 
-    private Class<?> typeForTemporal(Class<?> temporalType, Expression temporalAmountExpression, ImmutableMap<Parameter, Class<?>> types) {
+    private Class<?> typeForTemporalWithDelta(Class<?> temporalType, Expression temporalAmountExpression, ImmutableMap<Parameter, Class<?>> types) {
         if (temporalType != LocalDate.class && temporalType != LocalTime.class && temporalType != OffsetTime.class) {
             return temporalType;
         }
@@ -207,12 +215,15 @@ public class SubtractExpression implements Expression {
         }
     }
 
-    private Temporal operate(Temporal temporal, Object deltaValue) {
+    private Object operate(Temporal temporal, Object rightValue) {
+        if (rightValue instanceof Temporal) {
+            return DateTimeDelta.between((Temporal) rightValue, temporal);
+        }
         DateTimeDelta delta;
-        if (deltaValue instanceof TemporalAmount || !(temporal instanceof LocalDate)) {
-            delta = DateTimeDeltaUtil.deltaify(deltaValue);
+        if (rightValue instanceof TemporalAmount || !(temporal instanceof LocalDate)) {
+            delta = DateTimeDeltaUtil.deltaify(rightValue);
         } else {
-            Number deltaNumber = NumberUtil.numberify(deltaValue);
+            Number deltaNumber = NumberUtil.numberify(rightValue);
             if (deltaNumber instanceof LargeInteger) {
                 delta = DateTimeDelta.of(Period.ofDays(((LargeInteger) deltaNumber).intValueExact()));
             } else {
