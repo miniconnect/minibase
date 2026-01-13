@@ -15,6 +15,7 @@ import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
+import hu.webarticum.minibase.query.expression.AbsExpression;
 import hu.webarticum.minibase.query.expression.AddExpression;
 import hu.webarticum.minibase.query.expression.AndExpression;
 import hu.webarticum.minibase.query.expression.BetweenExpression;
@@ -770,13 +771,16 @@ public class AntlrSqlParser implements SqlParser {
         } else if (functionNameUpper.equals("CONCAT")) {
             return new ConcatExpression(parameters);
         } else if (functionNameUpper.equals("NULLIF")) {
-            checkFunctionParameterCount("NULLIF", 2, parameters);
+            checkFunctionParameterCount(functionNameUpper, 2, parameters);
             return new NullifExpression(parameters.get(0), parameters.get(1));
+        } else if (functionNameUpper.equals("ABS")) {
+            checkFunctionParameterCount(functionNameUpper, 1, parameters);
+            return new AbsExpression(parameters.get(0));
         } else if (functionNameUpper.equals("LEFT")) {
-            checkFunctionParameterCount("LEFT", 2, parameters);
+            checkFunctionParameterCount(functionNameUpper, 2, parameters);
             return new LeftExpression(parameters.get(0), parameters.get(1));
         } else if (functionNameUpper.equals("RIGHT")) {
-            checkFunctionParameterCount("RIGHT", 2, parameters);
+            checkFunctionParameterCount(functionNameUpper, 2, parameters);
             return new RightExpression(parameters.get(0), parameters.get(1));
         } else if (functionNameUpper.equals("LEAST")) {
             return new LeastExpression(parameters);
