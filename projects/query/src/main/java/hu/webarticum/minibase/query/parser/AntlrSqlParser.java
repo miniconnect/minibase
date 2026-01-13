@@ -19,8 +19,10 @@ import hu.webarticum.minibase.query.expression.AbsExpression;
 import hu.webarticum.minibase.query.expression.AddExpression;
 import hu.webarticum.minibase.query.expression.AndExpression;
 import hu.webarticum.minibase.query.expression.BetweenExpression;
+import hu.webarticum.minibase.query.expression.BitLengthExpression;
 import hu.webarticum.minibase.query.expression.CaseExpression;
 import hu.webarticum.minibase.query.expression.CastExpression;
+import hu.webarticum.minibase.query.expression.CharLengthExpression;
 import hu.webarticum.minibase.query.expression.CoalesceExpression;
 import hu.webarticum.minibase.query.expression.ColumnExpression;
 import hu.webarticum.minibase.query.expression.ConcatExpression;
@@ -41,6 +43,7 @@ import hu.webarticum.minibase.query.expression.NegateExpression;
 import hu.webarticum.minibase.query.expression.NotEqualsExpression;
 import hu.webarticum.minibase.query.expression.NotExpression;
 import hu.webarticum.minibase.query.expression.NullifExpression;
+import hu.webarticum.minibase.query.expression.OctetLengthExpression;
 import hu.webarticum.minibase.query.expression.OrExpression;
 import hu.webarticum.minibase.query.expression.OrderRelationExpression;
 import hu.webarticum.minibase.query.expression.OverlapsExpression;
@@ -778,6 +781,15 @@ public class AntlrSqlParser implements SqlParser {
         } else if (functionNameUpper.equals("ABS")) {
             checkFunctionParameterCount(functionNameUpper, 1, parameters);
             return new AbsExpression(parameters.get(0));
+        } else if (functionNameUpper.equals("BIT_LENGTH")) {
+            checkFunctionParameterCount(functionNameUpper, 1, parameters);
+            return new BitLengthExpression(parameters.get(0));
+        } else if (functionNameUpper.equals("OCTET_LENGTH")) {
+            checkFunctionParameterCount(functionNameUpper, 1, parameters);
+            return new OctetLengthExpression(parameters.get(0));
+        } else if (functionNameUpper.equals("CHAR_LENGTH") || functionNameUpper.equals("CHARACTER_LENGTH")) {
+            checkFunctionParameterCount(functionNameUpper, 1, parameters);
+            return new CharLengthExpression(parameters.get(0));
         } else if (functionNameUpper.equals("LOWER")) {
             checkFunctionParameterCount(functionNameUpper, 1, parameters);
             return new LowerExpression(parameters.get(0));
