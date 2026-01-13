@@ -34,6 +34,7 @@ import hu.webarticum.minibase.query.expression.IsNullExpression;
 import hu.webarticum.minibase.query.expression.LeastExpression;
 import hu.webarticum.minibase.query.expression.LeftExpression;
 import hu.webarticum.minibase.query.expression.LikeExpression;
+import hu.webarticum.minibase.query.expression.LowerExpression;
 import hu.webarticum.minibase.query.expression.ModExpression;
 import hu.webarticum.minibase.query.expression.MultiplyExpression;
 import hu.webarticum.minibase.query.expression.NegateExpression;
@@ -50,6 +51,7 @@ import hu.webarticum.minibase.query.expression.SpecialValueExpression;
 import hu.webarticum.minibase.query.expression.SpecialValueParameter;
 import hu.webarticum.minibase.query.expression.SubtractExpression;
 import hu.webarticum.minibase.query.expression.TypeConstruct;
+import hu.webarticum.minibase.query.expression.UpperExpression;
 import hu.webarticum.minibase.query.expression.TypeConstruct.SymbolAlias;
 import hu.webarticum.minibase.query.expression.VariableExpression;
 import hu.webarticum.minibase.query.expression.XorExpression;
@@ -776,6 +778,12 @@ public class AntlrSqlParser implements SqlParser {
         } else if (functionNameUpper.equals("ABS")) {
             checkFunctionParameterCount(functionNameUpper, 1, parameters);
             return new AbsExpression(parameters.get(0));
+        } else if (functionNameUpper.equals("LOWER")) {
+            checkFunctionParameterCount(functionNameUpper, 1, parameters);
+            return new LowerExpression(parameters.get(0));
+        } else if (functionNameUpper.equals("UPPER")) {
+            checkFunctionParameterCount(functionNameUpper, 1, parameters);
+            return new UpperExpression(parameters.get(0));
         } else if (functionNameUpper.equals("LEFT")) {
             checkFunctionParameterCount(functionNameUpper, 2, parameters);
             return new LeftExpression(parameters.get(0), parameters.get(1));
