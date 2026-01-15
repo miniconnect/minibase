@@ -53,6 +53,7 @@ import hu.webarticum.minibase.query.expression.RightExpression;
 import hu.webarticum.minibase.query.expression.SpecialValueExpression;
 import hu.webarticum.minibase.query.expression.SpecialValueParameter;
 import hu.webarticum.minibase.query.expression.SubtractExpression;
+import hu.webarticum.minibase.query.expression.TrimExpression;
 import hu.webarticum.minibase.query.expression.TypeConstruct;
 import hu.webarticum.minibase.query.expression.UpperExpression;
 import hu.webarticum.minibase.query.expression.TypeConstruct.SymbolAlias;
@@ -145,6 +146,8 @@ import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.Standalon
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.StringLiteralContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.StringTokenListContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.TableNameContext;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.TrimExpressionContext;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.TrimSpecificationContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.TypeConstructContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.TypeNameContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.UnaryArithmeticExpressionContext;
@@ -572,6 +575,11 @@ public class AntlrSqlParser implements SqlParser {
             return parseIntervalExpressionNode(intervalExpressionNode);
         }
 
+        TrimExpressionContext trimExpressionNode = expressionNode.trimExpression();
+        if (trimExpressionNode != null) {
+            return parseTrimExpressionNode(trimExpressionNode);
+        }
+
         CastExpressionContext castExpressionNode = expressionNode.castExpression();
         if (castExpressionNode != null) {
             return parseCastExpressionNode(castExpressionNode);
@@ -802,6 +810,9 @@ public class AntlrSqlParser implements SqlParser {
         } else if (functionNameUpper.equals("RIGHT")) {
             checkFunctionParameterCount(functionNameUpper, 2, parameters);
             return new RightExpression(parameters.get(0), parameters.get(1));
+        } else if (functionNameUpper.equals("TRIM")) {
+            checkFunctionParameterCount(functionNameUpper, 1, parameters);
+            return new TrimExpression(parameters.get(0), new ConstantExpression(" "), TrimExpression.TrimSpecification.BOTH);
         } else if (functionNameUpper.equals("LEAST")) {
             return new LeastExpression(parameters);
         } else if (functionNameUpper.equals("GREATEST")) {
@@ -916,6 +927,27 @@ public class AntlrSqlParser implements SqlParser {
         } else {
             throw new IllegalArgumentException("Unknown interval field");
         }
+    }
+
+    private Expression parseTrimExpressionNode(TrimExpressionContext trimExpressionNode) {
+        Expression inputExpression =
+                trimExpressionNode.inputExpression != null ?
+                parseExpressionNode(trimExpressionNode.inputExpression) :
+                new ConstantExpression(null);
+        Expression charsExpression =
+                trimExpressionNode.charsExpression != null ?
+                parseExpressionNode(trimExpressionNode.charsExpression) :
+                new ConstantExpression(" ");
+        TrimSpecificationContext trimSpecificatioNode = trimExpressionNode.trimSpecification();
+        TrimExpression.TrimSpecification trimSpecification =
+                trimSpecificatioNode != null ?
+                parseTrimSpecificationNode(trimSpecificatioNode) :
+                TrimExpression.TrimSpecification.BOTH;
+        return new TrimExpression(inputExpression, charsExpression, trimSpecification);
+    }
+
+    private TrimExpression.TrimSpecification parseTrimSpecificationNode(TrimSpecificationContext trimSpecificationNode) {
+        return TrimExpression.TrimSpecification.valueOf(trimSpecificationNode.getText().toUpperCase());
     }
 
     private Expression parseCastExpressionNode(CastExpressionContext castExpressionNode) {

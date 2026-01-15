@@ -111,6 +111,7 @@ expression:
     COUNT PAR_START DISTINCT? ASTERISK PAR_END |
     COUNT PAR_START DISTINCT subExpression=expression PAR_END |
     intervalExpression |
+    trimExpression |
     castExpression |
     atomicExpression;
 unaryArithmeticExpression: ( PLUS | MINUS ) subExpression=expression;
@@ -122,6 +123,8 @@ castExpression:
     CAST PAR_START expression AS typeConstruct PAR_END |
     CONVERT PAR_START expression COMMA typeConstruct PAR_END |
     CONVERT PAR_START typeConstruct COMMA expression PAR_END;
+trimExpression: TRIM PAR_START trimSpecification? charsExpression=expression? FROM inputExpression=expression PAR_END;
+trimSpecification: LEADING | TRAILING | BOTH;
 typeConstruct: simpleTypeConstruct | intervalTypeConstruct;
 simpleTypeConstruct: typeName ( PAR_START ( size=sizeParameter ( COMMA scale=sizeParameter )? )? PAR_END )?;
 intervalTypeConstruct: INTERVAL intervalSpecifier;
@@ -144,7 +147,7 @@ specialSelectableName:
     LAST_INSERT_ID;
 functionCall: functionName PAR_START expression ( COMMA expression )* PAR_END;
 functionName: identifier | functionNameToken;
-functionNameToken: LEFT | RIGHT | typeName;
+functionNameToken: LEFT | RIGHT | TRIM | typeName;
 typeName:
     NULL | BOOLEAN | INTEGER | BIGINT | DEC | DECIMAL | FLOAT | NVARCHAR | CLOB | BINARY | VARBINARY | BLOB | DATE | TIME | DATETIME |
     TIMESTAMP ( WITHOUT TIME ZONE )? | TIMESTAMP WITH TIME ZONE | INTERVAL |
@@ -182,6 +185,10 @@ SET: S E T;
 
 CAST: C A S T;
 CONVERT: C O N V E R T;
+TRIM: T R I M;
+LEADING: L E A D I N G;
+TRAILING: T R A I L I N G;
+BOTH: B O T H;
 
 BOOLEAN: B O O L E A N;
 INTEGER: I N T E G E R;
