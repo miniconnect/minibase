@@ -6,7 +6,6 @@ import hu.webarticum.minibase.query.util.ConvertUtil;
 import hu.webarticum.minibase.query.util.StringUtil;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
-import hu.webarticum.miniconnect.lang.LargeInteger;
 
 public class SubstringExpression implements Expression {
 

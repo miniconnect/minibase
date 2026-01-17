@@ -113,6 +113,7 @@ expression:
     intervalExpression |
     trimExpression |
     substringExpression |
+    positionExpression |
     castExpression |
     atomicExpression;
 unaryArithmeticExpression: ( PLUS | MINUS ) subExpression=expression;
@@ -124,6 +125,7 @@ trimExpression: TRIM PAR_START trimSpecification? charsExpression=expression? FR
 trimSpecification: LEADING | TRAILING | BOTH;
 substringExpression: ( SUBSTRING | SUBSTR ) PAR_START inputExpression=expression
     ( FROM fromExpression=expression ( FOR forExpression=expression )? | FOR forExpression=expression ) PAR_END;
+positionExpression: POSITION PAR_START subjectExpression=expression IN contextExpression=expression PAR_END;
 castExpression:
     CAST PAR_START expression AS typeConstruct PAR_END |
     CONVERT PAR_START expression COMMA typeConstruct PAR_END |
@@ -195,6 +197,8 @@ BOTH: B O T H;
 SUBSTRING: S U B S T R I N G;
 SUBSTR: S U B S T R;
 FOR: F O R;
+POSITION: P O S I T I O N;
+IN: I N;
 
 BOOLEAN: B O O L E A N;
 INTEGER: I N T E G E R;

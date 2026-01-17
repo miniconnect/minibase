@@ -47,6 +47,7 @@ import hu.webarticum.minibase.query.expression.OctetLengthExpression;
 import hu.webarticum.minibase.query.expression.OrExpression;
 import hu.webarticum.minibase.query.expression.OrderRelationExpression;
 import hu.webarticum.minibase.query.expression.OverlapsExpression;
+import hu.webarticum.minibase.query.expression.PositionExpression;
 import hu.webarticum.minibase.query.expression.RegexpExpression;
 import hu.webarticum.minibase.query.expression.RemainderExpression;
 import hu.webarticum.minibase.query.expression.RightExpression;
@@ -126,6 +127,7 @@ import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.OffsetPar
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.OrderByItemContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.OrderByPartContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.OrderByPositionContext;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.PositionExpressionContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.PostfixConditionContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.SchemaNameContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.ScopeableFieldNameContext;
@@ -587,6 +589,11 @@ public class AntlrSqlParser implements SqlParser {
             return parseSubstringExpressionNode(substringExpressionNode);
         }
 
+        PositionExpressionContext positionExpressionNode = expressionNode.positionExpression();
+        if (positionExpressionNode != null) {
+            return parsePositionExpressionNode(positionExpressionNode);
+        }
+
         CastExpressionContext castExpressionNode = expressionNode.castExpression();
         if (castExpressionNode != null) {
             return parseCastExpressionNode(castExpressionNode);
@@ -824,6 +831,9 @@ public class AntlrSqlParser implements SqlParser {
             checkFunctionParameterCount(functionNameUpper, parameters, 2, 3);
             Expression forExpression = parameters.size() > 2 ? parameters.get(2) : new ConstantExpression(null);
             return new SubstringExpression(parameters.get(0), parameters.get(1), forExpression);
+        } else if (functionNameUpper.equals("POSITION")) {
+            checkFunctionParameterCount(functionNameUpper, parameters, 2);
+            return new PositionExpression(parameters.get(0), parameters.get(1));
         } else if (functionNameUpper.equals("LEAST")) {
             return new LeastExpression(parameters);
         } else if (functionNameUpper.equals("GREATEST")) {
@@ -969,7 +979,7 @@ public class AntlrSqlParser implements SqlParser {
         return TrimExpression.TrimSpecification.valueOf(trimSpecificationNode.getText().toUpperCase());
     }
 
-    private SubstringExpression parseSubstringExpressionNode(SubstringExpressionContext substringExpressionNode) {
+    private Expression parseSubstringExpressionNode(SubstringExpressionContext substringExpressionNode) {
         Expression inputExpression =
                 substringExpressionNode.inputExpression != null ?
                 parseExpressionNode(substringExpressionNode.inputExpression) :
@@ -983,6 +993,12 @@ public class AntlrSqlParser implements SqlParser {
                 parseExpressionNode(substringExpressionNode.forExpression) :
                 new ConstantExpression(null);
         return new SubstringExpression(inputExpression, fromExpression, forExpression);
+    }
+
+    private Expression parsePositionExpressionNode(PositionExpressionContext positionExpressionNode) {
+        Expression subjectExpression = parseExpressionNode(positionExpressionNode.subjectExpression);
+        Expression contextExpression = parseExpressionNode(positionExpressionNode.contextExpression);
+        return new PositionExpression(subjectExpression, contextExpression);
     }
 
     private Expression parseCastExpressionNode(CastExpressionContext castExpressionNode) {
