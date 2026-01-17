@@ -112,6 +112,7 @@ expression:
     COUNT PAR_START DISTINCT subExpression=expression PAR_END |
     intervalExpression |
     trimExpression |
+    substringExpression |
     castExpression |
     atomicExpression;
 unaryArithmeticExpression: ( PLUS | MINUS ) subExpression=expression;
@@ -119,12 +120,14 @@ caseExpression: CASE (givenExpression=expression)? whenPart+ elsePart? END;
 whenPart: WHEN conditionExpression=expression THEN resultExpression=expression;
 elsePart: ELSE expression;
 intervalExpression: INTERVAL ( integerLiteral | decimalLiteral | stringLiteral ) intervalSpecifier?;
+trimExpression: TRIM PAR_START trimSpecification? charsExpression=expression? FROM inputExpression=expression PAR_END;
+trimSpecification: LEADING | TRAILING | BOTH;
+substringExpression: ( SUBSTRING | SUBSTR ) PAR_START inputExpression=expression
+    ( FROM fromExpression=expression ( FOR forExpression=expression )? | FOR forExpression=expression ) PAR_END;
 castExpression:
     CAST PAR_START expression AS typeConstruct PAR_END |
     CONVERT PAR_START expression COMMA typeConstruct PAR_END |
     CONVERT PAR_START typeConstruct COMMA expression PAR_END;
-trimExpression: TRIM PAR_START trimSpecification? charsExpression=expression? FROM inputExpression=expression PAR_END;
-trimSpecification: LEADING | TRAILING | BOTH;
 typeConstruct: simpleTypeConstruct | intervalTypeConstruct;
 simpleTypeConstruct: typeName ( PAR_START ( size=sizeParameter ( COMMA scale=sizeParameter )? )? PAR_END )?;
 intervalTypeConstruct: INTERVAL intervalSpecifier;
@@ -145,9 +148,9 @@ specialSelectableName:
     AUTOCOMMIT |
     IDENTITY |
     LAST_INSERT_ID;
-functionCall: functionName PAR_START expression ( COMMA expression )* PAR_END;
+functionCall: functionName PAR_START ( expression ( COMMA expression )* )? PAR_END;
 functionName: identifier | functionNameToken;
-functionNameToken: LEFT | RIGHT | TRIM | typeName;
+functionNameToken: LEFT | RIGHT | TRIM | SUBSTRING | SUBSTR | typeName;
 typeName:
     NULL | BOOLEAN | INTEGER | BIGINT | DEC | DECIMAL | FLOAT | NVARCHAR | CLOB | BINARY | VARBINARY | BLOB | DATE | TIME | DATETIME |
     TIMESTAMP ( WITHOUT TIME ZONE )? | TIMESTAMP WITH TIME ZONE | INTERVAL |
@@ -189,6 +192,9 @@ TRIM: T R I M;
 LEADING: L E A D I N G;
 TRAILING: T R A I L I N G;
 BOTH: B O T H;
+SUBSTRING: S U B S T R I N G;
+SUBSTR: S U B S T R;
+FOR: F O R;
 
 BOOLEAN: B O O L E A N;
 INTEGER: I N T E G E R;

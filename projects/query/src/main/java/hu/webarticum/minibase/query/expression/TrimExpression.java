@@ -2,7 +2,6 @@ package hu.webarticum.minibase.query.expression;
 
 import java.util.Optional;
 
-import hu.webarticum.minibase.query.util.NumberUtil;
 import hu.webarticum.minibase.query.util.StringUtil;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
@@ -77,8 +76,8 @@ public class TrimExpression implements Expression {
             return null;
         }
 
-        String inputString = inputValue.toString();
-        String charsString = charsValue.toString();
+        String inputString = StringUtil.stringify(inputValue);
+        String charsString = StringUtil.stringify(charsValue);
         int rightTrimPosition;
         if (trimSpecification != TrimSpecification.LEADING) {
             rightTrimPosition = getRightTrimPosition(inputString, charsString);

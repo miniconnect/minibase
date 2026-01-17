@@ -53,6 +53,7 @@ import hu.webarticum.minibase.query.expression.RightExpression;
 import hu.webarticum.minibase.query.expression.SpecialValueExpression;
 import hu.webarticum.minibase.query.expression.SpecialValueParameter;
 import hu.webarticum.minibase.query.expression.SubtractExpression;
+import hu.webarticum.minibase.query.expression.SubstringExpression;
 import hu.webarticum.minibase.query.expression.TrimExpression;
 import hu.webarticum.minibase.query.expression.TypeConstruct;
 import hu.webarticum.minibase.query.expression.UpperExpression;
@@ -145,6 +146,7 @@ import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.Standalon
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.StandaloneSelectRowContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.StringLiteralContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.StringTokenListContext;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.SubstringExpressionContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.TableNameContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.TrimExpressionContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.TrimSpecificationContext;
@@ -580,6 +582,11 @@ public class AntlrSqlParser implements SqlParser {
             return parseTrimExpressionNode(trimExpressionNode);
         }
 
+        SubstringExpressionContext substringExpressionNode = expressionNode.substringExpression();
+        if (substringExpressionNode != null) {
+            return parseSubstringExpressionNode(substringExpressionNode);
+        }
+
         CastExpressionContext castExpressionNode = expressionNode.castExpression();
         if (castExpressionNode != null) {
             return parseCastExpressionNode(castExpressionNode);
@@ -784,42 +791,46 @@ public class AntlrSqlParser implements SqlParser {
         } else if (functionNameUpper.equals("CONCAT")) {
             return new ConcatExpression(parameters);
         } else if (functionNameUpper.equals("NULLIF")) {
-            checkFunctionParameterCount(functionNameUpper, 2, parameters);
+            checkFunctionParameterCount(functionNameUpper, parameters, 2);
             return new NullifExpression(parameters.get(0), parameters.get(1));
         } else if (functionNameUpper.equals("ABS")) {
-            checkFunctionParameterCount(functionNameUpper, 1, parameters);
+            checkFunctionParameterCount(functionNameUpper, parameters, 1);
             return new AbsExpression(parameters.get(0));
         } else if (functionNameUpper.equals("BIT_LENGTH")) {
-            checkFunctionParameterCount(functionNameUpper, 1, parameters);
+            checkFunctionParameterCount(functionNameUpper, parameters, 1);
             return new BitLengthExpression(parameters.get(0));
         } else if (functionNameUpper.equals("OCTET_LENGTH")) {
-            checkFunctionParameterCount(functionNameUpper, 1, parameters);
+            checkFunctionParameterCount(functionNameUpper, parameters, 1);
             return new OctetLengthExpression(parameters.get(0));
         } else if (functionNameUpper.equals("CHAR_LENGTH") || functionNameUpper.equals("CHARACTER_LENGTH")) {
-            checkFunctionParameterCount(functionNameUpper, 1, parameters);
+            checkFunctionParameterCount(functionNameUpper, parameters, 1);
             return new CharLengthExpression(parameters.get(0));
         } else if (functionNameUpper.equals("LOWER")) {
-            checkFunctionParameterCount(functionNameUpper, 1, parameters);
+            checkFunctionParameterCount(functionNameUpper, parameters, 1);
             return new LowerExpression(parameters.get(0));
         } else if (functionNameUpper.equals("UPPER")) {
-            checkFunctionParameterCount(functionNameUpper, 1, parameters);
+            checkFunctionParameterCount(functionNameUpper, parameters, 1);
             return new UpperExpression(parameters.get(0));
         } else if (functionNameUpper.equals("LEFT")) {
-            checkFunctionParameterCount(functionNameUpper, 2, parameters);
+            checkFunctionParameterCount(functionNameUpper, parameters, 2);
             return new LeftExpression(parameters.get(0), parameters.get(1));
         } else if (functionNameUpper.equals("RIGHT")) {
-            checkFunctionParameterCount(functionNameUpper, 2, parameters);
+            checkFunctionParameterCount(functionNameUpper, parameters, 2);
             return new RightExpression(parameters.get(0), parameters.get(1));
         } else if (functionNameUpper.equals("TRIM")) {
-            checkFunctionParameterCount(functionNameUpper, 1, parameters);
+            checkFunctionParameterCount(functionNameUpper, parameters, 1);
             return new TrimExpression(parameters.get(0), new ConstantExpression(" "), TrimExpression.TrimSpecification.BOTH);
+        } else if (functionNameUpper.equals("SUBSTR") || functionNameUpper.equals("SUBSTRING")) {
+            checkFunctionParameterCount(functionNameUpper, parameters, 2, 3);
+            Expression forExpression = parameters.size() > 2 ? parameters.get(2) : new ConstantExpression(null);
+            return new SubstringExpression(parameters.get(0), parameters.get(1), forExpression);
         } else if (functionNameUpper.equals("LEAST")) {
             return new LeastExpression(parameters);
         } else if (functionNameUpper.equals("GREATEST")) {
             return new GreatestExpression(parameters);
         }
 
-        checkFunctionParameterCount(functionNameUpper, 1, parameters);
+        checkFunctionParameterCount(functionNameUpper, parameters, 1);
         TypeConstruct.SymbolAlias symbolAlias;
         try {
             symbolAlias = TypeConstruct.SymbolAlias.valueOf(functionNameUpper);
@@ -838,10 +849,18 @@ public class AntlrSqlParser implements SqlParser {
         }
     }
 
-    private void checkFunctionParameterCount(String name, int expectedCount, ImmutableList<Expression> actualParameters) {
+    private void checkFunctionParameterCount(String name, ImmutableList<Expression> actualParameters, int expectedCount) {
         int actualCount = actualParameters.size();
-        if (expectedCount != actualCount) {
-            throw new IllegalArgumentException("Function " + name + "expects " + expectedCount + "parameters, " + actualCount + " given");
+        if (actualCount != expectedCount) {
+            throw new IllegalArgumentException("Function " + name + " expects " + expectedCount + "parameters, " + actualCount + " given");
+        }
+    }
+
+    private void checkFunctionParameterCount(String name, ImmutableList<Expression> actualParameters, int minCount, int maxCount) {
+        int actualCount = actualParameters.size();
+        if (actualCount < minCount || actualCount > maxCount) {
+            throw new IllegalArgumentException(
+                    "Function " + name + " expects " + minCount + " to " + maxCount + " parameters, " + actualCount + " given");
         }
     }
 
@@ -948,6 +967,22 @@ public class AntlrSqlParser implements SqlParser {
 
     private TrimExpression.TrimSpecification parseTrimSpecificationNode(TrimSpecificationContext trimSpecificationNode) {
         return TrimExpression.TrimSpecification.valueOf(trimSpecificationNode.getText().toUpperCase());
+    }
+
+    private SubstringExpression parseSubstringExpressionNode(SubstringExpressionContext substringExpressionNode) {
+        Expression inputExpression =
+                substringExpressionNode.inputExpression != null ?
+                parseExpressionNode(substringExpressionNode.inputExpression) :
+                new ConstantExpression(null);
+        Expression fromExpression =
+                substringExpressionNode.fromExpression != null ?
+                parseExpressionNode(substringExpressionNode.fromExpression) :
+                new ConstantExpression(null);
+        Expression forExpression =
+                substringExpressionNode.forExpression != null ?
+                parseExpressionNode(substringExpressionNode.forExpression) :
+                new ConstantExpression(null);
+        return new SubstringExpression(inputExpression, fromExpression, forExpression);
     }
 
     private Expression parseCastExpressionNode(CastExpressionContext castExpressionNode) {
