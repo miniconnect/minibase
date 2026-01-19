@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.antlr.v4.runtime.BaseErrorListener;
@@ -826,11 +827,11 @@ public class AntlrSqlParser implements SqlParser {
             return new RightExpression(parameters.get(0), parameters.get(1));
         } else if (functionNameUpper.equals("TRIM")) {
             checkFunctionParameterCount(functionNameUpper, parameters, 1);
-            return new TrimExpression(parameters.get(0), new ConstantExpression(" "), TrimExpression.TrimSpecification.BOTH);
+            return new TrimExpression(parameters.get(0), Optional.empty(), Optional.empty());
         } else if (functionNameUpper.equals("SUBSTR") || functionNameUpper.equals("SUBSTRING")) {
             checkFunctionParameterCount(functionNameUpper, parameters, 2, 3);
-            Expression forExpression = parameters.size() > 2 ? parameters.get(2) : new ConstantExpression(null);
-            return new SubstringExpression(parameters.get(0), parameters.get(1), forExpression);
+            Optional<Expression> forExpression = parameters.size() > 2 ? Optional.of(parameters.get(2)) : Optional.empty();
+            return new SubstringExpression(parameters.get(0), Optional.of(parameters.get(1)), forExpression);
         } else if (functionNameUpper.equals("POSITION")) {
             checkFunctionParameterCount(functionNameUpper, parameters, 2);
             return new PositionExpression(parameters.get(0), parameters.get(1));
@@ -959,19 +960,10 @@ public class AntlrSqlParser implements SqlParser {
     }
 
     private Expression parseTrimExpressionNode(TrimExpressionContext trimExpressionNode) {
-        Expression inputExpression =
-                trimExpressionNode.inputExpression != null ?
-                parseExpressionNode(trimExpressionNode.inputExpression) :
-                new ConstantExpression(null);
-        Expression charsExpression =
-                trimExpressionNode.charsExpression != null ?
-                parseExpressionNode(trimExpressionNode.charsExpression) :
-                new ConstantExpression(" ");
-        TrimSpecificationContext trimSpecificatioNode = trimExpressionNode.trimSpecification();
-        TrimExpression.TrimSpecification trimSpecification =
-                trimSpecificatioNode != null ?
-                parseTrimSpecificationNode(trimSpecificatioNode) :
-                TrimExpression.TrimSpecification.BOTH;
+        Expression inputExpression = parseExpressionNode(trimExpressionNode.inputExpression);
+        Optional<Expression> charsExpression = Optional.ofNullable(trimExpressionNode.charsExpression).map(this::parseExpressionNode);
+        Optional<TrimExpression.TrimSpecification> trimSpecification =
+                Optional.ofNullable(trimExpressionNode.trimSpecification()).map(this::parseTrimSpecificationNode);
         return new TrimExpression(inputExpression, charsExpression, trimSpecification);
     }
 
@@ -980,18 +972,9 @@ public class AntlrSqlParser implements SqlParser {
     }
 
     private Expression parseSubstringExpressionNode(SubstringExpressionContext substringExpressionNode) {
-        Expression inputExpression =
-                substringExpressionNode.inputExpression != null ?
-                parseExpressionNode(substringExpressionNode.inputExpression) :
-                new ConstantExpression(null);
-        Expression fromExpression =
-                substringExpressionNode.fromExpression != null ?
-                parseExpressionNode(substringExpressionNode.fromExpression) :
-                new ConstantExpression(null);
-        Expression forExpression =
-                substringExpressionNode.forExpression != null ?
-                parseExpressionNode(substringExpressionNode.forExpression) :
-                new ConstantExpression(null);
+        Expression inputExpression = parseExpressionNode(substringExpressionNode.inputExpression);
+        Optional<Expression> fromExpression = Optional.ofNullable(substringExpressionNode.fromExpression).map(this::parseExpressionNode);
+        Optional<Expression> forExpression = Optional.ofNullable(substringExpressionNode.forExpression).map(this::parseExpressionNode);
         return new SubstringExpression(inputExpression, fromExpression, forExpression);
     }
 

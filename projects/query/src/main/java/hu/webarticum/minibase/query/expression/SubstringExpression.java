@@ -11,12 +11,15 @@ public class SubstringExpression implements Expression {
 
     private final Expression inputExpression;
 
-    private final Expression fromExpression;
+    private final Optional<Expression> fromExpression;
 
-    private final Expression forExpression;
+    private final Optional<Expression> forExpression;
 
 
-    public SubstringExpression(Expression inputExpression, Expression fromExpression, Expression forExpression) {
+    public SubstringExpression(
+            Expression inputExpression,
+            Optional<Expression> fromExpression,
+            Optional<Expression> forExpression) {
         this.inputExpression = inputExpression;
         this.fromExpression = fromExpression;
         this.forExpression = forExpression;
@@ -27,17 +30,19 @@ public class SubstringExpression implements Expression {
         return inputExpression;
     }
 
-    public Expression fromExpression() {
+    public Optional<Expression> fromExpression() {
         return fromExpression;
     }
 
-    public Expression forExpression() {
+    public Optional<Expression> forExpression() {
         return forExpression;
     }
 
     @Override
     public ImmutableList<Parameter> parameters() {
-        return inputExpression.parameters().concat(fromExpression.parameters()).concat(forExpression.parameters());
+        return inputExpression.parameters()
+                .concat(fromExpression.map(Expression::parameters).orElseGet(ImmutableList::empty))
+                .concat(forExpression.map(Expression::parameters).orElseGet(ImmutableList::empty));
     }
 
     @Override
@@ -52,15 +57,16 @@ public class SubstringExpression implements Expression {
 
     @Override
     public boolean isNullable() {
-        return inputExpression.isNullable() || fromExpression.isNullable() || forExpression.isNullable();
+        return inputExpression.isNullable() ||
+                fromExpression.map(Expression::isNullable).orElse(false) ||
+                forExpression.map(Expression::isNullable).orElse(false);
     }
 
     @Override
     public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
-        return
-                inputExpression.isNullable(nullabilities) ||
-                fromExpression.isNullable(nullabilities) ||
-                forExpression.isNullable(nullabilities);
+        return inputExpression.isNullable(nullabilities) ||
+                fromExpression.map(e -> e.isNullable(nullabilities)).orElse(false) ||
+                forExpression.map(e -> e.isNullable(nullabilities)).orElse(false);
     }
 
     @Override
@@ -70,33 +76,51 @@ public class SubstringExpression implements Expression {
             return null;
         }
 
+        Object fromValue = evaluateOptionalExpression(fromExpression, values, 1);
+        if (fromValue == null) {
+            return null;
+        }
+
         String inputString = StringUtil.stringify(inputValue);
         int length = inputString.length();
+        int from = (Integer) ConvertUtil.convert(fromValue, Integer.class);
+        int fromZeroBased = from - 1;
 
-        Object fromValue = fromExpression.evaluate(values);
-        Integer fromInteger = (Integer) ConvertUtil.convert(fromValue, Integer.class);
-        int fromZeroBased = fromInteger == null ? 0 : fromInteger - 1;
+        Object forValue = evaluateOptionalExpression(forExpression, values, length - fromZeroBased);
+        if (forValue == null) {
+            return null;
+        }
+
+        int forInt = (Integer) ConvertUtil.convert(forValue, Integer.class);
+        if (forInt <= 0) {
+            return "";
+        }
+
         if (fromZeroBased >= length) {
             return "";
         }
 
-        Object forValue = forExpression.evaluate(values);
-        Integer forInteger = (Integer) ConvertUtil.convert(forValue, Integer.class);
-        int untilZeroBased = forInteger == null ? length : Math.min(length, fromZeroBased + forInteger);
-
-        fromZeroBased = Math.max(0, fromZeroBased);
-        if (untilZeroBased < fromZeroBased) {
+        int untilZeroBased = Math.min(length, fromZeroBased + forInt);
+        if (untilZeroBased <= 0) {
             return "";
         }
 
-        return inputString.substring(fromZeroBased, untilZeroBased);
+        return inputString.substring(Math.max(0, fromZeroBased), untilZeroBased);
+    }
+
+    private Object evaluateOptionalExpression(
+            Optional<Expression> optionalExpression, ImmutableMap<Parameter, Object> values, Object defaultValue) {
+        if (!optionalExpression.isPresent()) {
+            return defaultValue;
+        }
+        return optionalExpression.get().evaluate(values);
     }
 
     @Override
     public String automaticName() {
         return "SUBSTRING(" + inputExpression.automaticName() +
-                " FROM " + fromExpression.automaticName() +
-                " FOR " + forExpression.automaticName() + ")";
+                fromExpression.map(e -> " FROM " + e.automaticName()).orElse("") +
+                forExpression.map(e -> " FOR " + e.automaticName()).orElse("") + ")";
     }
 
 }

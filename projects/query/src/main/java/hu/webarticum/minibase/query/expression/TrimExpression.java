@@ -13,14 +13,22 @@ public class TrimExpression implements Expression {
     }
 
 
+    private static final String DEFAULT_CHARS = " ";
+
+    private static final TrimSpecification DEFAULT_TRIM_SPECIFICATION = TrimSpecification.BOTH;
+
+
     private final Expression inputExpression;
 
-    private final Expression charsExpression;
+    private final Optional<Expression> charsExpression;
 
-    private final TrimSpecification trimSpecification;
+    private final Optional<TrimSpecification> trimSpecification;
 
 
-    public TrimExpression(Expression inputExpression, Expression charsExpression, TrimSpecification trimSpecification) {
+    public TrimExpression(
+            Expression inputExpression,
+            Optional<Expression> charsExpression,
+            Optional<TrimSpecification> trimSpecification) {
         this.inputExpression = inputExpression;
         this.charsExpression = charsExpression;
         this.trimSpecification = trimSpecification;
@@ -31,17 +39,18 @@ public class TrimExpression implements Expression {
         return inputExpression;
     }
 
-    public Expression charsExpression() {
+    public Optional<Expression> charsExpression() {
         return charsExpression;
     }
 
-    public TrimSpecification trimSpecification() {
+    public Optional<TrimSpecification> trimSpecification() {
         return trimSpecification;
     }
 
     @Override
     public ImmutableList<Parameter> parameters() {
-        return inputExpression.parameters().concat(charsExpression.parameters());
+        return inputExpression.parameters().concat(
+                charsExpression.map(Expression::parameters).orElseGet(ImmutableList::empty));
     }
 
     @Override
@@ -56,12 +65,12 @@ public class TrimExpression implements Expression {
 
     @Override
     public boolean isNullable() {
-        return inputExpression.isNullable() || charsExpression.isNullable();
+        return inputExpression.isNullable() || charsExpression.map(Expression::isNullable).orElse(false);
     }
 
     @Override
     public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
-        return inputExpression.isNullable(nullabilities) || charsExpression.isNullable(nullabilities);
+        return inputExpression.isNullable(nullabilities) || charsExpression.map(e -> e.isNullable(nullabilities)).orElse(false);
     }
 
     @Override
@@ -71,21 +80,23 @@ public class TrimExpression implements Expression {
             return null;
         }
 
-        Object charsValue = charsExpression.evaluate(values);
+        Object charsValue = charsExpression.orElseGet(() -> new ConstantExpression(DEFAULT_CHARS)).evaluate(values);
         if (charsValue == null) {
             return null;
         }
 
+        TrimSpecification effectiveSpecification = trimSpecification.orElse(DEFAULT_TRIM_SPECIFICATION);
+
         String inputString = StringUtil.stringify(inputValue);
         String charsString = StringUtil.stringify(charsValue);
         int rightTrimPosition;
-        if (trimSpecification != TrimSpecification.LEADING) {
+        if (effectiveSpecification != TrimSpecification.LEADING) {
             rightTrimPosition = getRightTrimPosition(inputString, charsString);
         } else {
             rightTrimPosition = inputString.length();
         }
         int leftTrimPosition;
-        if (trimSpecification != TrimSpecification.TRAILING && rightTrimPosition > 0) {
+        if (effectiveSpecification != TrimSpecification.TRAILING && rightTrimPosition > 0) {
             leftTrimPosition = getLeftTrimPosition(inputString, charsString);
         } else {
             leftTrimPosition = 0;
@@ -121,8 +132,12 @@ public class TrimExpression implements Expression {
 
     @Override
     public String automaticName() {
-        return "TRIM(" + trimSpecification.name() + " " + charsExpression.automaticName() +
-                " FROM " + inputExpression.automaticName() + ")";
+        ;
+        return "TRIM(" +
+                trimSpecification.map(s -> s.name() + " ").orElse("") +
+                charsExpression.map(e -> e.automaticName() + " ").orElse("") +
+                (trimSpecification.isPresent() || charsExpression.isPresent() ? "FROM " : "") +
+                inputExpression.automaticName() + ")";
     }
 
 }
