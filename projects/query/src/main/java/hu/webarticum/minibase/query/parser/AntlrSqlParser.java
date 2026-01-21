@@ -31,6 +31,7 @@ import hu.webarticum.minibase.query.expression.ConstantExpression;
 import hu.webarticum.minibase.query.expression.DivideExpression;
 import hu.webarticum.minibase.query.expression.EqualsExpression;
 import hu.webarticum.minibase.query.expression.Expression;
+import hu.webarticum.minibase.query.expression.ExtractExpression;
 import hu.webarticum.minibase.query.expression.GreatestExpression;
 import hu.webarticum.minibase.query.expression.IsNotNullExpression;
 import hu.webarticum.minibase.query.expression.IsNullExpression;
@@ -106,6 +107,8 @@ import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.EscapeStr
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.EscapeStringTokenListContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.ExpressionContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.ExtendedValueContext;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.ExtractExpressionContext;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.ExtractFieldNameContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.FieldListContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.FieldNameContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.FunctionCallContext;
@@ -595,6 +598,11 @@ public class AntlrSqlParser implements SqlParser {
             return parsePositionExpressionNode(positionExpressionNode);
         }
 
+        ExtractExpressionContext extractExpressionNode = expressionNode.extractExpression();
+        if (extractExpressionNode != null) {
+            return parseExtractExpressionNode(extractExpressionNode);
+        }
+
         CastExpressionContext castExpressionNode = expressionNode.castExpression();
         if (castExpressionNode != null) {
             return parseCastExpressionNode(castExpressionNode);
@@ -982,6 +990,16 @@ public class AntlrSqlParser implements SqlParser {
         Expression subjectExpression = parseExpressionNode(positionExpressionNode.subjectExpression);
         Expression contextExpression = parseExpressionNode(positionExpressionNode.contextExpression);
         return new PositionExpression(subjectExpression, contextExpression);
+    }
+
+    private Expression parseExtractExpressionNode(ExtractExpressionContext extractExpressionNode) {
+        Expression inputExpression = parseExpressionNode(extractExpressionNode.inputExpression);
+        ExtractExpression.ExtractField extractField = parseExtractFieldNode(extractExpressionNode.extractFieldName());
+        return new ExtractExpression(inputExpression, extractField);
+    }
+
+    private ExtractExpression.ExtractField parseExtractFieldNode(ExtractFieldNameContext extractFieldNameNode) {
+        return ExtractExpression.ExtractField.valueOf(extractFieldNameNode.getText().toUpperCase());
     }
 
     private Expression parseCastExpressionNode(CastExpressionContext castExpressionNode) {

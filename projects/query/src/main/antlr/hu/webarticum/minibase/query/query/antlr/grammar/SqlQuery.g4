@@ -114,6 +114,7 @@ expression:
     trimExpression |
     substringExpression |
     positionExpression |
+    extractExpression |
     castExpression |
     atomicExpression;
 unaryArithmeticExpression: ( PLUS | MINUS ) subExpression=expression;
@@ -126,6 +127,8 @@ trimSpecification: LEADING | TRAILING | BOTH;
 substringExpression: ( SUBSTRING | SUBSTR ) PAR_START inputExpression=expression
     ( FROM fromExpression=expression ( FOR forExpression=expression )? | FOR forExpression=expression ) PAR_END;
 positionExpression: POSITION PAR_START subjectExpression=expression IN contextExpression=expression PAR_END;
+extractExpression: EXTRACT PAR_START extractFieldName FROM inputExpression=expression PAR_END;
+extractFieldName: YEAR | MONTH | DAY | HOUR | MINUTE | SECOND;
 castExpression:
     CAST PAR_START expression AS typeConstruct PAR_END |
     CONVERT PAR_START expression COMMA typeConstruct PAR_END |
@@ -199,6 +202,7 @@ SUBSTR: S U B S T R;
 FOR: F O R;
 POSITION: P O S I T I O N;
 IN: I N;
+EXTRACT: E X T R A C T;
 
 BOOLEAN: B O O L E A N;
 INTEGER: I N T E G E R;
