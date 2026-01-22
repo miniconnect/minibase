@@ -3,6 +3,7 @@ package hu.webarticum.minibase.query.util;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.math.BigDecimal;
+import java.time.ZoneOffset;
 
 import org.junit.jupiter.api.Test;
 
@@ -25,6 +26,8 @@ class DateTimeDeltaUtilTest {
         assertThat(DateTimeDeltaUtil.deltaify(-100000.75)).isEqualTo(DateTimeDelta.of(0, 0, -1, -13600, -750_000_000));
         assertThat(DateTimeDeltaUtil.deltaify(new BigDecimal("42.7103"))).isEqualTo(DateTimeDelta.of(0, 0, 0, 42, 710_300_000));
         assertThat(DateTimeDeltaUtil.deltaify(new BigDecimal("-100000.77"))).isEqualTo(DateTimeDelta.of(0, 0, -1, -13600, -770_000_000));
+        assertThat(DateTimeDeltaUtil.deltaify(ZoneOffset.of("+01:30"))).isEqualTo(DateTimeDelta.of(0, 0, 0, 5400, 0));
+        assertThat(DateTimeDeltaUtil.deltaify(ZoneOffset.of("-01:02:03"))).isEqualTo(DateTimeDelta.of(0, 0, 0, -3723, 0));
     }
 
     @Test

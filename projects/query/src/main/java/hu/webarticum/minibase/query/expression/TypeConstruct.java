@@ -5,6 +5,9 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
+import java.time.ZoneOffset;
 
 import hu.webarticum.miniconnect.lang.ByteString;
 import hu.webarticum.miniconnect.lang.DateTimeDelta;
@@ -20,7 +23,9 @@ public class TypeConstruct {
         DECIMAL(BigDecimal.class), FLOAT(Double.class),
         NVARCHAR(String.class), CLOB(String.class),
         BINARY(ByteString.class), VARBINARY(ByteString.class), BLOB(ByteString.class),
-        DATE(LocalDate.class), TIME(LocalTime.class), DATETIME(LocalDateTime.class), TIMESTAMP_WITH_TIME_ZONE(Instant.class),
+        DATE(LocalDate.class), TIME(LocalTime.class), DATETIME(LocalDateTime.class),
+        TIMETZ(OffsetTime.class), DATETIMETZ(OffsetDateTime.class), TIMESTAMPTZ(Instant.class),
+        TIMEZONE(ZoneOffset.class),
         INTERVAL(DateTimeDelta.class),
 
         ;
@@ -45,14 +50,22 @@ public class TypeConstruct {
         DECIMAL(Symbol.DECIMAL), FLOAT(Symbol.FLOAT),
         NVARCHAR(Symbol.NVARCHAR), CLOB(Symbol.CLOB),
         BINARY(Symbol.BINARY), VARBINARY(Symbol.VARBINARY), BLOB(Symbol.BLOB),
-        DATE(Symbol.DATE), TIME(Symbol.TIME), DATETIME(Symbol.DATETIME), TIMESTAMP_WITH_TIME_ZONE(Symbol.TIMESTAMP_WITH_TIME_ZONE),
+        DATE(Symbol.DATE), TIME(Symbol.TIME), DATETIME(Symbol.DATETIME),
+        TIMETZ(Symbol.TIMETZ), DATETIMETZ(Symbol.DATETIMETZ), TIMESTAMPTZ(Symbol.TIMESTAMPTZ),
+        TIMEZONE(Symbol.TIMEZONE),
         INTERVAL(Symbol.INTERVAL),
 
         TINYINT(Symbol.INTEGER), SMALLINT(Symbol.INTEGER), INT(Symbol.INTEGER),
         NUMERIC(Symbol.DECIMAL), DEC(Symbol.DECIMAL),
         REAL(Symbol.FLOAT), DOUBLE_PRECISION(Symbol.FLOAT), DOUBLE(Symbol.FLOAT),
         CHAR(Symbol.NVARCHAR), VARCHAR(Symbol.NVARCHAR), NCHAR(Symbol.NVARCHAR), TEXT(Symbol.CLOB),
-        TIMESTAMP(Symbol.DATETIME), TIMESTAMP_WITHOUT_TIME_ZONE(Symbol.DATETIME),
+        TIMESTAMP(Symbol.DATETIME),
+        TIME_WITHOUT_TIME_ZONE(Symbol.TIME),
+        DATETIME_WITHOUT_TIME_ZONE(Symbol.DATETIME),
+        TIMESTAMP_WITHOUT_TIME_ZONE(Symbol.DATETIME),
+        TIME_WITH_TIME_ZONE(Symbol.TIMETZ),
+        DATETIME_WITH_TIME_ZONE(Symbol.DATETIMETZ),
+        TIMESTAMP_WITH_TIME_ZONE(Symbol.TIMESTAMPTZ),
 
         ;
 

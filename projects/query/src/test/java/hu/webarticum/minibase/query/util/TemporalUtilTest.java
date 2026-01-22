@@ -86,6 +86,7 @@ class TemporalUtilTest {
         assertThat(TemporalUtil.convert(LocalTime.of(16, 13, 11, 123456789), LocalTime.class)).isEqualTo(LocalTime.of(16, 13, 11, 123456789));
         assertThat(TemporalUtil.convert(LocalDateTime.of(2025, 12, 6, 2, 30), LocalTime.class)).isEqualTo(LocalTime.of(2, 30, 0));
         assertThat(TemporalUtil.convert(Instant.ofEpochSecond(1763237345), LocalTime.class)).isEqualTo(LocalTime.of(20, 9, 5));
+        assertThat(TemporalUtil.convert(ZoneOffset.ofHours(1), LocalTime.class)).isEqualTo(LocalTime.MIN);
     }
 
     @Test
@@ -96,6 +97,7 @@ class TemporalUtilTest {
         assertThat(TemporalUtil.convert(LocalDate.of(2025, 3, 4), LocalDate.class)).isEqualTo(LocalDate.of(2025, 3, 4));
         assertThat(TemporalUtil.convert(LocalDateTime.of(2024, 12, 6, 1, 24), LocalDate.class)).isEqualTo(LocalDate.of(2024, 12, 6));
         assertThat(TemporalUtil.convert(Instant.ofEpochSecond(1763238705), LocalDate.class)).isEqualTo(LocalDate.of(2025, 11, 15));
+        assertThat(TemporalUtil.convert(ZoneOffset.ofHours(1), LocalDate.class)).isEqualTo(LocalDate.ofEpochDay(0));
     }
 
     @Test
@@ -109,6 +111,8 @@ class TemporalUtilTest {
                 .isEqualTo(LocalDateTime.of(2023, 1, 30, 0, 0, 0));
         assertThat(TemporalUtil.convert(Instant.ofEpochSecond(1763241384, 174006389), LocalDateTime.class))
                 .isEqualTo(LocalDateTime.of(2025, 11, 15, 21, 16, 24, 174006389));
+        assertThat(TemporalUtil.convert(ZoneOffset.ofHours(1), LocalDateTime.class))
+                .isEqualTo(LocalDate.ofEpochDay(0).atStartOfDay());
     }
 
     @Test
@@ -124,6 +128,8 @@ class TemporalUtilTest {
                 .isEqualTo(Instant.ofEpochSecond(1763247043, 173826574));
         assertThat(TemporalUtil.convert(Instant.ofEpochSecond(1763241222, 96134385), Instant.class))
                 .isEqualTo(Instant.ofEpochSecond(1763241222, 96134385));
+        assertThat(TemporalUtil.convert(ZoneOffset.ofHours(1), Instant.class))
+                .isEqualTo(LocalDate.ofEpochDay(0).atStartOfDay(ZoneOffset.ofHours(1)).toInstant());
     }
 
     @Test

@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.OffsetTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.temporal.Temporal;
@@ -43,6 +44,8 @@ public final class TemporalUtil {
             return parse(((ByteString) value).toString(StandardCharsets.UTF_8));
         } else if (value == null) {
             return null;
+        } else if (value instanceof ZoneOffset) {
+            return LocalDateTime.MIN.atOffset((ZoneOffset) value);
         } else {
             return convertToInstant(value);
         }
@@ -160,6 +163,8 @@ public final class TemporalUtil {
             return LocalTime.ofNanoOfDay(nanosOfDay);
         } else if (value instanceof TemporalAmount) {
             return convertToLocalDateTime(value).toLocalTime();
+        } else if (value instanceof ZoneOffset) {
+            return LocalTime.MIN;
         } else {
             throw new IllegalArgumentException("Cannot convert to LocalTime");
         }
@@ -174,6 +179,8 @@ public final class TemporalUtil {
             return ((ZonedDateTime) value).toOffsetDateTime().toOffsetTime();
         } else if (value instanceof LocalTime) {
             return ((LocalTime) value).atOffset(ZoneOffset.UTC);
+        } else if (value instanceof ZoneOffset) {
+            return LocalTime.MIN.atOffset((ZoneOffset) value);
         } else if (value instanceof LocalDateTime) {
             return ((LocalDateTime) value).atOffset(ZoneOffset.UTC).toOffsetTime();
         } else if (value instanceof LocalDate) {
@@ -210,6 +217,8 @@ public final class TemporalUtil {
             return ((ZonedDateTime) value).toLocalDate();
         } else if (value instanceof TemporalAmount) {
             return convertToLocalDateTime(value).toLocalDate();
+        } else if (value instanceof ZoneOffset) {
+            return LocalDate.ofEpochDay(0);
         } else {
             throw new IllegalArgumentException("Cannot convert to LocalDate");
         }
@@ -238,6 +247,8 @@ public final class TemporalUtil {
             return ((ZonedDateTime) value).toLocalDateTime();
         } else if (value instanceof TemporalAmount) {
             return LocalDateTime.MIN.plus((TemporalAmount) value);
+        } else if (value instanceof ZoneOffset) {
+            return LocalDate.ofEpochDay(0).atStartOfDay();
         } else {
             throw new IllegalArgumentException("Cannot convert to LocalDateTime");
         }
@@ -264,6 +275,8 @@ public final class TemporalUtil {
             return instantValue.atOffset(ZoneOffset.UTC);
         } else if (value instanceof LocalTime) {
             return LocalDate.ofEpochDay(0).atTime((LocalTime) value).atOffset(ZoneOffset.UTC);
+        } else if (value instanceof ZoneOffset) {
+            return LocalDate.ofEpochDay(0).atStartOfDay().atOffset((ZoneOffset) value);
         } else if (value instanceof TemporalAmount) {
             return LocalDateTime.MIN.plus((TemporalAmount) value).atOffset(ZoneOffset.UTC);
         } else {
@@ -294,6 +307,8 @@ public final class TemporalUtil {
             return LocalDate.ofEpochDay(0).atTime((LocalTime) value).atZone(ZoneOffset.UTC);
         } else if (value instanceof TemporalAmount) {
             return LocalDateTime.MIN.plus((TemporalAmount) value).atZone(ZoneOffset.UTC);
+        } else if (value instanceof ZoneId) {
+            return LocalDate.ofEpochDay(0).atStartOfDay().atZone((ZoneId) value);
         } else {
             throw new IllegalArgumentException("Cannot convert to ZonedDateTime");
         }
@@ -321,6 +336,8 @@ public final class TemporalUtil {
             return ((ZonedDateTime) value).toInstant();
         } else if (value instanceof TemporalAmount) {
             return convertToLocalDateTime(value).toInstant(ZoneOffset.UTC);
+        } else if (value instanceof ZoneOffset) {
+            return LocalDate.ofEpochDay(0).atStartOfDay((ZoneOffset) value).toInstant();
         } else {
             throw new IllegalArgumentException("Cannot convert to Instant");
         }

@@ -157,8 +157,11 @@ functionCall: functionName PAR_START ( expression ( COMMA expression )* )? PAR_E
 functionName: identifier | functionNameToken;
 functionNameToken: LEFT | RIGHT | TRIM | SUBSTRING | SUBSTR | typeName;
 typeName:
-    NULL | BOOLEAN | INTEGER | BIGINT | DEC | DECIMAL | FLOAT | NVARCHAR | CLOB | BINARY | VARBINARY | BLOB | DATE | TIME | DATETIME |
-    TIMESTAMP ( WITHOUT TIME ZONE )? | TIMESTAMP WITH TIME ZONE | INTERVAL |
+    NULL | BOOLEAN | INTEGER | BIGINT | DEC | DECIMAL | FLOAT | NVARCHAR | CLOB | BINARY | VARBINARY | BLOB | DATE |
+    ( TIME | DATETIME | TIMESTAMP ) ( ( WITH | WITHOUT ) TIME ZONE )? |
+    TIMETZ | DATETIMETZ | TIMESTAMPTZ |
+    TIMEZONE |
+    INTERVAL |
     TINYINT | SMALLINT | INT | NUMERIC | REAL | DOUBLE PRECISION? | CHAR | VARCHAR | NCHAR | TEXT;
 intervalSpecifier: ( fromItem=intervalSpecifierItem TO )? toItem=intervalSpecifierItem;
 intervalSpecifierItem: intervalFieldName ( PAR_START integerLiteral PAR_END )?;
@@ -219,6 +222,10 @@ DATE: D A T E;
 TIME: T I M E;
 DATETIME: D A T E T I M E;
 TIMESTAMP: T I M E S T A M P;
+TIMETZ: T I M E T Z;
+DATETIMETZ: D A T E T I M E T Z;
+TIMESTAMPTZ: T I M E S T A M P T Z;
+TIMEZONE: T I M E Z O N E;
 INTERVAL: I N T E R V A L;
 SECOND: S E C O N D;
 MINUTE: M I N U T E;

@@ -2,6 +2,7 @@ package hu.webarticum.minibase.query.util;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.ZoneOffset;
 import java.time.temporal.Temporal;
 import java.util.Arrays;
 
@@ -64,8 +65,8 @@ public final class UnifyUtil {
             return Double.class;
         } else if (Number.class.isAssignableFrom(type)) {
             return BigDecimal.class;
-        } else if (Boolean.class.isAssignableFrom(type)) {
-            return Boolean.class;
+        } else if (type == Boolean.class || type == ZoneOffset.class) {
+            return type;
         } else if (Temporal.class.isAssignableFrom(type)) {
             return TemporalUtil.isTargetTypeSupported(type) ? type : Instant.class;
         } else {

@@ -78,6 +78,7 @@ public final class NumberUtil {
                 type == LocalDateTime.class ||
                 type == OffsetDateTime.class ||
                 type == ZonedDateTime.class ||
+                type == ZoneOffset.class ||
                 type == Instant.class ||
                 type == Period.class) {
             return LargeInteger.class;
@@ -271,6 +272,8 @@ public final class NumberUtil {
             return numberify(((OffsetDateTime) object).toInstant());
         } else if (object instanceof ZonedDateTime) {
             return numberify(((ZonedDateTime) object).toInstant());
+        } else if (object instanceof ZoneOffset) {
+            return LargeInteger.of(((ZoneOffset) object).getTotalSeconds());
         } else if (object instanceof Instant) {
             return LargeInteger.of(((Instant) object).getEpochSecond());
         } else if (object instanceof DateTimeDelta) {

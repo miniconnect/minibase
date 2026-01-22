@@ -133,6 +133,8 @@ public final class DateTimeDeltaUtil {
             return DateTimeDelta.of((Duration) object);
         } else if (object instanceof Period) {
             return DateTimeDelta.of((Period) object);
+        } else if (object instanceof ZoneOffset) {
+            return DateTimeDelta.of(Duration.ofSeconds(((ZoneOffset) object).getTotalSeconds()));
         } else if (object instanceof Temporal) {
             return DateTimeDelta.between(LocalDateTime.MIN.atOffset(ZoneOffset.UTC), (Temporal) object);
         } else if (object instanceof Boolean) {

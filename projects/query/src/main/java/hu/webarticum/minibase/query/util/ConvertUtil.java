@@ -1,5 +1,6 @@
 package hu.webarticum.minibase.query.util;
 
+import java.time.ZoneOffset;
 import java.time.temporal.Temporal;
 
 import hu.webarticum.miniconnect.lang.ByteString;
@@ -31,6 +32,8 @@ public final class ConvertUtil {
             return value;
         } else if (Temporal.class.isAssignableFrom(targetType)) {
             return TemporalUtil.convert(value, targetType);
+        } else if (targetType == ZoneOffset.class) {
+            return ZoneOffsetUtil.zoneify(value);
         } else if (targetType == DateTimeDelta.class) {
             return DateTimeDeltaUtil.deltaify(value, scale);
         } else {
