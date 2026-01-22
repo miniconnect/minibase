@@ -25,6 +25,8 @@ public class ExtractExpression implements Expression {
         HOUR(ChronoField.HOUR_OF_DAY, ChronoUnit.HOURS),
         MINUTE(ChronoField.MINUTE_OF_HOUR, ChronoUnit.MINUTES),
         SECOND(ChronoField.SECOND_OF_MINUTE, ChronoUnit.SECONDS),
+        TIMEZONE_HOUR(null, null),
+        TIMEZONE_MINUTE(null, null),
         ;
 
         private final TemporalField temporalField;
@@ -37,6 +39,17 @@ public class ExtractExpression implements Expression {
         }
 
         public Object extractFrom(Temporal temporal) {
+            if (this == TIMEZONE_HOUR || this == TIMEZONE_MINUTE) {
+                if (!temporal.isSupported(ChronoField.OFFSET_SECONDS)) {
+                    return LargeInteger.ZERO;
+                }
+                int offsetSeconds = temporal.get(ChronoField.OFFSET_SECONDS);
+                if (this == TIMEZONE_MINUTE) {
+                    return LargeInteger.of((offsetSeconds / 60) % 60);
+                } else {
+                    return LargeInteger.of((offsetSeconds / 3600) % 24);
+                }
+            }
             if (!temporal.isSupported(temporalField)) {
                 return this == SECOND ? BigDecimal.ZERO : LargeInteger.ZERO;
             }
@@ -50,6 +63,9 @@ public class ExtractExpression implements Expression {
         }
 
         public Object extractFrom(TemporalAmount temporalAmount) {
+            if (this == TIMEZONE_HOUR || this == TIMEZONE_MINUTE) {
+                return LargeInteger.ZERO;
+            }
             List<TemporalUnit> supportedUnits = temporalAmount.getUnits();
             if (supportedUnits.contains(temporalUnit)) {
                 if (this == SECOND) {

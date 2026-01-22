@@ -128,7 +128,7 @@ substringExpression: ( SUBSTRING | SUBSTR ) PAR_START inputExpression=expression
     ( FROM fromExpression=expression ( FOR forExpression=expression )? | FOR forExpression=expression ) PAR_END;
 positionExpression: POSITION PAR_START subjectExpression=expression IN contextExpression=expression PAR_END;
 extractExpression: EXTRACT PAR_START extractFieldName FROM inputExpression=expression PAR_END;
-extractFieldName: YEAR | MONTH | DAY | HOUR | MINUTE | SECOND;
+extractFieldName: YEAR | MONTH | DAY | HOUR | MINUTE | SECOND | TIMEZONE_HOUR | TIMEZONE_MINUTE;
 castExpression:
     CAST PAR_START expression AS typeConstruct PAR_END |
     CONVERT PAR_START expression COMMA typeConstruct PAR_END |
@@ -226,6 +226,8 @@ HOUR: H O U R;
 DAY: D A Y;
 MONTH: M O N T H;
 YEAR: Y E A R;
+TIMEZONE_HOUR: T I M E Z O N E UNDERSCORE H O U R;
+TIMEZONE_MINUTE: T I M E Z O N E UNDERSCORE M I N U T E;
 WITH: W I T H;
 WITHOUT: W I T H O U T;
 ZONE: Z O N E;
