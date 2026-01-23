@@ -9,6 +9,7 @@ import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 import java.time.Period;
+import java.time.ZoneOffset;
 import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAmount;
 import java.util.Optional;
@@ -74,22 +75,30 @@ public class AddExpression implements Expression {
         }
     }
 
-    private Optional<Class<?>> typeForTemporal(Class<?> temporalType, Expression temporalAmountExpression) {
-        if (temporalType != LocalDate.class && temporalType != LocalTime.class && temporalType != OffsetTime.class) {
-            return Optional.of(temporalType);
-        } else if (temporalType == null || temporalAmountExpression.isNullable() || !temporalAmountExpression.parameters().isEmpty()) {
+    private Optional<Class<?>> typeForTemporal(Class<?> temporalType, Expression otherExpression) {
+        Class<?> otherType = getTypeReluctantly(otherExpression);
+        if (temporalType == null || otherType == null) {
             return Optional.empty();
+        } else if (otherType == ZoneOffset.class) {
+            if (temporalType == LocalDateTime.class || temporalType == Instant.class) {
+                return Optional.of(OffsetDateTime.class);
+            } else if (temporalType == LocalTime.class) {
+                return Optional.of(OffsetTime.class);
+            } else {
+                return Optional.of(temporalType);
+            }
+        } else if (temporalType != LocalDate.class && temporalType != LocalTime.class && temporalType != OffsetTime.class) {
+            return Optional.of(temporalType);
         }
         if (temporalType == LocalDate.class) {
-            Class<?> temporalAmountType = temporalAmountExpression.type().orElse(null);
             if (
-                    temporalAmountType != null &&
-                    !TemporalAmount.class.isAssignableFrom(temporalAmountType) &&
-                    NumberUtil.numberifyType(temporalAmountType) == LargeInteger.class) {
+                    otherType != null &&
+                    !TemporalAmount.class.isAssignableFrom(otherType) &&
+                    NumberUtil.numberifyType(otherType) == LargeInteger.class) {
                 return Optional.of(LocalDate.class);
             }
         }
-        DateTimeDelta delta = DateTimeDeltaUtil.deltaify(temporalAmountExpression.evaluate(ImmutableMap.empty()));
+        DateTimeDelta delta = DateTimeDeltaUtil.deltaify(otherExpression.evaluate(ImmutableMap.empty()));
         if (temporalType == LocalDate.class) {
             return delta.getDuration().isZero() ? Optional.of(LocalDate.class) : Optional.of(LocalDateTime.class);
         } else if (temporalType == LocalTime.class) {
@@ -97,6 +106,13 @@ public class AddExpression implements Expression {
         } else {
             return delta.getPeriod().isZero() ? Optional.of(OffsetTime.class) : Optional.of(OffsetDateTime.class);
         }
+    }
+
+    private Class<?> getTypeReluctantly(Expression expression) {
+        if (expression.isNullable() || !expression.parameters().isEmpty()) {
+            return null;
+        }
+        return expression.type(ImmutableMap.empty());
     }
 
     @Override
@@ -125,12 +141,21 @@ public class AddExpression implements Expression {
         }
     }
 
-    private Class<?> typeForTemporal(Class<?> temporalType, Expression temporalAmountExpression, ImmutableMap<Parameter, Class<?>> types) {
-        if (temporalType != LocalDate.class && temporalType != LocalTime.class && temporalType != OffsetTime.class) {
+    private Class<?> typeForTemporal(Class<?> temporalType, Expression otherExpression, ImmutableMap<Parameter, Class<?>> types) {
+        Class<?> otherType = otherExpression.type(types);
+        if (otherType == ZoneOffset.class) {
+            if (temporalType == LocalDateTime.class || temporalType == Instant.class) {
+                return OffsetDateTime.class;
+            } else if (temporalType == LocalTime.class) {
+                return OffsetTime.class;
+            } else {
+                return temporalType;
+            }
+        } else if (temporalType != LocalDate.class && temporalType != LocalTime.class && temporalType != OffsetTime.class) {
             return temporalType;
         }
         if (temporalType == LocalDate.class) {
-            Class<?> temporalAmountType = temporalAmountExpression.type(types);
+            Class<?> temporalAmountType = otherExpression.type(types);
             if (
                     !TemporalAmount.class.isAssignableFrom(temporalAmountType) &&
                     NumberUtil.numberifyType(temporalAmountType) == LargeInteger.class) {
@@ -139,19 +164,18 @@ public class AddExpression implements Expression {
         }
         boolean hasPeriod = true;
         boolean hasDuration = true;
-        if (temporalAmountExpression.parameters().isEmpty()) {
-            Object value = temporalAmountExpression.evaluate(ImmutableMap.empty());
-            if (value == null) {
+        if (otherExpression.parameters().isEmpty()) {
+            Object otherValue = otherExpression.evaluate(ImmutableMap.empty());
+            if (otherValue == null) {
                 return Void.class;
             }
-            DateTimeDelta delta = DateTimeDeltaUtil.deltaify(value);
+            DateTimeDelta delta = DateTimeDeltaUtil.deltaify(otherValue);
             hasPeriod = !delta.getPeriod().isZero();
             hasDuration = !delta.getDuration().isZero();
         } else {
-            Class<?> temporalAmountType = temporalAmountExpression.type(types);
-            if (temporalAmountType == Period.class) {
+            if (otherType == Period.class) {
                 hasDuration = false;
-            } else if (temporalAmountType == Duration.class) {
+            } else if (otherType == Duration.class) {
                 hasPeriod = false;
             } else {
                 // final fallback
@@ -209,12 +233,24 @@ public class AddExpression implements Expression {
         }
     }
 
-    private Temporal operate(Temporal temporal, Object deltaValue) {
+    private Temporal operate(Temporal temporal, Object otherValue) {
+        if (otherValue instanceof ZoneOffset) {
+            ZoneOffset offset = (ZoneOffset) otherValue;
+            if (temporal instanceof LocalTime) {
+                return ((LocalTime) temporal).atOffset(offset);
+            } else if (temporal instanceof LocalDateTime) {
+                return ((LocalDateTime) temporal).atOffset(offset);
+            } else if (temporal instanceof Instant) {
+                return ((Instant) temporal).atOffset(offset);
+            } else {
+                return temporal;
+            }
+        }
         DateTimeDelta delta;
-        if (deltaValue instanceof TemporalAmount || !(temporal instanceof LocalDate)) {
-            delta = DateTimeDeltaUtil.deltaify(deltaValue);
+        if (otherValue instanceof TemporalAmount || !(temporal instanceof LocalDate)) {
+            delta = DateTimeDeltaUtil.deltaify(otherValue);
         } else {
-            Number deltaNumber = NumberUtil.numberify(deltaValue);
+            Number deltaNumber = NumberUtil.numberify(otherValue);
             if (deltaNumber instanceof LargeInteger) {
                 delta = DateTimeDelta.of(Period.ofDays(((LargeInteger) deltaNumber).intValueExact()));
             } else {

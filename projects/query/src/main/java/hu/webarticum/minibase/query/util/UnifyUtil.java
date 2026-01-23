@@ -68,7 +68,7 @@ public final class UnifyUtil {
         } else if (type == Boolean.class || type == ZoneOffset.class) {
             return type;
         } else if (Temporal.class.isAssignableFrom(type)) {
-            return TemporalUtil.isTargetTypeSupported(type) ? type : Instant.class;
+            return TemporalUtil.isTypeUnifiable(type) ? type : Instant.class;
         } else {
             return String.class;
         }

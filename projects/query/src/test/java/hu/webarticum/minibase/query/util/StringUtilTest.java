@@ -7,10 +7,13 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 
 import org.junit.jupiter.api.Test;
 
 import hu.webarticum.miniconnect.lang.ByteString;
+import hu.webarticum.miniconnect.lang.DateTimeDelta;
 import hu.webarticum.miniconnect.lang.LargeInteger;
 
 class StringUtilTest {
@@ -63,6 +66,11 @@ class StringUtilTest {
     void testStringifyOther() {
         assertThat(StringUtil.stringify(12L)).isEqualTo("12");
         assertThat(StringUtil.stringify(LargeInteger.of("436780617018127680712"))).isEqualTo("436780617018127680712");
+        assertThat(StringUtil.stringify(LocalTime.of(11, 20).atOffset(ZoneOffset.ofHours(-3)))).isEqualTo("11:20:00-03:00");
+        assertThat(StringUtil.stringify(LocalDateTime.of(2000, 1, 2, 3, 4, 5).atOffset(ZoneOffset.ofHours(1))))
+                .isEqualTo("2000-01-02T03:04:05+01:00");
+        assertThat(StringUtil.stringify(ZoneOffset.of("-02:45:10"))).isEqualTo("-02:45:10");
+        assertThat(StringUtil.stringify(DateTimeDelta.of(-10, ChronoUnit.MINUTES))).isEqualTo("PT-10M");
         assertThat(StringUtil.stringify(new Object() { @Override public String toString() { return "ipsum"; } })).isEqualTo("ipsum");
     }
 

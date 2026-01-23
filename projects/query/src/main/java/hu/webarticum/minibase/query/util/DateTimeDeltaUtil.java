@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Period;
 import java.time.ZoneOffset;
@@ -136,7 +137,7 @@ public final class DateTimeDeltaUtil {
         } else if (object instanceof ZoneOffset) {
             return DateTimeDelta.of(Duration.ofSeconds(((ZoneOffset) object).getTotalSeconds()));
         } else if (object instanceof Temporal) {
-            return DateTimeDelta.between(LocalDateTime.MIN.atOffset(ZoneOffset.UTC), (Temporal) object);
+            return DateTimeDelta.between(LocalDate.ofEpochDay(0).atStartOfDay(ZoneOffset.UTC), (Temporal) object);
         } else if (object instanceof Boolean) {
             return DateTimeDelta.of(0, 0, 0, (boolean) object ? 1 : 0);
         } else {

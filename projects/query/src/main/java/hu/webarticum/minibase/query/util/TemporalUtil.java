@@ -45,7 +45,7 @@ public final class TemporalUtil {
         } else if (value == null) {
             return null;
         } else if (value instanceof ZoneOffset) {
-            return LocalDateTime.MIN.atOffset((ZoneOffset) value);
+            return LocalDate.ofEpochDay(0).atStartOfDay((ZoneOffset) value);
         } else {
             return convertToInstant(value);
         }
@@ -61,8 +61,10 @@ public final class TemporalUtil {
         if (lastDashPos < 0 && lastPlusPos < 0) {
             return LocalTime.parse(dateString);
         }
-        if (dateString.lastIndexOf('/') >= 0 || dateString.lastIndexOf('Z') > 0 || dateString.lastIndexOf('z') > 0) {
+        if (dateString.lastIndexOf('/') >= 0) {
             return ZonedDateTime.parse(normalizeDateTimeString(dateString));
+        } else if (dateString.endsWith("Z") || dateString.endsWith("z")) {
+            return OffsetDateTime.parse(normalizeDateTimeString(dateString));
         }
         boolean hasOffset = (lastPlusPos >= 0 || lastDashPos > firstColonPos);
         if (!hasOffset) {
@@ -84,7 +86,7 @@ public final class TemporalUtil {
         return dateTimeString.substring(0, pos) + 'T' + dateTimeString.substring(pos + 1);
     }
 
-    public static boolean isTargetTypeSupported(Class<?> targetType) {
+    public static boolean isTypeUnifiable(Class<?> targetType) {
         return (
             targetType == LocalDate.class ||
             targetType == LocalTime.class ||
@@ -246,7 +248,7 @@ public final class TemporalUtil {
         } else if (value instanceof ZonedDateTime) {
             return ((ZonedDateTime) value).toLocalDateTime();
         } else if (value instanceof TemporalAmount) {
-            return LocalDateTime.MIN.plus((TemporalAmount) value);
+            return LocalDate.ofEpochDay(0).atStartOfDay().plus((TemporalAmount) value);
         } else if (value instanceof ZoneOffset) {
             return LocalDate.ofEpochDay(0).atStartOfDay();
         } else {
@@ -278,7 +280,7 @@ public final class TemporalUtil {
         } else if (value instanceof ZoneOffset) {
             return LocalDate.ofEpochDay(0).atStartOfDay().atOffset((ZoneOffset) value);
         } else if (value instanceof TemporalAmount) {
-            return LocalDateTime.MIN.plus((TemporalAmount) value).atOffset(ZoneOffset.UTC);
+            return LocalDate.ofEpochDay(0).atStartOfDay().plus((TemporalAmount) value).atOffset(ZoneOffset.UTC);
         } else {
             throw new IllegalArgumentException("Cannot convert to OffsetDateTime");
         }
@@ -288,9 +290,9 @@ public final class TemporalUtil {
         if (value instanceof ZonedDateTime) {
             return (ZonedDateTime) value;
         } else if (value instanceof OffsetDateTime) {
-            return ((OffsetDateTime) value).atZoneSameInstant(ZoneOffset.UTC);
+            return ((OffsetDateTime) value).toZonedDateTime();
         } else if (value instanceof OffsetTime) {
-            return LocalDate.ofEpochDay(0).atTime(((OffsetTime) value)).atZoneSameInstant(ZoneOffset.UTC);
+            return LocalDate.ofEpochDay(0).atTime(((OffsetTime) value)).toZonedDateTime();
         } else if (value instanceof LocalDateTime) {
             return ((LocalDateTime) value).atZone(ZoneOffset.UTC);
         } else if (value instanceof LocalDate) {
@@ -306,7 +308,7 @@ public final class TemporalUtil {
         } else if (value instanceof LocalTime) {
             return LocalDate.ofEpochDay(0).atTime((LocalTime) value).atZone(ZoneOffset.UTC);
         } else if (value instanceof TemporalAmount) {
-            return LocalDateTime.MIN.plus((TemporalAmount) value).atZone(ZoneOffset.UTC);
+            return LocalDate.ofEpochDay(0).atStartOfDay().plus((TemporalAmount) value).atZone(ZoneOffset.UTC);
         } else if (value instanceof ZoneId) {
             return LocalDate.ofEpochDay(0).atStartOfDay().atZone((ZoneId) value);
         } else {
@@ -329,7 +331,7 @@ public final class TemporalUtil {
         } else if (value instanceof LocalTime) {
             return LocalDate.ofEpochDay(0).atTime((LocalTime) value).toInstant(ZoneOffset.UTC);
         } else if (value instanceof OffsetTime) {
-            return LocalDate.ofEpochDay(0).atTime(((OffsetTime) value).toLocalTime()).toInstant(ZoneOffset.UTC);
+            return LocalDate.ofEpochDay(0).atTime((OffsetTime) value).toInstant();
         } else if (value instanceof OffsetDateTime) {
             return ((OffsetDateTime) value).toInstant();
         } else if (value instanceof ZonedDateTime) {
