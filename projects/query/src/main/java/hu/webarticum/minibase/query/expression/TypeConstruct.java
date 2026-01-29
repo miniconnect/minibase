@@ -24,8 +24,9 @@ public class TypeConstruct {
         NVARCHAR(String.class), CLOB(String.class),
         BINARY(ByteString.class), VARBINARY(ByteString.class), BLOB(ByteString.class),
         DATE(LocalDate.class), TIME(LocalTime.class), DATETIME(LocalDateTime.class),
-        TIMETZ(OffsetTime.class), DATETIMETZ(OffsetDateTime.class), TIMESTAMPTZ(Instant.class),
-        TIMEZONE(ZoneOffset.class),
+        INSTANT(Instant.class),
+        OTIME(OffsetTime.class), ODATETIME(OffsetDateTime.class),
+        UTCOFFSET(ZoneOffset.class),
         INTERVAL(DateTimeDelta.class),
 
         ;
@@ -51,8 +52,9 @@ public class TypeConstruct {
         NVARCHAR(Symbol.NVARCHAR), CLOB(Symbol.CLOB),
         BINARY(Symbol.BINARY), VARBINARY(Symbol.VARBINARY), BLOB(Symbol.BLOB),
         DATE(Symbol.DATE), TIME(Symbol.TIME), DATETIME(Symbol.DATETIME),
-        TIMETZ(Symbol.TIMETZ), DATETIMETZ(Symbol.DATETIMETZ), TIMESTAMPTZ(Symbol.TIMESTAMPTZ),
-        TIMEZONE(Symbol.TIMEZONE),
+        INSTANT(Symbol.INSTANT),
+        OTIME(Symbol.OTIME), ODATETIME(Symbol.ODATETIME),
+        UTCOFFSET(Symbol.UTCOFFSET),
         INTERVAL(Symbol.INTERVAL),
 
         TINYINT(Symbol.INTEGER), SMALLINT(Symbol.INTEGER), INT(Symbol.INTEGER),
@@ -63,10 +65,14 @@ public class TypeConstruct {
         TIME_WITHOUT_TIME_ZONE(Symbol.TIME),
         DATETIME_WITHOUT_TIME_ZONE(Symbol.DATETIME),
         TIMESTAMP_WITHOUT_TIME_ZONE(Symbol.DATETIME),
-        TIME_WITH_TIME_ZONE(Symbol.TIMETZ),
-        DATETIME_WITH_TIME_ZONE(Symbol.DATETIMETZ),
-        TIMESTAMP_WITH_TIME_ZONE(Symbol.TIMESTAMPTZ),
-
+        TIMETZ(Symbol.OTIME), TIME_WITH_TIME_ZONE(Symbol.OTIME),
+        DATETIMETZ(Symbol.ODATETIME), DATETIME_WITH_TIME_ZONE(Symbol.ODATETIME),
+        TIMESTAMPTZ(Symbol.INSTANT), TIMESTAMP_WITH_TIME_ZONE(Symbol.INSTANT),
+        TIME_WITH_OFFSET(Symbol.OTIME), TIME_WITH_UTCOFFSET(Symbol.OTIME),
+        DATETIME_WITH_OFFSET(Symbol.ODATETIME), DATETIME_WITH_UTCOFFSET(Symbol.ODATETIME),
+        TIMESTAMP_WITH_OFFSET(Symbol.ODATETIME), TIMESTAMP_WITH_UTCOFFSET(Symbol.ODATETIME),
+        OTIMESTAMP(Symbol.ODATETIME),
+        TIMEZONE(Symbol.UTCOFFSET),
         ;
 
         private final Symbol symbol;
