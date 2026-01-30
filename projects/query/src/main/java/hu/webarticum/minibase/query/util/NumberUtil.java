@@ -263,7 +263,7 @@ public final class NumberUtil {
         } else if (object instanceof LocalDate) {
             return LargeInteger.of(((LocalDate) object).toEpochDay());
         } else if (object instanceof LocalTime) {
-            return LargeInteger.of(((LocalTime) object).getSecond());
+            return LargeInteger.of(((LocalTime) object).toSecondOfDay());
         } else if (object instanceof OffsetTime) {
             return numberify(((OffsetTime) object).toLocalTime());
         } else if (object instanceof LocalDateTime) {
