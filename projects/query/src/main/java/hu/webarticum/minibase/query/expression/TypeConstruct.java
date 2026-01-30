@@ -25,7 +25,7 @@ public class TypeConstruct {
         BINARY(ByteString.class), VARBINARY(ByteString.class), BLOB(ByteString.class),
         DATE(LocalDate.class), TIME(LocalTime.class), DATETIME(LocalDateTime.class),
         INSTANT(Instant.class),
-        OTIME(OffsetTime.class), ODATETIME(OffsetDateTime.class),
+        TIMEO(OffsetTime.class), DATETIMEO(OffsetDateTime.class),
         UTCOFFSET(ZoneOffset.class),
         INTERVAL(DateTimeDelta.class),
 
@@ -53,7 +53,7 @@ public class TypeConstruct {
         BINARY(Symbol.BINARY), VARBINARY(Symbol.VARBINARY), BLOB(Symbol.BLOB),
         DATE(Symbol.DATE), TIME(Symbol.TIME), DATETIME(Symbol.DATETIME),
         INSTANT(Symbol.INSTANT),
-        OTIME(Symbol.OTIME), ODATETIME(Symbol.ODATETIME),
+        TIMEO(Symbol.TIMEO), DATETIMEO(Symbol.DATETIMEO),
         UTCOFFSET(Symbol.UTCOFFSET),
         INTERVAL(Symbol.INTERVAL),
 
@@ -65,13 +65,13 @@ public class TypeConstruct {
         TIME_WITHOUT_TIME_ZONE(Symbol.TIME),
         DATETIME_WITHOUT_TIME_ZONE(Symbol.DATETIME),
         TIMESTAMP_WITHOUT_TIME_ZONE(Symbol.DATETIME),
-        TIMETZ(Symbol.OTIME), TIME_WITH_TIME_ZONE(Symbol.OTIME),
-        DATETIMETZ(Symbol.ODATETIME), DATETIME_WITH_TIME_ZONE(Symbol.ODATETIME),
+        TIMETZ(Symbol.TIMEO), TIME_WITH_TIME_ZONE(Symbol.TIMEO),
+        DATETIMETZ(Symbol.DATETIMEO), DATETIME_WITH_TIME_ZONE(Symbol.DATETIMEO),
         TIMESTAMPTZ(Symbol.INSTANT), TIMESTAMP_WITH_TIME_ZONE(Symbol.INSTANT),
-        TIME_WITH_OFFSET(Symbol.OTIME), TIME_WITH_UTCOFFSET(Symbol.OTIME),
-        DATETIME_WITH_OFFSET(Symbol.ODATETIME), DATETIME_WITH_UTCOFFSET(Symbol.ODATETIME),
-        TIMESTAMP_WITH_OFFSET(Symbol.ODATETIME), TIMESTAMP_WITH_UTCOFFSET(Symbol.ODATETIME),
-        OTIMESTAMP(Symbol.ODATETIME),
+        TIME_WITH_OFFSET(Symbol.TIMEO), TIME_WITH_UTCOFFSET(Symbol.TIMEO),
+        DATETIME_WITH_OFFSET(Symbol.DATETIMEO), DATETIME_WITH_UTCOFFSET(Symbol.DATETIMEO),
+        TIMESTAMP_WITH_OFFSET(Symbol.DATETIMEO), TIMESTAMP_WITH_UTCOFFSET(Symbol.DATETIMEO),
+        TIMESTAMPO(Symbol.DATETIMEO),
         TIMEZONE(Symbol.UTCOFFSET),
         ;
 
