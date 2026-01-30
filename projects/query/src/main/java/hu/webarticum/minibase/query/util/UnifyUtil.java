@@ -16,7 +16,9 @@ public final class UnifyUtil {
 
 
     public static Class<?> typeOf(Object value) {
-        if (value instanceof LargeInteger) {
+        if (value == null) {
+            return Void.class;
+        } else if (value instanceof LargeInteger) {
             return LargeInteger.class;
         } else {
             return value.getClass();
