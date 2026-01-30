@@ -87,6 +87,20 @@ public class AddExpression implements Expression {
             } else {
                 return Optional.of(temporalType);
             }
+        } else if (Temporal.class.isAssignableFrom(otherType)) {
+            if (temporalType == LocalDate.class) {
+                if (otherType == LocalTime.class) {
+                    return Optional.of(LocalDateTime.class);
+                } else if (otherType == OffsetTime.class) {
+                    return Optional.of(OffsetDateTime.class);
+                }
+            } else if (otherType == LocalDate.class) {
+                if (temporalType == LocalTime.class) {
+                    return Optional.of(LocalDateTime.class);
+                } else if (temporalType == OffsetTime.class) {
+                    return Optional.of(OffsetDateTime.class);
+                }
+            }
         } else if (temporalType != LocalDate.class && temporalType != LocalTime.class && temporalType != OffsetTime.class) {
             return Optional.of(temporalType);
         }
@@ -150,6 +164,20 @@ public class AddExpression implements Expression {
                 return OffsetTime.class;
             } else {
                 return temporalType;
+            }
+        } else if (Temporal.class.isAssignableFrom(otherType)) {
+            if (temporalType == LocalDate.class) {
+                if (otherType == LocalTime.class) {
+                    return LocalDateTime.class;
+                } else if (otherType == OffsetTime.class) {
+                    return OffsetDateTime.class;
+                }
+            } else if (otherType == LocalDate.class) {
+                if (temporalType == LocalTime.class) {
+                    return LocalDateTime.class;
+                } else if (temporalType == OffsetTime.class) {
+                    return OffsetDateTime.class;
+                }
             }
         } else if (temporalType != LocalDate.class && temporalType != LocalTime.class && temporalType != OffsetTime.class) {
             return temporalType;
@@ -244,6 +272,19 @@ public class AddExpression implements Expression {
                 return ((Instant) temporal).atOffset(offset);
             } else {
                 return temporal;
+            }
+        }
+        if (temporal instanceof LocalDate) {
+            if (otherValue instanceof LocalTime) {
+                return ((LocalDate) temporal).atTime((LocalTime) otherValue);
+            } else if (otherValue instanceof OffsetTime) {
+                return ((LocalDate) temporal).atTime((OffsetTime) otherValue);
+            }
+        } else if (otherValue instanceof LocalDate) {
+            if (temporal instanceof LocalTime) {
+                return ((LocalDate) otherValue).atTime((LocalTime) temporal);
+            } else if (temporal instanceof OffsetTime) {
+                return ((LocalDate) otherValue).atTime((OffsetTime) temporal);
             }
         }
         DateTimeDelta delta;

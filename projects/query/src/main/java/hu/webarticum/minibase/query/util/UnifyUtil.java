@@ -50,11 +50,11 @@ public final class UnifyUtil {
 
     private static Class<?> mergeTypes(Class<?> type1, Class<?> type2) {
         if (type1 == type2) {
-            return type1;
+            return normalizeType(type1);
         } else if (type1 == Void.class) {
-            return type2;
+            return normalizeType(type2);
         } else if (type2 == Void.class) {
-            return type1;
+            return normalizeType(type1);
         }
 
         if (CharSequence.class.isAssignableFrom(type1)) {
