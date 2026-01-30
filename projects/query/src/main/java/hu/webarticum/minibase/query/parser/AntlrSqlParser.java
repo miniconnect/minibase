@@ -59,8 +59,9 @@ import hu.webarticum.minibase.query.expression.SubtractExpression;
 import hu.webarticum.minibase.query.expression.SubstringExpression;
 import hu.webarticum.minibase.query.expression.TrimExpression;
 import hu.webarticum.minibase.query.expression.TypeConstruct;
-import hu.webarticum.minibase.query.expression.UpperExpression;
 import hu.webarticum.minibase.query.expression.TypeConstruct.SymbolAlias;
+import hu.webarticum.minibase.query.expression.UnaryRealMathFunctionExpression;
+import hu.webarticum.minibase.query.expression.UpperExpression;
 import hu.webarticum.minibase.query.expression.VariableExpression;
 import hu.webarticum.minibase.query.expression.XorExpression;
 import hu.webarticum.minibase.query.query.DeleteQuery;
@@ -867,14 +868,29 @@ public class AntlrSqlParser implements SqlParser {
             return new GreatestExpression(parameters);
         }
 
-        checkFunctionParameterCount(functionNameUpper, parameters, 1);
-        TypeConstruct.SymbolAlias symbolAlias;
-        try {
-            symbolAlias = TypeConstruct.SymbolAlias.valueOf(functionNameUpper);
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Unknown function: " + functionName);
+        UnaryRealMathFunctionExpression.FunctionSymbol mathSymbolAlias =
+                getEnumValueOrNull(UnaryRealMathFunctionExpression.FunctionSymbol.class, functionNameUpper);
+        if (mathSymbolAlias != null) {
+            checkFunctionParameterCount(functionNameUpper, parameters, 1);
+            return new UnaryRealMathFunctionExpression(mathSymbolAlias, parameters.get(0));
         }
-        return new CastExpression(parameters.get(0), new TypeConstruct(symbolAlias, null, null));
+
+        checkFunctionParameterCount(functionNameUpper, parameters, 1);
+        TypeConstruct.SymbolAlias symbolAlias = getEnumValueOrNull(TypeConstruct.SymbolAlias.class, functionNameUpper);
+        if (symbolAlias != null) {
+            return new CastExpression(parameters.get(0), new TypeConstruct(symbolAlias, null, null));
+        }
+
+        throw new IllegalArgumentException("Unknown function: " + functionName);
+    }
+
+    private <T extends Enum<T>> T getEnumValueOrNull(Class<? extends T> enumType, String name) {
+        for (T item : enumType.getEnumConstants()) {
+            if (item.name().equals(name)) {
+                return item;
+            }
+        }
+        return null;
     }
 
     private String parseFunctionNameNode(FunctionNameContext fuctionNameNode) {
@@ -1111,7 +1127,6 @@ public class AntlrSqlParser implements SqlParser {
             resultBuilder.add(parseExpressionNode(expressionNode));
         }
         return ImmutableList.fromCollection(resultBuilder);
-        
     }
 
     private ImmutableList<JoinItem> parseJoinPartNodes(
