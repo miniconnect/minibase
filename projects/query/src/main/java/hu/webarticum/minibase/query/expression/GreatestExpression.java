@@ -12,7 +12,7 @@ import hu.webarticum.miniconnect.lang.ImmutableMap;
 
 public class GreatestExpression implements Expression {
 
-    private ImmutableList<Expression> parameterExpressions;
+    private final ImmutableList<Expression> parameterExpressions;
 
 
     public GreatestExpression(ImmutableList<Expression> parameterExpressions) {

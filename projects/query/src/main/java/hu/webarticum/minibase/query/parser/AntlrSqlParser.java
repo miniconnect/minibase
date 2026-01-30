@@ -33,6 +33,7 @@ import hu.webarticum.minibase.query.expression.EqualsExpression;
 import hu.webarticum.minibase.query.expression.Expression;
 import hu.webarticum.minibase.query.expression.ExtractExpression;
 import hu.webarticum.minibase.query.expression.GreatestExpression;
+import hu.webarticum.minibase.query.expression.InExpression;
 import hu.webarticum.minibase.query.expression.IsNotNullExpression;
 import hu.webarticum.minibase.query.expression.IsNullExpression;
 import hu.webarticum.minibase.query.expression.LeastExpression;
@@ -116,11 +117,13 @@ import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.FunctionN
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.IdentifierContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.InsertQueryContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.InsertValueContext;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.InsertValueListContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.IntegerLiteralContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.IntervalExpressionContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.IntervalFieldNameContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.IntervalSpecifierContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.IntervalTypeConstructContext;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.InValueListContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.JoinPartContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.LikePartContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.LimitParameterContext;
@@ -163,7 +166,6 @@ import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.UpdateIte
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.UpdatePartContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.UpdateQueryContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.UseQueryContext;
-import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.ValueListContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.VariableContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.WhenPartContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.WhereItemContext;
@@ -401,8 +403,8 @@ public class AntlrSqlParser implements SqlParser {
         String tableName = parseIdentifierNode(identifierNode);
         FieldListContext fieldListNode = insertQueryNode.fieldList();
         ImmutableList<String> fields = parseInsertFieldListNode(fieldListNode);
-        ValueListContext valueListNode = insertQueryNode.valueList();
-        ImmutableList<Object> values = parseInsertValueListNode(valueListNode);
+        InsertValueListContext insertValueListNode = insertQueryNode.insertValueList();
+        ImmutableList<Object> values = parseInsertValueListNode(insertValueListNode);
 
         return Queries.insert()
                 .replace(replace)
@@ -426,9 +428,9 @@ public class AntlrSqlParser implements SqlParser {
         return ImmutableList.fromCollection(resultBuilder);
     }
 
-    private ImmutableList<Object> parseInsertValueListNode(ValueListContext valueListNode) {
+    private ImmutableList<Object> parseInsertValueListNode(InsertValueListContext insertValueListNode) {
         List<Object> resultBuilder = new ArrayList<>();
-        for (InsertValueContext insertValueNode : valueListNode.insertValue()) {
+        for (InsertValueContext insertValueNode : insertValueListNode.insertValue()) {
             ExtendedValueContext extendedValueNode = insertValueNode.extendedValue();
             if (extendedValueNode != null) {
                 Object value = parseExtendedValueNode(extendedValueNode);
@@ -651,6 +653,12 @@ public class AntlrSqlParser implements SqlParser {
             } else {
                 return new NotExpression(regexpExpression);
             }
+        }
+
+        if (expressionNode.IN() != null) {
+            Expression givenExpression = parseExpressionNode(expressionNode.givenExpression);
+            ImmutableList<Expression> listedExpressions = parseInValueListNode(expressionNode.inValueList());
+            return new InExpression(givenExpression, listedExpressions);
         }
 
         if (expressionNode.BETWEEN() != null) {
@@ -1084,6 +1092,16 @@ public class AntlrSqlParser implements SqlParser {
         Expression conditionExpression = parseExpressionNode(whenPartNode.conditionExpression);
         Expression resultExpression = parseExpressionNode(whenPartNode.resultExpression);
         return new CaseExpression.WhenItem(conditionExpression, resultExpression);
+    }
+
+    private ImmutableList<Expression> parseInValueListNode(InValueListContext inValueListNode) {
+        List<ExpressionContext> expressions = inValueListNode.expression();
+        List<Expression> resultBuilder = new ArrayList<>(expressions.size());
+        for (ExpressionContext expressionNode : expressions) {
+            resultBuilder.add(parseExpressionNode(expressionNode));
+        }
+        return ImmutableList.fromCollection(resultBuilder);
+        
     }
 
     private ImmutableList<JoinItem> parseJoinPartNodes(

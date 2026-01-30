@@ -60,9 +60,9 @@ updateQuery: UPDATE ( schemaName DOT )? tableName updatePart wherePart?;
 updatePart: SET updateItem ( COMMA updateItem )*;
 updateItem: fieldName EQ extendedValue;
 
-insertQuery: ( INSERT | REPLACE ) INTO ( schemaName DOT )? tableName fieldList? VALUES valueList;
+insertQuery: ( INSERT | REPLACE ) INTO ( schemaName DOT )? tableName fieldList? VALUES insertValueList;
 fieldList: PAR_START fieldName ( COMMA fieldName )* PAR_END;
-valueList: PAR_START insertValue ( COMMA insertValue )* PAR_END;
+insertValueList: PAR_START insertValue ( COMMA insertValue )* PAR_END;
 insertValue: extendedValue | DEFAULT;
 
 deleteQuery: DELETE FROM ( schemaName DOT )? tableName wherePart?;
@@ -101,6 +101,7 @@ expression:
     leftExpression=expression binaryOperator=DOUBLE_PIPE rightExpression=expression |
     leftExpression=expression binaryOperator=( LESS | LESS_EQ | GREATER | GREATER_EQ ) rightExpression=expression |
     leftExpression=expression binaryOperator=( EQ | NEQ_ANG | NEQ_BANG ) rightExpression=expression |
+    givenExpression=expression IN inValueList |
     PAR_START start1Expression=expression COMMA end1Expression=expression PAR_END
         OVERLAPS PAR_START start2Expression=expression COMMA end2Expression=expression PAR_END |
     givenExpression=expression BETWEEN minExpression=expression AND maxExpression=expression |
@@ -118,6 +119,7 @@ expression:
     castExpression |
     atomicExpression;
 unaryArithmeticExpression: ( PLUS | MINUS ) subExpression=expression;
+inValueList: PAR_START expression ( COMMA expression )* PAR_END;
 caseExpression: CASE (givenExpression=expression)? whenPart+ elsePart? END;
 whenPart: WHEN conditionExpression=expression THEN resultExpression=expression;
 elsePart: ELSE expression;

@@ -6,12 +6,30 @@ import java.time.ZoneOffset;
 import java.time.temporal.Temporal;
 import java.util.Arrays;
 
+import hu.webarticum.miniconnect.lang.LargeInteger;
+
 public final class UnifyUtil {
 
     private UnifyUtil() {
         // utility class
     }
 
+
+    public static Class<?> typeOf(Object value) {
+        if (value instanceof LargeInteger) {
+            return LargeInteger.class;
+        } else {
+            return value.getClass();
+        }
+    }
+
+    public static Class<?> normalizeType(Class<?> type) {
+        if (LargeInteger.class.isAssignableFrom(type)) {
+            return LargeInteger.class;
+        } else {
+            return type;
+        }
+    }
 
     public static Class<?> unifyTypes(Class<?>... types) {
         return unifyTypes(Arrays.asList(types));

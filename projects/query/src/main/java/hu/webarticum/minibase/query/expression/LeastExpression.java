@@ -12,7 +12,7 @@ import hu.webarticum.miniconnect.lang.ImmutableMap;
 
 public class LeastExpression implements Expression {
 
-    private ImmutableList<Expression> parameterExpressions;
+    private final ImmutableList<Expression> parameterExpressions;
 
 
     public LeastExpression(ImmutableList<Expression> parameterExpressions) {

@@ -10,7 +10,7 @@ import hu.webarticum.miniconnect.lang.ImmutableMap;
 
 public class CoalesceExpression implements Expression {
 
-    private ImmutableList<Expression> parameterExpressions;
+    private final ImmutableList<Expression> parameterExpressions;
 
 
     public CoalesceExpression(ImmutableList<Expression> parameterExpressions) {
