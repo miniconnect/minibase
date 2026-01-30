@@ -50,6 +50,7 @@ import hu.webarticum.minibase.query.expression.OrExpression;
 import hu.webarticum.minibase.query.expression.OrderRelationExpression;
 import hu.webarticum.minibase.query.expression.OverlapsExpression;
 import hu.webarticum.minibase.query.expression.PositionExpression;
+import hu.webarticum.minibase.query.expression.RandomExpression;
 import hu.webarticum.minibase.query.expression.RegexpExpression;
 import hu.webarticum.minibase.query.expression.RemainderExpression;
 import hu.webarticum.minibase.query.expression.RightExpression;
@@ -870,6 +871,9 @@ public class AntlrSqlParser implements SqlParser {
             return new LeastExpression(parameters);
         } else if (functionNameUpper.equals("GREATEST")) {
             return new GreatestExpression(parameters);
+        } else if (functionNameUpper.equals("RAND") || functionNameUpper.equals("RANDOM")) {
+            checkFunctionParameterCount(functionNameUpper, parameters, 0);
+            return new RandomExpression();
         }
 
         UnaryRealMathFunctionExpression.FunctionSymbol mathSymbolAlias =
