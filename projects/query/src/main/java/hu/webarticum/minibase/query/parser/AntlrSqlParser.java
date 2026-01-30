@@ -53,6 +53,7 @@ import hu.webarticum.minibase.query.expression.PositionExpression;
 import hu.webarticum.minibase.query.expression.RegexpExpression;
 import hu.webarticum.minibase.query.expression.RemainderExpression;
 import hu.webarticum.minibase.query.expression.RightExpression;
+import hu.webarticum.minibase.query.expression.SignExpression;
 import hu.webarticum.minibase.query.expression.SpecialValueExpression;
 import hu.webarticum.minibase.query.expression.SpecialValueParameter;
 import hu.webarticum.minibase.query.expression.SubtractExpression;
@@ -828,6 +829,9 @@ public class AntlrSqlParser implements SqlParser {
         } else if (functionNameUpper.equals("NULLIF")) {
             checkFunctionParameterCount(functionNameUpper, parameters, 2);
             return new NullifExpression(parameters.get(0), parameters.get(1));
+        } else if (functionNameUpper.equals("SIGN")) {
+            checkFunctionParameterCount(functionNameUpper, parameters, 1);
+            return new SignExpression(parameters.get(0));
         } else if (functionNameUpper.equals("ABS")) {
             checkFunctionParameterCount(functionNameUpper, parameters, 1);
             return new AbsExpression(parameters.get(0));
