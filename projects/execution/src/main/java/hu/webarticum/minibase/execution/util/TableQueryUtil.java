@@ -1,5 +1,8 @@
 package hu.webarticum.minibase.execution.util;
 
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.OffsetTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -789,12 +792,22 @@ public class TableQueryUtil {
 
     public static Object getSpecialValue(SpecialValueParameter specialValueParameter, SessionState state) {
         switch (specialValueParameter) {
+            case SYSTEM_USER:
+                return "";
+            case SESSION_USER:
+                return "";
             case CURRENT_USER:
                 return "";
             case CURRENT_SCHEMA:
                 return state.getCurrentSchema();
             case CURRENT_CATALOG:
                 return state.getCurrentSchema();
+            case CURRENT_DATE:
+                return LocalDate.now();
+            case CURRENT_TIME:
+                return OffsetTime.now();
+            case CURRENT_TIMESTAMP:
+                return Instant.now();
             case READONLY:
                 return false;
             case AUTOCOMMIT:
