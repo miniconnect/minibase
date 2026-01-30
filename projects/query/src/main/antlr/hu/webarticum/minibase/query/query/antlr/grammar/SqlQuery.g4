@@ -101,10 +101,10 @@ expression:
     leftExpression=expression binaryOperator=DOUBLE_PIPE rightExpression=expression |
     leftExpression=expression binaryOperator=( LESS | LESS_EQ | GREATER | GREATER_EQ ) rightExpression=expression |
     leftExpression=expression binaryOperator=( EQ | NEQ_ANG | NEQ_BANG ) rightExpression=expression |
-    givenExpression=expression IN inValueList |
+    givenExpression=expression NOT? IN inValueList |
     PAR_START start1Expression=expression COMMA end1Expression=expression PAR_END
         OVERLAPS PAR_START start2Expression=expression COMMA end2Expression=expression PAR_END |
-    givenExpression=expression BETWEEN minExpression=expression AND maxExpression=expression |
+    givenExpression=expression NOT? BETWEEN minExpression=expression AND maxExpression=expression |
     subExpression=expression IS NOT? isNullOperator=( NULL | UNKNOWN ) |
     givenExpression=expression NOT? likeOperator=( LIKE | ILIKE ) patternExpression=expression ( ESCAPE escapeExpression=expression )? |
     givenExpression=expression NOT? regexpOperator=( REGEXP | RLIKE ) patternExpression=expression |

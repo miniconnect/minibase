@@ -34,7 +34,6 @@ import hu.webarticum.minibase.query.expression.Expression;
 import hu.webarticum.minibase.query.expression.ExtractExpression;
 import hu.webarticum.minibase.query.expression.GreatestExpression;
 import hu.webarticum.minibase.query.expression.InExpression;
-import hu.webarticum.minibase.query.expression.IsNotNullExpression;
 import hu.webarticum.minibase.query.expression.IsNullExpression;
 import hu.webarticum.minibase.query.expression.LeastExpression;
 import hu.webarticum.minibase.query.expression.LeftExpression;
@@ -616,10 +615,11 @@ public class AntlrSqlParser implements SqlParser {
 
         if (expressionNode.isNullOperator != null) {
             Expression subExpression = parseExpressionNode(expressionNode.subExpression);
+            Expression isNullExpression = new IsNullExpression(subExpression);
             if (expressionNode.NOT() == null) {
-                return new IsNullExpression(subExpression);
+                return isNullExpression;
             } else {
-                return new IsNotNullExpression(subExpression);
+                return new NotExpression(isNullExpression);
             }
         }
 
@@ -658,14 +658,24 @@ public class AntlrSqlParser implements SqlParser {
         if (expressionNode.IN() != null) {
             Expression givenExpression = parseExpressionNode(expressionNode.givenExpression);
             ImmutableList<Expression> listedExpressions = parseInValueListNode(expressionNode.inValueList());
-            return new InExpression(givenExpression, listedExpressions);
+            Expression inExpression = new InExpression(givenExpression, listedExpressions);
+            if (expressionNode.NOT() == null) {
+                return inExpression;
+            } else {
+                return new NotExpression(inExpression);
+            }
         }
 
         if (expressionNode.BETWEEN() != null) {
             Expression givenExpression = parseExpressionNode(expressionNode.givenExpression);
             Expression minExpression = parseExpressionNode(expressionNode.minExpression);
             Expression maxExpression = parseExpressionNode(expressionNode.maxExpression);
-            return new BetweenExpression(givenExpression, minExpression, maxExpression);
+            Expression betweenExpression = new BetweenExpression(givenExpression, minExpression, maxExpression);
+            if (expressionNode.NOT() == null) {
+                return betweenExpression;
+            } else {
+                return new NotExpression(betweenExpression);
+            }
         }
 
         if (expressionNode.OVERLAPS() != null) {
