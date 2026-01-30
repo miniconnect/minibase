@@ -13,6 +13,7 @@ public class UnaryRealMathFunctionExpression implements Expression {
 
         SQRT(Math::sqrt),
         CBRT(Math::cbrt),
+        EXP(Math::exp),
         LN(Math::log),
         LOG10(Math::log10),
         LOG2(x -> Math.log(x) / Math.log(2.0)),
