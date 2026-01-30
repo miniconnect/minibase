@@ -1,16 +1,11 @@
 package hu.webarticum.minibase.query.expression;
 
-import java.math.BigDecimal;
-import java.time.temporal.TemporalAmount;
 import java.util.Optional;
 import java.util.function.DoubleUnaryOperator;
 
-import hu.webarticum.minibase.query.util.DateTimeDeltaUtil;
 import hu.webarticum.minibase.query.util.ConvertUtil;
-import hu.webarticum.miniconnect.lang.DateTimeDelta;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
-import hu.webarticum.miniconnect.lang.LargeInteger;
 
 public class UnaryRealMathFunctionExpression implements Expression {
 
