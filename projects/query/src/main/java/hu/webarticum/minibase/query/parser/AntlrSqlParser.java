@@ -19,6 +19,7 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 import hu.webarticum.minibase.query.expression.AbsExpression;
 import hu.webarticum.minibase.query.expression.AddExpression;
 import hu.webarticum.minibase.query.expression.AndExpression;
+import hu.webarticum.minibase.query.expression.Atan2Expression;
 import hu.webarticum.minibase.query.expression.BetweenExpression;
 import hu.webarticum.minibase.query.expression.BitLengthExpression;
 import hu.webarticum.minibase.query.expression.CaseExpression;
@@ -39,6 +40,7 @@ import hu.webarticum.minibase.query.expression.LeastExpression;
 import hu.webarticum.minibase.query.expression.LeftExpression;
 import hu.webarticum.minibase.query.expression.LengthExpression;
 import hu.webarticum.minibase.query.expression.LikeExpression;
+import hu.webarticum.minibase.query.expression.LogExpression;
 import hu.webarticum.minibase.query.expression.LowerExpression;
 import hu.webarticum.minibase.query.expression.ModExpression;
 import hu.webarticum.minibase.query.expression.MultiplyExpression;
@@ -842,6 +844,12 @@ public class AntlrSqlParser implements SqlParser {
         } else if (functionNameUpper.equals("POW") || functionNameUpper.equals("POWER")) {
             checkFunctionParameterCount(functionNameUpper, parameters, 2);
             return new PowExpression(parameters.get(0), parameters.get(1));
+        } else if (functionNameUpper.equals("LOG")) {
+            checkFunctionParameterCount(functionNameUpper, parameters, 2);
+            return new LogExpression(parameters.get(0), parameters.get(1));
+        } else if (functionNameUpper.equals("ATAN2")) {
+            checkFunctionParameterCount(functionNameUpper, parameters, 2);
+            return new Atan2Expression(parameters.get(0), parameters.get(1));
         } else if (functionNameUpper.equals("BIT_LENGTH")) {
             checkFunctionParameterCount(functionNameUpper, parameters, 1);
             return new BitLengthExpression(parameters.get(0));
