@@ -59,6 +59,7 @@ import hu.webarticum.minibase.query.expression.RandomExpression;
 import hu.webarticum.minibase.query.expression.RegexpExpression;
 import hu.webarticum.minibase.query.expression.RemainderExpression;
 import hu.webarticum.minibase.query.expression.RightExpression;
+import hu.webarticum.minibase.query.expression.RoundExpression;
 import hu.webarticum.minibase.query.expression.SignExpression;
 import hu.webarticum.minibase.query.expression.SpecialValueExpression;
 import hu.webarticum.minibase.query.expression.SpecialValueParameter;
@@ -850,6 +851,15 @@ public class AntlrSqlParser implements SqlParser {
         } else if (functionNameUpper.equals("ATAN2")) {
             checkFunctionParameterCount(functionNameUpper, parameters, 2);
             return new Atan2Expression(parameters.get(0), parameters.get(1));
+        } else if (functionNameUpper.equals("FLOOR")) {
+            checkFunctionParameterCount(functionNameUpper, parameters, 1);
+            return new RoundExpression(parameters.get(0), RoundExpression.RoundMode.FLOOR);
+        } else if (functionNameUpper.equals("ROUND")) {
+            checkFunctionParameterCount(functionNameUpper, parameters, 1);
+            return new RoundExpression(parameters.get(0), RoundExpression.RoundMode.ROUND);
+        } else if (functionNameUpper.equals("CEIL") || functionNameUpper.equals("CEILING")) {
+            checkFunctionParameterCount(functionNameUpper, parameters, 1);
+            return new RoundExpression(parameters.get(0), RoundExpression.RoundMode.CEIL);
         } else if (functionNameUpper.equals("BIT_LENGTH")) {
             checkFunctionParameterCount(functionNameUpper, parameters, 1);
             return new BitLengthExpression(parameters.get(0));
