@@ -44,6 +44,7 @@ import hu.webarticum.minibase.query.expression.MultiplyExpression;
 import hu.webarticum.minibase.query.expression.NegateExpression;
 import hu.webarticum.minibase.query.expression.NotEqualsExpression;
 import hu.webarticum.minibase.query.expression.NotExpression;
+import hu.webarticum.minibase.query.expression.NowExpression;
 import hu.webarticum.minibase.query.expression.NullifExpression;
 import hu.webarticum.minibase.query.expression.OctetLengthExpression;
 import hu.webarticum.minibase.query.expression.OrExpression;
@@ -874,6 +875,9 @@ public class AntlrSqlParser implements SqlParser {
         } else if (functionNameUpper.equals("RAND") || functionNameUpper.equals("RANDOM")) {
             checkFunctionParameterCount(functionNameUpper, parameters, 0);
             return new RandomExpression();
+        } else if (functionNameUpper.equals("NOW")) {
+            checkFunctionParameterCount(functionNameUpper, parameters, 0);
+            return new NowExpression();
         }
 
         UnaryRealMathFunctionExpression.FunctionSymbol mathSymbolAlias =
