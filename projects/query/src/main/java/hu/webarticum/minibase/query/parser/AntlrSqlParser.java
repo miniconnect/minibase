@@ -52,6 +52,7 @@ import hu.webarticum.minibase.query.expression.OrExpression;
 import hu.webarticum.minibase.query.expression.OrderRelationExpression;
 import hu.webarticum.minibase.query.expression.OverlapsExpression;
 import hu.webarticum.minibase.query.expression.PositionExpression;
+import hu.webarticum.minibase.query.expression.PowExpression;
 import hu.webarticum.minibase.query.expression.RandomExpression;
 import hu.webarticum.minibase.query.expression.RegexpExpression;
 import hu.webarticum.minibase.query.expression.RemainderExpression;
@@ -838,6 +839,9 @@ public class AntlrSqlParser implements SqlParser {
         } else if (functionNameUpper.equals("ABS")) {
             checkFunctionParameterCount(functionNameUpper, parameters, 1);
             return new AbsExpression(parameters.get(0));
+        } else if (functionNameUpper.equals("POW") || functionNameUpper.equals("POWER")) {
+            checkFunctionParameterCount(functionNameUpper, parameters, 2);
+            return new PowExpression(parameters.get(0), parameters.get(1));
         } else if (functionNameUpper.equals("BIT_LENGTH")) {
             checkFunctionParameterCount(functionNameUpper, parameters, 1);
             return new BitLengthExpression(parameters.get(0));
