@@ -37,6 +37,7 @@ import hu.webarticum.minibase.query.expression.InExpression;
 import hu.webarticum.minibase.query.expression.IsNullExpression;
 import hu.webarticum.minibase.query.expression.LeastExpression;
 import hu.webarticum.minibase.query.expression.LeftExpression;
+import hu.webarticum.minibase.query.expression.LengthExpression;
 import hu.webarticum.minibase.query.expression.LikeExpression;
 import hu.webarticum.minibase.query.expression.LowerExpression;
 import hu.webarticum.minibase.query.expression.ModExpression;
@@ -868,6 +869,9 @@ public class AntlrSqlParser implements SqlParser {
         } else if (functionNameUpper.equals("POSITION")) {
             checkFunctionParameterCount(functionNameUpper, parameters, 2);
             return new PositionExpression(parameters.get(0), parameters.get(1));
+        } else if (functionNameUpper.equals("LENGTH")) {
+            checkFunctionParameterCount(functionNameUpper, parameters, 1);
+            return new LengthExpression(parameters.get(0));
         } else if (functionNameUpper.equals("LEAST")) {
             return new LeastExpression(parameters);
         } else if (functionNameUpper.equals("GREATEST")) {
