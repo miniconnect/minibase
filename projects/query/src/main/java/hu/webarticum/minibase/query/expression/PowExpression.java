@@ -1,25 +1,10 @@
 package hu.webarticum.minibase.query.expression;
 
-import java.math.BigDecimal;
-import java.time.Duration;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.OffsetDateTime;
-import java.time.OffsetTime;
-import java.time.Period;
-import java.time.temporal.Temporal;
-import java.time.temporal.TemporalAmount;
 import java.util.Optional;
 
 import hu.webarticum.minibase.query.util.ConvertUtil;
-import hu.webarticum.minibase.query.util.DateTimeDeltaUtil;
-import hu.webarticum.minibase.query.util.NumberUtil;
-import hu.webarticum.miniconnect.lang.DateTimeDelta;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
-import hu.webarticum.miniconnect.lang.LargeInteger;
 
 public class PowExpression implements Expression {
 
