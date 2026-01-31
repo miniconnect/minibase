@@ -37,6 +37,7 @@ import hu.webarticum.minibase.query.expression.GcdExpression;
 import hu.webarticum.minibase.query.expression.GreatestExpression;
 import hu.webarticum.minibase.query.expression.InExpression;
 import hu.webarticum.minibase.query.expression.IsNullExpression;
+import hu.webarticum.minibase.query.expression.LcmExpression;
 import hu.webarticum.minibase.query.expression.LeastExpression;
 import hu.webarticum.minibase.query.expression.LeftExpression;
 import hu.webarticum.minibase.query.expression.LengthExpression;
@@ -868,6 +869,9 @@ public class AntlrSqlParser implements SqlParser {
         } else if (functionNameUpper.equals("GCD")) {
             checkFunctionParameterCount(functionNameUpper, parameters, 2);
             return new GcdExpression(parameters.get(0), parameters.get(1));
+        } else if (functionNameUpper.equals("LCM")) {
+            checkFunctionParameterCount(functionNameUpper, parameters, 2);
+            return new LcmExpression(parameters.get(0), parameters.get(1));
         } else if (functionNameUpper.equals("BIT_LENGTH")) {
             checkFunctionParameterCount(functionNameUpper, parameters, 1);
             return new BitLengthExpression(parameters.get(0));
