@@ -925,7 +925,7 @@ public class AntlrSqlParser implements SqlParser {
     private void checkFunctionParameterCount(String name, ImmutableList<Expression> actualParameters, int expectedCount) {
         int actualCount = actualParameters.size();
         if (actualCount != expectedCount) {
-            throw new IllegalArgumentException("Function " + name + " expects " + expectedCount + "parameters, " + actualCount + " given");
+            throw new IllegalArgumentException("Function " + name + " expects " + expectedCount + " parameters, " + actualCount + " given");
         }
     }
 
