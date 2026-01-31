@@ -925,9 +925,9 @@ public class AntlrSqlParser implements SqlParser {
             return new UnaryRealMathFunctionExpression(mathSymbolAlias, parameters.get(0));
         }
 
-        checkFunctionParameterCount(functionNameUpper, parameters, 1);
         TypeConstruct.SymbolAlias symbolAlias = getEnumValueOrNull(TypeConstruct.SymbolAlias.class, functionNameUpper);
         if (symbolAlias != null) {
+            checkFunctionParameterCount(functionNameUpper, parameters, 1);
             return new CastExpression(parameters.get(0), new TypeConstruct(symbolAlias, null, null));
         }
 
