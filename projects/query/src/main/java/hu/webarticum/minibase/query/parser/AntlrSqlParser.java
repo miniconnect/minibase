@@ -66,6 +66,7 @@ import hu.webarticum.minibase.query.expression.RandomExpression;
 import hu.webarticum.minibase.query.expression.RegexpExpression;
 import hu.webarticum.minibase.query.expression.RemainderExpression;
 import hu.webarticum.minibase.query.expression.RepeatExpression;
+import hu.webarticum.minibase.query.expression.ReverseExpression;
 import hu.webarticum.minibase.query.expression.RightExpression;
 import hu.webarticum.minibase.query.expression.RightPadExpression;
 import hu.webarticum.minibase.query.expression.RightRightPadExpression;
@@ -903,6 +904,9 @@ public class AntlrSqlParser implements SqlParser {
         } else if (functionNameUpper.equals("UPPER")) {
             checkFunctionParameterCount(functionNameUpper, parameters, 1);
             return new UpperExpression(parameters.get(0));
+        } else if (functionNameUpper.equals("REVERSE")) {
+            checkFunctionParameterCount(functionNameUpper, parameters, 1);
+            return new ReverseExpression(parameters.get(0));
         } else if (functionNameUpper.equals("LEFT")) {
             checkFunctionParameterCount(functionNameUpper, parameters, 2);
             return new LeftExpression(parameters.get(0), parameters.get(1));
