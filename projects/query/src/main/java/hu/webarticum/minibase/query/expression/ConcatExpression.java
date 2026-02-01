@@ -10,7 +10,7 @@ import hu.webarticum.miniconnect.lang.ImmutableMap;
 
 public class ConcatExpression implements Expression {
 
-    protected final ImmutableList<Expression> parameterExpressions;
+    private final ImmutableList<Expression> parameterExpressions;
 
 
     public ConcatExpression(ImmutableList<Expression> parameterExpressions) {
