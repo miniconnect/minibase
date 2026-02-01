@@ -54,15 +54,13 @@ public class ConcatExpression implements Expression {
     @Override
     public Object evaluate(ImmutableMap<Parameter, Object> values) {
         StringBuilder resultBuilder = new StringBuilder();
-        boolean allNull = true;
         for (Expression parameterExpression : parameterExpressions) {
             Object value = parameterExpression.evaluate(values);
             if (value != null) {
                 resultBuilder.append(StringUtil.stringify(value));
-                allNull = false;
             }
         }
-        return allNull ? null : resultBuilder.toString();
+        return resultBuilder.toString();
     }
 
     @Override
