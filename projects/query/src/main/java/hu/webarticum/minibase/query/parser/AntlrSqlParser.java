@@ -42,6 +42,7 @@ import hu.webarticum.minibase.query.expression.IsNullExpression;
 import hu.webarticum.minibase.query.expression.LcmExpression;
 import hu.webarticum.minibase.query.expression.LeastExpression;
 import hu.webarticum.minibase.query.expression.LeftExpression;
+import hu.webarticum.minibase.query.expression.LeftPadExpression;
 import hu.webarticum.minibase.query.expression.LengthExpression;
 import hu.webarticum.minibase.query.expression.LikeExpression;
 import hu.webarticum.minibase.query.expression.LogExpression;
@@ -66,6 +67,8 @@ import hu.webarticum.minibase.query.expression.RegexpExpression;
 import hu.webarticum.minibase.query.expression.RemainderExpression;
 import hu.webarticum.minibase.query.expression.RepeatExpression;
 import hu.webarticum.minibase.query.expression.RightExpression;
+import hu.webarticum.minibase.query.expression.RightPadExpression;
+import hu.webarticum.minibase.query.expression.RightRightPadExpression;
 import hu.webarticum.minibase.query.expression.RoundExpression;
 import hu.webarticum.minibase.query.expression.SignExpression;
 import hu.webarticum.minibase.query.expression.SpecialValueExpression;
@@ -909,6 +912,18 @@ public class AntlrSqlParser implements SqlParser {
         } else if (functionNameUpper.equals("TRIM")) {
             checkFunctionParameterCount(functionNameUpper, parameters, 1);
             return new TrimExpression(parameters.get(0), Optional.empty(), Optional.empty());
+        } else if (functionNameUpper.equals("LPAD")) {
+            checkFunctionParameterCount(functionNameUpper, parameters, 2, 3);
+            Optional<Expression> padStringExpression = parameters.size() > 2 ? Optional.of(parameters.get(2)) : Optional.empty();
+            return new LeftPadExpression(parameters.get(0), parameters.get(1), padStringExpression);
+        } else if (functionNameUpper.equals("RPAD")) {
+            checkFunctionParameterCount(functionNameUpper, parameters, 2, 3);
+            Optional<Expression> padStringExpression = parameters.size() > 2 ? Optional.of(parameters.get(2)) : Optional.empty();
+            return new RightPadExpression(parameters.get(0), parameters.get(1), padStringExpression);
+        } else if (functionNameUpper.equals("RRPAD")) {
+            checkFunctionParameterCount(functionNameUpper, parameters, 2, 3);
+            Optional<Expression> padStringExpression = parameters.size() > 2 ? Optional.of(parameters.get(2)) : Optional.empty();
+            return new RightRightPadExpression(parameters.get(0), parameters.get(1), padStringExpression);
         } else if (functionNameUpper.equals("SUBSTR") || functionNameUpper.equals("SUBSTRING")) {
             checkFunctionParameterCount(functionNameUpper, parameters, 2, 3);
             Optional<Expression> forExpression = parameters.size() > 2 ? Optional.of(parameters.get(2)) : Optional.empty();
