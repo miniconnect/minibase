@@ -19,12 +19,14 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 import hu.webarticum.minibase.query.expression.AbsExpression;
 import hu.webarticum.minibase.query.expression.AddExpression;
 import hu.webarticum.minibase.query.expression.AndExpression;
+import hu.webarticum.minibase.query.expression.AsciiExpression;
 import hu.webarticum.minibase.query.expression.Atan2Expression;
 import hu.webarticum.minibase.query.expression.BetweenExpression;
 import hu.webarticum.minibase.query.expression.BitLengthExpression;
 import hu.webarticum.minibase.query.expression.CaseExpression;
 import hu.webarticum.minibase.query.expression.CastExpression;
 import hu.webarticum.minibase.query.expression.CharLengthExpression;
+import hu.webarticum.minibase.query.expression.ChrExpression;
 import hu.webarticum.minibase.query.expression.CoalesceExpression;
 import hu.webarticum.minibase.query.expression.ColumnExpression;
 import hu.webarticum.minibase.query.expression.ConcatExpression;
@@ -53,6 +55,7 @@ import hu.webarticum.minibase.query.expression.NowExpression;
 import hu.webarticum.minibase.query.expression.NullifExpression;
 import hu.webarticum.minibase.query.expression.OctetLengthExpression;
 import hu.webarticum.minibase.query.expression.OrExpression;
+import hu.webarticum.minibase.query.expression.OrdExpression;
 import hu.webarticum.minibase.query.expression.OrderRelationExpression;
 import hu.webarticum.minibase.query.expression.OverlapsExpression;
 import hu.webarticum.minibase.query.expression.PiExpression;
@@ -881,6 +884,15 @@ public class AntlrSqlParser implements SqlParser {
         } else if (functionNameUpper.equals("CHAR_LENGTH") || functionNameUpper.equals("CHARACTER_LENGTH")) {
             checkFunctionParameterCount(functionNameUpper, parameters, 1);
             return new CharLengthExpression(parameters.get(0));
+        } else if (functionNameUpper.equals("ASCII")) {
+            checkFunctionParameterCount(functionNameUpper, parameters, 1);
+            return new AsciiExpression(parameters.get(0));
+        } else if (functionNameUpper.equals("ORD")) {
+            checkFunctionParameterCount(functionNameUpper, parameters, 1);
+            return new OrdExpression(parameters.get(0));
+        } else if (functionNameUpper.equals("CHR")) {
+            checkFunctionParameterCount(functionNameUpper, parameters, 1);
+            return new ChrExpression(parameters.get(0));
         } else if (functionNameUpper.equals("LOWER")) {
             checkFunctionParameterCount(functionNameUpper, parameters, 1);
             return new LowerExpression(parameters.get(0));
