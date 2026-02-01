@@ -18,16 +18,15 @@ public class RegexpExpression implements Expression {
     public RegexpExpression(Expression givenExpression, Expression patternExpression) {
         this.givenExpression = givenExpression;
         this.patternExpression = patternExpression;
-        this.precompiledPattern = precompilePatternIfConstant(patternExpression);
+        this.precompiledPattern = precompilePatternIfPossible(patternExpression);
     }
 
-    private static Pattern precompilePatternIfConstant(Expression patternExpression) {
-        if (!(patternExpression instanceof ConstantExpression)) {
+    private static Pattern precompilePatternIfPossible(Expression patternExpression) {
+        if (patternExpression.parameters().isEmpty()) {
             return null;
         }
 
-        ConstantExpression constantPatternExpression = (ConstantExpression) patternExpression;
-        Object patternValue = constantPatternExpression.evaluate(ImmutableMap.empty());
+        Object patternValue = patternExpression.evaluate(ImmutableMap.empty());
         return compilePattern(patternValue);
     }
 
