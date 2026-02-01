@@ -59,12 +59,12 @@ public final class StringUtil {
         return stringValue.substring(0, size);
     }
 
-    public static String toTitleCase(String stringValue) {
-        int length = stringValue.length();
+    public static String toTitleCase(String input) {
+        int length = input.length();
         StringBuilder resultBuilder = new StringBuilder();
         boolean wasLetter = false;
         for (int i = 0; i < length; i++) {
-            char c = stringValue.charAt(i);
+            char c = input.charAt(i);
             boolean isLetter = Character.isLetter(c);
             if (!isLetter) {
                 resultBuilder.append(c);
@@ -77,6 +77,32 @@ public final class StringUtil {
             }
         }
         return resultBuilder.toString();
+    }
+
+    public static String extractSlot(String input, String delimiter, int slot) {
+        if (slot < 0) {
+            return "";
+        }
+
+        int length = input.length();
+        int delimiterLength = delimiter.length();
+
+        if (delimiterLength == 0) {
+            return slot < length ? "" + input.charAt(slot) : "";
+        }
+
+        int currentSlot = 0;
+        int pos = 0;
+        while (true) {
+            int foundIndex = input.indexOf(delimiter, pos);
+            if (foundIndex == -1) {
+                return currentSlot == slot ? input.substring(pos, length) : "";
+            } else if (currentSlot == slot) {
+                return input.substring(pos, foundIndex);
+            }
+            pos = foundIndex + delimiterLength;
+            currentSlot++;
+        }
     }
 
 }

@@ -105,4 +105,37 @@ class StringUtilTest {
         assertThat(StringUtil.toTitleCase("űz TÁR Ú ŰrR")).isEqualTo("Űz Tár Ú Űrr");
     }
 
+    @Test
+    void testExtractSlot() {
+        assertThat(StringUtil.extractSlot("", "", -1)).isEmpty();
+        assertThat(StringUtil.extractSlot("", "", 0)).isEmpty();
+        assertThat(StringUtil.extractSlot("", "", 5)).isEmpty();
+        assertThat(StringUtil.extractSlot("", ",", 0)).isEmpty();
+        assertThat(StringUtil.extractSlot("", ",", -1)).isEmpty();
+        assertThat(StringUtil.extractSlot("", ",", 5)).isEmpty();
+        assertThat(StringUtil.extractSlot("lorem", "", -2)).isEmpty();
+        assertThat(StringUtil.extractSlot("lorem", "", 0)).isEqualTo("l");
+        assertThat(StringUtil.extractSlot("lorem", "", 2)).isEqualTo("r");
+        assertThat(StringUtil.extractSlot("lorem", "", 7)).isEmpty();
+        assertThat(StringUtil.extractSlot("lorem,ipsum", ",", -1)).isEmpty();
+        assertThat(StringUtil.extractSlot("lorem,ipsum", ",", 0)).isEqualTo("lorem");
+        assertThat(StringUtil.extractSlot("lorem,ipsum", ",", 1)).isEqualTo("ipsum");
+        assertThat(StringUtil.extractSlot("lorem,ipsum", ",", 2)).isEmpty();
+        assertThat(StringUtil.extractSlot("lorem, ipsum", ",", 1)).isEqualTo(" ipsum");
+        assertThat(StringUtil.extractSlot("lorem::ipsum::::dolor:::sit:::", "::", -1)).isEmpty();
+        assertThat(StringUtil.extractSlot("lorem::ipsum::::dolor:::sit:::", "::", 0)).isEqualTo("lorem");
+        assertThat(StringUtil.extractSlot("lorem::ipsum::::dolor:::sit:::", "::", 1)).isEqualTo("ipsum");
+        assertThat(StringUtil.extractSlot("lorem::ipsum::::dolor:::sit:::", "::", 2)).isEmpty();
+        assertThat(StringUtil.extractSlot("lorem::ipsum::::dolor:::sit:::", "::", 3)).isEqualTo("dolor");
+        assertThat(StringUtil.extractSlot("lorem::ipsum::::dolor:::sit:::", "::", 4)).isEqualTo(":sit");
+        assertThat(StringUtil.extractSlot("lorem::ipsum::::dolor:::sit:::", "::", 5)).isEqualTo(":");
+        assertThat(StringUtil.extractSlot("lorem::ipsum::::dolor:::sit:::", "::", 6)).isEmpty();
+        assertThat(StringUtil.extractSlot("=:lorem=:=ipsum=:=:=dolor:=sit:=:=amet", "=:=", -1)).isEmpty();
+        assertThat(StringUtil.extractSlot("=:lorem=:=ipsum=:=:=dolor:=sit:=:=amet", "=:=", 0)).isEqualTo("=:lorem");
+        assertThat(StringUtil.extractSlot("=:lorem=:=ipsum=:=:=dolor:=sit:=:=amet", "=:=", 1)).isEqualTo("ipsum");
+        assertThat(StringUtil.extractSlot("=:lorem=:=ipsum=:=:=dolor:=sit:=:=amet", "=:=", 2)).isEqualTo(":=dolor:=sit:");
+        assertThat(StringUtil.extractSlot("=:lorem=:=ipsum=:=:=dolor:=sit:=:=amet", "=:=", 3)).isEqualTo("amet");
+        assertThat(StringUtil.extractSlot("=:lorem=:=ipsum=:=:=dolor:=sit:=:=amet", "=:=", 4)).isEmpty();
+    }
+
 }

@@ -75,6 +75,7 @@ import hu.webarticum.minibase.query.expression.RoundExpression;
 import hu.webarticum.minibase.query.expression.SignExpression;
 import hu.webarticum.minibase.query.expression.SpecialValueExpression;
 import hu.webarticum.minibase.query.expression.SpecialValueParameter;
+import hu.webarticum.minibase.query.expression.SplitPartExpression;
 import hu.webarticum.minibase.query.expression.SubtractExpression;
 import hu.webarticum.minibase.query.expression.SubstringExpression;
 import hu.webarticum.minibase.query.expression.TrimExpression;
@@ -942,6 +943,9 @@ public class AntlrSqlParser implements SqlParser {
         } else if (functionNameUpper.equals("REPEAT")) {
             checkFunctionParameterCount(functionNameUpper, parameters, 2);
             return new RepeatExpression(parameters.get(0), parameters.get(1));
+        } else if (functionNameUpper.equals("SPLIT_PART")) {
+            checkFunctionParameterCount(functionNameUpper, parameters, 3);
+            return new SplitPartExpression(parameters.get(0), parameters.get(1), parameters.get(2));
         } else if (functionNameUpper.equals("LENGTH")) {
             checkFunctionParameterCount(functionNameUpper, parameters, 1);
             return new LengthExpression(parameters.get(0));
