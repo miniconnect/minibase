@@ -59,4 +59,24 @@ public final class StringUtil {
         return stringValue.substring(0, size);
     }
 
+    public static String toTitleCase(String stringValue) {
+        int length = stringValue.length();
+        StringBuilder resultBuilder = new StringBuilder();
+        boolean wasLetter = false;
+        for (int i = 0; i < length; i++) {
+            char c = stringValue.charAt(i);
+            boolean isLetter = Character.isLetter(c);
+            if (!isLetter) {
+                resultBuilder.append(c);
+                wasLetter = false;
+            } else if (wasLetter) {
+                resultBuilder.append(Character.toLowerCase(c));
+            } else {
+                resultBuilder.append(Character.toUpperCase(c));
+                wasLetter = true;
+            }
+        }
+        return resultBuilder.toString();
+    }
+
 }

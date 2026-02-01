@@ -90,4 +90,19 @@ class StringUtilTest {
         assertThat(StringUtil.stringify(new Object() { @Override public String toString() { return "amet"; } }, 15)).isEqualTo("amet");
     }
 
+    @Test
+    void testToTitleCase() {
+        assertThat(StringUtil.toTitleCase("")).isEmpty();
+        assertThat(StringUtil.toTitleCase("?:-")).isEqualTo("?:-");
+        assertThat(StringUtil.toTitleCase("a")).isEqualTo("A");
+        assertThat(StringUtil.toTitleCase(" b")).isEqualTo(" B");
+        assertThat(StringUtil.toTitleCase(" xYz")).isEqualTo(" Xyz");
+        assertThat(StringUtil.toTitleCase("lorem")).isEqualTo("Lorem");
+        assertThat(StringUtil.toTitleCase("lorem ipsum")).isEqualTo("Lorem Ipsum");
+        assertThat(StringUtil.toTitleCase("lorem iPsum, dolor SIT aMeT")).isEqualTo("Lorem Ipsum, Dolor Sit Amet");
+        assertThat(StringUtil.toTitleCase("hello_world!")).isEqualTo("Hello_World!");
+        assertThat(StringUtil.toTitleCase("a/b.c:de___f(G.HI)")).isEqualTo("A/B.C:De___F(G.Hi)");
+        assertThat(StringUtil.toTitleCase("űz TÁR Ú ŰrR")).isEqualTo("Űz Tár Ú Űrr");
+    }
+
 }

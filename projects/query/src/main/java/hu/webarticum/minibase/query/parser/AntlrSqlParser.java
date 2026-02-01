@@ -38,6 +38,7 @@ import hu.webarticum.minibase.query.expression.ExtractExpression;
 import hu.webarticum.minibase.query.expression.GcdExpression;
 import hu.webarticum.minibase.query.expression.GreatestExpression;
 import hu.webarticum.minibase.query.expression.InExpression;
+import hu.webarticum.minibase.query.expression.InitcapExpression;
 import hu.webarticum.minibase.query.expression.IsNullExpression;
 import hu.webarticum.minibase.query.expression.LcmExpression;
 import hu.webarticum.minibase.query.expression.LeastExpression;
@@ -904,6 +905,9 @@ public class AntlrSqlParser implements SqlParser {
         } else if (functionNameUpper.equals("UPPER")) {
             checkFunctionParameterCount(functionNameUpper, parameters, 1);
             return new UpperExpression(parameters.get(0));
+        } else if (functionNameUpper.equals("INITCAP")) {
+            checkFunctionParameterCount(functionNameUpper, parameters, 1);
+            return new InitcapExpression(parameters.get(0));
         } else if (functionNameUpper.equals("REVERSE")) {
             checkFunctionParameterCount(functionNameUpper, parameters, 1);
             return new ReverseExpression(parameters.get(0));
