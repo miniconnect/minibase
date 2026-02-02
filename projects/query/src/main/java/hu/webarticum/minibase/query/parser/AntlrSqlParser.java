@@ -30,6 +30,7 @@ import hu.webarticum.minibase.query.expression.ChrExpression;
 import hu.webarticum.minibase.query.expression.CoalesceExpression;
 import hu.webarticum.minibase.query.expression.ColumnExpression;
 import hu.webarticum.minibase.query.expression.ConcatExpression;
+import hu.webarticum.minibase.query.expression.ConcatWithSeparatorExpression;
 import hu.webarticum.minibase.query.expression.ConstantExpression;
 import hu.webarticum.minibase.query.expression.DivideExpression;
 import hu.webarticum.minibase.query.expression.EqualsExpression;
@@ -846,6 +847,9 @@ public class AntlrSqlParser implements SqlParser {
             return new CoalesceExpression(parameters);
         } else if (functionNameUpper.equals("CONCAT")) {
             return new ConcatExpression(parameters);
+        } else if (functionNameUpper.equals("CONCAT_WS")) {
+            checkFunctionMinParameterCount(functionNameUpper, parameters, 1);
+            return new ConcatWithSeparatorExpression(parameters.get(0), parameters.section(1, parameters.size()));
         } else if (functionNameUpper.equals("NULLIF")) {
             checkFunctionParameterCount(functionNameUpper, parameters, 2);
             return new NullifExpression(parameters.get(0), parameters.get(1));
@@ -998,7 +1002,14 @@ public class AntlrSqlParser implements SqlParser {
     private void checkFunctionParameterCount(String name, ImmutableList<Expression> actualParameters, int expectedCount) {
         int actualCount = actualParameters.size();
         if (actualCount != expectedCount) {
-            throw new IllegalArgumentException("Function " + name + " expects " + expectedCount + " parameters, " + actualCount + " given");
+            throw new IllegalArgumentException("Function " + name + " expects " + expectedCount + " parameter(s), " + actualCount + " given");
+        }
+    }
+
+    private void checkFunctionMinParameterCount(String name, ImmutableList<Expression> actualParameters, int minCount) {
+        int actualCount = actualParameters.size();
+        if (actualCount < minCount) {
+            throw new IllegalArgumentException("Function " + name + " expects at least " + minCount + " parameter(s), " + actualCount + " given");
         }
     }
 
