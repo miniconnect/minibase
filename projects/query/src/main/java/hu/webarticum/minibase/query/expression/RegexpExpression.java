@@ -22,7 +22,7 @@ public class RegexpExpression implements Expression {
     }
 
     private static Pattern precompilePatternIfPossible(Expression patternExpression) {
-        if (patternExpression.parameters().isEmpty()) {
+        if (!patternExpression.parameters().isEmpty()) {
             return null;
         }
 
