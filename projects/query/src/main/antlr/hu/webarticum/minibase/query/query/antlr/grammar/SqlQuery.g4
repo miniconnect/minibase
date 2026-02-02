@@ -162,7 +162,7 @@ specialSelectableName:
     LAST_INSERT_ID;
 functionCall: functionName PAR_START ( expression ( COMMA expression )* )? PAR_END;
 functionName: identifier | functionNameToken;
-functionNameToken: LEFT | RIGHT | TRIM | SUBSTRING | SUBSTR | typeName;
+functionNameToken: LEFT | RIGHT | TRIM | SUBSTRING | SUBSTR | REPLACE | typeName;
 typeName:
     NULL | BOOLEAN | INTEGER | BIGINT | DEC | DECIMAL | FLOAT | NVARCHAR | CLOB | BINARY | VARBINARY | BLOB | DATE |
     ( TIME | DATETIME | TIMESTAMP ) ( ( WITH | WITHOUT ) ( TIME ZONE | OFFSET | UTCOFFSET ) )? |

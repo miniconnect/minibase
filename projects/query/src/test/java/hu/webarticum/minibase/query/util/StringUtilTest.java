@@ -138,4 +138,24 @@ class StringUtilTest {
         assertThat(StringUtil.extractSlot("=:lorem=:=ipsum=:=:=dolor:=sit:=:=amet", "=:=", 4)).isEmpty();
     }
 
+    @Test
+    void testReplace() {
+        assertThat(StringUtil.replace("", "", "")).isEmpty();
+        assertThat(StringUtil.replace("", "lorem", "")).isEmpty();
+        assertThat(StringUtil.replace("", "", "lorem")).isEmpty();
+        assertThat(StringUtil.replace("", "lorem", "ipsum")).isEmpty();
+        assertThat(StringUtil.replace("hello", "", "")).isEqualTo("hello");
+        assertThat(StringUtil.replace("hello", "", "lorem")).isEqualTo("hello");
+        assertThat(StringUtil.replace("hello", "lorem", "")).isEqualTo("hello");
+        assertThat(StringUtil.replace("hello", "lorem", "ipsum")).isEqualTo("hello");
+        assertThat(StringUtil.replace("hello", "lorem", "ipsum")).isEqualTo("hello");
+        assertThat(StringUtil.replace("hello", "hello", "")).isEmpty();
+        assertThat(StringUtil.replace("hello", "el", "xxx")).isEqualTo("hxxxlo");
+        assertThat(StringUtil.replace("hello world", "l", "(%)")).isEqualTo("he(%)(%)o wor(%)d");
+        assertThat(StringUtil.replace("hello world", "l+", "=")).isEqualTo("hello world");
+        assertThat(StringUtil.replace("hello world", "o", "")).isEqualTo("hell wrld");
+        assertThat(StringUtil.replace("hellollobello", "ello", "he")).isEqualTo("hhellobhe");
+        assertThat(StringUtil.replace("hellx", "hello", "x")).isEqualTo("hellx");
+    }
+
 }

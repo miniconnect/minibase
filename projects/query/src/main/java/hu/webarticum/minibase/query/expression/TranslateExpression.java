@@ -5,7 +5,6 @@ import java.util.Optional;
 import hu.webarticum.minibase.query.util.StringUtil;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
-import hu.webarticum.miniconnect.lang.LargeInteger;
 
 public class TranslateExpression implements Expression {
 
