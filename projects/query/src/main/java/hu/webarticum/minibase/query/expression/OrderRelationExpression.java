@@ -3,6 +3,7 @@ package hu.webarticum.minibase.query.expression;
 import java.util.Optional;
 
 import hu.webarticum.minibase.query.util.ConvertUtil;
+import hu.webarticum.minibase.query.util.StringUtil;
 import hu.webarticum.minibase.query.util.UnifyUtil;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
@@ -87,7 +88,7 @@ public class OrderRelationExpression implements Expression {
 
         Class<?> commonType = UnifyUtil.unifyTypes(leftValue.getClass(), rightValue.getClass());
         if (commonType == null) {
-            return compare(leftValue.toString(), rightValue.toString());
+            return compare(StringUtil.stringify(leftValue), StringUtil.stringify(rightValue));
         }
 
         Object convertedLeftValue;
@@ -96,11 +97,11 @@ public class OrderRelationExpression implements Expression {
             convertedLeftValue = ConvertUtil.convert(leftValue, commonType);
             convertedRightValue = ConvertUtil.convert(rightValue, commonType);
         } catch (IllegalArgumentException e) {
-            return compare(leftValue.toString(), rightValue.toString());
+        return compare(StringUtil.stringify(leftValue), StringUtil.stringify(rightValue));
         }
 
         if (!(convertedLeftValue instanceof Comparable)) {
-            return compare(leftValue.toString(), rightValue.toString());
+            return compare(StringUtil.stringify(leftValue), StringUtil.stringify(rightValue));
         }
 
         return compare(convertedLeftValue, convertedRightValue);

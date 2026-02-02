@@ -3,6 +3,7 @@ package hu.webarticum.minibase.query.expression;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
+import hu.webarticum.minibase.query.util.StringUtil;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
 
@@ -35,7 +36,7 @@ public class RegexpExpression implements Expression {
             return null;
         }
 
-        String patternString = patternValue.toString();
+        String patternString = StringUtil.stringify(patternValue);
         return Pattern.compile(patternString);
     }
 
@@ -85,7 +86,7 @@ public class RegexpExpression implements Expression {
             return null;
         }
 
-        String givenString = givenValue.toString();
+        String givenString = StringUtil.stringify(givenValue);
         return pattern.matcher(givenString).find();
     }
 

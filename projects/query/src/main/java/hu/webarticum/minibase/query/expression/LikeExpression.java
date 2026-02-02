@@ -4,6 +4,7 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 
 import hu.webarticum.minibase.query.util.LikeUtil;
+import hu.webarticum.minibase.query.util.StringUtil;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
 
@@ -50,7 +51,7 @@ public class LikeExpression implements Expression {
             return null;
         }
 
-        String patternString = patternValue.toString();
+        String patternString = StringUtil.stringify(patternValue);
         Character escapeCharacter = getEscapeCharacter(escapeValue);
 
         String regexString = LikeUtil.buildRegexString(patternString, escapeCharacter);
@@ -68,7 +69,7 @@ public class LikeExpression implements Expression {
             return null;
         }
 
-        String escapeString = escapeValue.toString();
+        String escapeString = StringUtil.stringify(escapeValue);
         if (escapeString.isEmpty()) {
             return null;
         }
@@ -135,7 +136,7 @@ public class LikeExpression implements Expression {
             return null;
         }
 
-        String givenString = givenValue.toString();
+        String givenString = StringUtil.stringify(givenValue);
         return pattern.matcher(givenString).matches();
     }
 

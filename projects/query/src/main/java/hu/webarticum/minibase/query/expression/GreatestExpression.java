@@ -6,6 +6,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import hu.webarticum.minibase.query.util.ConvertUtil;
+import hu.webarticum.minibase.query.util.StringUtil;
 import hu.webarticum.minibase.query.util.UnifyUtil;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
@@ -92,7 +93,7 @@ public class GreatestExpression implements Expression {
             Comparable<Object> nextComparable = (Comparable<Object>) nextValue;
             return nextComparable.compareTo(existingCandidate) > 0;
         } else {
-            return nextValue.toString().compareTo(existingCandidate.toString()) > 0;
+            return StringUtil.stringify(nextValue).compareTo(StringUtil.stringify(existingCandidate)) > 0;
         }
     }
 
