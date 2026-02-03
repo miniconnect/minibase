@@ -75,6 +75,7 @@ import hu.webarticum.minibase.query.expression.RightExpression;
 import hu.webarticum.minibase.query.expression.RightPadExpression;
 import hu.webarticum.minibase.query.expression.RightRightPadExpression;
 import hu.webarticum.minibase.query.expression.RoundExpression;
+import hu.webarticum.minibase.query.expression.Sha256Expression;
 import hu.webarticum.minibase.query.expression.SignExpression;
 import hu.webarticum.minibase.query.expression.SpecialValueExpression;
 import hu.webarticum.minibase.query.expression.SpecialValueParameter;
@@ -973,6 +974,9 @@ public class AntlrSqlParser implements SqlParser {
         } else if (functionNameUpper.equals("RAND") || functionNameUpper.equals("RANDOM")) {
             checkFunctionParameterCount(functionNameUpper, parameters, 0);
             return new RandomExpression();
+        } else if (functionNameUpper.equals("SHA256")) {
+            checkFunctionParameterCount(functionNameUpper, parameters, 1);
+            return new Sha256Expression(parameters.get(0));
         } else if (functionNameUpper.equals("NOW")) {
             checkFunctionParameterCount(functionNameUpper, parameters, 0);
             return new NowExpression();
