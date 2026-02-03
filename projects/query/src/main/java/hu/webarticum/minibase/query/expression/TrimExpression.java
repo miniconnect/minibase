@@ -132,7 +132,6 @@ public class TrimExpression implements Expression {
 
     @Override
     public String automaticName() {
-        ;
         return "TRIM(" +
                 trimSpecification.map(s -> s.name() + " ").orElse("") +
                 charsExpression.map(e -> e.automaticName() + " ").orElse("") +
