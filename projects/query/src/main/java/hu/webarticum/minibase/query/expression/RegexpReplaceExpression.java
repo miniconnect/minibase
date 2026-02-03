@@ -123,7 +123,10 @@ public class RegexpReplaceExpression implements Expression {
 
     @Override
     public ImmutableList<Parameter> parameters() {
-        return contextExpression.parameters().concat(patternExpression.parameters()).concat(toExpression.parameters());
+        return contextExpression.parameters()
+                .concat(patternExpression.parameters())
+                .concat(toExpression.parameters())
+                .concat(flagsExpression.map(e -> e.parameters()).orElseGet(ImmutableList::empty));
     }
 
     @Override
