@@ -66,6 +66,7 @@ import hu.webarticum.minibase.query.expression.PositionExpression;
 import hu.webarticum.minibase.query.expression.PowExpression;
 import hu.webarticum.minibase.query.expression.RandomExpression;
 import hu.webarticum.minibase.query.expression.RegexpExpression;
+import hu.webarticum.minibase.query.expression.RegexpReplaceExpression;
 import hu.webarticum.minibase.query.expression.RemainderExpression;
 import hu.webarticum.minibase.query.expression.RepeatExpression;
 import hu.webarticum.minibase.query.expression.ReplaceExpression;
@@ -952,6 +953,10 @@ public class AntlrSqlParser implements SqlParser {
         } else if (functionNameUpper.equals("REPLACE")) {
             checkFunctionParameterCount(functionNameUpper, parameters, 3);
             return new ReplaceExpression(parameters.get(0), parameters.get(1), parameters.get(2));
+        } else if (functionNameUpper.equals("REGEXP_REPLACE")) {
+            checkFunctionParameterCount(functionNameUpper, parameters, 3, 4);
+            Optional<Expression> flagsExpression = parameters.size() > 3 ? Optional.of(parameters.get(3)) : Optional.empty();
+            return new RegexpReplaceExpression(parameters.get(0), parameters.get(1), parameters.get(2), flagsExpression);
         } else if (functionNameUpper.equals("REPEAT")) {
             checkFunctionParameterCount(functionNameUpper, parameters, 2);
             return new RepeatExpression(parameters.get(0), parameters.get(1));
