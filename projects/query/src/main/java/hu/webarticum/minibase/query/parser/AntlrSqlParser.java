@@ -32,7 +32,9 @@ import hu.webarticum.minibase.query.expression.ColumnExpression;
 import hu.webarticum.minibase.query.expression.ConcatExpression;
 import hu.webarticum.minibase.query.expression.ConcatWithSeparatorExpression;
 import hu.webarticum.minibase.query.expression.ConstantExpression;
+import hu.webarticum.minibase.query.expression.DecodeExpression;
 import hu.webarticum.minibase.query.expression.DivideExpression;
+import hu.webarticum.minibase.query.expression.EncodeExpression;
 import hu.webarticum.minibase.query.expression.EqualsExpression;
 import hu.webarticum.minibase.query.expression.Expression;
 import hu.webarticum.minibase.query.expression.ExtractExpression;
@@ -977,6 +979,24 @@ public class AntlrSqlParser implements SqlParser {
         } else if (functionNameUpper.equals("SHA256")) {
             checkFunctionParameterCount(functionNameUpper, parameters, 1);
             return new Sha256Expression(parameters.get(0));
+        } else if (functionNameUpper.equals("HEX")) {
+            checkFunctionParameterCount(functionNameUpper, parameters, 1);
+            return new EncodeExpression(parameters.get(0), new ConstantExpression("HEX"));
+        } else if (functionNameUpper.equals("UNHEX")) {
+            checkFunctionParameterCount(functionNameUpper, parameters, 1);
+            return new DecodeExpression(parameters.get(0), new ConstantExpression("HEX"));
+        } else if (functionNameUpper.equals("TO_BASE64")) {
+            checkFunctionParameterCount(functionNameUpper, parameters, 1);
+            return new EncodeExpression(parameters.get(0), new ConstantExpression("BASE64"));
+        } else if (functionNameUpper.equals("FROM_BASE64")) {
+            checkFunctionParameterCount(functionNameUpper, parameters, 1);
+            return new DecodeExpression(parameters.get(0), new ConstantExpression("BASE64"));
+        } else if (functionNameUpper.equals("ENCODE")) {
+            checkFunctionParameterCount(functionNameUpper, parameters, 2);
+            return new EncodeExpression(parameters.get(0), parameters.get(1));
+        } else if (functionNameUpper.equals("DECODE")) {
+            checkFunctionParameterCount(functionNameUpper, parameters, 2);
+            return new DecodeExpression(parameters.get(0), parameters.get(1));
         } else if (functionNameUpper.equals("NOW")) {
             checkFunctionParameterCount(functionNameUpper, parameters, 0);
             return new NowExpression();
