@@ -9,6 +9,7 @@ include 'engine'
 include 'execution'
 include 'query'
 include 'storage'
+include 'test'
 
 rootProject.children.each { project ->
     project.projectDir = new File(settingsDir, "projects/${project.name}")

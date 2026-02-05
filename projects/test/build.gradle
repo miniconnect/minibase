@@ -1,0 +1,23 @@
+plugins {
+    id 'java-library'
+    id 'application'
+    id 'com.gradleup.shadow' version '9.3.0'
+}
+
+description = "MiniBase query execution tests"
+
+ext.mainClass = 'hu.webarticum.minibase.test.launch.QueryTestMain'
+
+dependencies {
+    implementation "hu.webarticum.miniconnect:record:${miniConnectVersion}"
+
+    implementation 'info.picocli:picocli:4.7.7'
+    implementation 'org.slf4j:slf4j-api:2.0.17'
+
+    runtimeOnly 'org.apache.logging.log4j:log4j-core:2.25.1'
+    runtimeOnly 'org.apache.logging.log4j:log4j-slf4j2-impl:2.25.1'
+}
+
+application {
+    mainClass = project.ext.mainClass
+}
