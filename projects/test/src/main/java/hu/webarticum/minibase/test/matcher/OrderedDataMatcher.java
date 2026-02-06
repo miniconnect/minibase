@@ -6,22 +6,22 @@ import java.util.Iterator;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.record.ResultRecord;
 
-public class OrderedRecordIterableMatcher implements RecordIterableMatcher {
+public class OrderedDataMatcher implements DataMatcher {
 
     private final RecordMatcher recordMatcher;
 
-    public OrderedRecordIterableMatcher(RecordMatcher recordMatcher) {
+    public OrderedDataMatcher(RecordMatcher recordMatcher) {
         this.recordMatcher = recordMatcher;
     }
 
-    public boolean match(Iterable<ResultRecord> recordIterable, ImmutableList<ImmutableList<Object>> expectedData) {
+    public boolean match(Iterable<ResultRecord> recordIterable, Iterable<ImmutableList<Object>> expectedData) {
         Iterator<ImmutableList<Object>> expectedDataIterator = expectedData.iterator();
         for (ResultRecord record : recordIterable) {
             if (!expectedDataIterator.hasNext()) {
                 return false;
             }
-            ImmutableList<Object> expectedValues = expectedDataIterator.next();
-            recordMatcher.match(record, expectedValues);
+            ImmutableList<Object> expectedRow = expectedDataIterator.next();
+            recordMatcher.match(record, expectedRow);
         }
         return !expectedDataIterator.hasNext();
     }

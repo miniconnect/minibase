@@ -6,6 +6,6 @@ import hu.webarticum.miniconnect.record.ResultRecord;
 @FunctionalInterface
 public interface RecordMatcher {
 
-    public boolean match(ResultRecord record, ImmutableList<Object> expectedValues);
+    public boolean match(ResultRecord record, ImmutableList<Object> expectedRow);
 
 }

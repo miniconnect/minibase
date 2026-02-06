@@ -6,8 +6,8 @@ import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.record.ResultRecord;
 
 @FunctionalInterface
-public interface RecordIterableMatcher {
+public interface DataMatcher {
 
-    public boolean match(Iterable<ResultRecord> recordIterable, ImmutableList<ImmutableList<Object>> expectedData);
+    public boolean match(Iterable<ResultRecord> givenRecords, Iterable<ImmutableList<Object>> expectedData);
 
 }

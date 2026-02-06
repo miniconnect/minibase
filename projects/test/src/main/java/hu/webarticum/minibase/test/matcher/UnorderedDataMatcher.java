@@ -8,22 +8,25 @@ import java.util.LinkedList;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.record.ResultRecord;
 
-public class UnorderedRecordIterableMatcher implements RecordIterableMatcher {
+public class UnorderedDataMatcher implements DataMatcher {
 
     private final RecordMatcher recordMatcher;
 
-    public UnorderedRecordIterableMatcher(RecordMatcher recordMatcher) {
+    public UnorderedDataMatcher(RecordMatcher recordMatcher) {
         this.recordMatcher = recordMatcher;
     }
 
-    public boolean match(Iterable<ResultRecord> recordIterable, ImmutableList<ImmutableList<Object>> expectedData) {
-        List<ImmutableList<Object>> remainingExpectedRows = new LinkedList<>(expectedData.asList());
+    public boolean match(Iterable<ResultRecord> recordIterable, Iterable<ImmutableList<Object>> expectedData) {
+        List<ImmutableList<Object>> remainingExpectedRows = new LinkedList<>();
+        for (ImmutableList<Object> expectedRow : expectedData) {
+            remainingExpectedRows.add(expectedRow);
+        }
         for (ResultRecord record : recordIterable) {
-            Iterator <ImmutableList<Object>> remainingIterator = remainingExpectedRows.iterator();
+            Iterator<ImmutableList<Object>> remainingIterator = remainingExpectedRows.iterator();
             boolean found = false;
             while (remainingIterator.hasNext()) {
-                ImmutableList<Object> expectedValues = remainingIterator.next();
-                if (recordMatcher.match(record, expectedValues)) {
+                ImmutableList<Object> expectedRow = remainingIterator.next();
+                if (recordMatcher.match(record, expectedRow)) {
                     remainingIterator.remove();
                     found = true;
                     break;
