@@ -14,9 +14,13 @@ public class KeyedDataMatcher implements DataMatcher {
 
     private final KeyExtractor keyExtractor;
 
-    public KeyedDataMatcher(RecordMatcher recordMatcher, KeyExtractor keyExtractor) {
+    private KeyedDataMatcher(RecordMatcher recordMatcher, KeyExtractor keyExtractor) {
         this.recordMatcher = recordMatcher;
         this.keyExtractor = keyExtractor;
+    }
+
+    public static KeyedDataMatcher of(RecordMatcher recordMatcher, KeyExtractor keyExtractor) {
+        return new KeyedDataMatcher(recordMatcher, keyExtractor);
     }
 
     @Override

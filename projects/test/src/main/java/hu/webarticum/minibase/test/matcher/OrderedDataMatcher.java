@@ -10,8 +10,12 @@ public class OrderedDataMatcher implements DataMatcher {
 
     private final RecordMatcher recordMatcher;
 
-    public OrderedDataMatcher(RecordMatcher recordMatcher) {
+    private OrderedDataMatcher(RecordMatcher recordMatcher) {
         this.recordMatcher = recordMatcher;
+    }
+
+    public static OrderedDataMatcher of(RecordMatcher recordMatcher) {
+        return new OrderedDataMatcher(recordMatcher);
     }
 
     @Override

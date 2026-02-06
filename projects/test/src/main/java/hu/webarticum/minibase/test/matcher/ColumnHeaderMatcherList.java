@@ -9,8 +9,12 @@ public class ColumnHeaderMatcherList implements ColumnHeaderMatcher {
 
     private final ImmutableList<ColumnHeaderMatcher> matchers;
 
-    public ColumnHeaderMatcherList(ImmutableList<ColumnHeaderMatcher> matchers) {
+    private ColumnHeaderMatcherList(ImmutableList<ColumnHeaderMatcher> matchers) {
         this.matchers = matchers;
+    }
+
+    public static ColumnHeaderMatcherList of(ImmutableList<ColumnHeaderMatcher> matchers) {
+        return new ColumnHeaderMatcherList(matchers);
     }
 
     @Override

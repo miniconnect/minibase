@@ -15,9 +15,13 @@ public class GroupingDataMatcher implements DataMatcher {
 
     private final KeyExtractor groupingKeyExtractor;
 
-    public GroupingDataMatcher(DataMatcher groupDataMatcher, KeyExtractor groupingKeyExtractor) {
+    private GroupingDataMatcher(DataMatcher groupDataMatcher, KeyExtractor groupingKeyExtractor) {
         this.groupDataMatcher = groupDataMatcher;
         this.groupingKeyExtractor = groupingKeyExtractor;
+    }
+
+    public static GroupingDataMatcher of(DataMatcher groupDataMatcher, KeyExtractor groupingKeyExtractor) {
+        return new GroupingDataMatcher(groupDataMatcher, groupingKeyExtractor);
     }
 
     @Override

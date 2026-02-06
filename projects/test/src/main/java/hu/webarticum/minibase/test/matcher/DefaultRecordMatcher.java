@@ -8,8 +8,12 @@ public class DefaultRecordMatcher implements RecordMatcher {
 
     private final ImmutableList<FieldMatcher> fieldMatchers;
 
-    public DefaultRecordMatcher(ImmutableList<FieldMatcher> fieldMatchers) {
+    private DefaultRecordMatcher(ImmutableList<FieldMatcher> fieldMatchers) {
         this.fieldMatchers = fieldMatchers;
+    }
+
+    public static DefaultRecordMatcher of(ImmutableList<FieldMatcher> fieldMatchers) {
+        return new DefaultRecordMatcher(fieldMatchers);
     }
 
     @Override

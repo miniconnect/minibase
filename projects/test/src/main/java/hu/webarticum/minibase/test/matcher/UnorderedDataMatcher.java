@@ -12,8 +12,12 @@ public class UnorderedDataMatcher implements DataMatcher {
 
     private final RecordMatcher recordMatcher;
 
-    public UnorderedDataMatcher(RecordMatcher recordMatcher) {
+    private UnorderedDataMatcher(RecordMatcher recordMatcher) {
         this.recordMatcher = recordMatcher;
+    }
+
+    public static UnorderedDataMatcher of(RecordMatcher recordMatcher) {
+        return new UnorderedDataMatcher(recordMatcher);
     }
 
     @Override

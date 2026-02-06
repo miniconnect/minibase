@@ -9,8 +9,12 @@ public class ColumnHeaderNameMatcher implements ColumnHeaderMatcher {
 
     private final String expectedName;
 
-    public ColumnHeaderNameMatcher(String expectedName) {
+    private ColumnHeaderNameMatcher(String expectedName) {
         this.expectedName = expectedName;
+    }
+
+    public static ColumnHeaderNameMatcher of(String expectedName) {
+        return new ColumnHeaderNameMatcher(expectedName);
     }
 
     @Override

@@ -7,8 +7,12 @@ public class DefaultTableHeaderMatcher implements TableHeaderMatcher {
 
     private final ImmutableList<ColumnHeaderMatcher> columnHeaderMatchers;
 
-    public DefaultTableHeaderMatcher(ImmutableList<ColumnHeaderMatcher> columnHeaderMatchers) {
+    private DefaultTableHeaderMatcher(ImmutableList<ColumnHeaderMatcher> columnHeaderMatchers) {
         this.columnHeaderMatchers = columnHeaderMatchers;
+    }
+
+    public static DefaultTableHeaderMatcher of(ImmutableList<ColumnHeaderMatcher> columnHeaderMatchers) {
+        return new DefaultTableHeaderMatcher(columnHeaderMatchers);
     }
 
     @Override
