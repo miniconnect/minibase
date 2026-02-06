@@ -11,6 +11,7 @@ public class DefaultTableHeaderMatcher implements TableHeaderMatcher {
         this.columnHeaderMatchers = columnHeaderMatchers;
     }
 
+    @Override
     public boolean match(ImmutableList<MiniColumnHeader> columnHeaders) {
         int tableWidth = columnHeaderMatchers.size();
         if (columnHeaders.size() != tableWidth) {

@@ -20,6 +20,7 @@ public class GroupingDataMatcher implements DataMatcher {
         this.groupingKeyExtractor = groupingKeyExtractor;
     }
 
+    @Override
     public boolean match(Iterable<ResultRecord> recordIterable, Iterable<ImmutableList<Object>> expectedData) {
         Iterator<ImmutableList<Object>> expectedDataIterator = expectedData.iterator();
         List<ResultRecord> currentGroupGivenRecords = new ArrayList<>();

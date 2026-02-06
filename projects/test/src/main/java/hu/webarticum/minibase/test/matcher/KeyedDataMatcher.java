@@ -19,6 +19,7 @@ public class KeyedDataMatcher implements DataMatcher {
         this.keyExtractor = keyExtractor;
     }
 
+    @Override
     public boolean match(Iterable<ResultRecord> recordIterable, Iterable<ImmutableList<Object>> expectedData) {
         Map<Object, ImmutableList<Object>> expectedDataMap = new HashMap<>();
         for (ImmutableList<Object> expectedRow : expectedData) {

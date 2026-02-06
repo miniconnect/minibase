@@ -12,6 +12,7 @@ public class DefaultRecordMatcher implements RecordMatcher {
         this.fieldMatchers = fieldMatchers;
     }
 
+    @Override
     public boolean match(ResultRecord record, ImmutableList<Object> expectedRow) {
         int length = fieldMatchers.size();
         for (int i = 0; i < length; i++) {

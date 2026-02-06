@@ -16,6 +16,7 @@ public class DefaultTableMatcher implements TableMatcher {
         this.tableHeaderMatcher = tableHeaderMatcher;
     }
 
+    @Override
     public boolean match(ResultTable table, Iterable<ImmutableList<Object>> expectedData) {
         return
                 tableHeaderMatcher.match(table.resultSet().columnHeaders()) &&

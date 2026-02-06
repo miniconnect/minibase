@@ -14,6 +14,7 @@ public class OrderedDataMatcher implements DataMatcher {
         this.recordMatcher = recordMatcher;
     }
 
+    @Override
     public boolean match(Iterable<ResultRecord> recordIterable, Iterable<ImmutableList<Object>> expectedData) {
         Iterator<ImmutableList<Object>> expectedDataIterator = expectedData.iterator();
         for (ResultRecord record : recordIterable) {
