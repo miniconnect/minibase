@@ -8,6 +8,6 @@ import hu.webarticum.miniconnect.lang.ImmutableList;
 @FunctionalInterface
 public interface ColumnHeaderMatcher {
 
-    public boolean match(MiniColumnHeader columnHeader);
+    public boolean match(MiniColumnHeader givenColumnHeader);
 
 }

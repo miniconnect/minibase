@@ -19,14 +19,16 @@ public class OrderedDataMatcher implements DataMatcher {
     }
 
     @Override
-    public boolean match(Iterable<ResultRecord> recordIterable, Iterable<ImmutableList<Object>> expectedData) {
+    public boolean match(Iterable<ResultRecord> givenRecords, Iterable<ImmutableList<Object>> expectedData) {
         Iterator<ImmutableList<Object>> expectedDataIterator = expectedData.iterator();
-        for (ResultRecord record : recordIterable) {
+        for (ResultRecord record : givenRecords) {
             if (!expectedDataIterator.hasNext()) {
                 return false;
             }
             ImmutableList<Object> expectedRow = expectedDataIterator.next();
-            recordMatcher.match(record, expectedRow);
+            if (!recordMatcher.match(record, expectedRow)) {
+                return false;
+            }
         }
         return !expectedDataIterator.hasNext();
     }

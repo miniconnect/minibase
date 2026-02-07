@@ -13,8 +13,8 @@ public class EqualityFieldMatcher implements FieldMatcher {
     }
 
     @Override
-    public boolean match(ResultField field, Object expectedValue) {
-        return Objects.equals(field.get(), expectedValue);
+    public boolean match(ResultField givenField, Object expectedValue) {
+        return Objects.equals(givenField.get(), expectedValue);
     }
 
 }

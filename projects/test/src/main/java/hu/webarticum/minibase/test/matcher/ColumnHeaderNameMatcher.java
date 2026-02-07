@@ -18,8 +18,8 @@ public class ColumnHeaderNameMatcher implements ColumnHeaderMatcher {
     }
 
     @Override
-    public boolean match(MiniColumnHeader columnHeader) {
-        return columnHeader.name().equals(expectedName);
+    public boolean match(MiniColumnHeader givenColumnHeader) {
+        return givenColumnHeader.name().equals(expectedName);
     }
 
 }

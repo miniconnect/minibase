@@ -21,12 +21,12 @@ public class UnorderedDataMatcher implements DataMatcher {
     }
 
     @Override
-    public boolean match(Iterable<ResultRecord> recordIterable, Iterable<ImmutableList<Object>> expectedData) {
+    public boolean match(Iterable<ResultRecord> givenRecords, Iterable<ImmutableList<Object>> expectedData) {
         List<ImmutableList<Object>> remainingExpectedRows = new LinkedList<>();
         for (ImmutableList<Object> expectedRow : expectedData) {
             remainingExpectedRows.add(expectedRow);
         }
-        for (ResultRecord record : recordIterable) {
+        for (ResultRecord record : givenRecords) {
             Iterator<ImmutableList<Object>> remainingIterator = remainingExpectedRows.iterator();
             boolean found = false;
             while (remainingIterator.hasNext()) {

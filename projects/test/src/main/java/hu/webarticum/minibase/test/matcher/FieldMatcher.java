@@ -5,6 +5,6 @@ import hu.webarticum.miniconnect.record.ResultField;
 @FunctionalInterface
 public interface FieldMatcher {
 
-    public boolean match(ResultField field, Object expectedValue);
+    public boolean match(ResultField givenField, Object expectedValue);
 
 }

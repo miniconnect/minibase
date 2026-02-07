@@ -6,6 +6,6 @@ import hu.webarticum.miniconnect.lang.ImmutableList;
 @FunctionalInterface
 public interface TableHeaderMatcher {
 
-    public boolean match(ImmutableList<MiniColumnHeader> columnHeaders);
+    public boolean match(ImmutableList<MiniColumnHeader> givenColumnHeader);
 
 }

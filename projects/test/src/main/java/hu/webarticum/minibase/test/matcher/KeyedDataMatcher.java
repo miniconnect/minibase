@@ -24,7 +24,7 @@ public class KeyedDataMatcher implements DataMatcher {
     }
 
     @Override
-    public boolean match(Iterable<ResultRecord> recordIterable, Iterable<ImmutableList<Object>> expectedData) {
+    public boolean match(Iterable<ResultRecord> givenRecords, Iterable<ImmutableList<Object>> expectedData) {
         Map<Object, ImmutableList<Object>> expectedDataMap = new HashMap<>();
         for (ImmutableList<Object> expectedRow : expectedData) {
             Object key = keyExtractor.extract(expectedRow);
@@ -33,7 +33,7 @@ public class KeyedDataMatcher implements DataMatcher {
             }
             expectedDataMap.put(key, expectedRow);
         }
-        for (ResultRecord record : recordIterable) {
+        for (ResultRecord record : givenRecords) {
             Object key = keyExtractor.extract(record);
             if (!expectedDataMap.containsKey(key)) {
                 return false;

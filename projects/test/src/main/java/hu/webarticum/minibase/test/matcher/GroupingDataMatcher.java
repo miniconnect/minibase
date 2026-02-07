@@ -25,12 +25,12 @@ public class GroupingDataMatcher implements DataMatcher {
     }
 
     @Override
-    public boolean match(Iterable<ResultRecord> recordIterable, Iterable<ImmutableList<Object>> expectedData) {
+    public boolean match(Iterable<ResultRecord> givenRecords, Iterable<ImmutableList<Object>> expectedData) {
         Iterator<ImmutableList<Object>> expectedDataIterator = expectedData.iterator();
         List<ResultRecord> currentGroupGivenRecords = new ArrayList<>();
         List<ImmutableList<Object>> currentGroupExpectedRows = new ArrayList<>();
         Object currentGroupKey = null;
-        for (ResultRecord record : recordIterable) {
+        for (ResultRecord record : givenRecords) {
             if (!expectedDataIterator.hasNext()) {
                 return false;
             }

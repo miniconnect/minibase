@@ -18,9 +18,9 @@ public class ColumnHeaderMatcherList implements ColumnHeaderMatcher {
     }
 
     @Override
-    public boolean match(MiniColumnHeader columnHeader) {
+    public boolean match(MiniColumnHeader givenColumnHeader) {
         for (ColumnHeaderMatcher matcher : matchers) {
-            if (!matcher.match(columnHeader)) {
+            if (!matcher.match(givenColumnHeader)) {
                 return false;
             }
         }
