@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test;
 
 class GroupingDataMatcherTest {
 
-    private Converter converter = new DefaultConverter();
+    private Converter converter;
 
     private ImmutableList<MiniColumnHeader> columnHeaders;
 

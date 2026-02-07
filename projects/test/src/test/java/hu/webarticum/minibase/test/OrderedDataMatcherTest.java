@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test;
 
 class OrderedDataMatcherTest {
 
-    private Converter converter = new DefaultConverter();
+    private Converter converter;
 
     private ImmutableList<MiniColumnHeader> columnHeaders;
 
