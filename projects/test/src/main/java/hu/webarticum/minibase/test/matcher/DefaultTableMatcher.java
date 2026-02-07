@@ -6,18 +6,18 @@ import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.record.ResultTable;
 
 public class DefaultTableMatcher implements TableMatcher {
+    
+        private final TableHeaderMatcher tableHeaderMatcher;
 
     private final DataMatcher dataMatcher;
 
-    private final TableHeaderMatcher tableHeaderMatcher;
-
-    private DefaultTableMatcher(DataMatcher dataMatcher, TableHeaderMatcher tableHeaderMatcher) {
-        this.dataMatcher = dataMatcher;
+    private DefaultTableMatcher(TableHeaderMatcher tableHeaderMatcher, DataMatcher dataMatcher) {
         this.tableHeaderMatcher = tableHeaderMatcher;
+        this.dataMatcher = dataMatcher;
     }
 
-    public static DefaultTableMatcher of(DataMatcher dataMatcher, TableHeaderMatcher tableHeaderMatcher) {
-        return new DefaultTableMatcher(dataMatcher, tableHeaderMatcher);
+    public static DefaultTableMatcher of(TableHeaderMatcher tableHeaderMatcher, DataMatcher dataMatcher) {
+        return new DefaultTableMatcher(tableHeaderMatcher, dataMatcher);
     }
 
     @Override
