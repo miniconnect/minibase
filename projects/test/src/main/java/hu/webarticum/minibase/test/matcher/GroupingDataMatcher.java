@@ -57,7 +57,7 @@ public class GroupingDataMatcher implements DataMatcher {
         if (!groupDataMatcher.match(currentGroupGivenRecords, currentGroupExpectedRows)) {
             return false;
         }
-        return false;
+        return true;
     }
 
 }
