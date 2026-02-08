@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import hu.webarticum.miniconnect.lang.ImmutableList;
-import hu.webarticum.miniconnect.record.ResultField;
 import hu.webarticum.miniconnect.record.ResultRecord;
 
 public class KeyedDataMatcher implements DataMatcher {
