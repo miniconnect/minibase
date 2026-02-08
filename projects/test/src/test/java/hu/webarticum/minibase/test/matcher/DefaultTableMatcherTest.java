@@ -2,7 +2,6 @@ package hu.webarticum.minibase.test.matcher;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import hu.webarticum.miniconnect.api.MiniValue;
 import hu.webarticum.miniconnect.impl.result.StoredColumnHeader;
 import hu.webarticum.miniconnect.impl.result.StoredResultSet;
 import hu.webarticum.miniconnect.impl.result.StoredResultSetData;
@@ -92,7 +91,8 @@ class DefaultTableMatcherTest {
     private ResultTable buildTable(ImmutableList<StoredColumnHeader> columnHeaders, ImmutableList<ImmutableList<Object>> data) {
         ImmutableList<ImmutableList<StoredValue>> wrappedData =
                 data.map(r -> r.map((i, v) -> StoredValue.from(valueTranslators.get(i).encodeFully(v))));
-        return new ResultTable(StoredResultSet.of(StoredResultSetData.of(columnHeaders, wrappedData)));
+        return new ResultTable(
+                StoredResultSet.of(StoredResultSetData.of(columnHeaders, wrappedData)), valueTranslators, converter);
     }
 
     @BeforeEach

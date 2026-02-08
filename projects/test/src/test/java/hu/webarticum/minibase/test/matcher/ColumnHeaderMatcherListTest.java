@@ -30,8 +30,4 @@ class ColumnHeaderMatcherListTest {
                 )).match(columnHeader)).isTrue();
     }
 
-    private MiniColumnHeader headerOfName(String name) {
-        return StoredColumnHeader.of(name, false, StoredValueDefinition.of(StandardValueType.STRING.name()));
-    }
-
 }
