@@ -1,4 +1,4 @@
-package hu.webarticum.minibase.test.model.fixture;
+package hu.webarticum.minibase.test.model.suite;
 
 import java.util.Objects;
 
@@ -7,7 +7,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import hu.webarticum.miniconnect.lang.ImmutableList;
 
-public class QueryTestCase {
+public class QueryTestCaseDescription {
 
     private final String description;
 
@@ -15,17 +15,17 @@ public class QueryTestCase {
 
     private final String query;
 
-    private final ImmutableList<QueryColumnDefinition> columns;
+    private final ImmutableList<QueryTestResultColumnDescription> columns;
 
     // TODO: field: comparison settigns
 
     private final ImmutableList<ImmutableList<Object>> expectedResult;
 
-    public QueryTestCase(
+    public QueryTestCaseDescription(
             @JsonProperty("description") String description,
             @JsonProperty("initQueries") ImmutableList<String> initQueries,
             @JsonProperty("query") String query,
-            @JsonProperty("columns") ImmutableList<QueryColumnDefinition> columns,
+            @JsonProperty("columns") ImmutableList<QueryTestResultColumnDescription> columns,
             // TODO: field: comparison settigns
             @JsonProperty("expectedResult") ImmutableList<ImmutableList<Object>> expectedResult) {
         this.description = description != null ? description : "";
@@ -52,7 +52,7 @@ public class QueryTestCase {
     }
 
     @JsonGetter("columns")
-    public ImmutableList<QueryColumnDefinition> columns() {
+    public ImmutableList<QueryTestResultColumnDescription> columns() {
         return columns;
     }
 

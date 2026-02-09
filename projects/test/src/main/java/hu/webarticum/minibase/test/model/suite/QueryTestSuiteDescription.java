@@ -1,4 +1,4 @@
-package hu.webarticum.minibase.test.model.fixture;
+package hu.webarticum.minibase.test.model.suite;
 
 import java.util.Objects;
 
@@ -7,7 +7,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import hu.webarticum.miniconnect.lang.ImmutableList;
 
-public class QueryTestFixture {
+public class QueryTestSuiteDescription {
 
     private final String description;
 
@@ -15,13 +15,13 @@ public class QueryTestFixture {
 
     private final ImmutableList<String> initQueries;
 
-    private final ImmutableList<QueryTestCase> cases;
+    private final ImmutableList<QueryTestCaseDescription> cases;
 
-    public QueryTestFixture(
+    public QueryTestSuiteDescription(
             @JsonProperty("description") String description,
             @JsonProperty("datasetResource") String datasetResource,
             @JsonProperty("initQueries") ImmutableList<String> initQueries,
-            @JsonProperty("cases") ImmutableList<QueryTestCase> cases) {
+            @JsonProperty("cases") ImmutableList<QueryTestCaseDescription> cases) {
         this.description = description != null ? description : "";
         this.datasetResource = Objects.requireNonNull(datasetResource, "datasetResource must not be null");
         this.initQueries = initQueries != null ? initQueries : ImmutableList.empty();
@@ -44,7 +44,7 @@ public class QueryTestFixture {
     }
 
     @JsonGetter("cases")
-    public ImmutableList<QueryTestCase> cases() {
+    public ImmutableList<QueryTestCaseDescription> cases() {
         return cases;
     }
 

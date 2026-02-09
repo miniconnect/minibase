@@ -1,9 +1,9 @@
-description: This is a test test fixture
-datasetResource: test-dataset.yaml
+description: This is a sample test suite
+datasetResource: sample-dataset.yaml
 initQueries:
   - "USE db"
 cases:
-  - description: This is a test test case
+  - description: This is a test case
     query: "SELECT id, label FROM tbl_1 LIMIT 1"
     columns:
       - {}
@@ -11,7 +11,7 @@ cases:
     # comparison settigns
     expectedResult:
       - [ 1, "xyz"]
-  - description: This is another test test case
+  - description: This is another test case
     initQueries:
       - "INSERT INTO tbl_1(id, label) VALUES(1, 'Hello')"
       - "INSERT INTO tbl_2(id, name) VALUES(99, 'Lorem Ipsum')"
