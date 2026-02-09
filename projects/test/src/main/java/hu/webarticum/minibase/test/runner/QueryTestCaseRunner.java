@@ -1,16 +1,16 @@
 package hu.webarticum.minibase.test.runner;
 
-import hu.webarticum.minibase.test.model.QueryTestCase;
+import hu.webarticum.minibase.test.model.fixture.QueryTestFixture;
 
 public class QueryTestCaseRunner implements Runnable {
 
-    private final QueryTestCase caseDescription;
+    private final QueryTestFixture caseDescription;
 
-    public QueryTestCaseRunner(QueryTestCase caseDescription) {
+    public QueryTestCaseRunner(QueryTestFixture caseDescription) {
         this.caseDescription = caseDescription;
     }
 
-    public QueryTestCase caseDescription() {
+    public QueryTestFixture caseDescription() {
         return caseDescription;
     }
 

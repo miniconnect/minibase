@@ -9,8 +9,14 @@ description = "MiniBase query execution tests"
 ext.mainClass = 'hu.webarticum.minibase.test.launch.QueryTestMain'
 
 dependencies {
+    implementation project(':storage')
     implementation "hu.webarticum.miniconnect:record:${miniConnectVersion}"
 
+    api 'com.fasterxml.jackson.core:jackson-annotations:2.19.2'
+    implementation 'com.fasterxml.jackson.core:jackson-core:2.19.2'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.19.2'
+    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.19.2'
+    implementation "hu.webarticum.miniconnect.api:lang-jackson:${miniConnectApiVersion}"
     implementation 'info.picocli:picocli:4.7.7'
     implementation 'org.slf4j:slf4j-api:2.0.17'
 
@@ -22,6 +28,7 @@ dependencies {
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.13.4'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.13.4'
     testImplementation 'org.assertj:assertj-core:3.27.3'
+    testImplementation "hu.webarticum.miniconnect.api:lang-assertj:${miniConnectApiVersion}"
     testImplementation "hu.webarticum.miniconnect:impl:${miniConnectVersion}"
 }
 
