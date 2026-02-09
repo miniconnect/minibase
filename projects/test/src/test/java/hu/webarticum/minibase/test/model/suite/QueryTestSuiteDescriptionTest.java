@@ -4,18 +4,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static hu.webarticum.miniconnect.lang.assertj.Assertions.assertThat;
 
 import java.io.IOException;
-import java.io.InputStream;
 
 import org.junit.jupiter.api.Test;
 
-import com.fasterxml.jackson.databind.MapperFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.json.JsonMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-
 import hu.webarticum.minibase.test.model.AbstractResourceBasedTest;
 import hu.webarticum.miniconnect.lang.ImmutableList;
-import hu.webarticum.miniconnect.lang.jackson.JacksonSupport;
 
 class QueryTestSuiteDescriptionTest extends AbstractResourceBasedTest {
 
@@ -67,21 +60,11 @@ class QueryTestSuiteDescriptionTest extends AbstractResourceBasedTest {
     }
 
     private QueryTestSuiteDescription loadSuite1() throws IOException {
-        return loadSuite(SUITE_1_RESOURCE, "suite 1 resource stream");
+        return loadYaml(SUITE_1_RESOURCE, "suite 1 resource stream", QueryTestSuiteDescription.class);
     }
 
     private QueryTestSuiteDescription loadSuite2() throws IOException {
-        return loadSuite(SUITE_2_RESOURCE, "suite 2 resource stream");
-    }
-
-    private QueryTestSuiteDescription loadSuite(String resourcePath, String resourceDescription) throws IOException {
-        ObjectMapper mapper = JsonMapper.builder(new YAMLFactory())
-                .enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS)
-                .addModule(JacksonSupport.createModule())
-                .build();
-        try (InputStream in = openResourceInputStream(resourcePath, resourceDescription)) {
-            return mapper.readValue(in, QueryTestSuiteDescription.class);
-        }
+        return loadYaml(SUITE_2_RESOURCE, "suite 2 resource stream", QueryTestSuiteDescription.class);
     }
 
 }
