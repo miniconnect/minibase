@@ -1,5 +1,6 @@
 package hu.webarticum.minibase.test.model.suite;
 
+import java.util.Objects;
 import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonGetter;
@@ -7,25 +8,34 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class QueryTestResultColumnDescription {
 
-    private final String expectedName;
+    private final String name;
 
-    private final Class<?> expectedType;
+    private final Class<?> type;
+
+    private final Boolean nullable;
 
     public QueryTestResultColumnDescription(
-            @JsonProperty("expectedName") String expectedName,
-            @JsonProperty("expectedType") Class<?> expectedType) {
-        this.expectedName = expectedName;
-        this.expectedType = expectedType;
+            @JsonProperty("name") String name,
+            @JsonProperty("type") Class<?> type,
+            @JsonProperty("nullable") Boolean nullable) {
+        this.name = name;
+        this.type = Objects.requireNonNull(type);
+        this.nullable = nullable;
     }
 
-    @JsonGetter("expectedName")
-    public Optional<String> expectedName() {
-        return Optional.ofNullable(expectedName);
+    @JsonGetter("name")
+    public Optional<String> name() {
+        return Optional.ofNullable(name);
     }
 
-    @JsonGetter("expectedType")
-    public Optional<Class<?>> expectedType() {
-        return Optional.ofNullable(expectedType);
+    @JsonGetter("type")
+    public Class<?> type() {
+        return type;
+    }
+
+    @JsonGetter("nullable")
+    public Optional<Boolean> nullable() {
+        return Optional.ofNullable(nullable);
     }
 
 }

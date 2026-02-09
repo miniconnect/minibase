@@ -9,6 +9,8 @@ import hu.webarticum.miniconnect.lang.ImmutableList;
 
 public class QueryTestCaseDescription {
 
+    private final String name;
+
     private final String description;
 
     private final ImmutableList<String> initQueries;
@@ -22,18 +24,25 @@ public class QueryTestCaseDescription {
     private final ImmutableList<ImmutableList<Object>> expectedResult;
 
     public QueryTestCaseDescription(
+            @JsonProperty("name") String name,
             @JsonProperty("description") String description,
             @JsonProperty("initQueries") ImmutableList<String> initQueries,
             @JsonProperty("query") String query,
             @JsonProperty("columns") ImmutableList<QueryTestResultColumnDescription> columns,
             // TODO: field: comparison settigns
             @JsonProperty("expectedResult") ImmutableList<ImmutableList<Object>> expectedResult) {
+        this.name = Objects.requireNonNull(name, "name must not be null");
         this.description = description != null ? description : "";
         this.initQueries = initQueries != null ? initQueries : ImmutableList.empty();
         this.query = Objects.requireNonNull(query, "query must not be null");
         this.columns = Objects.requireNonNull(columns, "columns must not be null");
         // TODO: field: comparison settigns
         this.expectedResult = Objects.requireNonNull(expectedResult, "expectedResult must not be null");
+    }
+
+    @JsonGetter("name")
+    public String name() {
+        return name;
     }
 
     @JsonGetter("description")

@@ -1,6 +1,8 @@
 package hu.webarticum.minibase.test.model.suite;
 
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -26,6 +28,13 @@ public class QueryTestSuiteDescription {
         this.datasetResource = Objects.requireNonNull(datasetResource, "datasetResource must not be null");
         this.initQueries = initQueries != null ? initQueries : ImmutableList.empty();
         this.cases = Objects.requireNonNull(cases, "cases must not be null");
+        Set<String> names = new HashSet<>(cases.size());
+        for (QueryTestCaseDescription testCase : cases) {
+            String caseName = testCase.name();
+            if (!names.add(caseName)) {
+                throw new IllegalArgumentException("Duplicated case name: " + caseName);
+            }
+        }
     }
 
     @JsonGetter("description")

@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 
 import hu.webarticum.minibase.test.model.AbstractResourceBasedTest;
 import hu.webarticum.miniconnect.lang.ImmutableList;
+import hu.webarticum.miniconnect.lang.LargeInteger;
 
 class QueryTestSuiteDescriptionTest extends AbstractResourceBasedTest {
 
@@ -25,26 +26,31 @@ class QueryTestSuiteDescriptionTest extends AbstractResourceBasedTest {
         assertThat(suite.cases()).hasSize(2);
 
         QueryTestCaseDescription case1 = suite.cases().get(0);
+        assertThat(case1.name()).isEqualTo("case-1");
         assertThat(case1.description()).isEqualTo("This is a test case");
         assertThat(case1.initQueries()).isEmpty();
         assertThat(case1.query()).isEqualTo("SELECT id, label FROM tbl_1 LIMIT 1");
         assertThat(case1.columns()).hasSize(2);
-        assertThat(case1.columns().get(0).expectedName()).isNotPresent();
-        assertThat(case1.columns().get(0).expectedType()).isNotPresent();
-        assertThat(case1.columns().get(1).expectedName()).isPresent();
-        assertThat(case1.columns().get(1).expectedType()).isNotPresent();
+        assertThat(case1.columns().get(0).name()).isNotPresent();
+        assertThat(case1.columns().get(0).type()).isEqualTo(String.class);
+        assertThat(case1.columns().get(0).nullable()).isNotPresent();
+        assertThat(case1.columns().get(1).name()).contains("label");
+        assertThat(case1.columns().get(1).type()).isEqualTo(String.class);
+        assertThat(case1.columns().get(1).nullable()).contains(true);
         // TODO: comparison settigns
         assertThat(case1.expectedResult()).containsExactly(ImmutableList.of(1, "xyz"));
 
         QueryTestCaseDescription case2 = suite.cases().get(1);
+        assertThat(case2.name()).isEqualTo("case-2");
         assertThat(case2.description()).isEqualTo("This is another test case");
         assertThat(case2.initQueries()).containsExactly(
                 "INSERT INTO tbl_1(id, label) VALUES(1, 'Hello')",
                 "INSERT INTO tbl_2(id, name) VALUES(99, 'Lorem Ipsum')");
         assertThat(case2.query()).isEqualTo("SELECT id FROM tbl_2 LIMIT 10");
         assertThat(case2.columns()).hasSize(1);
-        assertThat(case2.columns().get(0).expectedName()).isPresent();
-        assertThat(case2.columns().get(0).expectedType()).isPresent();
+        assertThat(case2.columns().get(0).name()).contains("id");
+        assertThat(case2.columns().get(0).type()).isEqualTo(LargeInteger.class);
+        assertThat(case2.columns().get(0).nullable()).contains(false);
         // TODO: comparison settigns
         assertThat(case2.expectedResult()).containsExactly(
                 ImmutableList.of(1, "lorem"),
@@ -56,7 +62,27 @@ class QueryTestSuiteDescriptionTest extends AbstractResourceBasedTest {
     void testMappingOfSuite2() throws IOException {
         QueryTestSuiteDescription suite = loadSuite2();
         assertThat(suite.description()).isEqualTo("This is another sample test suite");
-        // TODO
+        assertThat(suite.datasetResource()).isEqualTo("sample-dataset.yaml");
+        assertThat(suite.initQueries()).isEmpty();
+        assertThat(suite.cases()).hasSize(1);
+
+        QueryTestCaseDescription soleCase = suite.cases().get(0);
+        assertThat(soleCase.name()).isEqualTo("sole-case");
+        assertThat(soleCase.description()).isEmpty();
+        assertThat(soleCase.initQueries()).isEmpty();
+        assertThat(soleCase.query()).isEqualTo("SELECT 1 AS one, 2 AS two, 3 AS three");
+        assertThat(soleCase.columns()).hasSize(3);
+        assertThat(soleCase.columns().get(0).name()).contains("one");
+        assertThat(soleCase.columns().get(0).type()).isEqualTo(LargeInteger.class);
+        assertThat(soleCase.columns().get(0).nullable()).contains(false);
+        assertThat(soleCase.columns().get(1).name()).contains("two");
+        assertThat(soleCase.columns().get(1).type()).isEqualTo(LargeInteger.class);
+        assertThat(soleCase.columns().get(1).nullable()).contains(false);
+        assertThat(soleCase.columns().get(2).name()).contains("three");
+        assertThat(soleCase.columns().get(2).type()).isEqualTo(LargeInteger.class);
+        assertThat(soleCase.columns().get(2).nullable()).contains(false);
+        // TODO: comparison settigns
+        assertThat(soleCase.expectedResult()).containsExactly(ImmutableList.of(1, 2, 3));
     }
 
     private QueryTestSuiteDescription loadSuite1() throws IOException {

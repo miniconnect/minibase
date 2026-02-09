@@ -1,13 +1,17 @@
 description: This is another sample test suite
 datasetResource: sample-dataset.yaml
 cases:
-  - query: "SELECT 1 AS one, 2 AS two, 3 AS three"
+  - name: sole-case
+    query: "SELECT 1 AS one, 2 AS two, 3 AS three"
     columns:
-      - expectedName: one
-        expectedType: hu.webarticum.miniconnect.lang.LargeInteger
-      - expectedName: two
-        expectedType: hu.webarticum.miniconnect.lang.LargeInteger
-      - expectedName: three
-        expectedType: hu.webarticum.miniconnect.lang.LargeInteger
+      - name: one
+        type: hu.webarticum.miniconnect.lang.LargeInteger
+        nullable: false
+      - name: two
+        type: hu.webarticum.miniconnect.lang.LargeInteger
+        nullable: false
+      - name: three
+        type: hu.webarticum.miniconnect.lang.LargeInteger
+        nullable: false
     expectedResult:
       - [ 1, 2, 3 ]
