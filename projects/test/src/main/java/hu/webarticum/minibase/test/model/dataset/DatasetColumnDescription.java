@@ -1,11 +1,12 @@
 package hu.webarticum.minibase.test.model.dataset;
 
+import java.util.Objects;
+import java.util.Optional;
+
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-
-import hu.webarticum.miniconnect.lang.ToStringBuilder;;
 
 public class DatasetColumnDescription {
 
@@ -13,14 +14,18 @@ public class DatasetColumnDescription {
 
     private final Class<?> type;
 
+    private final boolean nullable;
+
     private final Object defaultValue;
 
-    public DatasetColumnDescription( // NOSONAR: many parameter is OK
+    public DatasetColumnDescription(
             @JsonProperty("name") String name,
             @JsonProperty("type") Class<?> type,
+            @JsonProperty("nullable") Boolean nullable,
             @JsonProperty("defaultValue") Object defaultValue) {
-        this.name = name;
-        this.type = type;
+        this.name = Objects.requireNonNull(name);
+        this.type = Objects.requireNonNull(type);
+        this.nullable = nullable != null ? nullable : false;
         this.defaultValue = defaultValue;
     }
 
@@ -34,19 +39,15 @@ public class DatasetColumnDescription {
         return type;
     }
 
-    @JsonGetter("defaultValue")
-    @JsonInclude(Include.NON_NULL)
-    public Object defaultValue() {
-        return defaultValue;
+    @JsonGetter("nullable")
+    public boolean nullable() {
+        return nullable;
     }
 
-    @Override
-    public String toString() {
-        return new ToStringBuilder(this)
-                .add("name", name)
-                .add("type", type)
-                .add("defaultValue", defaultValue)
-                .build();
+    @JsonGetter("defaultValue")
+    @JsonInclude(Include.NON_NULL)
+    public Optional<Object> defaultValue() {
+        return Optional.ofNullable(defaultValue);
     }
 
 }

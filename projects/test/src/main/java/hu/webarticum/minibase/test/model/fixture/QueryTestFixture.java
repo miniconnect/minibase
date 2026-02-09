@@ -1,5 +1,7 @@
 package hu.webarticum.minibase.test.model.fixture;
 
+import java.util.Objects;
+
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -9,7 +11,7 @@ public class QueryTestFixture {
 
     private final String description;
 
-    private final String datasetPath;
+    private final String datasetResource;
 
     private final ImmutableList<String> initQueries;
 
@@ -17,13 +19,13 @@ public class QueryTestFixture {
 
     public QueryTestFixture(
             @JsonProperty("description") String description,
-            @JsonProperty("datasetPath") String datasetPath,
+            @JsonProperty("datasetResource") String datasetResource,
             @JsonProperty("initQueries") ImmutableList<String> initQueries,
             @JsonProperty("cases") ImmutableList<QueryTestCase> cases) {
-        this.description = description;
-        this.datasetPath = datasetPath;
-        this.initQueries = initQueries;
-        this.cases = cases;
+        this.description = description != null ? description : "";
+        this.datasetResource = Objects.requireNonNull(datasetResource, "datasetResource must not be null");
+        this.initQueries = initQueries != null ? initQueries : ImmutableList.empty();
+        this.cases = Objects.requireNonNull(cases, "cases must not be null");
     }
 
     @JsonGetter("description")
@@ -31,9 +33,9 @@ public class QueryTestFixture {
         return description;
     }
 
-    @JsonGetter("datasetPath")
-    public String datasetPath() {
-        return datasetPath;
+    @JsonGetter("datasetResource")
+    public String datasetResource() {
+        return datasetResource;
     }
 
     @JsonGetter("initQueries")

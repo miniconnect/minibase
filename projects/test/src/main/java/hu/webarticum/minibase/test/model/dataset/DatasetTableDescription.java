@@ -1,28 +1,27 @@
 package hu.webarticum.minibase.test.model.dataset;
 
+import java.util.Objects;
+
 import com.fasterxml.jackson.annotation.JsonGetter;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 import hu.webarticum.miniconnect.lang.ImmutableList;
-import hu.webarticum.miniconnect.lang.ToStringBuilder;
 
 public class DatasetTableDescription {
 
     private final String name;
 
-    private final Boolean writeable;
-
     private final ImmutableList<DatasetColumnDescription> columns;
+
+    private final String dataResource;
 
     public DatasetTableDescription(
             @JsonProperty("name") String name,
-            @JsonProperty("writeable") Boolean writeable,
-            @JsonProperty("columns") ImmutableList<DatasetColumnDescription> columns) {
-        this.name = name;
-        this.writeable = writeable;
-        this.columns = columns;
+            @JsonProperty("columns") ImmutableList<DatasetColumnDescription> columns,
+            @JsonProperty("dataResource") String dataResource) {
+        this.name = Objects.requireNonNull(name);
+        this.columns = columns != null ? columns : ImmutableList.empty();
+        this.dataResource = Objects.requireNonNull(dataResource);
     }
 
     @JsonGetter("name")
@@ -30,24 +29,14 @@ public class DatasetTableDescription {
         return name;
     }
 
-    @JsonGetter("writeable")
-    @JsonInclude(Include.NON_NULL)
-    public Boolean writeable() {
-        return writeable;
-    }
-
     @JsonGetter("columns")
     public ImmutableList<DatasetColumnDescription> columns() {
         return columns;
     }
 
-    @Override
-    public String toString() {
-        return new ToStringBuilder(this)
-                .add("name", name)
-                .add("writeable", writeable)
-                .add("columns", columns)
-                .build();
+    @JsonGetter("dataResource")
+    public String dataResource() {
+        return dataResource;
     }
 
 }

@@ -1,5 +1,7 @@
 package hu.webarticum.minibase.test.model.fixture;
 
+import java.util.Objects;
+
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -26,12 +28,12 @@ public class QueryTestCase {
             @JsonProperty("columns") ImmutableList<QueryColumnDefinition> columns,
             // TODO: field: comparison settigns
             @JsonProperty("expectedResult") ImmutableList<ImmutableList<Object>> expectedResult) {
-        this.description = description;
-        this.initQueries = initQueries;
-        this.query = query;
-        this.columns = columns;
+        this.description = description != null ? description : "";
+        this.initQueries = initQueries != null ? initQueries : ImmutableList.empty();
+        this.query = Objects.requireNonNull(query, "query must not be null");
+        this.columns = Objects.requireNonNull(columns, "columns must not be null");
         // TODO: field: comparison settigns
-        this.expectedResult = expectedResult;
+        this.expectedResult = Objects.requireNonNull(expectedResult, "expectedResult must not be null");
     }
 
     @JsonGetter("description")

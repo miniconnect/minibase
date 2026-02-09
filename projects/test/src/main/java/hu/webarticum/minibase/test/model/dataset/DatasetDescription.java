@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import hu.webarticum.miniconnect.lang.ImmutableList;
-import hu.webarticum.miniconnect.lang.ToStringBuilder;
 
 public class DatasetDescription {
 
@@ -18,13 +17,6 @@ public class DatasetDescription {
     @JsonGetter("schemas")
     public ImmutableList<DatasetSchemaDescription> schemas() {
         return schemas;
-    }
-
-    @Override
-    public String toString() {
-        return new ToStringBuilder(this)
-                .add("schemas", schemas)
-                .build();
     }
 
 }

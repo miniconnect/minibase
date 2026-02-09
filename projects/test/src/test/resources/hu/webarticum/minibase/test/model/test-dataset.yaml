@@ -1,0 +1,22 @@
+schemas:
+  - name: db
+    tables:
+      - name: tbl_1
+        columns:
+          - name: id
+            type: hu.webarticum.miniconnect.lang.LargeInteger
+          - name: label
+            type: java.lang.String
+            defaultValue: ""
+        dataResource: tbl_1.csv
+      - name: tbl_2
+        columns:
+          - name: id
+            type: hu.webarticum.miniconnect.lang.LargeInteger
+          - name: name
+            type: java.lang.String
+            defaultValue: ""
+          - name: description
+            type: java.lang.String
+            nullable: true
+        dataResource: tbl_2.csv

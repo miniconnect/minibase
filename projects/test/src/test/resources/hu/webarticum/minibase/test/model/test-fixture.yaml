@@ -1,0 +1,26 @@
+description: This is a test test fixture
+datasetResource: test-dataset.yaml
+initQueries:
+  - "USE db"
+cases:
+  - description: This is a test test case
+    query: "SELECT id, label FROM tbl_1 LIMIT 1"
+    columns:
+      - {}
+      - expectedName: label
+    # comparison settigns
+    expectedResult:
+      - [ 1, "xyz"]
+  - description: This is another test test case
+    initQueries:
+      - "INSERT INTO tbl_1(id, label) VALUES(1, 'Hello')"
+      - "INSERT INTO tbl_2(id, name) VALUES(99, 'Lorem Ipsum')"
+    query: "SELECT id FROM tbl_2 LIMIT 10"
+    columns:
+      - expectedName: id
+        expectedType: java.lang.String
+    # comparison settigns
+    expectedResult:
+      - [ 1, "lorem"]
+      - [ 2, "ipsum"]
+      - [ 99, "dolor"]
