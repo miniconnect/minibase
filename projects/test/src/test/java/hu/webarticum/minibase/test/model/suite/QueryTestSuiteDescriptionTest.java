@@ -29,7 +29,7 @@ class QueryTestSuiteDescriptionTest extends AbstractResourceBasedTest {
         assertThat(case1.name()).isEqualTo("case-1");
         assertThat(case1.description()).isEqualTo("This is a test case");
         assertThat(case1.initQueries()).isEmpty();
-        assertThat(case1.query()).isEqualTo("SELECT id, label FROM tbl_1 LIMIT 1");
+        assertThat(case1.query()).isEqualTo("SELECT id, label FROM tbl_1 ORDER BY id LIMIT 1");
         assertThat(case1.columns()).hasSize(2);
         assertThat(case1.columns().get(0).name()).isNotPresent();
         assertThat(case1.columns().get(0).type()).isEqualTo(String.class);
@@ -44,18 +44,23 @@ class QueryTestSuiteDescriptionTest extends AbstractResourceBasedTest {
         assertThat(case2.name()).isEqualTo("case-2");
         assertThat(case2.description()).isEqualTo("This is another test case");
         assertThat(case2.initQueries()).containsExactly(
-                "INSERT INTO tbl_1(id, label) VALUES(1, 'Hello')",
-                "INSERT INTO tbl_2(id, name) VALUES(99, 'Lorem Ipsum')");
-        assertThat(case2.query()).isEqualTo("SELECT id FROM tbl_2 LIMIT 10");
-        assertThat(case2.columns()).hasSize(1);
+                "INSERT INTO tbl_2(id, name, description) VALUES(99, 'lorem', '')");
+        assertThat(case2.query()).isEqualTo("SELECT id, description, name FROM tbl_2 ORDER BY id DESC");
+        assertThat(case2.columns()).hasSize(3);
         assertThat(case2.columns().get(0).name()).contains("id");
         assertThat(case2.columns().get(0).type()).isEqualTo(LargeInteger.class);
         assertThat(case2.columns().get(0).nullable()).contains(false);
+        assertThat(case2.columns().get(1).name()).contains("description");
+        assertThat(case2.columns().get(1).type()).isEqualTo(String.class);
+        assertThat(case2.columns().get(1).nullable()).contains(true);
+        assertThat(case2.columns().get(2).name()).contains("name");
+        assertThat(case2.columns().get(2).type()).isEqualTo(String.class);
+        assertThat(case2.columns().get(2).nullable()).contains(false);
         // TODO: comparison settigns
         assertThat(case2.expectedResult()).containsExactly(
-                ImmutableList.of(1, "lorem"),
-                ImmutableList.of(2, "ipsum"),
-                ImmutableList.of(99, "dolor"));
+                ImmutableList.of(99, "", "dolor"),
+                ImmutableList.of(2, null, "ipsum"),
+                ImmutableList.of(1, "Some description", "lorem"));
     }
 
     @Test

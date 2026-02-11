@@ -8,7 +8,8 @@ schemas:
           - name: label
             type: java.lang.String
             defaultValue: ""
-        dataResource: tbl_1.csv
+        data:
+          - [ 1, "xyz"]
       - name: tbl_2
         columns:
           - name: id
@@ -19,4 +20,6 @@ schemas:
           - name: description
             type: java.lang.String
             nullable: true
-        dataResource: tbl_2.csv
+        data:
+          - [ 1, "lorem", "Some description"]
+          - [ 2, "ipsum", null]

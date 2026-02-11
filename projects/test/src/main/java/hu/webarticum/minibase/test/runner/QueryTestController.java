@@ -9,6 +9,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
+import hu.webarticum.minibase.test.model.suite.QueryTestCaseDescription;
+import hu.webarticum.minibase.test.model.suite.QueryTestSuiteDescription;
 import hu.webarticum.minibase.test.model.suite.QueryTestSuiteListDescription;
 import hu.webarticum.miniconnect.lang.jackson.JacksonSupport;
 
@@ -29,10 +31,25 @@ public class QueryTestController {
     }
 
     private void runSuitesInternal(QueryTestCaseCallback callback) throws IOException {
+        QueryTestSuiteListDescription suiteListDescription = loadYaml(suiteListResourcePath, QueryTestSuiteListDescription.class);
+        for (String suiteResourcePath  : suiteListDescription.suites()) {
+            handleSuite(suiteResourcePath, callback);
+        }
+    }
 
-        // TODO
-        loadYaml(suiteListResourcePath, QueryTestSuiteListDescription.class);
+    private void handleSuite(String suiteResourcePath, QueryTestCaseCallback callback) throws IOException {
+        QueryTestSuiteDescription suiteDescription = loadYaml(suiteResourcePath, QueryTestSuiteDescription.class);
+        for (QueryTestCaseDescription testCase : suiteDescription.cases()) {
+            handleCase(suiteDescription, testCase, callback);
+        }
+    }
 
+    private void handleCase(
+            QueryTestSuiteDescription suiteDescription,
+            QueryTestCaseDescription testCase,
+            QueryTestCaseCallback callback
+            ) throws IOException {
+        
     }
 
     private <T> T loadYaml(String resourcePath, Class<T> type) throws IOException {

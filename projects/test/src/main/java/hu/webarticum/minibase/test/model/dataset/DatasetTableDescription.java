@@ -13,15 +13,15 @@ public class DatasetTableDescription {
 
     private final ImmutableList<DatasetColumnDescription> columns;
 
-    private final String dataResource;
+    private final ImmutableList<ImmutableList<Object>> data;
 
     public DatasetTableDescription(
             @JsonProperty("name") String name,
             @JsonProperty("columns") ImmutableList<DatasetColumnDescription> columns,
-            @JsonProperty("dataResource") String dataResource) {
+            @JsonProperty("data") ImmutableList<ImmutableList<Object>> data) {
         this.name = Objects.requireNonNull(name);
         this.columns = columns != null ? columns : ImmutableList.empty();
-        this.dataResource = Objects.requireNonNull(dataResource);
+        this.data = Objects.requireNonNull(data);
     }
 
     @JsonGetter("name")
@@ -34,9 +34,9 @@ public class DatasetTableDescription {
         return columns;
     }
 
-    @JsonGetter("dataResource")
-    public String dataResource() {
-        return dataResource;
+    @JsonGetter("data")
+    public ImmutableList<ImmutableList<Object>> data() {
+        return data;
     }
 
 }
