@@ -48,6 +48,7 @@ import hu.webarticum.minibase.test.model.suite.QueryTestCaseDescription;
 import hu.webarticum.minibase.test.model.suite.QueryTestResultColumnDescription;
 import hu.webarticum.minibase.test.model.suite.QueryTestSuiteDescription;
 import hu.webarticum.minibase.test.model.suite.QueryTestSuiteListDescription;
+import hu.webarticum.miniconnect.api.MiniColumnHeader;
 import hu.webarticum.miniconnect.api.MiniSession;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.jackson.JacksonSupport;
@@ -136,8 +137,15 @@ public class QueryTestController {
     }
 
     private ColumnHeaderMatcher buildColumnHeaderMatcher(QueryTestResultColumnDescription columnDescription) {
-        // TODO
-        return h -> true;
+        String name = columnDescription.name().orElse(null);
+        Boolean nullable = columnDescription.nullable().orElse(null);
+        return c -> matchColumnHeader(c, name, nullable);
+    }
+
+    private boolean matchColumnHeader(MiniColumnHeader columnHeader, String name, Boolean nullable) {
+        return
+                (name == null || columnHeader.name().equals(name)) &&
+                (nullable == null || columnHeader.isNullable() == nullable);
     }
 
     private DataMatcher buildDataMatcher(QueryTestCaseDescription testCase) {

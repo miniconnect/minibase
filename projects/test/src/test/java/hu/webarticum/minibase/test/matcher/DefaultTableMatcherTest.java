@@ -98,8 +98,8 @@ class DefaultTableMatcherTest {
     @BeforeEach
     void prepare() {
         tableHeaderMatcher = DefaultTableHeaderMatcher.of(ImmutableList.of(
-                ColumnHeaderNameMatcher.of("id"),
-                ColumnHeaderNameMatcher.of("label")));
+                c -> c.name().equals("id"),
+                c -> c.name().equals("label")));
         converter = new DefaultConverter();
         valueTranslators = ImmutableList.of(
                 StandardValueType.INT.translatorFor(ImmutableMap.empty()),

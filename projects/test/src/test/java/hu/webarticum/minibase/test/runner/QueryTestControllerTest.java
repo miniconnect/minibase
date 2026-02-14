@@ -10,7 +10,6 @@ import org.junit.jupiter.api.Test;
 
 import hu.webarticum.minibase.test.matcher.DefaultTableMatcher;
 import hu.webarticum.minibase.test.matcher.GroupingDataMatcher;
-import hu.webarticum.minibase.test.matcher.KeyedDataMatcher;
 import hu.webarticum.minibase.test.matcher.OrderedDataMatcher;
 import hu.webarticum.minibase.test.matcher.TableMatcher;
 import hu.webarticum.miniconnect.lang.ImmutableList;
@@ -42,29 +41,30 @@ class QueryTestControllerTest {
     }
 
     private void testCase1(CaseData caseData) {
-        assertThat(caseData.matcher()).isInstanceOf(DefaultTableMatcher.class);
-        assertThat(((DefaultTableMatcher) caseData.matcher()).dataMatcher()).isInstanceOf(GroupingDataMatcher.class);
-        // TODO
-        assertThat(caseData.result()).containsExactly(
-                ImmutableList.of(LargeInteger.ONE, "xyz"));
+        testCase(caseData, GroupingDataMatcher.class, ImmutableList.of(
+                ImmutableList.of(LargeInteger.ONE, "xyz")));
     }
 
     private void testCase2(CaseData caseData) {
-        assertThat(caseData.matcher()).isInstanceOf(DefaultTableMatcher.class);
-        assertThat(((DefaultTableMatcher) caseData.matcher()).dataMatcher()).isInstanceOf(OrderedDataMatcher.class);
-        // TODO
-        assertThat(caseData.result()).containsExactly(
+        testCase(caseData, OrderedDataMatcher.class, ImmutableList.of(
                 ImmutableList.of(LargeInteger.of(99), "", "dolor"),
                 ImmutableList.of(LargeInteger.TWO, null, "ipsum"),
-                ImmutableList.of(LargeInteger.ONE, "Some description", "lorem"));
+                ImmutableList.of(LargeInteger.ONE, "Some description", "lorem")));
     }
 
     private void testSoleCase(CaseData caseData) {
-        assertThat(caseData.matcher()).isInstanceOf(DefaultTableMatcher.class);
-        assertThat(((DefaultTableMatcher) caseData.matcher()).dataMatcher()).isInstanceOf(OrderedDataMatcher.class);
-        // TODO
-        assertThat(caseData.result()).containsExactly(
-                ImmutableList.of(LargeInteger.ONE, LargeInteger.TWO, LargeInteger.THREE));
+        testCase(caseData, OrderedDataMatcher.class, ImmutableList.of(
+                ImmutableList.of(LargeInteger.ONE, LargeInteger.TWO, LargeInteger.THREE)));
+    }
+
+    private void testCase(CaseData caseData, Class<?> matcherType, Iterable<ImmutableList<Object>> result) {
+        TableMatcher tableMatcher = caseData.matcher();
+        ResultTable givenTable = caseData.table();
+        Iterable<ImmutableList<Object>> expectedResult = caseData.result();
+        assertThat(expectedResult).containsExactlyElementsOf(result);
+        assertThat(tableMatcher).isInstanceOf(DefaultTableMatcher.class);
+        assertThat(((DefaultTableMatcher) tableMatcher).dataMatcher()).isInstanceOf(matcherType);
+        assertThat(tableMatcher.match(givenTable, expectedResult));
     }
 
     static class CaseData {
