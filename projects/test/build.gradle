@@ -9,6 +9,7 @@ description = "MiniBase query execution tests"
 ext.mainClass = 'hu.webarticum.minibase.test.launch.QueryTestMain'
 
 dependencies {
+    implementation project(':engine')
     implementation project(':storage')
     implementation "hu.webarticum.miniconnect:record:${miniConnectVersion}"
 

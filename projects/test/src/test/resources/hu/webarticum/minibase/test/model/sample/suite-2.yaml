@@ -1,5 +1,5 @@
 description: This is another sample test suite
-datasetResource: sample-dataset.yaml
+datasetResource: dataset.yaml
 cases:
   - name: sole-case
     query: "SELECT 1 AS one, 2 AS two, 3 AS three"

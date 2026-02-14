@@ -14,13 +14,21 @@ public class QueryTestResultColumnDescription {
 
     private final Boolean nullable;
 
+    private final boolean key;
+
+    private final boolean groupKey;
+
     public QueryTestResultColumnDescription(
             @JsonProperty("name") String name,
             @JsonProperty("type") Class<?> type,
-            @JsonProperty("nullable") Boolean nullable) {
+            @JsonProperty("nullable") Boolean nullable,
+            @JsonProperty("key") Boolean key,
+            @JsonProperty("groupKey") Boolean groupKey) {
         this.name = name;
         this.type = Objects.requireNonNull(type);
         this.nullable = nullable;
+        this.key = key == null ? false : key;
+        this.groupKey = groupKey != null ? groupKey : false;
     }
 
     @JsonGetter("name")
@@ -36,6 +44,16 @@ public class QueryTestResultColumnDescription {
     @JsonGetter("nullable")
     public Optional<Boolean> nullable() {
         return Optional.ofNullable(nullable);
+    }
+
+    @JsonGetter("key")
+    public boolean key() {
+        return key;
+    }
+
+    @JsonGetter("groupKey")
+    public boolean groupKey() {
+        return groupKey;
     }
 
 }

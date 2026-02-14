@@ -5,6 +5,8 @@ schemas:
         columns:
           - name: id
             type: hu.webarticum.miniconnect.lang.LargeInteger
+            unique: true
+            autoIncremented: true
           - name: label
             type: java.lang.String
             defaultValue: ""
@@ -14,12 +16,17 @@ schemas:
         columns:
           - name: id
             type: hu.webarticum.miniconnect.lang.LargeInteger
+            unique: true
+            autoIncremented: true
           - name: name
             type: java.lang.String
             defaultValue: ""
+          - name: type
+            type: java.lang.String
+            enumValues: [ "APPLE", "ORANGE" ]
           - name: description
             type: java.lang.String
             nullable: true
         data:
-          - [ 1, "lorem", "Some description"]
-          - [ 2, "ipsum", null]
+          - [ 1, "lorem", "APPLE", "Some description"]
+          - [ 2, "ipsum", "ORANGE", null]

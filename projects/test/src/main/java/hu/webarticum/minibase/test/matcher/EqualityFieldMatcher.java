@@ -8,6 +8,10 @@ public class EqualityFieldMatcher implements FieldMatcher {
 
     private static final EqualityFieldMatcher INSTANCE = new EqualityFieldMatcher();
 
+    private EqualityFieldMatcher() {
+        // use instance()
+    }
+
     public static EqualityFieldMatcher instance() {
         return INSTANCE;
     }

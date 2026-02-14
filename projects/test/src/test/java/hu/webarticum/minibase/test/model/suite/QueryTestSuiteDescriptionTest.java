@@ -21,7 +21,7 @@ class QueryTestSuiteDescriptionTest extends AbstractResourceBasedTest {
     void testMappingOfSuite1() throws IOException {
         QueryTestSuiteDescription suite = loadSuite1();
         assertThat(suite.description()).isEqualTo("This is a sample test suite");
-        assertThat(suite.datasetResource()).isEqualTo("sample-dataset.yaml");
+        assertThat(suite.datasetResource()).isEqualTo("dataset.yaml");
         assertThat(suite.initQueries()).containsExactly("USE db");
         assertThat(suite.cases()).hasSize(2);
 
@@ -32,31 +32,41 @@ class QueryTestSuiteDescriptionTest extends AbstractResourceBasedTest {
         assertThat(case1.query()).isEqualTo("SELECT id, label FROM tbl_1 ORDER BY id LIMIT 1");
         assertThat(case1.columns()).hasSize(2);
         assertThat(case1.columns().get(0).name()).isNotPresent();
-        assertThat(case1.columns().get(0).type()).isEqualTo(String.class);
+        assertThat(case1.columns().get(0).type()).isEqualTo(LargeInteger.class);
         assertThat(case1.columns().get(0).nullable()).isNotPresent();
+        assertThat(case1.columns().get(0).key()).isTrue();
+        assertThat(case1.columns().get(0).groupKey()).isTrue();
         assertThat(case1.columns().get(1).name()).contains("label");
         assertThat(case1.columns().get(1).type()).isEqualTo(String.class);
         assertThat(case1.columns().get(1).nullable()).contains(true);
-        // TODO: comparison settigns
+        assertThat(case1.columns().get(1).key()).isFalse();
+        assertThat(case1.columns().get(1).groupKey()).isFalse();
+        assertThat(case1.ordered()).isFalse();
         assertThat(case1.expectedResult()).containsExactly(ImmutableList.of(1, "xyz"));
 
         QueryTestCaseDescription case2 = suite.cases().get(1);
         assertThat(case2.name()).isEqualTo("case-2");
         assertThat(case2.description()).isEqualTo("This is another test case");
         assertThat(case2.initQueries()).containsExactly(
-                "INSERT INTO tbl_2(id, name, description) VALUES(99, 'lorem', '')");
+                "INSERT INTO tbl_2(id, name, type, description) VALUES(99, 'lorem', 'APPLE', '')");
         assertThat(case2.query()).isEqualTo("SELECT id, description, name FROM tbl_2 ORDER BY id DESC");
         assertThat(case2.columns()).hasSize(3);
         assertThat(case2.columns().get(0).name()).contains("id");
         assertThat(case2.columns().get(0).type()).isEqualTo(LargeInteger.class);
         assertThat(case2.columns().get(0).nullable()).contains(false);
+        assertThat(case2.columns().get(0).key()).isTrue();
+        assertThat(case2.columns().get(0).groupKey()).isFalse();
         assertThat(case2.columns().get(1).name()).contains("description");
         assertThat(case2.columns().get(1).type()).isEqualTo(String.class);
         assertThat(case2.columns().get(1).nullable()).contains(true);
+        assertThat(case2.columns().get(1).key()).isFalse();
+        assertThat(case2.columns().get(1).groupKey()).isFalse();
         assertThat(case2.columns().get(2).name()).contains("name");
         assertThat(case2.columns().get(2).type()).isEqualTo(String.class);
         assertThat(case2.columns().get(2).nullable()).contains(false);
-        // TODO: comparison settigns
+        assertThat(case2.columns().get(2).key()).isFalse();
+        assertThat(case2.columns().get(2).groupKey()).isFalse();
+        assertThat(case2.ordered()).isTrue();
         assertThat(case2.expectedResult()).containsExactly(
                 ImmutableList.of(99, "", "dolor"),
                 ImmutableList.of(2, null, "ipsum"),
@@ -67,7 +77,7 @@ class QueryTestSuiteDescriptionTest extends AbstractResourceBasedTest {
     void testMappingOfSuite2() throws IOException {
         QueryTestSuiteDescription suite = loadSuite2();
         assertThat(suite.description()).isEqualTo("This is another sample test suite");
-        assertThat(suite.datasetResource()).isEqualTo("sample-dataset.yaml");
+        assertThat(suite.datasetResource()).isEqualTo("dataset.yaml");
         assertThat(suite.initQueries()).isEmpty();
         assertThat(suite.cases()).hasSize(1);
 
@@ -80,13 +90,19 @@ class QueryTestSuiteDescriptionTest extends AbstractResourceBasedTest {
         assertThat(soleCase.columns().get(0).name()).contains("one");
         assertThat(soleCase.columns().get(0).type()).isEqualTo(LargeInteger.class);
         assertThat(soleCase.columns().get(0).nullable()).contains(false);
+        assertThat(soleCase.columns().get(0).key()).isFalse();
+        assertThat(soleCase.columns().get(0).groupKey()).isFalse();
         assertThat(soleCase.columns().get(1).name()).contains("two");
         assertThat(soleCase.columns().get(1).type()).isEqualTo(LargeInteger.class);
         assertThat(soleCase.columns().get(1).nullable()).contains(false);
+        assertThat(soleCase.columns().get(1).key()).isFalse();
+        assertThat(soleCase.columns().get(1).groupKey()).isFalse();
         assertThat(soleCase.columns().get(2).name()).contains("three");
         assertThat(soleCase.columns().get(2).type()).isEqualTo(LargeInteger.class);
         assertThat(soleCase.columns().get(2).nullable()).contains(false);
-        // TODO: comparison settigns
+        assertThat(soleCase.columns().get(2).key()).isFalse();
+        assertThat(soleCase.columns().get(2).groupKey()).isFalse();
+        assertThat(soleCase.ordered()).isTrue();
         assertThat(soleCase.expectedResult()).containsExactly(ImmutableList.of(1, 2, 3));
     }
 

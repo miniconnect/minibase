@@ -12,6 +12,6 @@ public interface QueryTestCaseCallback {
             String caseName,
             TableMatcher tableMatcher,
             ResultTable givenTable,
-            Iterable<ImmutableList<Object>> expectedData);
+            Iterable<ImmutableList<Object>> expectedResult);
 
 }
