@@ -13,9 +13,9 @@ import hu.webarticum.miniconnect.lang.LargeInteger;
 
 class QueryTestSuiteDescriptionTest extends AbstractResourceBasedTest {
 
-    private final static String SUITE_1_RESOURCE = "hu/webarticum/minibase/test/model/sample/suite-1.yaml";
+    private final static String SUITE_1_RESOURCE = "hu/webarticum/minibase/test/sample/suite-1.yaml";
 
-    private final static String SUITE_2_RESOURCE = "hu/webarticum/minibase/test/model/sample/suite-2.yaml";
+    private final static String SUITE_2_RESOURCE = "hu/webarticum/minibase/test/sample/suite-2.yaml";
 
     @Test
     void testMappingOfSuite1() throws IOException {

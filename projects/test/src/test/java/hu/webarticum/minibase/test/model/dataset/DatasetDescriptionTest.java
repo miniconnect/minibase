@@ -18,7 +18,7 @@ import hu.webarticum.miniconnect.lang.jackson.JacksonSupport;
 
 class DatasetDescriptionTest extends AbstractResourceBasedTest {
 
-    private final static String DATASET_RESOURCE = "hu/webarticum/minibase/test/model/sample/dataset.yaml";
+    private final static String DATASET_RESOURCE = "hu/webarticum/minibase/test/sample/dataset.yaml";
 
     @Test
     void testMapping() throws IOException {

@@ -1,0 +1,11 @@
+description: Simple standalone select queries
+datasetResource: ../datasets/empty.yaml
+cases:
+  - name: single-constant
+    description: Select single constant
+    query: "SELECT 1"
+    columns:
+      - type: hu.webarticum.miniconnect.lang.LargeInteger
+        nullable: false
+    expectedResult:
+      - [ 1 ]

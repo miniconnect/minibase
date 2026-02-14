@@ -3,7 +3,17 @@ plugins {
     id 'com.gradleup.shadow' version '9.3.0'
 }
 
-description = "MiniBase query execution tests"
+description = 'MiniBase query execution tests'
+
+ext.queryTestMainClass = 'hu.webarticum.minibase.test.launch.QueryTestMain'
+ext.queryTestSuiteListResourcePath = 'hu/webarticum/minibase/test/scenarios/suite-list.yaml'
+
+sourceSets {
+    queryTest {
+        compileClasspath += sourceSets.main.runtimeClasspath
+        runtimeClasspath += sourceSets.main.runtimeClasspath
+    }
+}
 
 dependencies {
     implementation project(':engine')
@@ -26,4 +36,20 @@ dependencies {
     testImplementation 'org.assertj:assertj-core:3.27.3'
     testImplementation "hu.webarticum.miniconnect.api:lang-assertj:${miniConnectApiVersion}"
     testImplementation "hu.webarticum.miniconnect:impl:${miniConnectVersion}"
+
+    queryTestImplementation 'info.picocli:picocli:4.7.7'
+    queryTestImplementation 'org.slf4j:slf4j-api:2.0.17'
+}
+
+tasks.register('queryTest', JavaExec) {
+    shouldRunAfter tasks.test
+    group = LifecycleBasePlugin.VERIFICATION_GROUP
+    description = 'Tests query execution and result set content'
+    classpath = sourceSets.queryTest.runtimeClasspath
+    mainClass = queryTestMainClass
+    args = [ queryTestSuiteListResourcePath ]
+}
+
+tasks.named('check') {
+    dependsOn tasks.queryTest
 }

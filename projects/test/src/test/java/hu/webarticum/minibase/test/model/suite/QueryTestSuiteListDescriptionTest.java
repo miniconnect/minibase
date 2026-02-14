@@ -11,7 +11,7 @@ import hu.webarticum.minibase.test.model.AbstractResourceBasedTest;
 
 class QueryTestSuiteListDescriptionTest extends AbstractResourceBasedTest {
 
-    private final static String SUITE_LIST_RESOURCE = "hu/webarticum/minibase/test/model/sample/suite-list.yaml";
+    private final static String SUITE_LIST_RESOURCE = "hu/webarticum/minibase/test/sample/suite-list.yaml";
 
     @Test
     void testMapping() throws IOException {

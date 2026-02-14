@@ -18,16 +18,16 @@ import hu.webarticum.miniconnect.record.ResultTable;
 
 class QueryTestControllerTest {
 
-    private static final String SUITE_LIST_RESOURCE = "hu/webarticum/minibase/test/model/sample/suite-list.yaml";
+    private static final String SUITE_LIST_RESOURCE = "hu/webarticum/minibase/test/sample/suite-list.yaml";
 
-    private static final String CASE_1_KEY = "hu/webarticum/minibase/test/model/sample/suite-1.yaml:case-1";
+    private static final String CASE_1_KEY = "hu/webarticum/minibase/test/sample/suite-1.yaml:case-1";
 
-    private static final String CASE_2_KEY = "hu/webarticum/minibase/test/model/sample/suite-1.yaml:case-2";
+    private static final String CASE_2_KEY = "hu/webarticum/minibase/test/sample/suite-1.yaml:case-2";
 
-    private static final String SOLE_CASE_KEY = "hu/webarticum/minibase/test/model/sample/suite-2.yaml:sole-case";
+    private static final String SOLE_CASE_KEY = "hu/webarticum/minibase/test/sample/suite-2.yaml:sole-case";
 
     @Test
-    void testLoadedSuits() {
+    void testLoadedSuites() {
         Map<String, CaseData> collectedCases = Collections.synchronizedMap(new HashMap<>());
         QueryTestController
                 .ofResource(SUITE_LIST_RESOURCE)
