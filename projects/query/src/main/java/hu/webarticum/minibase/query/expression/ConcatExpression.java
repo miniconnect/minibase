@@ -43,11 +43,21 @@ public class ConcatExpression implements Expression {
 
     @Override
     public boolean isNullable() {
+        for (Expression parameterExpression : parameterExpressions.reverseOrder()) {
+            if (parameterExpression.isNullable()) {
+                return true;
+            }
+        }
         return false;
     }
 
     @Override
     public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
+        for (Expression parameterExpression : parameterExpressions.reverseOrder()) {
+            if (parameterExpression.isNullable(nullabilities)) {
+                return true;
+            }
+        }
         return false;
     }
 
@@ -56,9 +66,10 @@ public class ConcatExpression implements Expression {
         StringBuilder resultBuilder = new StringBuilder();
         for (Expression parameterExpression : parameterExpressions) {
             Object value = parameterExpression.evaluate(values);
-            if (value != null) {
-                resultBuilder.append(StringUtil.stringify(value));
+            if (value == null) {
+                return null;
             }
+            resultBuilder.append(StringUtil.stringify(value));
         }
         return resultBuilder.toString();
     }
