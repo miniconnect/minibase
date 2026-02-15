@@ -90,11 +90,8 @@ orderByPosition: TOKEN_INTEGER;
 aliasableExpression: expression aliasPart?;
 aliasPart: AS? alias=identifier;
 expression:
-    subExpression=expression DOUBLE_COLON typeConstruct |
-    unaryArithmeticExpression |
     leftExpression=expression binaryOperator=( ASTERISK | MOD | PERCENT | DIV | SLASH ) rightExpression=expression |
     leftExpression=expression binaryOperator=( PLUS | MINUS ) rightExpression=expression |
-    notOperator=NOT subExpression=expression |
     leftExpression=expression binaryOperator=AND rightExpression=expression |
     leftExpression=expression binaryOperator=XOR rightExpression=expression |
     leftExpression=expression binaryOperator=OR rightExpression=expression |
@@ -102,13 +99,18 @@ expression:
     leftExpression=expression binaryOperator=( LESS | LESS_EQ | GREATER | GREATER_EQ ) rightExpression=expression |
     leftExpression=expression binaryOperator=( EQ | NEQ_ANG | NEQ_BANG ) rightExpression=expression |
     givenExpression=expression NOT? IN inValueList |
-    PAR_START start1Expression=expression COMMA end1Expression=expression PAR_END
-        OVERLAPS PAR_START start2Expression=expression COMMA end2Expression=expression PAR_END |
     givenExpression=expression NOT? BETWEEN minExpression=expression AND maxExpression=expression |
     subExpression=expression IS NOT? isNullOperator=( NULL | UNKNOWN ) |
     givenExpression=expression NOT? likeOperator=( LIKE | ILIKE ) patternExpression=expression ( ESCAPE escapeExpression=expression )? |
     givenExpression=expression NOT? regexpOperator=( REGEXP | RLIKE ) patternExpression=expression |
+    subExpression=expression DOUBLE_COLON typeConstruct |
+    prefixableExpression ;
+prefixableExpression:
+    notOperator=NOT subExpression=expression |
+    PAR_START start1Expression=expression COMMA end1Expression=expression PAR_END
+        OVERLAPS PAR_START start2Expression=expression COMMA end2Expression=expression PAR_END |
     caseExpression |
+    unaryArithmeticExpression |
     COUNT PAR_START DISTINCT? ASTERISK PAR_END |
     COUNT PAR_START DISTINCT subExpression=expression PAR_END |
     intervalExpression |
@@ -118,7 +120,7 @@ expression:
     extractExpression |
     castExpression |
     atomicExpression;
-unaryArithmeticExpression: ( PLUS | MINUS ) subExpression=expression;
+unaryArithmeticExpression: ( PLUS | MINUS ) prefixableExpression;
 inValueList: PAR_START expression ( COMMA expression )* PAR_END;
 caseExpression: CASE (givenExpression=expression)? whenPart+ elsePart? END;
 whenPart: WHEN conditionExpression=expression THEN resultExpression=expression;

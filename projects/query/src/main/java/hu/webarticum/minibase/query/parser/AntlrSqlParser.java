@@ -164,6 +164,7 @@ import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.OrderByPa
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.OrderByPositionContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.PositionExpressionContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.PostfixConditionContext;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.PrefixableExpressionContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.SchemaNameContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.ScopeableFieldNameContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.SelectCountQueryContext;
@@ -598,48 +599,9 @@ public class AntlrSqlParser implements SqlParser {
     }
 
     private Expression parseExpressionNode(ExpressionContext expressionNode) {
-        AtomicExpressionContext atomicExpressionNode = expressionNode.atomicExpression();
-        if (atomicExpressionNode != null) {
-            return parseAtomicExpressionNode(atomicExpressionNode);
-        }
-
-        UnaryArithmeticExpressionContext unaryArithmeticExpressionNode = expressionNode.unaryArithmeticExpression();
-        if (unaryArithmeticExpressionNode != null) {
-            return parseUnaryArithmeticExpressionNode(unaryArithmeticExpressionNode);
-        }
-
-        IntervalExpressionContext intervalExpressionNode = expressionNode.intervalExpression();
-        if (intervalExpressionNode != null) {
-            return parseIntervalExpressionNode(intervalExpressionNode);
-        }
-
-        TrimExpressionContext trimExpressionNode = expressionNode.trimExpression();
-        if (trimExpressionNode != null) {
-            return parseTrimExpressionNode(trimExpressionNode);
-        }
-
-        SubstringExpressionContext substringExpressionNode = expressionNode.substringExpression();
-        if (substringExpressionNode != null) {
-            return parseSubstringExpressionNode(substringExpressionNode);
-        }
-
-        PositionExpressionContext positionExpressionNode = expressionNode.positionExpression();
-        if (positionExpressionNode != null) {
-            return parsePositionExpressionNode(positionExpressionNode);
-        }
-
-        ExtractExpressionContext extractExpressionNode = expressionNode.extractExpression();
-        if (extractExpressionNode != null) {
-            return parseExtractExpressionNode(extractExpressionNode);
-        }
-
-        CastExpressionContext castExpressionNode = expressionNode.castExpression();
-        if (castExpressionNode != null) {
-            return parseCastExpressionNode(castExpressionNode);
-        }
-
-        if (expressionNode.notOperator != null) {
-            return new NotExpression(parseExpressionNode(expressionNode.subExpression));
+        PrefixableExpressionContext prefixableExpressionNode = expressionNode.prefixableExpression();
+        if (prefixableExpressionNode != null) {
+            return parsePrefixableExpressionNode(prefixableExpressionNode);
         }
 
         if (expressionNode.isNullOperator != null) {
@@ -650,11 +612,6 @@ public class AntlrSqlParser implements SqlParser {
             } else {
                 return new NotExpression(isNullExpression);
             }
-        }
-
-        CaseExpressionContext caseExpressionNode = expressionNode.caseExpression();
-        if (caseExpressionNode != null) {
-            return parseCaseExpressionNode(caseExpressionNode);
         }
 
         if (expressionNode.likeOperator != null) {
@@ -707,22 +664,10 @@ public class AntlrSqlParser implements SqlParser {
             }
         }
 
-        if (expressionNode.OVERLAPS() != null) {
-            Expression start1Expression = parseExpressionNode(expressionNode.start1Expression);
-            Expression end1Expression = parseExpressionNode(expressionNode.end1Expression);
-            Expression start2Expression = parseExpressionNode(expressionNode.start2Expression);
-            Expression end2Expression = parseExpressionNode(expressionNode.end2Expression);
-            return new OverlapsExpression(start1Expression, end1Expression, start2Expression, end2Expression);
-        }
-
         if (expressionNode.DOUBLE_COLON() != null) {
             Expression subExpression = parseExpressionNode(expressionNode.subExpression);
             TypeConstruct typeConstruct = parseTypeConstructNode(expressionNode.typeConstruct());
             return new CastExpression(subExpression, typeConstruct);
-        }
-
-        if (expressionNode.COUNT() != null) {
-            throw new UnsupportedOperationException("Aggregation currently not supported (COUNT)");
         }
 
         Object operation = extractOperation(expressionNode);
@@ -761,6 +706,71 @@ public class AntlrSqlParser implements SqlParser {
         } else {
             throw new IllegalArgumentException("Unknown operation: " + operation);
         }
+    }
+
+    private Expression parsePrefixableExpressionNode(PrefixableExpressionContext prefixableExpressionNode) {
+        AtomicExpressionContext atomicExpressionNode = prefixableExpressionNode.atomicExpression();
+        if (atomicExpressionNode != null) {
+            return parseAtomicExpressionNode(atomicExpressionNode);
+        }
+
+        IntervalExpressionContext intervalExpressionNode = prefixableExpressionNode.intervalExpression();
+        if (intervalExpressionNode != null) {
+            return parseIntervalExpressionNode(intervalExpressionNode);
+        }
+
+        TrimExpressionContext trimExpressionNode = prefixableExpressionNode.trimExpression();
+        if (trimExpressionNode != null) {
+            return parseTrimExpressionNode(trimExpressionNode);
+        }
+
+        SubstringExpressionContext substringExpressionNode = prefixableExpressionNode.substringExpression();
+        if (substringExpressionNode != null) {
+            return parseSubstringExpressionNode(substringExpressionNode);
+        }
+
+        PositionExpressionContext positionExpressionNode = prefixableExpressionNode.positionExpression();
+        if (positionExpressionNode != null) {
+            return parsePositionExpressionNode(positionExpressionNode);
+        }
+
+        ExtractExpressionContext extractExpressionNode = prefixableExpressionNode.extractExpression();
+        if (extractExpressionNode != null) {
+            return parseExtractExpressionNode(extractExpressionNode);
+        }
+
+        CastExpressionContext castExpressionNode = prefixableExpressionNode.castExpression();
+        if (castExpressionNode != null) {
+            return parseCastExpressionNode(castExpressionNode);
+        }
+
+        UnaryArithmeticExpressionContext unaryArithmeticExpressionNode = prefixableExpressionNode.unaryArithmeticExpression();
+        if (unaryArithmeticExpressionNode != null) {
+            return parseUnaryArithmeticExpressionNode(unaryArithmeticExpressionNode);
+        }
+
+        if (prefixableExpressionNode.notOperator != null) {
+            return new NotExpression(parseExpressionNode(prefixableExpressionNode.subExpression));
+        }
+
+        if (prefixableExpressionNode.OVERLAPS() != null) {
+            Expression start1Expression = parseExpressionNode(prefixableExpressionNode.start1Expression);
+            Expression end1Expression = parseExpressionNode(prefixableExpressionNode.end1Expression);
+            Expression start2Expression = parseExpressionNode(prefixableExpressionNode.start2Expression);
+            Expression end2Expression = parseExpressionNode(prefixableExpressionNode.end2Expression);
+            return new OverlapsExpression(start1Expression, end1Expression, start2Expression, end2Expression);
+        }
+
+        CaseExpressionContext caseExpressionNode = prefixableExpressionNode.caseExpression();
+        if (caseExpressionNode != null) {
+            return parseCaseExpressionNode(caseExpressionNode);
+        }
+
+        if (prefixableExpressionNode.COUNT() != null) {
+            throw new UnsupportedOperationException("Aggregation currently not supported (COUNT)");
+        }
+
+        throw new IllegalArgumentException("Unknown expression: " + prefixableExpressionNode.getText());
     }
 
     private Object extractOperation(ExpressionContext expressionNode) {
@@ -1059,7 +1069,7 @@ public class AntlrSqlParser implements SqlParser {
     }
 
     private Expression parseUnaryArithmeticExpressionNode(UnaryArithmeticExpressionContext unaryArithmeticExpressionNode) {
-        Expression subExpression = parseExpressionNode(unaryArithmeticExpressionNode.subExpression);
+        Expression subExpression = parsePrefixableExpressionNode(unaryArithmeticExpressionNode.prefixableExpression());
         if (unaryArithmeticExpressionNode.MINUS() != null) {
             return new NegateExpression(subExpression);
         } else {
