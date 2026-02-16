@@ -1,0 +1,63 @@
+description: Simple standalone select queries
+datasetResource: ../datasets/single-table.yaml
+initQueries:
+  - USE library
+cases:
+
+  - name: record-by-id
+    description: Select single record by id
+    query: "SELECT * FROM books WHERE id = 14"
+    columns:
+      - name: id
+        type: hu.webarticum.miniconnect.lang.LargeInteger
+      - name: title
+        type: java.lang.String
+      - name: author
+        type: java.lang.String
+      - name: pub_year
+        type: hu.webarticum.miniconnect.lang.LargeInteger
+    expectedResult:
+      - [ 14, "Brothers Karamazov, The", "Fyodor Dostoyevsky", 1880 ]
+
+  - name: columns-order-limit-1
+    description: Select single constant
+    query: "SELECT id, title FROM books ORDER BY pub_year DESC LIMIT 3"
+    columns:
+      - name: id
+        type: hu.webarticum.miniconnect.lang.LargeInteger
+      - name: title
+        type: java.lang.String
+    expectedResult:
+      - [ 25, "One Hundred Years of Solitude" ]
+      - [ 24, "Doctor Zhivago" ]
+      - [ 23, "Lord of the Flies" ]
+
+  - name: columns-order-limit-2
+    description: Select single constant
+    query: "SELECT id, author, title FROM books ORDER BY title LIMIT 5"
+    columns:
+      - name: id
+        type: hu.webarticum.miniconnect.lang.LargeInteger
+      - name: author
+        type: java.lang.String
+      - name: title
+        type: java.lang.String
+    expectedResult:
+      - [ 17, "Erich Maria Remarque", "All Quiet on the Western Front" ]
+      - [ 13, "Leo Tolstoy", "Anna Karenina" ]
+      - [ 14, "Fyodor Dostoyevsky", "Brothers Karamazov, The" ]
+      - [ 21, "J.D. Salinger", "Catcher in the Rye, The" ]
+      - [ 24, "Boris Leonidovich Pasternak", "Doctor Zhivago" ]
+
+  - name: single-column-order-offset-limit
+    description: Select single constant
+    query: "SELECT author FROM books ORDER BY author OFFSET 4 LIMIT 5"
+    columns:
+      - name: author
+        type: java.lang.String
+    expectedResult:
+      - [ "Franz Kafka" ]
+      - [ "Fyodor Dostoyevsky" ]
+      - [ "Gabriel Garcia Márquez" ]
+      - [ "George Orwell" ]
+      - [ "Gustave Flaubert" ]
