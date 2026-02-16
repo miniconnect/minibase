@@ -53,11 +53,14 @@ public class QueryTestMain implements Callable<Integer> {
             TableMatcher tableMatcher,
             ResultTable givenTable,
             Iterable<ImmutableList<Object>> expectedResult) {
-        if (!tableMatcher.match(givenTable, expectedResult)) {
+        try {
+            tableMatcher.match(givenTable, expectedResult);
+        } catch (Exception e) {
             System.out.println();
             System.out.println("FAILED query test");
             System.out.println("    resource:  " + resourcePath);
             System.out.println("    case:      " + caseName);
+            System.out.println("    message:   " + e.getMessage());
             return false;
         }
         return true;

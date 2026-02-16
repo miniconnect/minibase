@@ -1,6 +1,6 @@
 package hu.webarticum.minibase.test.matcher;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 import hu.webarticum.miniconnect.impl.result.StoredColumnHeader;
 import hu.webarticum.miniconnect.impl.result.StoredResultSet;
@@ -40,7 +40,8 @@ class DefaultTableMatcherTest {
         ImmutableList<ImmutableList<Object>> expectedData = ImmutableList.of(
                 ImmutableList.of(1, "lorem"),
                 ImmutableList.of(2, "ipsum"));
-        assertThat(DefaultTableMatcher.of(tableHeaderMatcher, dataMatcher).match(givenTable, expectedData)).isTrue();
+        assertThatCode(() -> DefaultTableMatcher.of(tableHeaderMatcher, dataMatcher).match(givenTable, expectedData))
+                .doesNotThrowAnyException();
     }
 
     @Test
@@ -55,7 +56,8 @@ class DefaultTableMatcherTest {
         ImmutableList<ImmutableList<Object>> expectedData = ImmutableList.of(
                 ImmutableList.of(1, "lorem"),
                 ImmutableList.of(2, "ipsum"));
-        assertThat(DefaultTableMatcher.of(tableHeaderMatcher, dataMatcher).match(givenTable, expectedData)).isFalse();
+        assertThatCode(() -> DefaultTableMatcher.of(tableHeaderMatcher, dataMatcher).match(givenTable, expectedData))
+                .isInstanceOf(MatchFailedException.class);
     }
 
     @Test
@@ -70,7 +72,8 @@ class DefaultTableMatcherTest {
         ImmutableList<ImmutableList<Object>> expectedData = ImmutableList.of(
                 ImmutableList.of(1, "lorem"),
                 ImmutableList.of(2, "ipsum"));
-        assertThat(DefaultTableMatcher.of(tableHeaderMatcher, dataMatcher).match(givenTable, expectedData)).isFalse();
+        assertThatCode(() -> DefaultTableMatcher.of(tableHeaderMatcher, dataMatcher).match(givenTable, expectedData))
+                .isInstanceOf(MatchFailedException.class);
     }
 
     @Test
@@ -85,7 +88,8 @@ class DefaultTableMatcherTest {
         ImmutableList<ImmutableList<Object>> expectedData = ImmutableList.of(
                 ImmutableList.of(1, "lorem"),
                 ImmutableList.of(2, "ipsum"));
-        assertThat(DefaultTableMatcher.of(tableHeaderMatcher, dataMatcher).match(givenTable, expectedData)).isFalse();
+        assertThatCode(() -> DefaultTableMatcher.of(tableHeaderMatcher, dataMatcher).match(givenTable, expectedData))
+                .isInstanceOf(MatchFailedException.class);
     }
 
     private ResultTable buildTable(ImmutableList<StoredColumnHeader> columnHeaders, ImmutableList<ImmutableList<Object>> data) {

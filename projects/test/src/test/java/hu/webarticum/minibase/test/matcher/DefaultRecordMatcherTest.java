@@ -1,6 +1,7 @@
 package hu.webarticum.minibase.test.matcher;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 import hu.webarticum.miniconnect.api.MiniColumnHeader;
 import hu.webarticum.miniconnect.api.MiniValue;
@@ -19,21 +20,39 @@ import org.junit.jupiter.api.Test;
 class DefaultRecordMatcherTest {
 
     @Test
-    void testMatch() {
+    void testIsMatching() throws Exception {
         ResultRecord record = buildRecord();
         FieldMatcher equality = EqualityFieldMatcher.instance();
         assertThat(DefaultRecordMatcher.of(ImmutableList.of((f, v) -> true
-                )).match(record, ImmutableList.of(1, "xxx"))).isFalse();
+                )).isMatching(record, ImmutableList.of(1, "xxx"))).isFalse();
         assertThat(DefaultRecordMatcher.of(ImmutableList.of((f, v) -> true, (f, v) -> true
-                )).match(record, ImmutableList.of(1, "xxx"))).isTrue();
+                )).isMatching(record, ImmutableList.of(1, "xxx"))).isTrue();
         assertThat(DefaultRecordMatcher.of(ImmutableList.of((f, v) -> true, (f, v) -> true, (f, v) -> true
-                )).match(record, ImmutableList.of(1, "xxx"))).isFalse();
+                )).isMatching(record, ImmutableList.of(1, "xxx"))).isFalse();
         assertThat(DefaultRecordMatcher.of(ImmutableList.of(equality, equality
-                )).match(record, ImmutableList.of(1, "lorem"))).isTrue();
+                )).isMatching(record, ImmutableList.of(1, "lorem"))).isTrue();
         assertThat(DefaultRecordMatcher.of(ImmutableList.of(equality, equality
-                )).match(record, ImmutableList.of(3, "lorem"))).isFalse();
+                )).isMatching(record, ImmutableList.of(3, "lorem"))).isFalse();
         assertThat(DefaultRecordMatcher.of(ImmutableList.of(equality, equality
-                )).match(record, ImmutableList.of(1, "xxx"))).isFalse();
+                )).isMatching(record, ImmutableList.of(1, "xxx"))).isFalse();
+    }
+
+    @Test
+    void testMatch() {
+        ResultRecord record = buildRecord();
+        FieldMatcher equality = EqualityFieldMatcher.instance();
+        assertThatCode(() -> DefaultRecordMatcher.of(ImmutableList.of((f, v) -> true
+                )).match(record, ImmutableList.of(1, "xxx"))).isInstanceOf(MatchFailedException.class);
+        assertThatCode(() -> DefaultRecordMatcher.of(ImmutableList.of((f, v) -> true, (f, v) -> true
+                )).match(record, ImmutableList.of(1, "xxx"))).doesNotThrowAnyException();
+        assertThatCode(() -> DefaultRecordMatcher.of(ImmutableList.of((f, v) -> true, (f, v) -> true, (f, v) -> true
+                )).match(record, ImmutableList.of(1, "xxx"))).isInstanceOf(MatchFailedException.class);
+        assertThatCode(() -> DefaultRecordMatcher.of(ImmutableList.of(equality, equality
+                )).match(record, ImmutableList.of(1, "lorem"))).doesNotThrowAnyException();
+        assertThatCode(() -> DefaultRecordMatcher.of(ImmutableList.of(equality, equality
+                )).match(record, ImmutableList.of(3, "lorem"))).isInstanceOf(MatchFailedException.class);
+        assertThatCode(() -> DefaultRecordMatcher.of(ImmutableList.of(equality, equality
+                )).match(record, ImmutableList.of(1, "xxx"))).isInstanceOf(MatchFailedException.class);
     }
 
     private ResultRecord buildRecord() {

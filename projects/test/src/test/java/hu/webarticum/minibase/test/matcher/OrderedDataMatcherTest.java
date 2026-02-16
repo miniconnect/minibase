@@ -1,6 +1,6 @@
 package hu.webarticum.minibase.test.matcher;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 import hu.webarticum.miniconnect.api.MiniColumnHeader;
 import hu.webarticum.miniconnect.api.MiniValue;
@@ -31,7 +31,8 @@ class OrderedDataMatcherTest {
     void testMatchSuccessEmpty() {
         ImmutableList<ResultRecord> givenRecords = ImmutableList.empty();
         ImmutableList<ImmutableList<Object>> expectedData = ImmutableList.empty();
-        assertThat(OrderedDataMatcher.of(recordMatcher).match(givenRecords, expectedData)).isTrue();
+        assertThatCode(() -> OrderedDataMatcher.of(recordMatcher).match(givenRecords, expectedData))
+                .doesNotThrowAnyException();
     }
 
     @Test
@@ -48,7 +49,8 @@ class OrderedDataMatcherTest {
                 ImmutableList.of(3, "dolor", null),
                 ImmutableList.of(4, "sit", "HELLO"),
                 ImmutableList.of(5, "amet", null));
-        assertThat(OrderedDataMatcher.of(recordMatcher).match(givenRecords, expectedData)).isTrue();
+        assertThatCode(() -> OrderedDataMatcher.of(recordMatcher).match(givenRecords, expectedData))
+                .doesNotThrowAnyException();
     }
 
     @Test
@@ -65,7 +67,8 @@ class OrderedDataMatcherTest {
                 ImmutableList.of(3, "dolor", null),
                 ImmutableList.of(4, "sit", "HELLO"),
                 ImmutableList.of(5, "amet", null));
-        assertThat(OrderedDataMatcher.of(recordMatcher).match(givenRecords, expectedData)).isFalse();
+        assertThatCode(() -> OrderedDataMatcher.of(recordMatcher).match(givenRecords, expectedData))
+                .isInstanceOf(MatchFailedException.class);
     }
 
     @Test
@@ -82,7 +85,8 @@ class OrderedDataMatcherTest {
                 ImmutableList.of(3, "DOLOR", null),
                 ImmutableList.of(4, "sit", "HELLO"),
                 ImmutableList.of(5, "amet", null));
-        assertThat(OrderedDataMatcher.of(recordMatcher).match(givenRecords, expectedData)).isFalse();
+        assertThatCode(() -> OrderedDataMatcher.of(recordMatcher).match(givenRecords, expectedData))
+                .isInstanceOf(MatchFailedException.class);
     }
 
     @Test
@@ -97,7 +101,8 @@ class OrderedDataMatcherTest {
                 ImmutableList.of(3, "dolor", null),
                 ImmutableList.of(4, "sit", "HELLO"),
                 ImmutableList.of(5, "amet", null));
-        assertThat(OrderedDataMatcher.of(recordMatcher).match(givenRecords, expectedData)).isFalse();
+        assertThatCode(() -> OrderedDataMatcher.of(recordMatcher).match(givenRecords, expectedData))
+                .isInstanceOf(MatchFailedException.class);
     }
 
     @Test
@@ -116,7 +121,8 @@ class OrderedDataMatcherTest {
                 ImmutableList.of(5, "amet", null),
                 ImmutableList.of(6, "xxx", "Additional row"),
                 ImmutableList.of(7, "yyy", null));
-        assertThat(OrderedDataMatcher.of(recordMatcher).match(givenRecords, expectedData)).isFalse();
+        assertThatCode(() -> OrderedDataMatcher.of(recordMatcher).match(givenRecords, expectedData))
+                .isInstanceOf(MatchFailedException.class);
     }
 
     private ResultRecord buildRecord(int id, String label, String description) {

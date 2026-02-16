@@ -25,24 +25,27 @@ public class GroupingDataMatcher implements DataMatcher {
     }
 
     @Override
-    public boolean match(Iterable<ResultRecord> givenRecords, Iterable<ImmutableList<Object>> expectedData) {
+    public void match(Iterable<ResultRecord> givenRecords, Iterable<ImmutableList<Object>> expectedData) throws Exception {
         Iterator<ImmutableList<Object>> expectedDataIterator = expectedData.iterator();
         List<ResultRecord> currentGroupGivenRecords = new ArrayList<>();
         List<ImmutableList<Object>> currentGroupExpectedRows = new ArrayList<>();
         Object currentGroupKey = null;
+        int i = 0;
         for (ResultRecord record : givenRecords) {
             if (!expectedDataIterator.hasNext()) {
-                return false;
+                throw new MatchFailedException("too many records");
             }
             Object foundGroupKey = groupingKeyExtractor.extract(record);
             ImmutableList<Object> expectedRow = expectedDataIterator.next();
             Object expectedGroupKey = groupingKeyExtractor.extract(expectedRow);
             if (!Objects.equals(foundGroupKey, expectedGroupKey)) {
-                return false;
+                throw new MatchFailedException("at row " + i + ": group key: " + foundGroupKey + " != " + expectedGroupKey);
             }
             if (!Objects.equals(foundGroupKey, currentGroupKey)) {
-                if (!groupDataMatcher.match(currentGroupGivenRecords, currentGroupExpectedRows)) {
-                    return false;
+                try {
+                    groupDataMatcher.match(currentGroupGivenRecords, currentGroupExpectedRows);
+                } catch (Exception e) {
+                    throw MatchFailedException.prefix("at group key " + currentGroupKey + ": ", e);
                 }
                 currentGroupGivenRecords.clear();
                 currentGroupExpectedRows.clear();
@@ -50,14 +53,16 @@ public class GroupingDataMatcher implements DataMatcher {
             }
             currentGroupGivenRecords.add(record);
             currentGroupExpectedRows.add(expectedRow);
+            i++;
         }
         if (expectedDataIterator.hasNext()) {
-            return false;
+            throw new MatchFailedException("too few records");
         }
-        if (!groupDataMatcher.match(currentGroupGivenRecords, currentGroupExpectedRows)) {
-            return false;
+        try {
+            groupDataMatcher.match(currentGroupGivenRecords, currentGroupExpectedRows);
+        } catch (Exception e) {
+            throw MatchFailedException.prefix("at group key " + currentGroupKey + ": ", e);
         }
-        return true;
     }
 
 }

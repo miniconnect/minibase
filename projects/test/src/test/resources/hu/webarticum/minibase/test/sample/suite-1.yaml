@@ -12,14 +12,14 @@ cases:
         groupKey: true
       - name: label
         type: java.lang.String
-        nullable: true
+        nullable: false
     ordered: false
     expectedResult:
       - [ 1, "xyz"]
   - name: case-2
     description: This is another test case
     initQueries:
-      - "INSERT INTO tbl_2(id, name, type, description) VALUES(99, 'lorem', 'APPLE', '')"
+      - "INSERT INTO tbl_2(id, name, type, description) VALUES(99, 'dolor', 'APPLE', '')"
     query: "SELECT id, description, name FROM tbl_2 ORDER BY id DESC"
     columns:
       - name: id

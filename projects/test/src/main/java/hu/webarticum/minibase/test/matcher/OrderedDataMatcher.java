@@ -19,18 +19,24 @@ public class OrderedDataMatcher implements DataMatcher {
     }
 
     @Override
-    public boolean match(Iterable<ResultRecord> givenRecords, Iterable<ImmutableList<Object>> expectedData) {
+    public void match(Iterable<ResultRecord> givenRecords, Iterable<ImmutableList<Object>> expectedData) throws Exception {
         Iterator<ImmutableList<Object>> expectedDataIterator = expectedData.iterator();
+        int i = 0;
         for (ResultRecord record : givenRecords) {
             if (!expectedDataIterator.hasNext()) {
-                return false;
+                throw new MatchFailedException("too many records");
             }
             ImmutableList<Object> expectedRow = expectedDataIterator.next();
-            if (!recordMatcher.match(record, expectedRow)) {
-                return false;
+            try {
+                recordMatcher.match(record, expectedRow);
+            } catch (Exception e) {
+                throw MatchFailedException.prefix("at row " + i + ": ", e);
             }
+            i++;
         }
-        return !expectedDataIterator.hasNext();
+        if (expectedDataIterator.hasNext()) {
+            throw new MatchFailedException("too few records");
+        }
     }
 
 }

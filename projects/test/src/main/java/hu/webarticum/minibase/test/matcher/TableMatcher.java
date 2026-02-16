@@ -8,6 +8,6 @@ import hu.webarticum.miniconnect.record.ResultTable;
 @FunctionalInterface
 public interface TableMatcher {
 
-    public boolean match(ResultTable givenTable, Iterable<ImmutableList<Object>> expectedData);
+    public void match(ResultTable givenTable, Iterable<ImmutableList<Object>> expectedData) throws Exception;
 
 }

@@ -1,6 +1,6 @@
 package hu.webarticum.minibase.test.matcher;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 import hu.webarticum.miniconnect.api.MiniColumnHeader;
 import hu.webarticum.miniconnect.api.MiniValue;
@@ -33,7 +33,8 @@ class KeyedDataMatcherTest {
     void testMatchSuccessEmpty() {
         ImmutableList<ResultRecord> givenRecords = ImmutableList.empty();
         ImmutableList<ImmutableList<Object>> expectedData = ImmutableList.empty();
-        assertThat(KeyedDataMatcher.of(recordMatcher, keyExtractor).match(givenRecords, expectedData)).isTrue();
+        assertThatCode(() -> KeyedDataMatcher.of(recordMatcher, keyExtractor).match(givenRecords, expectedData))
+                .doesNotThrowAnyException();
     }
 
     @Test
@@ -50,7 +51,8 @@ class KeyedDataMatcherTest {
                 ImmutableList.of(3, "dolor", null),
                 ImmutableList.of(4, "sit", "HELLO"),
                 ImmutableList.of(5, "amet", null));
-        assertThat(KeyedDataMatcher.of(recordMatcher, keyExtractor).match(givenRecords, expectedData)).isTrue();
+        assertThatCode(() -> KeyedDataMatcher.of(recordMatcher, keyExtractor).match(givenRecords, expectedData))
+                .doesNotThrowAnyException();
     }
 
     @Test
@@ -67,7 +69,8 @@ class KeyedDataMatcherTest {
                 ImmutableList.of(3, "dolor", null),
                 ImmutableList.of(4, "sit", "HELLO"),
                 ImmutableList.of(5, "amet", null));
-        assertThat(KeyedDataMatcher.of(recordMatcher, keyExtractor).match(givenRecords, expectedData)).isTrue();
+        assertThatCode(() -> KeyedDataMatcher.of(recordMatcher, keyExtractor).match(givenRecords, expectedData))
+                .doesNotThrowAnyException();
     }
 
     @Test
@@ -84,7 +87,8 @@ class KeyedDataMatcherTest {
                 ImmutableList.of(3, "dolor", null),
                 ImmutableList.of(4, "sit", "HELLO"),
                 ImmutableList.of(5, "amet", null));
-        assertThat(KeyedDataMatcher.of(recordMatcher, keyExtractor).match(givenRecords, expectedData)).isFalse();
+        assertThatCode(() -> KeyedDataMatcher.of(recordMatcher, keyExtractor).match(givenRecords, expectedData))
+                .isInstanceOf(MatchFailedException.class);
     }
 
     @Test
@@ -100,7 +104,8 @@ class KeyedDataMatcherTest {
                 ImmutableList.of(3, "dolor", null),
                 ImmutableList.of(4, "sit", "HELLO"),
                 ImmutableList.of(5, "amet", null));
-        assertThat(KeyedDataMatcher.of(recordMatcher, keyExtractor).match(givenRecords, expectedData)).isFalse();
+        assertThatCode(() -> KeyedDataMatcher.of(recordMatcher, keyExtractor).match(givenRecords, expectedData))
+                .isInstanceOf(MatchFailedException.class);
     }
 
     @Test
@@ -118,7 +123,8 @@ class KeyedDataMatcherTest {
                 ImmutableList.of(3, "dolor", null),
                 ImmutableList.of(4, "sit", "HELLO"),
                 ImmutableList.of(5, "amet", null));
-        assertThat(KeyedDataMatcher.of(recordMatcher, keyExtractor).match(givenRecords, expectedData)).isFalse();
+        assertThatCode(() -> KeyedDataMatcher.of(recordMatcher, keyExtractor).match(givenRecords, expectedData))
+                .isInstanceOf(MatchFailedException.class);
     }
 
     private ResultRecord buildRecord(int id, String label, String description) {

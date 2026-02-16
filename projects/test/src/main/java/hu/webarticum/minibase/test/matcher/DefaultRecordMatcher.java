@@ -17,20 +17,48 @@ public class DefaultRecordMatcher implements RecordMatcher {
     }
 
     @Override
-    public boolean match(ResultRecord givenRecord, ImmutableList<Object> expectedRow) {
-        int length = fieldMatchers.size();
-        if (length != expectedRow.size()) {
+    public boolean isMatching(ResultRecord givenRecord, ImmutableList<Object> expectedRow) throws Exception {
+        int matcherLength = fieldMatchers.size();
+        int expectedLength = expectedRow.size();
+        if (matcherLength != expectedLength) {
             return false;
         }
-        for (int i = 0; i < length; i++) {
+        int recordLength = givenRecord.row().size();
+        if (recordLength != expectedLength) {
+            return false;
+        }
+        for (int i = 0; i < matcherLength; i++) {
             FieldMatcher fieldMatcher = fieldMatchers.get(i);
             ResultField field = givenRecord.get(i);
             Object expectedValue = expectedRow.get(i);
-            if (!fieldMatcher.match(field, expectedValue)) {
+            if (!fieldMatcher.isMatching(field, expectedValue)) {
                 return false;
             }
         }
         return true;
+    }
+
+    @Override
+    public void match(ResultRecord givenRecord, ImmutableList<Object> expectedRow) throws Exception {
+        int matcherLength = fieldMatchers.size();
+        int expectedLength = expectedRow.size();
+        if (matcherLength != expectedLength) {
+            throw new MatchFailedException("matcher length: " + matcherLength + " != expected row length: " + expectedLength);
+        }
+        int recordLength = givenRecord.row().size();
+        if (recordLength != expectedLength) {
+            throw new MatchFailedException("record length: " + recordLength + " != expected row length: " + expectedLength);
+        }
+        for (int i = 0; i < matcherLength; i++) {
+            FieldMatcher fieldMatcher = fieldMatchers.get(i);
+            ResultField field = givenRecord.get(i);
+            Object expectedValue = expectedRow.get(i);
+            try {
+                fieldMatcher.match(field, expectedValue);
+            } catch (Exception e) {
+                throw MatchFailedException.prefix("at column " + i + ": ", e);
+            }
+        }
     }
 
 }

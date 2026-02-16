@@ -1,6 +1,6 @@
 package hu.webarticum.minibase.test.matcher;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 import hu.webarticum.miniconnect.api.MiniColumnHeader;
 import hu.webarticum.miniconnect.api.MiniValue;
@@ -32,7 +32,8 @@ class GroupingDataMatcherTest {
         ImmutableList<ResultRecord> givenRecords = ImmutableList.empty();
         ImmutableList<ImmutableList<Object>> expectedData = ImmutableList.empty();
         DataMatcher groupDataMatcher = UnorderedDataMatcher.of(recordMatcher);
-        assertThat(GroupingDataMatcher.of(groupDataMatcher, r -> r.get(1)).match(givenRecords, expectedData)).isTrue();
+        assertThatCode(() -> GroupingDataMatcher.of(groupDataMatcher, r -> r.get(1)).match(givenRecords, expectedData))
+                .doesNotThrowAnyException();
     }
 
     @Test
@@ -62,9 +63,12 @@ class GroupingDataMatcherTest {
                 ImmutableList.of(10, "sit", null),
                 ImmutableList.of(11, "amet", "Some description"));
         DataMatcher groupDataMatcher = UnorderedDataMatcher.of(recordMatcher);
-        assertThat(GroupingDataMatcher.of(groupDataMatcher, r -> r.get(0)).match(givenRecords, expectedData)).isTrue();
-        assertThat(GroupingDataMatcher.of(groupDataMatcher, r -> r.get(1)).match(givenRecords, expectedData)).isTrue();
-        assertThat(GroupingDataMatcher.of(groupDataMatcher, r -> r.get(2)).match(givenRecords, expectedData)).isTrue();
+        assertThatCode(() -> GroupingDataMatcher.of(groupDataMatcher, r -> r.get(0)).match(givenRecords, expectedData))
+                .doesNotThrowAnyException();
+        assertThatCode(() -> GroupingDataMatcher.of(groupDataMatcher, r -> r.get(1)).match(givenRecords, expectedData))
+                .doesNotThrowAnyException();
+        assertThatCode(() -> GroupingDataMatcher.of(groupDataMatcher, r -> r.get(2)).match(givenRecords, expectedData))
+                .doesNotThrowAnyException();
     }
 
     @Test
@@ -94,9 +98,12 @@ class GroupingDataMatcherTest {
                 ImmutableList.of(10, "sit", null),
                 ImmutableList.of(11, "amet", "Some description"));
         DataMatcher groupDataMatcher = UnorderedDataMatcher.of(recordMatcher);
-        assertThat(GroupingDataMatcher.of(groupDataMatcher, r -> r.get(0)).match(givenRecords, expectedData)).isFalse();
-        assertThat(GroupingDataMatcher.of(groupDataMatcher, r -> r.get(1)).match(givenRecords, expectedData)).isTrue();
-        assertThat(GroupingDataMatcher.of(groupDataMatcher, r -> r.get(2)).match(givenRecords, expectedData)).isFalse();
+        assertThatCode(() -> GroupingDataMatcher.of(groupDataMatcher, r -> r.get(0)).match(givenRecords, expectedData))
+                .isInstanceOf(MatchFailedException.class);
+        assertThatCode(() -> GroupingDataMatcher.of(groupDataMatcher, r -> r.get(1)).match(givenRecords, expectedData))
+                .doesNotThrowAnyException();
+        assertThatCode(() -> GroupingDataMatcher.of(groupDataMatcher, r -> r.get(2)).match(givenRecords, expectedData))
+                .isInstanceOf(MatchFailedException.class);
     }
 
     @Test
@@ -126,9 +133,12 @@ class GroupingDataMatcherTest {
                 ImmutableList.of(10, "sit", null),
                 ImmutableList.of(11, "amet", "Some description"));
         DataMatcher groupDataMatcher = UnorderedDataMatcher.of(recordMatcher);
-        assertThat(GroupingDataMatcher.of(groupDataMatcher, r -> r.get(0)).match(givenRecords, expectedData)).isFalse();
-        assertThat(GroupingDataMatcher.of(groupDataMatcher, r -> r.get(1)).match(givenRecords, expectedData)).isFalse();
-        assertThat(GroupingDataMatcher.of(groupDataMatcher, r -> r.get(2)).match(givenRecords, expectedData)).isFalse();
+        assertThatCode(() -> GroupingDataMatcher.of(groupDataMatcher, r -> r.get(0)).match(givenRecords, expectedData))
+                .isInstanceOf(MatchFailedException.class);
+        assertThatCode(() -> GroupingDataMatcher.of(groupDataMatcher, r -> r.get(1)).match(givenRecords, expectedData))
+                .isInstanceOf(MatchFailedException.class);
+        assertThatCode(() -> GroupingDataMatcher.of(groupDataMatcher, r -> r.get(2)).match(givenRecords, expectedData))
+                .isInstanceOf(MatchFailedException.class);
     }
 
     @Test
@@ -157,9 +167,12 @@ class GroupingDataMatcherTest {
                 ImmutableList.of(10, "sit", null),
                 ImmutableList.of(11, "amet", "Some description"));
         DataMatcher groupDataMatcher = UnorderedDataMatcher.of(recordMatcher);
-        assertThat(GroupingDataMatcher.of(groupDataMatcher, r -> r.get(0)).match(givenRecords, expectedData)).isFalse();
-        assertThat(GroupingDataMatcher.of(groupDataMatcher, r -> r.get(1)).match(givenRecords, expectedData)).isFalse();
-        assertThat(GroupingDataMatcher.of(groupDataMatcher, r -> r.get(2)).match(givenRecords, expectedData)).isFalse();
+        assertThatCode(() -> GroupingDataMatcher.of(groupDataMatcher, r -> r.get(0)).match(givenRecords, expectedData))
+                .isInstanceOf(MatchFailedException.class);
+        assertThatCode(() -> GroupingDataMatcher.of(groupDataMatcher, r -> r.get(1)).match(givenRecords, expectedData))
+                .isInstanceOf(MatchFailedException.class);
+        assertThatCode(() -> GroupingDataMatcher.of(groupDataMatcher, r -> r.get(2)).match(givenRecords, expectedData))
+                .isInstanceOf(MatchFailedException.class);
     }
 
     @Test
@@ -190,9 +203,12 @@ class GroupingDataMatcherTest {
                 ImmutableList.of(10, "sit", null),
                 ImmutableList.of(11, "amet", "Some description"));
         DataMatcher groupDataMatcher = UnorderedDataMatcher.of(recordMatcher);
-        assertThat(GroupingDataMatcher.of(groupDataMatcher, r -> r.get(0)).match(givenRecords, expectedData)).isFalse();
-        assertThat(GroupingDataMatcher.of(groupDataMatcher, r -> r.get(1)).match(givenRecords, expectedData)).isFalse();
-        assertThat(GroupingDataMatcher.of(groupDataMatcher, r -> r.get(2)).match(givenRecords, expectedData)).isFalse();
+        assertThatCode(() -> GroupingDataMatcher.of(groupDataMatcher, r -> r.get(0)).match(givenRecords, expectedData))
+                .isInstanceOf(MatchFailedException.class);
+        assertThatCode(() -> GroupingDataMatcher.of(groupDataMatcher, r -> r.get(1)).match(givenRecords, expectedData))
+                .isInstanceOf(MatchFailedException.class);
+        assertThatCode(() -> GroupingDataMatcher.of(groupDataMatcher, r -> r.get(2)).match(givenRecords, expectedData))
+                .isInstanceOf(MatchFailedException.class);
     }
 
     @Test
@@ -223,9 +239,12 @@ class GroupingDataMatcherTest {
                 ImmutableList.of(10, "sit", null),
                 ImmutableList.of(11, "amet", "Some description"));
         DataMatcher groupDataMatcher = UnorderedDataMatcher.of(recordMatcher);
-        assertThat(GroupingDataMatcher.of(groupDataMatcher, r -> r.get(0)).match(givenRecords, expectedData)).isFalse();
-        assertThat(GroupingDataMatcher.of(groupDataMatcher, r -> r.get(1)).match(givenRecords, expectedData)).isFalse();
-        assertThat(GroupingDataMatcher.of(groupDataMatcher, r -> r.get(2)).match(givenRecords, expectedData)).isFalse();
+        assertThatCode(() -> GroupingDataMatcher.of(groupDataMatcher, r -> r.get(0)).match(givenRecords, expectedData))
+                .isInstanceOf(MatchFailedException.class);
+        assertThatCode(() -> GroupingDataMatcher.of(groupDataMatcher, r -> r.get(1)).match(givenRecords, expectedData))
+                .isInstanceOf(MatchFailedException.class);
+        assertThatCode(() -> GroupingDataMatcher.of(groupDataMatcher, r -> r.get(2)).match(givenRecords, expectedData))
+                .isInstanceOf(MatchFailedException.class);
     }
 
     @Test
@@ -255,9 +274,12 @@ class GroupingDataMatcherTest {
                 ImmutableList.of(10, "sit", null),
                 ImmutableList.of(11, "amet", "Some description"));
         DataMatcher groupDataMatcher = UnorderedDataMatcher.of(recordMatcher);
-        assertThat(GroupingDataMatcher.of(groupDataMatcher, r -> r.get(0)).match(givenRecords, expectedData)).isFalse();
-        assertThat(GroupingDataMatcher.of(groupDataMatcher, r -> r.get(1)).match(givenRecords, expectedData)).isFalse();
-        assertThat(GroupingDataMatcher.of(groupDataMatcher, r -> r.get(2)).match(givenRecords, expectedData)).isFalse();
+        assertThatCode(() -> GroupingDataMatcher.of(groupDataMatcher, r -> r.get(0)).match(givenRecords, expectedData))
+                .isInstanceOf(MatchFailedException.class);
+        assertThatCode(() -> GroupingDataMatcher.of(groupDataMatcher, r -> r.get(1)).match(givenRecords, expectedData))
+                .isInstanceOf(MatchFailedException.class);
+        assertThatCode(() -> GroupingDataMatcher.of(groupDataMatcher, r -> r.get(2)).match(givenRecords, expectedData))
+                .isInstanceOf(MatchFailedException.class);
     }
 
     @Test
@@ -286,9 +308,12 @@ class GroupingDataMatcherTest {
                 ImmutableList.of(10, "sit", null),
                 ImmutableList.of(11, "amet", "Some description"));
         DataMatcher groupDataMatcher = UnorderedDataMatcher.of(recordMatcher);
-        assertThat(GroupingDataMatcher.of(groupDataMatcher, r -> r.get(0)).match(givenRecords, expectedData)).isFalse();
-        assertThat(GroupingDataMatcher.of(groupDataMatcher, r -> r.get(1)).match(givenRecords, expectedData)).isFalse();
-        assertThat(GroupingDataMatcher.of(groupDataMatcher, r -> r.get(2)).match(givenRecords, expectedData)).isFalse();
+        assertThatCode(() -> GroupingDataMatcher.of(groupDataMatcher, r -> r.get(0)).match(givenRecords, expectedData))
+                .isInstanceOf(MatchFailedException.class);
+        assertThatCode(() -> GroupingDataMatcher.of(groupDataMatcher, r -> r.get(1)).match(givenRecords, expectedData))
+                .isInstanceOf(MatchFailedException.class);
+        assertThatCode(() -> GroupingDataMatcher.of(groupDataMatcher, r -> r.get(2)).match(givenRecords, expectedData))
+                .isInstanceOf(MatchFailedException.class);
     }
 
     @Test
@@ -319,9 +344,12 @@ class GroupingDataMatcherTest {
                 ImmutableList.of(10, "sit", null),
                 ImmutableList.of(11, "amet", "Some description"));
         DataMatcher groupDataMatcher = UnorderedDataMatcher.of(recordMatcher);
-        assertThat(GroupingDataMatcher.of(groupDataMatcher, r -> r.get(0)).match(givenRecords, expectedData)).isFalse();
-        assertThat(GroupingDataMatcher.of(groupDataMatcher, r -> r.get(1)).match(givenRecords, expectedData)).isFalse();
-        assertThat(GroupingDataMatcher.of(groupDataMatcher, r -> r.get(2)).match(givenRecords, expectedData)).isFalse();
+        assertThatCode(() -> GroupingDataMatcher.of(groupDataMatcher, r -> r.get(0)).match(givenRecords, expectedData))
+                .isInstanceOf(MatchFailedException.class);
+        assertThatCode(() -> GroupingDataMatcher.of(groupDataMatcher, r -> r.get(1)).match(givenRecords, expectedData))
+                .isInstanceOf(MatchFailedException.class);
+        assertThatCode(() -> GroupingDataMatcher.of(groupDataMatcher, r -> r.get(2)).match(givenRecords, expectedData))
+                .isInstanceOf(MatchFailedException.class);
     }
 
     private ResultRecord buildRecord(int id, String label, String description) {

@@ -17,7 +17,7 @@ public class EqualityFieldMatcher implements FieldMatcher {
     }
 
     @Override
-    public boolean match(ResultField givenField, Object expectedValue) {
+    public boolean isMatching(ResultField givenField, Object expectedValue) {
         return Objects.equals(givenField.get(), expectedValue);
     }
 

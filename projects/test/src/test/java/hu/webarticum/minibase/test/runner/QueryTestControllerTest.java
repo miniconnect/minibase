@@ -1,6 +1,7 @@
 package hu.webarticum.minibase.test.runner;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -64,7 +65,7 @@ class QueryTestControllerTest {
         assertThat(expectedResult).containsExactlyElementsOf(result);
         assertThat(tableMatcher).isInstanceOf(DefaultTableMatcher.class);
         assertThat(((DefaultTableMatcher) tableMatcher).dataMatcher()).isInstanceOf(matcherType);
-        assertThat(tableMatcher.match(givenTable, expectedResult));
+        assertThatCode(() -> tableMatcher.match(givenTable, expectedResult)).doesNotThrowAnyException();
     }
 
     static class CaseData {

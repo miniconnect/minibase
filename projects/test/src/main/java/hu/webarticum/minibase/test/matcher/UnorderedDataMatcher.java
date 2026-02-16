@@ -21,7 +21,7 @@ public class UnorderedDataMatcher implements DataMatcher {
     }
 
     @Override
-    public boolean match(Iterable<ResultRecord> givenRecords, Iterable<ImmutableList<Object>> expectedData) {
+    public void match(Iterable<ResultRecord> givenRecords, Iterable<ImmutableList<Object>> expectedData) throws Exception {
         List<ImmutableList<Object>> remainingExpectedRows = new LinkedList<>();
         for (ImmutableList<Object> expectedRow : expectedData) {
             remainingExpectedRows.add(expectedRow);
@@ -31,17 +31,19 @@ public class UnorderedDataMatcher implements DataMatcher {
             boolean found = false;
             while (remainingIterator.hasNext()) {
                 ImmutableList<Object> expectedRow = remainingIterator.next();
-                if (recordMatcher.match(record, expectedRow)) {
+                if (recordMatcher.isMatching(record, expectedRow)) {
                     remainingIterator.remove();
                     found = true;
                     break;
                 }
             }
             if (!found) {
-                return false;
+                throw new MatchFailedException("row not found: " + record.getAll());
             }
         }
-        return remainingExpectedRows.isEmpty();
+        if (!remainingExpectedRows.isEmpty()) {
+            throw new MatchFailedException("too few rows");
+        }
     }
 
 }

@@ -35,6 +35,7 @@ import hu.webarticum.minibase.test.matcher.DefaultTableMatcher;
 import hu.webarticum.minibase.test.matcher.EqualityFieldMatcher;
 import hu.webarticum.minibase.test.matcher.GroupingDataMatcher;
 import hu.webarticum.minibase.test.matcher.KeyedDataMatcher;
+import hu.webarticum.minibase.test.matcher.MatchFailedException;
 import hu.webarticum.minibase.test.matcher.OrderedDataMatcher;
 import hu.webarticum.minibase.test.matcher.RecordMatcher;
 import hu.webarticum.minibase.test.matcher.TableHeaderMatcher;
@@ -55,6 +56,7 @@ import hu.webarticum.miniconnect.lang.jackson.JacksonSupport;
 import hu.webarticum.miniconnect.record.ResultTable;
 import hu.webarticum.miniconnect.record.converter.Converter;
 import hu.webarticum.miniconnect.record.converter.DefaultConverter;
+import hu.webarticum.miniconnect.record.type.StandardValueType;
 
 public class QueryTestController {
 
@@ -138,14 +140,9 @@ public class QueryTestController {
 
     private ColumnHeaderMatcher buildColumnHeaderMatcher(QueryTestResultColumnDescription columnDescription) {
         String name = columnDescription.name().orElse(null);
+        Class<?> type = columnDescription.type();
         Boolean nullable = columnDescription.nullable().orElse(null);
-        return c -> matchColumnHeader(c, name, nullable);
-    }
-
-    private boolean matchColumnHeader(MiniColumnHeader columnHeader, String name, Boolean nullable) {
-        return
-                (name == null || columnHeader.name().equals(name)) &&
-                (nullable == null || columnHeader.isNullable() == nullable);
+        return new ConfiguredColumnHeaderMatcher(name, type, nullable);
     }
 
     private DataMatcher buildDataMatcher(QueryTestCaseDescription testCase) {
@@ -287,6 +284,48 @@ public class QueryTestController {
 
     private String subpath(String parent, String sub) {
         return parent.isEmpty() ? sub : parent + "/" + sub;
+    }
+
+    private static final class ConfiguredColumnHeaderMatcher implements ColumnHeaderMatcher {
+
+        private final String name;
+
+        private final Class<?> type;
+
+        private final Boolean nullable;
+
+        ConfiguredColumnHeaderMatcher(String name, Class<?> type, Boolean nullable) {
+            this.name = name;
+            this.type = type;
+            this.nullable = nullable;
+        }
+
+        @Override
+        public boolean isMatching(MiniColumnHeader columnHeader) {
+            return
+                    (name == null || columnHeader.name().equals(name)) &&
+                    extractType(columnHeader) == type &&
+                    (nullable == null || columnHeader.isNullable() == nullable);
+        }
+
+        @Override
+        public void match(MiniColumnHeader columnHeader) {
+            if (name != null && !columnHeader.name().equals(name)) {
+                throw new MatchFailedException("column name: " + columnHeader.name() + " != " + name);
+            }
+            Class<?> givenType = extractType(columnHeader);
+            if (givenType != type) {
+                throw new MatchFailedException("column type: " + givenType + " != " + type);
+            }
+            if (nullable != null && columnHeader.isNullable() != nullable) {
+                throw new MatchFailedException("column nullable: " + columnHeader.isNullable() + " != " + nullable);
+            }
+        }
+
+        private Class<?> extractType(MiniColumnHeader columnHeader) {
+            return StandardValueType.valueOf(columnHeader.valueDefinition().type()).clazz();
+        }
+
     }
 
 }

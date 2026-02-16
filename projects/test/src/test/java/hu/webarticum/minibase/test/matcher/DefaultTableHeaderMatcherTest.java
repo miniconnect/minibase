@@ -1,6 +1,6 @@
 package hu.webarticum.minibase.test.matcher;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 import hu.webarticum.miniconnect.api.MiniColumnHeader;
 import hu.webarticum.miniconnect.impl.result.StoredColumnHeader;
@@ -17,15 +17,21 @@ class DefaultTableHeaderMatcherTest {
         ImmutableList<MiniColumnHeader> columnHeaders = ImmutableList.of(
                 buildColumnHeader("id", false, StandardValueType.INT),
                 buildColumnHeader("label", false, StandardValueType.STRING));
-        assertThat(DefaultTableHeaderMatcher.of(ImmutableList.empty()).match(columnHeaders)).isFalse();
-        assertThat(DefaultTableHeaderMatcher.of(ImmutableList.of(h -> false)).match(columnHeaders)).isFalse();
-        assertThat(DefaultTableHeaderMatcher.of(ImmutableList.of(h -> true)).match(columnHeaders)).isFalse();
-        assertThat(DefaultTableHeaderMatcher.of(ImmutableList.of(h -> true, h -> false)).match(columnHeaders)).isFalse();
-        assertThat(DefaultTableHeaderMatcher.of(ImmutableList.of(h -> true, h -> true)).match(columnHeaders)).isTrue();
-        assertThat(DefaultTableHeaderMatcher.of(ImmutableList.of(
-                h -> true, h -> true, h -> true)).match(columnHeaders)).isFalse();
-        assertThat(DefaultTableHeaderMatcher.of(ImmutableList.of(
-                h -> h.name().equals("id"), h -> h.name().startsWith("la"))).match(columnHeaders)).isTrue();
+        assertThatCode(() -> DefaultTableHeaderMatcher.of(ImmutableList.empty()).match(columnHeaders))
+                .isInstanceOf(MatchFailedException.class);
+        assertThatCode(() -> DefaultTableHeaderMatcher.of(ImmutableList.of(h -> false)).match(columnHeaders))
+                .isInstanceOf(MatchFailedException.class);
+        assertThatCode(() -> DefaultTableHeaderMatcher.of(ImmutableList.of(h -> true)).match(columnHeaders))
+                .isInstanceOf(MatchFailedException.class);
+        assertThatCode(() -> DefaultTableHeaderMatcher.of(ImmutableList.of(h -> true, h -> false)).match(columnHeaders))
+                .isInstanceOf(MatchFailedException.class);
+        assertThatCode(() -> DefaultTableHeaderMatcher.of(ImmutableList.of(h -> true, h -> true)).match(columnHeaders))
+                .doesNotThrowAnyException();
+        assertThatCode(() -> DefaultTableHeaderMatcher.of(ImmutableList.of(h -> true, h -> true, h -> true)).match(columnHeaders))
+                .isInstanceOf(MatchFailedException.class);
+        assertThatCode(() -> DefaultTableHeaderMatcher.of(ImmutableList.of(
+                h -> h.name().equals("id"), h -> h.name().startsWith("la"))).match(columnHeaders))
+                .doesNotThrowAnyException();
     }
 
     private MiniColumnHeader buildColumnHeader(String name, boolean isNullable, StandardValueType type) {

@@ -23,26 +23,30 @@ public class KeyedDataMatcher implements DataMatcher {
     }
 
     @Override
-    public boolean match(Iterable<ResultRecord> givenRecords, Iterable<ImmutableList<Object>> expectedData) {
+    public void match(Iterable<ResultRecord> givenRecords, Iterable<ImmutableList<Object>> expectedData) throws Exception {
         Map<Object, ImmutableList<Object>> expectedDataMap = new HashMap<>();
         for (ImmutableList<Object> expectedRow : expectedData) {
             Object key = keyExtractor.extract(expectedRow);
             if (expectedDataMap.containsKey(key)) {
-                return false;
+                throw new MatchFailedException("duplicated expected record key: " + key);
             }
             expectedDataMap.put(key, expectedRow);
         }
         for (ResultRecord record : givenRecords) {
             Object key = keyExtractor.extract(record);
             if (!expectedDataMap.containsKey(key)) {
-                return false;
+                throw new MatchFailedException("unexpected record key: " + key);
             }
             ImmutableList<Object> expectedRow = expectedDataMap.remove(key);
-            if (!recordMatcher.match(record, expectedRow)) {
-                return false;
+            try {
+                recordMatcher.match(record, expectedRow);
+            } catch (Exception e) {
+                throw MatchFailedException.prefix("at key " + key + ": ", e);
             }
         }
-        return expectedDataMap.isEmpty();
+        if (!expectedDataMap.isEmpty()) {
+            throw new MatchFailedException("too few records (" + expectedDataMap.size() + " keys are missing) " + expectedDataMap);
+        }
     }
 
 }

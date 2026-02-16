@@ -38,7 +38,7 @@ class QueryTestSuiteDescriptionTest extends AbstractResourceBasedTest {
         assertThat(case1.columns().get(0).groupKey()).isTrue();
         assertThat(case1.columns().get(1).name()).contains("label");
         assertThat(case1.columns().get(1).type()).isEqualTo(String.class);
-        assertThat(case1.columns().get(1).nullable()).contains(true);
+        assertThat(case1.columns().get(1).nullable()).contains(false);
         assertThat(case1.columns().get(1).key()).isFalse();
         assertThat(case1.columns().get(1).groupKey()).isFalse();
         assertThat(case1.ordered()).isFalse();
@@ -48,7 +48,7 @@ class QueryTestSuiteDescriptionTest extends AbstractResourceBasedTest {
         assertThat(case2.name()).isEqualTo("case-2");
         assertThat(case2.description()).isEqualTo("This is another test case");
         assertThat(case2.initQueries()).containsExactly(
-                "INSERT INTO tbl_2(id, name, type, description) VALUES(99, 'lorem', 'APPLE', '')");
+                "INSERT INTO tbl_2(id, name, type, description) VALUES(99, 'dolor', 'APPLE', '')");
         assertThat(case2.query()).isEqualTo("SELECT id, description, name FROM tbl_2 ORDER BY id DESC");
         assertThat(case2.columns()).hasSize(3);
         assertThat(case2.columns().get(0).name()).contains("id");

@@ -29,10 +29,9 @@ public class DefaultTableMatcher implements TableMatcher {
     }
 
     @Override
-    public boolean match(ResultTable givenTable, Iterable<ImmutableList<Object>> expectedData) {
-        return
-                tableHeaderMatcher.match(givenTable.resultSet().columnHeaders()) &&
-                dataMatcher.match(givenTable, expectedData);
+    public void match(ResultTable givenTable, Iterable<ImmutableList<Object>> expectedData) throws Exception {
+        tableHeaderMatcher.match(givenTable.resultSet().columnHeaders());
+        dataMatcher.match(givenTable, expectedData);
     }
 
 }

@@ -114,7 +114,7 @@ cases:
         nullable: false
       - type: java.lang.Boolean
         nullable: false
-      - type: java.lang.Void
+      - type: java.lang.String
         nullable: true
       - type: java.lang.String
     expectedResult:
@@ -131,23 +131,23 @@ cases:
         nullable: true
       - type: java.lang.Void
         nullable: true
-      - type: java.lang.Void
+      - type: java.lang.String
         nullable: true
-      - type: java.lang.Void
+      - type: java.lang.String
         nullable: true
       - type: java.lang.String
         nullable: false
-      - type: java.lang.Void
+      - type: java.lang.Boolean
+        nullable: true
+      - type: java.lang.Boolean
         nullable: true
       - type: java.lang.Boolean
         nullable: true
       - type: java.lang.Boolean
         nullable: true
-      - type: java.lang.Void
+      - type: java.lang.Boolean
         nullable: true
-      - type: java.lang.Void
-        nullable: true
-      - type: java.lang.Void
+      - type: java.lang.Boolean
         nullable: true
     expectedResult:
       - [ null, null, null, null, "lorem,ipsum,dolor", null, true, false, null, null, null ]
