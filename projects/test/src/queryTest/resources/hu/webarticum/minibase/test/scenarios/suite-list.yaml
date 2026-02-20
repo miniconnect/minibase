@@ -1,3 +1,4 @@
 suites:
   - suites/select-standalone-simple.yaml
+  - suites/crud-simple.yaml
   - suites/select-table-simple.yaml
