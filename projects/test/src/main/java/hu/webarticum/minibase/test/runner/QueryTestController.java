@@ -4,9 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -18,15 +16,12 @@ import hu.webarticum.minibase.engine.facade.FrameworkSessionManager;
 import hu.webarticum.minibase.engine.impl.SimpleEngine;
 import hu.webarticum.minibase.execution.impl.IntegratedQueryExecutor;
 import hu.webarticum.minibase.query.parser.AntlrSqlParser;
-import hu.webarticum.minibase.storage.api.ColumnDefinition;
 import hu.webarticum.minibase.storage.api.Schema;
 import hu.webarticum.minibase.storage.api.StorageAccess;
 import hu.webarticum.minibase.storage.api.Table;
-import hu.webarticum.minibase.storage.impl.simple.SimpleColumnDefinition;
 import hu.webarticum.minibase.storage.impl.simple.SimpleResourceManager;
 import hu.webarticum.minibase.storage.impl.simple.SimpleSchema;
 import hu.webarticum.minibase.storage.impl.simple.SimpleStorageAccess;
-import hu.webarticum.minibase.storage.impl.simple.SimpleTable;
 import hu.webarticum.minibase.test.matcher.ColumnHeaderMatcher;
 import hu.webarticum.minibase.test.matcher.DataMatcher;
 import hu.webarticum.minibase.test.matcher.DefaultRecordMatcher;
@@ -41,7 +36,6 @@ import hu.webarticum.minibase.test.matcher.RecordMatcher;
 import hu.webarticum.minibase.test.matcher.TableHeaderMatcher;
 import hu.webarticum.minibase.test.matcher.TableMatcher;
 import hu.webarticum.minibase.test.matcher.UnorderedDataMatcher;
-import hu.webarticum.minibase.test.model.dataset.DatasetColumnDescription;
 import hu.webarticum.minibase.test.model.dataset.DatasetDescription;
 import hu.webarticum.minibase.test.model.dataset.DatasetSchemaDescription;
 import hu.webarticum.minibase.test.model.dataset.DatasetTableDescription;
@@ -59,6 +53,8 @@ import hu.webarticum.miniconnect.record.converter.DefaultConverter;
 import hu.webarticum.miniconnect.record.type.StandardValueType;
 
 public class QueryTestController {
+
+    private final TableRenderer tableRenderer = new TableRenderer();
 
     private final Converter converter = new DefaultConverter();
 
@@ -212,44 +208,10 @@ public class QueryTestController {
         SimpleSchema schema = new SimpleSchema(schemaDescription.name());
         SimpleResourceManager<Table> tables = schema.tables();
         for (DatasetTableDescription tableDescription : schemaDescription.tables()) {
-            Table table = buildTable(tableDescription);
+            Table table = tableRenderer.renderTable(tableDescription);
             tables.register(table);
         }
         return schema;
-    }
-
-    private Table buildTable(DatasetTableDescription tableDescription) {
-        SimpleTable.SimpleTableBuilder builder = SimpleTable.builder();
-        builder.name(tableDescription.name());
-        ImmutableList<DatasetColumnDescription> columns = tableDescription.columns();
-        for (DatasetColumnDescription columnDescription : columns) {
-            builder.addColumn(columnDescription.name(), buildColumnDefinition(columnDescription));
-        }
-        for (ImmutableList<Object> rawRow : tableDescription.data()) {
-            builder.addRow(rawRow.map((i, v) -> convert(v, columns.get(i).type())));
-        }
-        return builder.build();
-    }
-
-    private ColumnDefinition buildColumnDefinition(DatasetColumnDescription columnDescription) {
-        Class<?> type = columnDescription.type();
-        return new SimpleColumnDefinition(
-                type,
-                columnDescription.nullable(),
-                columnDescription.unique(),
-                columnDescription.autoIncremented(),
-                columnDescription.enumValues().orElse(null),
-                buildColumnComparator(columnDescription),
-                convert(columnDescription.defaultValue().orElse(null), type));
-    }
-
-    private Comparator<?> buildColumnComparator(DatasetColumnDescription columnDescription) {
-        Optional<ImmutableList<Object>> enumValuesOptional = columnDescription.enumValues();
-        if (!enumValuesOptional.isPresent()) {
-            return Comparator.naturalOrder();
-        }
-        ImmutableList<Object> enumValues = enumValuesOptional.get();
-        return (a, b) -> Integer.compare(enumValues.indexOf(a), enumValues.indexOf(b));
     }
 
     private <T> T loadYaml(String resourcePath, Class<T> type) throws IOException {

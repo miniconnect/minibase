@@ -13,6 +13,7 @@ schemas:
         data:
           - [ 1, "xyz"]
       - name: tbl_2
+        addDiffLayer: true
         columns:
           - name: id
             type: hu.webarticum.miniconnect.lang.LargeInteger
@@ -20,13 +21,15 @@ schemas:
             autoIncremented: true
           - name: name
             type: java.lang.String
-            defaultValue: ""
+            defaultValue: "hello"
           - name: type
             type: java.lang.String
             enumValues: [ "APPLE", "ORANGE" ]
           - name: description
             type: java.lang.String
             nullable: true
+        indexes:
+          - [ id ]
         data:
           - [ 1, "lorem", "APPLE", "Some description"]
           - [ 2, "ipsum", "ORANGE", null]

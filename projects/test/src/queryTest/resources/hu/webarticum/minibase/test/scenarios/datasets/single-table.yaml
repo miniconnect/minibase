@@ -13,6 +13,8 @@ schemas:
             type: java.lang.String
           - name: pub_year
             type: hu.webarticum.miniconnect.lang.LargeInteger
+        indexes:
+          - [ id ]
         data:
           - [ 1, "Don Quixote", "Miguel de Cervantes", 1605 ]
           - [ 2, "Gulliver's Travels", "Jonathan Swift", 1726 ]
