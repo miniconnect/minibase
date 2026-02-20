@@ -474,9 +474,16 @@ public class TableQueryUtil {
             TableIndex tableIndex = entry.getValue();
             ImmutableList<Object> values = columnNames.map(filter::get);
 
+            ImmutableList<Object> fromCondition = values.map(TableQueryUtil::rangeFromForValue);
+            ImmutableList<Object> toCondition = values.map(TableQueryUtil::rangeToForValue);
+
             // FIXME: hotfix: this is an alignment to save MultiComparator from unexpected null values in SelectionPredicate
-            ImmutableList<Object> fromCondition = (values.get(0) != null) ? values.map(TableQueryUtil::rangeFromForValue) : null;
-            ImmutableList<Object> toCondition = (values.get(0) != null) ? values.map(TableQueryUtil::rangeToForValue) : null;
+            if (fromCondition.get(0) == null) {
+                fromCondition = null;
+            }
+            if (toCondition.get(0) == null) {
+                toCondition = null;
+            }
 
             ImmutableList<SortMode> sortModes;
             if (firstSelection == null && !orderBy.isEmpty()) {

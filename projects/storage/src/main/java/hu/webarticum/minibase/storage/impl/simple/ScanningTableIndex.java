@@ -130,7 +130,7 @@ public class ScanningTableIndex implements TableIndex {
         if (from == to) {
             return true;
         }
-        if (from == null || to == null) {
+        if (hasNull(from) || hasNull(to)) {
             return false;
         }
         int fromSize = from.size();
@@ -140,6 +140,18 @@ public class ScanningTableIndex implements TableIndex {
         @SuppressWarnings("unchecked")
         int cmp = multiComparator.compare((ImmutableList<Object>) from, (ImmutableList<Object>) to);
         return cmp == 0;
+    }
+
+    private boolean hasNull(ImmutableList<?> boundary) {
+        if (boundary == null) {
+            return true;
+        }
+        for (Object item : boundary) {
+            if (item == null) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private ImmutableList<Object> extractValues(ImmutableList<Object> row) {
