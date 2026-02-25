@@ -157,6 +157,7 @@ import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.LikePartC
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.LimitParameterContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.LimitPartContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.LiteralContext;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.NotExpressionContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.OffsetLimitPartContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.OffsetPartContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.OrderByItemContext;
@@ -687,6 +688,8 @@ public class AntlrSqlParser implements SqlParser {
             return new OrderRelationExpression(relationOperation, leftExpression, rightExpression);
         } else if (operation == MultiplyExpression.class) {
             return new MultiplyExpression(leftExpression, rightExpression);
+        } else if (operation == ModExpression.class) {
+            return new ModExpression(leftExpression, rightExpression);
         } else if (operation == RemainderExpression.class) {
             return new RemainderExpression(leftExpression, rightExpression);
         } else if (operation == DivideExpression.class) {
@@ -744,13 +747,14 @@ public class AntlrSqlParser implements SqlParser {
             return parseCastExpressionNode(castExpressionNode);
         }
 
+        NotExpressionContext notExpressionNode = prefixableExpressionNode.notExpression();
+        if (notExpressionNode != null) {
+            return parseNotExpressionNode(notExpressionNode);
+        }
+
         UnaryArithmeticExpressionContext unaryArithmeticExpressionNode = prefixableExpressionNode.unaryArithmeticExpression();
         if (unaryArithmeticExpressionNode != null) {
             return parseUnaryArithmeticExpressionNode(unaryArithmeticExpressionNode);
-        }
-
-        if (prefixableExpressionNode.notOperator != null) {
-            return new NotExpression(parseExpressionNode(prefixableExpressionNode.subExpression));
         }
 
         if (prefixableExpressionNode.OVERLAPS() != null) {
@@ -1066,6 +1070,10 @@ public class AntlrSqlParser implements SqlParser {
             throw new IllegalArgumentException(
                     "Function " + name + " expects " + minCount + " to " + maxCount + " parameters, " + actualCount + " given");
         }
+    }
+
+    private Expression parseNotExpressionNode(NotExpressionContext notExpressionNode) {
+        return new NotExpression(parsePrefixableExpressionNode(notExpressionNode.prefixableExpression()));
     }
 
     private Expression parseUnaryArithmeticExpressionNode(UnaryArithmeticExpressionContext unaryArithmeticExpressionNode) {

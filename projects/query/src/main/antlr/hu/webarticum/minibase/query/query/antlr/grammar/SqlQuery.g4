@@ -90,27 +90,27 @@ orderByPosition: TOKEN_INTEGER;
 aliasableExpression: expression aliasPart?;
 aliasPart: AS? alias=identifier;
 expression:
+    subExpression=expression DOUBLE_COLON typeConstruct |
     leftExpression=expression binaryOperator=( ASTERISK | MOD | PERCENT | DIV | SLASH ) rightExpression=expression |
     leftExpression=expression binaryOperator=( PLUS | MINUS ) rightExpression=expression |
     leftExpression=expression binaryOperator=AND rightExpression=expression |
     leftExpression=expression binaryOperator=XOR rightExpression=expression |
     leftExpression=expression binaryOperator=OR rightExpression=expression |
-    leftExpression=expression binaryOperator=DOUBLE_PIPE rightExpression=expression |
     leftExpression=expression binaryOperator=( LESS | LESS_EQ | GREATER | GREATER_EQ ) rightExpression=expression |
     leftExpression=expression binaryOperator=( EQ | NEQ_ANG | NEQ_BANG ) rightExpression=expression |
-    givenExpression=expression NOT? IN inValueList |
     givenExpression=expression NOT? BETWEEN minExpression=expression AND maxExpression=expression |
+    leftExpression=expression binaryOperator=DOUBLE_PIPE rightExpression=expression |
+    givenExpression=expression NOT? IN inValueList |
     subExpression=expression IS NOT? isNullOperator=( NULL | UNKNOWN ) |
     givenExpression=expression NOT? likeOperator=( LIKE | ILIKE ) patternExpression=expression ( ESCAPE escapeExpression=expression )? |
     givenExpression=expression NOT? regexpOperator=( REGEXP | RLIKE ) patternExpression=expression |
-    subExpression=expression DOUBLE_COLON typeConstruct |
     prefixableExpression ;
 prefixableExpression:
-    notOperator=NOT subExpression=expression |
+    unaryArithmeticExpression |
+    notExpression |
     PAR_START start1Expression=expression COMMA end1Expression=expression PAR_END
         OVERLAPS PAR_START start2Expression=expression COMMA end2Expression=expression PAR_END |
     caseExpression |
-    unaryArithmeticExpression |
     COUNT PAR_START DISTINCT? ASTERISK PAR_END |
     COUNT PAR_START DISTINCT subExpression=expression PAR_END |
     intervalExpression |
@@ -120,6 +120,7 @@ prefixableExpression:
     extractExpression |
     castExpression |
     atomicExpression;
+notExpression: NOT prefixableExpression;
 unaryArithmeticExpression: ( PLUS | MINUS ) prefixableExpression;
 inValueList: PAR_START expression ( COMMA expression )* PAR_END;
 caseExpression: CASE (givenExpression=expression)? whenPart+ elsePart? END;
@@ -166,7 +167,8 @@ functionCall: functionName PAR_START ( expression ( COMMA expression )* )? PAR_E
 functionName: identifier | functionNameToken;
 functionNameToken: LEFT | RIGHT | TRIM | SUBSTRING | SUBSTR | REPLACE | typeName;
 typeName:
-    NULL | BOOLEAN | INTEGER | BIGINT | DEC | DECIMAL | FLOAT | NVARCHAR | CLOB | BINARY | VARBINARY | BLOB | DATE |
+    NULL | BOOL | BOOLEAN | INTEGER | BIGINT | DEC | DECIMAL | FLOAT |
+    NVARCHAR | CLOB | BINARY | VARBINARY | BLOB | DATE |
     ( TIME | DATETIME | TIMESTAMP ) ( ( WITH | WITHOUT ) ( TIME ZONE | OFFSET | UTCOFFSET ) )? |
     TIMETZ | DATETIMETZ | TIMESTAMPTZ |
     INSTANT |
@@ -218,6 +220,7 @@ POSITION: P O S I T I O N;
 IN: I N;
 EXTRACT: E X T R A C T;
 
+BOOL: B O O L;
 BOOLEAN: B O O L E A N;
 INTEGER: I N T E G E R;
 BIGINT: B I G I N T;

@@ -57,6 +57,7 @@ public class TypeConstruct {
         UTCOFFSET(Symbol.UTCOFFSET),
         INTERVAL(Symbol.INTERVAL),
 
+        BOOL(Symbol.BOOLEAN),
         TINYINT(Symbol.INTEGER), SMALLINT(Symbol.INTEGER), INT(Symbol.INTEGER),
         NUMERIC(Symbol.DECIMAL), DEC(Symbol.DECIMAL),
         REAL(Symbol.FLOAT), DOUBLE_PRECISION(Symbol.FLOAT), DOUBLE(Symbol.FLOAT),
