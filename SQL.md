@@ -253,12 +253,30 @@ Here are some examples of how it is evaluated:
 | `3 BETWEEN 5 AND NULL` | `FALSE` |
 | `3 BETWEEN NULL AND 5` | `NULL` |
 | `3 BETWEEN NULL AND 1` | `FALSE` |
+| `3 NOT BETWEEN 1 AND 5` | `FALSE` |
+| `3 NOT BETWEEN 1 AND NULL` | `NULL` |
 
 ### The `IN` expression
 
-TODO
+The expression `x IN (a1, a2, a3)` checks if `x` is equal to at least one in the list.
+It returns with `TRUE` if `x` is not null and found,
+`FALSE` if neither `x` or the listed values are null and not found,
+and finally `NULL` if `x` is null or there is a null value in the list while `x` not found.
+The expression `x NOT IN (a1, a2, a3)` is equivalent to `NOT(x IN (a1, a2, a3))`.
 
-<!-- givenExpression=expression NOT? IN inValueList -->
+Here are some examples of how it is evaluated:
+
+| Example | Result |
+| ------- | ------ |
+| `1 IN (1)` | `TRUE` |
+| `2 IN (1, 2, 3)` | `TRUE` |
+| `3 IN (1, 2, 4)` | `FALSE` |
+| `1 IN (1, NULL, 3)` | `TRUE` |
+| `2 IN (1, NULL, 3)` | `NULL` |
+| `NULL IN (1, 2, 3)` | `NULL` |
+| `NULL IN (1, NULL, 3)` | `NULL` |
+| `1 NOT IN (1)` | `FALSE` |
+| `NULL NOT IN (1, 2, 3)` | `NULL` |
 
 ### The `IS NULL` expression
 
