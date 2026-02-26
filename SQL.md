@@ -408,47 +408,47 @@ TODO
 
 | Name | Description | Example | Result |
 | ---- | ------- | ------ | ----- |
-| `ABS` | Absolute value | `TODO` | TODO |
-| `ASCII` | Codepoint of character | `TODO` | TODO |
-| `ATAN2` | Arctangent of ratio | `TODO` | TODO |
-| `BIT_LENGTH` | Length in bits | `TODO` | TODO |
-| `CHAR_LENGTH` | Length in characters | `TODO` | TODO |
-| `CHARACTER_LENGTH` | Length in characters | `TODO` | TODO |
-| `CHR` | Character of codepoint | `TODO` | TODO |
-| `COALESCE` | Finding first non-null | `TODO` | TODO |
-| `CONCAT` | String concatenation | `TODO` | TODO |
-| `CONCAT_WS` | Null-tolerant string concatenation with separator | `TODO` | TODO |
-| `DECODE` | Decoding binary data using the choosen algorithm | `TODO` | TODO |
-| `ENCODE` | Encoding to binary data using the choosen algorithm | `TODO` | TODO |
-| `GCD` | Greatest common divisor | `TODO` | TODO |
-| `GREATEST` | Greatest of the given values | `TODO` | TODO |
-| `INITCAP` | Title-case string | `TODO` | TODO |
-| `LCM` | Least common multiple | `TODO` | TODO |
-| `LEAST` | Least of the given values | `TODO` | TODO |
-| `LEFT` | Left part of string | `TODO` | TODO |
-| `LENGTH` | Type-specific length | `TODO` | TODO |
-| `LOG` | Logarithm with specific base | `TODO` | TODO |
-| `LOWER` | Lowercase string | `TODO` | TODO |
-| `LPAD` | Left-padded string | `TODO` | TODO |
-| `NULLIF` | TODO | `TODO` | TODO |
-| `OCTET_LENGTH` | Length in bytes | `TODO` | TODO |
-| `ORD` | Codepoint of character | `TODO` | TODO |
-| `PI` | The pi constant | `TODO` | TODO |
-| `POW` | Exponentiation | `TODO` | TODO |
-| `POWER` | Exponentiation | `TODO` | TODO |
-| `REGEXP_REPLACE` | Replace by regular expression | `TODO` | TODO |
-| `REPEAT` | Repeated string | `TODO` | TODO |
-| `REPLACE` | Replace by string | `TODO` | TODO |
-| `REVERSE` | Reversed string | `TODO` | TODO |
-| `RIGHT` | Right part of string | `TODO` | TODO |
-| `RPAD` | Right-padded string | `TODO` | TODO |
-| `RRPAD` | Right-padded string, improved | `TODO` | TODO |
-| `ROUND` | Rounded numeric value | `TODO` | TODO |
-| `SHA256` | SHA256 checksum | `TODO` | TODO |
-| `SIGN` | Signum | `TODO` | TODO |
-| `SPLIT_PART` | Extract part by separator | `TODO` | TODO |
-| `TRANSLATE` | Replace characters | `TODO` | TODO |
-| `UPPER` | Uppercase string | `TODO` | TODO |
+| `ABS` | Absolute value | `ABS(-3)` | `3` |
+| `ASCII` | Codepoint of character | `ASCII('a')` | `97` |
+| `ATAN2` | Arctangent of ratio | `ATAN2(1, 2)` | `0.46364760900081` |
+| `BIT_LENGTH` | Length in bits | `BIT_LENGTH('tűzőgép')` | `80` |
+| `CHAR_LENGTH` | Length in characters | `CHAR_LENGTH('tűzőgép')` | `7` |
+| `CHARACTER_LENGTH` | Alias for `CHAR_LENGTH` |  |  |
+| `CHR` | Character of codepoint | `CHR(65)` | `'A'` |
+| `COALESCE` | Finding first non-null | `COALESCE(NULL, 1, 2)` | `1` |
+| `CONCAT` | String concatenation | `CONCAT('lorem', 'ipsum')` | `'loremipsum'` |
+| `CONCAT_WS` | Null-tolerant string concatenation with separator | `CONCAT_WS(',', 'a', NULL, 'b', 'c')` | `'a,b,c'` |
+| `DECODE` | Decoding binary data using the choosen algorithm | `DECODE('bG9yZW0=', 'base64')` | `'lorem'` |
+| `ENCODE` | Encoding to binary data using the choosen algorithm | `ENCODE('lorem', 'base64')` | `'bG9yZW0='` |
+| `GCD` | Greatest common divisor | `GCD(12, 27)` | `3` |
+| `GREATEST` | Greatest of the given values | `GREATEST(3, 7, NULL, -11)` | `7` |
+| `INITCAP` | Title-case string | `INITCAP('lorem IPSUM dOlOr')` | `'Lorem Ipsum Dolor'` |
+| `LCM` | Least common multiple | `LCM(8, 18)` | `72` |
+| `LEAST` | Least of the given values | `LEAST(3, 7, NULL, -11)` | `-11` |
+| `LEFT` | Left part of string | `LEFT('lorem', 3)` | `'lor'` |
+| `LENGTH` | Type-specific length | `LENGTH('tűzőgép')` | `7` |
+| `LOG` | Logarithm with specific base | `LOG(2, 8)` | `3.0` |
+| `LOWER` | Lowercase string | `LOWER('LoReM')` | 'lorem' |
+| `LPAD` | Left-padded string | `LPAD(12, 5, '0')` | `00012` |
+| `NULLIF` | Returns with the first value ornull if not equal to the second | `NULLIF('lorem', 'lorem')` | `NULL` |
+| `OCTET_LENGTH` | Length in bytes | `OCTET_LENGTH('tűzőgép')` | `10` |
+| `ORD` | Codepoint of character | `ORD('ű')` | `369` |
+| `PI` | The pi constant | `PI()` | `3.14159265358979` |
+| `POW` | Exponentiation | `POW(2, 3)` | `8.0` |
+| `POWER` | Alias for `POW` |  |  |
+| `REGEXP_REPLACE` | Replace by regular expression | `REGEXP_REPLACE('loREm', '[oe]', 'a', 'gi')` | `'laRam'` |
+| `REPEAT` | Repeated string | `REPEAT('ab', 3)` | `'ababab'` |
+| `REPLACE` | Replace by string | `REPLACE('lorem ipsum dolor', 'or', 'ith')` | `'lithem ipsum dolith'` |
+| `REVERSE` | Reversed string | `REVERSE('lorem')` | `'merol'` |
+| `RIGHT` | Right part of string | `RIGHT('lorem', 3)` | `'rem'` |
+| `RPAD` | Right-padded string | `RPAD('lorem', 10, '=#:')` | `'lorem=#:=#'` |
+| `RRPAD` | Right-padded string, improved | `RRPAD('lorem', 10, '=#:')` | `'lorem#:=#:'` |
+| `ROUND` | Rounded numeric value | `ROUND(4.23)` | `4` |
+| `SHA256` | SHA256 checksum | `SHA256('lorem')` | `'3400bb495c3f8c4c3483a44c`[...]`'` |
+| `SIGN` | Signum | `SIGN(-23)` | `-1` |
+| `SPLIT_PART` | Extract part by separator | `SPLIT_PART('lorem,ipsum,dolor', ',', 2)` | `'ipsum'` |
+| `TRANSLATE` | Replace characters | `TRANSLATE('lorem', 'mow', 'nöx')` | `'lören'` |
+| `UPPER` | Uppercase string | `UPPER('LoReM')` | 'LOREM' |
 
 Some functions are non-stable (changes when you call again):
 
