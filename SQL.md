@@ -264,7 +264,7 @@ It returns with `TRUE` if `x` is not null and found,
 and finally `NULL` if `x` is null or there is a null value in the list while `x` not found.
 The expression `x NOT IN (a1, a2, a3)` is equivalent to `NOT(x IN (a1, a2, a3))`.
 
-Here are some examples of how it is evaluated:
+Some examples of how it is evaluated:
 
 | Example | Result |
 | ------- | ------ |
@@ -280,9 +280,15 @@ Here are some examples of how it is evaluated:
 
 ### The `IS NULL` expression
 
-TODO
+The expression `x IS NULL` checks if `x` is null.
+The expression `x IS NOT NULL` is equivalent to `NOT(x IS NULL)`.
 
-<!-- subExpression=expression IS NOT? isNullOperator=( NULL | UNKNOWN ) -->
+| Example | Result |
+| ------- | ------ |
+| `1 IS NULL` | `FALSE` |
+| `NULL IS NULL` | `TRUE` |
+| `1 IS NOT NULL` | `TRUE` |
+| `NULL IS NOT NULL` | `FALSE` |
 
 ### The `LIKE` expression
 
@@ -292,19 +298,70 @@ TODO
 
 ### The `REGEXP` expression
 
-TODO
+The `REGEXP` expression is similar to `LIKE` but the pattern is interpreted as a Java regular expression,
+and the `ESCAPE` clause is not supported.
+The alternative keyword `RLIKE` can also be used in place of `REGEXP`.
 
-<!-- givenExpression=expression NOT? regexpOperator=( REGEXP | RLIKE ) patternExpression=expression -->
+| Example | Result |
+| ------- | ------ |
+| `'ipsum' REGEXP '^i'` | `TRUE` |
+| `'ipsum' RLIKE '^i'` | `TRUE` |
+| `'lorem' REGEXP 'x$'` | `FALSE` |
+| `NULL REGEXP '.'` | `NULL` |
+| `'lorem' REGEXP NULL` | `NULL` |
 
 ### The `OVERLAPS` expression
 
-TODO
+In MiniBase, `OVERLAPS` works with any type, not only with temporal values.
 
-<!-- PAR_START start1Expression=expression COMMA end1Expression=expression PAR_END OVERLAPS PAR_START start2Expression=expression COMMA end2Expression=expression PAR_END -->
+The expression `(x, y) OVERLAPS (a, b)` checks if the interval `x` to `y`
+has an intersection with the interval `a` to `b`.
+The intervals are commutative, the lesser value is inclusive, and the greater value is exclusive.
+If the two values of an interval is equal, then the interval will be a point containing this single value.
+If none of the operands is null then the result is non-null.
+If there is a single null value, the result can still be `TRUE` if there is an overlap regardless of the missing value.
+
+Some examples of how it is evaluated:
+
+| Example | Result |
+| ------- | ------ |
+| `(2, 5) OVERLAPS (3, 6)` | `TRUE` |
+| `(2, 5) OVERLAPS (2, 2)` | `TRUE` |
+| `(1, 5) OVERLAPS (2, 3)` | `TRUE` |
+| `(2, 5) OVERLAPS (5, 7)` | `FALSE` |
+| `(2, 5) OVERLAPS (5, 5)` | `FALSE` |
+| `(5, 2) OVERLAPS (2, 2)` | `TRUE` |
+| `(1, 5) OVERLAPS (NULL, 3)` | `TRUE` |
+| `(1, 5) OVERLAPS (NULL, 7)` | `NULL` |
+| `(NULL, NULL) OVERLAPS (NULL, NULL)` | `NULL` |
 
 ### The `CASE` expression
 
-TODO
+The simple `CASE` expression accepts a condition value and contains one ore more `WHEN` clauses,
+branching based on the accepted value.
+It optionally contains an `ELSE` clause:
+
+```sql
+CASE x
+  WHEN 1 THEN 'one'
+  WHEN 2 THEN 'two'
+  WHEN 3 THEN 'three'
+  ELSE 'other'
+END
+```
+
+The search `CASE` expression is similar, but there is no condition value.
+Instead, the branches will be interpreted directly as boolean:
+
+```sql
+CASE
+  WHEN @var = 'lorem' THEN 'LOREM'
+  WHEN @var = 'ispum' THEN 'IPSUM'
+  ELSE 'OTHER'
+END
+```
+
+The result type and nullability is calculated accordingly.
 
 ### Standard function-like expressions
 
@@ -349,50 +406,50 @@ These are the supported regular functions:
 
 TODO
 
-| Name | Example | Result | Notes |
+| Name | Description | Example | Result |
 | ---- | ------- | ------ | ----- |
-| `ABS` | `TODO` | `TODO` | TODO |
-| `ADD` | `TODO` | `TODO` | TODO |
-| `ASCII` | `TODO` | `TODO` | TODO |
-| `ATAN2` | `TODO` | `TODO` | TODO |
-| `BIT_LENGTH` | `TODO` | `TODO` | TODO |
-| `CHAR_LENGTH` | `TODO` | `TODO` | TODO |
-| `CHR` | `TODO` | `TODO` | TODO |
-| `COALESCE` | `TODO` | `TODO` | TODO |
-| `CONCAT` | `TODO` | `TODO` | TODO |
-| `CONCAT_WS` | `TODO` | `TODO` | TODO |
-| `DECODE` | `TODO` | `TODO` | TODO |
-| `DIVIDE` | `TODO` | `TODO` | TODO |
-| `ENCODE` | `TODO` | `TODO` | TODO |
-| `GCD` | `TODO` | `TODO` | TODO |
-| `GREATEST` | `TODO` | `TODO` | TODO |
-| `INITCAP` | `TODO` | `TODO` | TODO |
-| `LCM` | `TODO` | `TODO` | TODO |
-| `LEAST` | `TODO` | `TODO` | TODO |
-| `LEFT` | `TODO` | `TODO` | TODO |
+| `ABS` | `Absolute value` | `TODO` | TODO |
+| `ASCII` | `Codepoint of character` | `TODO` | TODO |
+| `ATAN2` | `Arctangent of ratio` | `TODO` | TODO |
+| `BIT_LENGTH` | `Length in bits` | `TODO` | TODO |
+| `CHAR_LENGTH` | `Length in characters` | `TODO` | TODO |
+| `CHARACTER_LENGTH` | `Length in characters` | `TODO` | TODO |
+| `CHR` | `Character of codepoint` | `TODO` | TODO |
+| `COALESCE` | `Finding first non-null` | `TODO` | TODO |
+| `CONCAT` | `String concatenation` | `TODO` | TODO |
+| `CONCAT_WS` | `Null-tolerant string concatenation with separator` | `TODO` | TODO |
+| `DECODE` | `Decoding binary data using the choosen algorithm` | `TODO` | TODO |
+| `ENCODE` | `Encoding to binary data using the choosen algorithm` | `TODO` | TODO |
+| `GCD` | `Greatest common divisor` | `TODO` | TODO |
+| `GREATEST` | `Greatest of the given values` | `TODO` | TODO |
+| `INITCAP` | `Title-case string` | `TODO` | TODO |
+| `LCM` | `Least common multiple` | `TODO` | TODO |
+| `LEAST` | `Least of the given values` | `TODO` | TODO |
+| `LEFT` | `Left part of string` | `TODO` | TODO |
 | `LENGTH` | `TODO` | `TODO` | TODO |
 | `LOG` | `TODO` | `TODO` | TODO |
-| `LOWER` | `TODO` | `TODO` | TODO |
-| `LPAD` | `TODO` | `TODO` | TODO |
+| `LOWER` | `Lowercase string` | `TODO` | TODO |
+| `LPAD` | `Left-padded string` | `TODO` | TODO |
 | `NOW` | `TODO` | `TODO` | TODO |
 | `NULLIF` | `TODO` | `TODO` | TODO |
-| `OCTET_LENGTH` | `TODO` | `TODO` | TODO |
-| `ORD` | `TODO` | `TODO` | TODO |
-| `PI` | `TODO` | `TODO` | TODO |
-| `POW` | `TODO` | `TODO` | TODO |
-| `REGEXP_REPLACE` | `TODO` | `TODO` | TODO |
-| `REPEAT` | `TODO` | `TODO` | TODO |
-| `REPLACE` | `TODO` | `TODO` | TODO |
-| `REVERSE` | `TODO` | `TODO` | TODO |
-| `RIGHT` | `TODO` | `TODO` | TODO |
-| `RPAD` | `TODO` | `TODO` | TODO |
-| `RRPAD` | `TODO` | `TODO` | TODO |
-| `ROUND` | `TODO` | `TODO` | TODO |
-| `SHA256` | `TODO` | `TODO` | TODO |
-| `SIGN` | `TODO` | `TODO` | TODO |
-| `SPLIT_PART` | `TODO` | `TODO` | TODO |
-| `TRANSLATE` | `TODO` | `TODO` | TODO |
-| `UPPER` | `TODO` | `TODO` | TODO |
+| `OCTET_LENGTH` | `Length in bytes` | `TODO` | TODO |
+| `ORD` | `Codepoint of character` | `TODO` | TODO |
+| `PI` | `The pi constant` | `TODO` | TODO |
+| `POW` | `Exponentiation` | `TODO` | TODO |
+| `POWER` | `Exponentiation` | `TODO` | TODO |
+| `REGEXP_REPLACE` | `Replace by regular expression` | `TODO` | TODO |
+| `REPEAT` | `Repeated string` | `TODO` | TODO |
+| `REPLACE` | `Replace by string` | `TODO` | TODO |
+| `REVERSE` | `Reversed string` | `TODO` | TODO |
+| `RIGHT` | `Right part of string` | `TODO` | TODO |
+| `RPAD` | `Right-padded string` | `TODO` | TODO |
+| `RRPAD` | `Right-padded string, improved` | `TODO` | TODO |
+| `ROUND` | `Rounded numeric value` | `TODO` | TODO |
+| `SHA256` | `SHA256 checksum` | `TODO` | TODO |
+| `SIGN` | `Signum` | `TODO` | TODO |
+| `SPLIT_PART` | `Extract part by separator` | `TODO` | TODO |
+| `TRANSLATE` | `Replace characters` | `TODO` | TODO |
+| `UPPER` | `Uppercase string` | `TODO` | TODO |
 
 ### Stateful system functions
 
