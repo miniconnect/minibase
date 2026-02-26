@@ -408,52 +408,60 @@ TODO
 
 | Name | Description | Example | Result |
 | ---- | ------- | ------ | ----- |
-| `ABS` | `Absolute value` | `TODO` | TODO |
-| `ASCII` | `Codepoint of character` | `TODO` | TODO |
-| `ATAN2` | `Arctangent of ratio` | `TODO` | TODO |
-| `BIT_LENGTH` | `Length in bits` | `TODO` | TODO |
-| `CHAR_LENGTH` | `Length in characters` | `TODO` | TODO |
-| `CHARACTER_LENGTH` | `Length in characters` | `TODO` | TODO |
-| `CHR` | `Character of codepoint` | `TODO` | TODO |
-| `COALESCE` | `Finding first non-null` | `TODO` | TODO |
-| `CONCAT` | `String concatenation` | `TODO` | TODO |
-| `CONCAT_WS` | `Null-tolerant string concatenation with separator` | `TODO` | TODO |
-| `DECODE` | `Decoding binary data using the choosen algorithm` | `TODO` | TODO |
-| `ENCODE` | `Encoding to binary data using the choosen algorithm` | `TODO` | TODO |
-| `GCD` | `Greatest common divisor` | `TODO` | TODO |
-| `GREATEST` | `Greatest of the given values` | `TODO` | TODO |
-| `INITCAP` | `Title-case string` | `TODO` | TODO |
-| `LCM` | `Least common multiple` | `TODO` | TODO |
-| `LEAST` | `Least of the given values` | `TODO` | TODO |
-| `LEFT` | `Left part of string` | `TODO` | TODO |
-| `LENGTH` | `TODO` | `TODO` | TODO |
-| `LOG` | `TODO` | `TODO` | TODO |
-| `LOWER` | `Lowercase string` | `TODO` | TODO |
-| `LPAD` | `Left-padded string` | `TODO` | TODO |
-| `NOW` | `TODO` | `TODO` | TODO |
-| `NULLIF` | `TODO` | `TODO` | TODO |
-| `OCTET_LENGTH` | `Length in bytes` | `TODO` | TODO |
-| `ORD` | `Codepoint of character` | `TODO` | TODO |
-| `PI` | `The pi constant` | `TODO` | TODO |
-| `POW` | `Exponentiation` | `TODO` | TODO |
-| `POWER` | `Exponentiation` | `TODO` | TODO |
-| `REGEXP_REPLACE` | `Replace by regular expression` | `TODO` | TODO |
-| `REPEAT` | `Repeated string` | `TODO` | TODO |
-| `REPLACE` | `Replace by string` | `TODO` | TODO |
-| `REVERSE` | `Reversed string` | `TODO` | TODO |
-| `RIGHT` | `Right part of string` | `TODO` | TODO |
-| `RPAD` | `Right-padded string` | `TODO` | TODO |
-| `RRPAD` | `Right-padded string, improved` | `TODO` | TODO |
-| `ROUND` | `Rounded numeric value` | `TODO` | TODO |
-| `SHA256` | `SHA256 checksum` | `TODO` | TODO |
-| `SIGN` | `Signum` | `TODO` | TODO |
-| `SPLIT_PART` | `Extract part by separator` | `TODO` | TODO |
-| `TRANSLATE` | `Replace characters` | `TODO` | TODO |
-| `UPPER` | `Uppercase string` | `TODO` | TODO |
+| `ABS` | Absolute value | `TODO` | TODO |
+| `ASCII` | Codepoint of character | `TODO` | TODO |
+| `ATAN2` | Arctangent of ratio | `TODO` | TODO |
+| `BIT_LENGTH` | Length in bits | `TODO` | TODO |
+| `CHAR_LENGTH` | Length in characters | `TODO` | TODO |
+| `CHARACTER_LENGTH` | Length in characters | `TODO` | TODO |
+| `CHR` | Character of codepoint | `TODO` | TODO |
+| `COALESCE` | Finding first non-null | `TODO` | TODO |
+| `CONCAT` | String concatenation | `TODO` | TODO |
+| `CONCAT_WS` | Null-tolerant string concatenation with separator | `TODO` | TODO |
+| `DECODE` | Decoding binary data using the choosen algorithm | `TODO` | TODO |
+| `ENCODE` | Encoding to binary data using the choosen algorithm | `TODO` | TODO |
+| `GCD` | Greatest common divisor | `TODO` | TODO |
+| `GREATEST` | Greatest of the given values | `TODO` | TODO |
+| `INITCAP` | Title-case string | `TODO` | TODO |
+| `LCM` | Least common multiple | `TODO` | TODO |
+| `LEAST` | Least of the given values | `TODO` | TODO |
+| `LEFT` | Left part of string | `TODO` | TODO |
+| `LENGTH` | Type-specific length | `TODO` | TODO |
+| `LOG` | Logarithm with specific base | `TODO` | TODO |
+| `LOWER` | Lowercase string | `TODO` | TODO |
+| `LPAD` | Left-padded string | `TODO` | TODO |
+| `NULLIF` | TODO | `TODO` | TODO |
+| `OCTET_LENGTH` | Length in bytes | `TODO` | TODO |
+| `ORD` | Codepoint of character | `TODO` | TODO |
+| `PI` | The pi constant | `TODO` | TODO |
+| `POW` | Exponentiation | `TODO` | TODO |
+| `POWER` | Exponentiation | `TODO` | TODO |
+| `REGEXP_REPLACE` | Replace by regular expression | `TODO` | TODO |
+| `REPEAT` | Repeated string | `TODO` | TODO |
+| `REPLACE` | Replace by string | `TODO` | TODO |
+| `REVERSE` | Reversed string | `TODO` | TODO |
+| `RIGHT` | Right part of string | `TODO` | TODO |
+| `RPAD` | Right-padded string | `TODO` | TODO |
+| `RRPAD` | Right-padded string, improved | `TODO` | TODO |
+| `ROUND` | Rounded numeric value | `TODO` | TODO |
+| `SHA256` | SHA256 checksum | `TODO` | TODO |
+| `SIGN` | Signum | `TODO` | TODO |
+| `SPLIT_PART` | Extract part by separator | `TODO` | TODO |
+| `TRANSLATE` | Replace characters | `TODO` | TODO |
+| `UPPER` | Uppercase string | `TODO` | TODO |
 
-### Stateful system functions
+Some functions are non-stable (changes when you call again):
 
-There are several global functions that provide stateful information:
+| Function | Description |
+| -------- | ----------- |
+| `NOW` | gets the current instant |
+| `RANDOM()` | generates a random floating point number between 0 (inclusive) and 1 (exclusive) |
+
+## System functions
+
+There are several global functions that provide system-specific information.
+You can use these as magic constants too, omitting the parentheses (e.g. `SELECT CURRENT_TIMESTAMP`).
+Here are a list of them:
 
 | Function | Description |
 | -------- | ----------- |
@@ -462,16 +470,13 @@ There are several global functions that provide stateful information:
 | `CURRENT_DATE()` | gets the current local date |
 | `CURRENT_SCHEMA()` | gets the current selected schema (or `NULL` if not selected) |
 | `CURRENT_TIME()` | gets the current zoned time |
-| `CURRENT_TIMESTAMP()` | gets the current instant |
+| `CURRENT_TIMESTAMP()` | gets the current instant (same as `NOW()`) |
 | `CURRENT_USER()` | gets the current database user (currently always empty) |
 | `IDENTITY()` | alias for `CURRENT_USER()` |
 | `LAST_INSERT_ID()` | gets the last inserted value for an auto-incremented column (or `NULL` if none) |
-| `RANDOM()` | random floating point number between 0 (inclusive) and 1 (exclusive) |
 | `READONLY()` | checks whether the database is read-only or not |
 | `SESSION_USER()` | alias for `CURRENT_USER()` |
 | `SYSTEM_USER()` | alias for `CURRENT_USER()` |
-
-Some of them are present for compatibility with the standard and only partially supported.
 
 ## Select data from tables
 
