@@ -70,7 +70,7 @@ public class Atan2Expression implements Expression {
 
     @Override
     public String automaticName() {
-        return "ATAN2(" + yExpression.automaticName() + " + " + xExpression.automaticName() + ")";
+        return "ATAN2(" + yExpression.automaticName() + ", " + xExpression.automaticName() + ")";
     }
 
 }
