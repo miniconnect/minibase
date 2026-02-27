@@ -19,7 +19,7 @@ sqlQuery: (
 ) EOF ;
 
 selectCountQuery: (
-    SELECT COUNT PAR_START ( wildcardSelectItem | DISTINCT? scopeableFieldName ) PAR_END fieldAliasPart=aliasPart?
+    SELECT COUNT PAR_START ( wildcardSelectItem | scopeableFieldName ) PAR_END fieldAliasPart=aliasPart?
     FROM ( schemaName DOT )? tableName tableAliasPart=aliasPart?
     wherePart?
     limitPart?
