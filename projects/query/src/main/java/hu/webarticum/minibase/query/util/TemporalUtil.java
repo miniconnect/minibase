@@ -52,7 +52,7 @@ public final class TemporalUtil {
     }
 
     private static Temporal parse(String dateString) {
-        int firstColonPos = dateString.lastIndexOf(':');
+        int firstColonPos = dateString.indexOf(':');
         if (firstColonPos < 0) {
             return LocalDate.parse(dateString);
         }

@@ -40,10 +40,13 @@ class TemporalUtilTest {
         assertThat(TemporalUtil.temporalify("2026-05-06T01:02:09")).isEqualTo(LocalDateTime.of(2026, 5, 6, 1, 2, 9));
         assertThat(TemporalUtil.temporalify("2026-02-06 01:02:09")).isEqualTo(LocalDateTime.of(2026, 2, 6, 1, 2, 9));
         assertThat(TemporalUtil.temporalify("01:02:07+01:00")).isEqualTo(LocalTime.of(1, 2, 7).atOffset(ZoneOffset.ofHours(1)));
+        assertThat(TemporalUtil.temporalify("01:02:03-04:00")).isEqualTo(LocalTime.of(1, 2, 3).atOffset(ZoneOffset.ofHours(-4)));
         assertThat(TemporalUtil.temporalify("2026-04-01T01:00:00+02:00"))
                 .isEqualTo(LocalDateTime.of(2026, 4, 1, 1, 0, 0).atOffset(ZoneOffset.ofHours(2)));
         assertThat(TemporalUtil.temporalify("2026-04-12 01:00:00+02:00"))
                 .isEqualTo(LocalDateTime.of(2026, 4, 12, 1, 0, 0).atOffset(ZoneOffset.ofHours(2)));
+        assertThat(TemporalUtil.temporalify("2026-04-12 01:00:00-03:00"))
+                .isEqualTo(LocalDateTime.of(2026, 4, 12, 1, 0, 0).atOffset(ZoneOffset.ofHours(-3)));
     }
 
     @Test
