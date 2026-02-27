@@ -2,7 +2,8 @@
 
 ## Overview
 
-MiniBase supports a subset of SQL described in this document.
+This document describes the SQL subset currently implemented by the MiniBase engine.
+
 The syntax is mostly but not entirely based on the SQL 92 Standard, and is heavily inspired by PostgreSQL and MySQL.
 Some of the supported features:
 
