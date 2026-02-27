@@ -16,7 +16,7 @@ Some of the supported features:
 - advanced date/time handling
 - arbitrarily large integers, decimals and floating point numbers, mathematical functions
 
-[You can find the all-in-one SQL grammar file here.](projects/query/src/main/antlr/hu/webarticum/minibase/query/query/antlr/grammar/SqlQuery.g4)
+[The all-in-one SQL grammar file can be found here.](projects/query/src/main/antlr/hu/webarticum/minibase/query/query/antlr/grammar/SqlQuery.g4)
 
 ## Limitations
 
@@ -72,13 +72,15 @@ Here is the current complete list of keywords:
 An identifier can be an arbitrary string.
 If it's not a keyword and also matching to the regular expression `(?!\d)\w+`
 (or more precisely: `[\p{L}_][\p{N}\p{L}_]*`)
-then you can write it in a bare form, like in this query:
+then it can be written in its bare form, like in this query:
 
 ```sql
 SELECT some_column FROM some_table;
 ```
 
-Any other identifier must be written between `` ` `` or `"` (you can escape by doubling):
+Any other identifier must be written between `` ` `` or `"`.
+Both can be escaped by doubling.
+For example:
 
 ```sql
 SELECT `1col` AS `from`, "2col" AS `2``col` FROM `table`
@@ -96,9 +98,7 @@ The hierarchical syntax can be used wherever a table or column name can be writt
 
 ## Aliases
 
-Tables and columns can be aliased in queries.
-
-You can alias an identifier using one of the two variants:
+Tables and columns can be aliased in queries using one of the two variants:
 
 - without `AS`, e. g. `col c`, `` `sch`.`tbl` t `` etc.
 - with `AS`, e. g. `col AS c`, `` `sch`.`tbl` AS t `` etc.
@@ -110,13 +110,13 @@ Currently, five types of literals are supported: integer, decimal, boolean, stri
 ### Integer literals
 
 Arbitrarily large unsigned integer literals are supported (e.g. `0`, `432345`, `72016234137468237434`).
-You can use the unary sign operators for negative or explicitly positive values (e.g. `-123`, `+2`).
+Unary sign operators can be used for negative or explicitly positive values (e.g. `-123`, `+2`).
 Note that both unsigned and signed literals result in a signed type (so the result of `123 - 321` is `-198`).
 
 ### Decimal literals
 
 An unsigned decimal literal contains a dot and at least one digit (e.g. `1.43`, `.023`, `45.`).
-You can use the unary sign operators for negative or explicitly positive values (e.g. `-.004`).
+Unary sign operators can be used for negative or explicitly positive values (e.g. `-.004`).
 Decimal numbers remember to their scale, so `0.0400` and `0.04` are numerically equal but printed differently.
 
 ### Boolean literals
@@ -129,7 +129,7 @@ Additionally, there is `UNKNOWN` (traditionally used for unknown boolean values)
 Simple string literals are written between single quotes (e.g. `'some text'`).
 If the text itself contains a single quote, it must be doubled (e.g. `'it''s possible'`).
 
-You can write multiple simple string literals consecutively, and they will be joined.
+Multiple simple string literals written consecutively will be joined.
 This method can be used for breaking the string to multiple lines, e.g.:
 
 ```sql
@@ -142,7 +142,7 @@ SELECT
 
 Escaped string literals are introduced with the `e` prefix (e.g. `e'a\tb'`).
 Behavior of escaped string literals is similar to Postgres'.
-You can use the following kinds of escape sequences:
+The following kinds of escape sequences are available:
 
 | Name | Example |
 | ---- | ------- |
@@ -173,7 +173,7 @@ SELECT
 Null values can be explicitly created using the `NULL` keyword.
 
 | Literal type | Examples | Description |
-| ------------ | ------- | ----------- |
+| ------------ | -------- | ----------- |
 | Integer | `84337892`, `-4329` | Arbitrarily large whole number |
 | Decimal | `35.23`, `.0127`, `-0.5` | Decimal number with scale |
 | String | `'some text'`, `'couldn\'t'`, `'a\\b\\c'` | Decimal number with scale |
@@ -183,7 +183,135 @@ Null values can be explicitly created using the `NULL` keyword.
 
 ## Types and cast
 
-TODO
+SQL types are specified by their name, size, and scale.
+A fully specified type looks like this:
+
+```sql
+DECIMAL(7, 3)
+```
+
+Here, `7` the size and `3` is the scale.
+When only one parameter is given, it is the size.
+However, in most cases, only the name is used, and in such cases the parentheses are optional, for example:
+
+```sql
+FLOAT
+```
+
+Under the hood, all type name is mapped to a Java type.
+Depending on the type, the size or scale parameter can be handled differently:
+
+- in some cases it will be preserved (e.g. size of `DECIMAL`)
+- in some cases it is used during conversions then erased (e.g. size of `NVARCHAR`)
+- in some cases it is unified metadata, used internally (e.g. parameters of `INTERVAL x TO y`)
+- in some cases it is completely ignored (when it has no meaning to the type)
+
+These are the supported first-class types
+('co' means conversion-only, 'mo' means metadata-only):
+
+| Type name | Meaning of size | Meaning of scale | Associated java type |
+| --------- | --------------- | ---------------- | -------------------- |
+| `NULL` |  |  | java.lang.Void |
+| `BOOLEAN` |  |  | java.lang.Boolean |
+| `INTEGER` | Digits (co) |  | hu.webarticum.miniconnect.lang.LargeInteger |
+| `BIGINT` | Digits (co) |  | hu.webarticum.miniconnect.lang.LargeInteger |
+| `DECIMAL` | Digits (co) | Fractional digits | java.math.BigDecimal |
+| `FLOAT` |  |  | java.lang.Double |
+| `NVARCHAR` | Characters (co) |  | java.lang.String |
+| `CLOB` | Characters (co) |  | java.lang.String |
+| `VARBINARY` | Bytes (co) |  | hu.webarticum.miniconnect.lang.ByteString |
+| `BLOB` |  |  | hu.webarticum.miniconnect.lang.ByteString |
+| `DATE` | Date digits (mo) |  | java.time.LocalDate |
+| `TIME` | Time digits (mo) |  | java.time.LocalTime |
+| `DATETIME` | Date digits (mo) |  | java.time.LocalDateTime |
+| `INSTANT` |  |  | java.time.Instant |
+| `TIMEO` |  |  | java.time.OffsetTime |
+| `DATETIMEO` |  |  | java.time.OffsetDateTime |
+| `UTCOFFSET` |  |  | java.time.ZoneOffset |
+| `INTERVAL` |  |  | hu.webarticum.miniconnect.lang.DateTimeDelta |
+
+Some of the above types has aliases:
+
+| Alias name | Referred type |
+| ---------- | ---------------- |
+| `BOOL` | `BOOLEAN` |
+| `TINYINT` | `INTEGER` |
+| `SMALLINT` | `INTEGER` |
+| `INT` | `INTEGER` |
+| `NUMERIC` | `DECIMAL` |
+| `DEC` | `DECIMAL` |
+| `REAL` | `FLOAT` |
+| `DOUBLE PRECISION` | `FLOAT` |
+| `DOUBLE` | `FLOAT` |
+| `CHAR` | `NVARCHAR` |
+| `VARCHAR` | `NVARCHAR` |
+| `NCHAR` | `NVARCHAR` |
+| `TEXT` | `CLOB` |
+| `BINARY` | `VARBINARY` |
+| `TIMESTAMP` | `DATETIME` |
+| `TIME WITHOUT TIME ZONE` | `TIME` |
+| `DATETIME WITHOUT TIME ZONE` | `DATETIME` |
+| `TIMESTAMP WITHOUT TIME ZONE` | `DATETIME` |
+| `TIMETZ` | `TIMEO` |
+| `TIME WITH TIME ZONE` | `TIMEO` |
+| `DATETIMETZ` | `DATETIMEO` |
+| `DATETIME WITH TIME ZONE` | `DATETIMEO` |
+| `TIMESTAMPTZ` | `INSTANT` |
+| `TIMESTAMP WITH TIME ZONE` | `INSTANT` |
+| `TIME WITH OFFSET` | `TIMEO` |
+| `TIME WITH UTCOFFSET` | `TIMEO` |
+| `DATETIME WITH OFFSET` | `DATETIMEO` |
+| `DATETIME WITH UTCOFFSET` | `DATETIMEO` |
+| `TIMESTAMP WITH OFFSET` | `DATETIMEO` |
+| `TIMESTAMP WITH UTCOFFSET` | `DATETIMEO` |
+| `TIMESTAMPO` | `DATETIMEO` |
+| `TIMEZONE` | `UTCOFFSET` |
+
+The `INTERVAL` type is a little bit special.
+Traditionally, it has no size and scale parameters,
+but a start field (with optional size) and an end field (with optional scale).
+These are internally normalized to size and scale as metadata.
+
+`INTERVAL` is mapped to a unified interval implementation mixing `java.time.Period` and `java.time.Duration`.
+It can handle any mix of fields,
+no parting line between months and days (SQL Standard),
+nor between days and hourse (Java Time API).
+In MiniBase, this type construct is completely legal:
+
+```sql
+INTERVAL YEAR(3) TO MINUTE
+```
+
+Apart from the sign, this means 3 year digits, 2 month digits, 2 day digits, 2 hour digits and 2 minute digits, 11 total.
+It omit seconds, which is 2 digits left to the decimal point of seconds.
+So, it is equivalent to (and internally represented as):
+
+```sql
+INTERVAL(11, -2)
+```
+
+The double-colon operator, the `CAST` expression, or the `CONVERT` expression can be used
+for explicitly casting values to another type.
+For example:
+
+| Cast expression | Result | Note |
+| --------------- | :----: | ---- |
+| `(12 + 65)::CHAR` | `'77'` | Simple stringification |
+| `'lorem'::CHAR(2)` | `'lo'` | Conversion-only size enforcing |
+| `12.345::DECIMAL(4, 2)` | `12.34` | Changing scale |
+| `'12:30'::INTERVAL SECOND::INT` | `750` | Interpret as interval then convert to seconds as integer |
+
+Alternatively, each type name can be used as a conversion function (without parameters),
+for example `FLOAT(x)` converts the value to `FLOAT`.
+
+Many functions and operators convert their parameters implicitly if necessary.
+For example:
+
+| Expression with implicit cast | Result |
+| ----------------------------- | :----: |
+| `'12' + '8.2'` | `20.2` |
+| 'result: ' || 42 | `'result: 42'` |
+| 'CASE WHEN TRUE THEN TRUE ELSE 2 END' | `1` |
 
 ## Expressions
 
@@ -225,7 +353,7 @@ In most cases, each of these returns with `NULL` if any of the given operands is
 The only exception is when a logical expression can be evaluated based on the non-null operand,
 for example `NULL OR TRUE` is evaluated to `TRUE`.
 
-You can use parentheses to enforce a different execution order, for example:
+Parentheses can be used to enforce a different execution order, for example:
 
 ```
 NOT (3 > 5 OR NOT ('1' || '2')::int > 7)
@@ -248,7 +376,7 @@ The expression `x NOT BETWEEN a AND b` is equivalent to `NOT(x BETWEEN a AND b)`
 Here are some examples of how it is evaluated:
 
 | Example | Result |
-| ------- | ------ |
+| ------- | :----: |
 | `3 BETWEEN 1 AND 5` | `TRUE` |
 | `3 BETWEEN 5 AND 1` | `FALSE` |
 | `3 BETWEEN 3 AND 3` | `TRUE` |
@@ -271,7 +399,7 @@ The expression `x NOT IN (a1, a2, a3)` is equivalent to `NOT(x IN (a1, a2, a3))`
 Some examples of how it is evaluated:
 
 | Example | Result |
-| ------- | ------ |
+| ------- | :----: |
 | `1 IN (1)` | `TRUE` |
 | `2 IN (1, 2, 3)` | `TRUE` |
 | `3 IN (1, 2, 4)` | `FALSE` |
@@ -290,7 +418,7 @@ The expression `x IS NOT NULL` is equivalent to `NOT(x IS NULL)`.
 Some examples:
 
 | Example | Result |
-| ------- | ------ |
+| ------- | :----: |
 | `1 IS NULL` | `FALSE` |
 | `NULL IS NULL` | `TRUE` |
 | `1 IS NOT NULL` | `TRUE` |
@@ -313,7 +441,7 @@ Both can be escaped by preceding it with the escape character (if specified).
 Some examples:
 
 | Example | Result |
-| ------- | ------ |
+| ------- | :----: |
 | `'lorem' LIKE 'lor'` | `FALSE` |
 | `'lorem' LIKE 'lor%'` | `TRUE` |
 | `'lorem' LIKE 'lo_e%'` | `TRUE` |
@@ -331,7 +459,7 @@ and the `ESCAPE` clause is not supported.
 The alternative keyword `RLIKE` can also be used in place of `REGEXP`.
 
 | Example | Result |
-| ------- | ------ |
+| ------- | :----: |
 | `'ipsum' REGEXP '^i'` | `TRUE` |
 | `'ipsum' RLIKE '^i'` | `TRUE` |
 | `'lorem' REGEXP 'x$'` | `FALSE` |
@@ -352,7 +480,7 @@ If there is a single null value, the result can still be `TRUE` if there is an o
 Some examples of how it is evaluated:
 
 | Example | Result |
-| ------- | ------ |
+| ------- | :----: |
 | `(2, 5) OVERLAPS (3, 6)` | `TRUE` |
 | `(2, 5) OVERLAPS (2, 2)` | `TRUE` |
 | `(1, 5) OVERLAPS (2, 3)` | `TRUE` |
@@ -396,7 +524,7 @@ The result type and nullability is calculated accordingly.
 These are the supported deterministic regular functions:
 
 | Name | Description | Example | Result |
-| ---- | ------- | ------ | ----- |
+| ---- | ----------- | ------- | :----: |
 | `ABS` | Absolute value | `ABS(-3)` | `3` |
 | `ASCII` | Codepoint of character | `ASCII('a')` | `97` |
 | `ATAN2` | Arctangent of ratio | `ATAN2(1, 2)` | `0.46364760900081` |
@@ -439,19 +567,19 @@ These are the supported deterministic regular functions:
 | `TRANSLATE` | Replace characters | `TRANSLATE('lorem', 'mow', 'nöx')` | `'lören'` |
 | `UPPER` | Uppercase string | `UPPER('LoReM')` | 'LOREM' |
 
-Some functions are volatile (can return differently when you call again):
+Some functions are volatile (can return differently when called again):
 
 | Function | Description |
 | -------- | ----------- |
 | `NOW()` | gets the current instant |
 | `RANDOM()` | generates a random floating point number between 0 (inclusive) and 1 (exclusive) |
 
-Regular function names are identifiers, so you can write them like `` `UPPER`('lorem')`` or `"UPPER"('lorem')` too.
+Regular function names are identifiers, so they can be written them like `` `UPPER`('lorem')`` or `"UPPER"('lorem')` too.
 
 ## System functions
 
 There are several global functions that provide system-specific information.
-You can use these as magic constants too, omitting the parentheses (e.g. `SELECT CURRENT_TIMESTAMP`).
+These can be used as magic constants too by omitting the parentheses (e.g. `SELECT CURRENT_TIMESTAMP`).
 Here are a list of them:
 
 | Function | Description |
@@ -469,7 +597,7 @@ Here are a list of them:
 | `SESSION_USER()` | alias for `CURRENT_USER()` |
 | `SYSTEM_USER()` | alias for `CURRENT_USER()` |
 
-These functions are keywords and not identifiers, so you must write them in bare form.
+These functions are keywords and not identifiers, so they must be written in bare form.
 
 ### Standard function-like expressions
 
@@ -556,7 +684,7 @@ The expression `TRIM(c FROM x)` removes all leading and trailing occurences of t
 Some examples:
 
 | Expression | Result |
-| ---------- | ------ |
+| ---------- | :----: |
 | `TRIM('')` | `''` |
 | `TRIM('     ')` | `''` |
 | `TRIM('   lorem')` | `'lorem'` |
@@ -577,7 +705,7 @@ The substring is allowed partially or entirely out of bounds either in the negat
 Some examples:
 
 | Expression | Result |
-| ---------- | ------ |
+| ---------- | :----: |
 | `SUBSTRING('lorem' FROM 2)` | `'orem'` |
 | `SUBSTRING('lorem' FOR 3)` | `'lor'` |
 | `SUBSTRING('lorem' FROM 3 FOR 2)` | `'re'` |
@@ -598,7 +726,7 @@ If no occurence is found then `0` will be returned.
 Some examples:
 
 | Expression | Result |
-| ---------- | ------ |
+| ---------- | :----: |
 | `POSITION('x' in 'lorem')` | `0` |
 | `POSITION('r' in 'lorem')` | `3` |
 | `POSITION('ore' in 'lorem')` | `2` |
@@ -613,7 +741,7 @@ The expression `EXTRACT(f FROM x)` extract the field `f` from `x` (interpreted a
 Some examples:
 
 | Expression | Result |
-| ---------- | ------ |
+| ---------- | :----: |
 | `EXTRACT(MONTH FROM INTERVAL '1 year 2 months 2 days 3 hours')` | `2` |
 | `EXTRACT(MINUTE FROM TIME('12:30:03'))` | `30` |
 | `EXTRACT(TIMEZONE_HOUR FROM TIMEO('12:45:00-04:00'))` | `-4` |
@@ -631,7 +759,7 @@ The expression `CAST(x AS t)` converts `x` to the type `t`.
 Some examples:
 
 | Expression | Result |
-| ---------- | ------ |
+| ---------- | :----: |
 | `CAST('12' AS INT)` | `12` |
 | `CAST(34.2 AS INT)` | `34` |
 | `CAST('lorem' AS INT)` | `0` |
@@ -650,35 +778,60 @@ It's equivalent to the corresponding `CAST(x AS t)` expression.
 Some examples:
 
 | Expression | Result |
-| ---------- | ------ |
+| ---------- | :----: |
 | `CONVERT('12', INT)` | `12` |
 | `CONVERT(INT, '12')` | `12` |
 | `CONVERT('lorem', CHAR(3))` | `'lor'` |
 
 ## Select data from tables
 
-You can select records from a table with the `SELECT` statement.
+Records can be retrieved from a table using the `SELECT` statement.
 
-The simplest table select is to query all records and columns:
+The simplest table select query retrieves all records with all columns:
 
 ```sql
 SELECT * FROM tbl;
 ```
 
-You can also specify some columns and/or filters:
+Custom projection can be specified by explicitly enumerating the needed columns and expressions:
 
 ```sql
-SELECT id, col1, col2 some_alias, col3 AS some_other_alias FROM tbl;
+SELECT id, col1, col2 some_alias, col3 AS some_other_alias, CONCAT('#', t.id) FROM tbl;
 ```
 
-Table alias, more wildcards, custom expresssions,
-sorting (using the `ORDER BY` clause), limiting (using the `LIMIT` clause) are also supported:
+The optional `WHERE` clause adds filters to the query.
+Currently, only a simple filter list is supported which is basically a list of column filters connected with `AND` operators:
 
 ```sql
-SELECT CONCAT('#', t.id), t.* FROM tbl t WHERE id > 20 ORDER by id, label DESC NULLS FIRST LIMIT 5;
+SELECT * FROM tbl WHERE id > 3 AND label = 'lorem';
 ```
 
-You can select data from multiple tables using joins.
+The optional `ORDER BY` clause specifies explicit sorting of the result set.
+Currently, only column based sorting is supported.
+Optionally, the direction of order can also be specified, `ASC` for ascending, and `DESC` for descending (default is `ASC`).
+Also, optionally, the null order can be specified as `NULLS FIRST` or `NULLS LAST`
+(by default, null values is sorted as highest).
+Example:
+
+```sql
+SELECT * FROM tbl ORDER by id, label DESC NULLS LAST;
+```
+
+The `LIMIT` and `OFFSET` clauses, both optional, control pagination of the result set.
+Both the limit and the offset is zero-indexed.
+For example:
+
+```sql
+SELECT * FROM tbl LIMIT 10 OFFSET 20;
+```
+
+Alternatively, the offset can be specified inside the `LIMIT` clause before the limit value, delimited with comma.
+So the previous query can also be written as follows:
+
+```sql
+SELECT * FROM tbl LIMIT 20, 10;
+```
+
 Currently two types of joins are supported: `INNER JOIN` and `LEFT JOIN` (or `LEFT OUTER JOIN`).
 A very simple joined select looks like this:
 
@@ -686,7 +839,7 @@ A very simple joined select looks like this:
 SELECT t1.id, t2.* FROM table1 t1 LEFT JOIN table2 t2 ON t2.t1_id = t1.id;
 ```
 
-Finally, here is a complex example including most of the supported features for table select:
+Finally, here is a complex example including a number of the supported features for table select:
 
 ```sql
 SELECT
@@ -739,7 +892,7 @@ SELECT COUNT(*) FROM some_table WHERE some_column > 10
 
 ### Switch to schema
 
-You can set the current database schema with the `USE` statement.
+The current database schema can be switched using the `USE` statement.
 
 Example:
 
@@ -749,31 +902,31 @@ USE some_schema;
 
 ### Show schemas and tables
 
-You can list all the schemas:
+The list of all schemas can be retrieved using `SHOW`:
 
 ```sql
 SHOW SCHEMAS;
 ```
 
-Or:
+Or alternatively:
 
 ```sql
 SHOW DATABASES;
 ```
 
-You can list all the tables in the current schema:
+Retrieval of the list of all tables in the current schema is similar:
 
 ```sql
 SHOW TABLES;
 ```
 
-Or in a specific schema:
+Tables from a specific schema can be listed by appending the corresponding `FROM` clause:
 
 ```sql
 SHOW TABLES FROM some_schema;
 ```
 
-All the above can be filtered with the `LIKE` clause, for example:
+In all the above cases,the list can be filtered using the `LIKE` clause, for example:
 
 ```sql
 SHOW TABLES FROM some_schema LIKE 'a%';
@@ -781,13 +934,14 @@ SHOW TABLES FROM some_schema LIKE 'a%';
 
 ### Set variables
 
-You can define user variables for the current session with the `SET` statement:
+User variables can be defined for the current session using the `SET` statement:
 
 ```sql
 SET @some_variable = 'lorem ipsum';
 ```
 
-You can quote variable names too:
+Variable names are identifiers.
+If a variable name contains unsafe characters, it must be quoted:
 
 ```sql
 SET @`some special `` variable name` = 35;
@@ -795,39 +949,27 @@ SET @`some special `` variable name` = 35;
 
 ### Select variables and other values
 
-You can execute several types of `SELECT` queries without a table.
+`SELECT` queries without a table are also supported.
 
-To show a variable:
+For example, this query selects the current value of a variable:
 
 ```sql
 SELECT @some_variable;
 ```
 
-Optionally you can use a `FROM` clause to the special table `UNIT`:
-
-```sql
-SELECT 'value' FROM UNIT;
-```
-
-Or to show a special value:
-
-```sql
-SELECT CURRENT_SCHEMA();
-```
-
-These special values can be selected with alternative syntaxes (just like to other RDMBS engines), for example:
-
-```sql
-SHOW CURRENT_SCHEMA;
-```
-
-You can select multiple values in a single query:
+Multiple values can be selected in a single query:
 
 ```sql
 SELECT LAST_INSERT_ID() AS id, @some_variable AS var;
 ```
 
-Or even multiple rows:
+Optionally, a `FROM` clause with the special table `UNIT` can be used:
+
+```sql
+SELECT 'value' FROM UNIT;
+```
+
+Multi-row results can be produced by concatenating single-row queries with the `UNION` operator:
 
 ```sql
 SELECT 1 AS no, @some_variable AS var
@@ -837,35 +979,21 @@ SELECT 2 AS no, @some_other_variable AS var
 SELECT 3 AS no, @some_more_variable AS var;
 ```
 
-### Select table size or count of matching records
-
-You can count rows in a table:
-
-```sql
-SELECT COUNT(*) FROM some_table;
-```
-
-Or count rows that match a filter:
-
-```sql
-SELECT COUNT(*) FROM books WHERE id > 3 AND category IS NOT NULL;
-```
-
 ### Insert (or replace) records to table
 
-You can insert new records to a table with the `INSERT` statement:
+New records can be inserted to a table with the `INSERT` statement:
 
 ```sql
 INSERT INTO tbl VALUES (null, 'lorem', 42);
 ```
 
-Or with explicitly enumerated columns:
+Alternatively, the columns can be explicitly enumerated:
 
 ```sql
 INSERT INTO tbl (col1, col2) VALUES ('lorem', 42);
 ```
 
-The `REPLACE` statement is nearly the same, but it deletes all the conflicting records:
+The `REPLACE` statement is roughly the same, but it deletes all the conflicting records:
 
 ```sql
 REPLACE INTO tbl (col1, col2) VALUES ('lorem', 42);
@@ -873,7 +1001,7 @@ REPLACE INTO tbl (col1, col2) VALUES ('lorem', 42);
 
 ### Update records in table
 
-You can change existing values in a table with the `UPDATE` statement:
+Existing values can be chaged using the `UPDATE` statement:
 
 ```sql
 UPDATE tbl SET col1 = 'lorem', col2 = 42 WHERE id BETWEEN 16 AND 23;
@@ -883,7 +1011,7 @@ The `WHERE` clause is optional, if omitted, all records will be updated.
 
 ### Delete records from table
 
-You can delete records from a table with the `DELETE` statement:
+Records can be deleted from a table with the `DELETE` statement:
 
 ```sql
 DELETE FROM tbl WHERE id = 44;
