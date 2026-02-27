@@ -2,7 +2,7 @@
 
 ## Overview
 
-MiniBase supports a sane subset of SQL.
+MiniBase supports a subset of SQL described in this document.
 The syntax is mostly but not entirely based on the SQL 92 Standard, and is heavily inspired by PostgreSQL and MySQL.
 Some of the supported features:
 
@@ -181,6 +181,10 @@ Null values can be explicitly created using the `NULL` keyword.
 - Integer literals, e. g. `0`, `123`, `-432345`, `16234137468237434`
 - String literals, e. g. `'some text'`, `'couldn\'t'`, `'a\\b\\c'`
 
+## Types and cast
+
+TODO
+
 ## Expressions
 
 Expressions are possibly compound syntactic structures evaluating to a single value.
@@ -283,6 +287,8 @@ Some examples of how it is evaluated:
 The expression `x IS NULL` checks if `x` is null.
 The expression `x IS NOT NULL` is equivalent to `NOT(x IS NULL)`.
 
+Some examples:
+
 | Example | Result |
 | ------- | ------ |
 | `1 IS NULL` | `FALSE` |
@@ -292,9 +298,31 @@ The expression `x IS NOT NULL` is equivalent to `NOT(x IS NULL)`.
 
 ### The `LIKE` expression
 
-TODO
+The expression `x LIKE p` checks if `x` matches to the SQL like pattern `p`.
+The optional `ESCAPE` clause specifies an escape character.
+The expression `x NOT LIKE p` is equivalent to `NOT(x LIKE p)`.
+Instead of `LIKE`, the `ILIKE` keyword can also be used, in which case the pattern matching will be case-insensitive.
 
-<!-- givenExpression=expression NOT? likeOperator=( LIKE | ILIKE ) patternExpression=expression ( ESCAPE escapeExpression=expression )? -->
+There are two special wildcards:
+
+- `_`: matches to any single character
+- `%`: matches to any sequences of characters, including empty
+
+Both can be escaped by preceding it with the escape character (if specified).
+
+Some examples:
+
+| Example | Result |
+| ------- | ------ |
+| `'lorem' LIKE 'lor'` | `FALSE` |
+| `'lorem' LIKE 'lor%'` | `TRUE` |
+| `'lorem' LIKE 'lo_e%'` | `TRUE` |
+| `'lorem' LIKE 'LO_E%'` | `FALSE` |
+| `'lorem' ILIKE 'LO_E%'` | `TRUE` |
+| `'lorem' NOT LIKE 'LO_E%'` | `TRUE` |
+| `'lorem' NOT ILIKE 'LO_E%'` | `FALSE` |
+
+If any specified parameter is null then null will be returned.
 
 ### The `REGEXP` expression
 
@@ -363,48 +391,9 @@ END
 
 The result type and nullability is calculated accordingly.
 
-### Standard function-like expressions
-
-TODO
-
-### The `COUNT` expression
-
-TODO
-
-<!--
-    COUNT PAR_START DISTINCT? ASTERISK PAR_END |
-    COUNT PAR_START DISTINCT subExpression=expression PAR_END |
--->
-
-### The `INTERVAL` expression
-
-TODO
-
-### The `TRIM` expression
-
-TODO
-
-### The `SUBSTRING` expression
-
-TODO
-
-### The `POSITION` expression
-
-TODO
-
-### The `EXTRACT` expression
-
-TODO
-
-### The `CAST` expression
-
-TODO
-
 ### Regular functions
 
-These are the supported regular functions:
-
-TODO
+These are the supported deterministic regular functions:
 
 | Name | Description | Example | Result |
 | ---- | ------- | ------ | ----- |
@@ -450,12 +439,14 @@ TODO
 | `TRANSLATE` | Replace characters | `TRANSLATE('lorem', 'mow', 'nöx')` | `'lören'` |
 | `UPPER` | Uppercase string | `UPPER('LoReM')` | 'LOREM' |
 
-Some functions are non-stable (changes when you call again):
+Some functions are volatile (can return differently when you call again):
 
 | Function | Description |
 | -------- | ----------- |
-| `NOW` | gets the current instant |
+| `NOW()` | gets the current instant |
 | `RANDOM()` | generates a random floating point number between 0 (inclusive) and 1 (exclusive) |
+
+Regular function names are identifiers, so you can write them like `` `UPPER`('lorem')`` or `"UPPER"('lorem')` too.
 
 ## System functions
 
@@ -477,6 +468,192 @@ Here are a list of them:
 | `READONLY()` | checks whether the database is read-only or not |
 | `SESSION_USER()` | alias for `CURRENT_USER()` |
 | `SYSTEM_USER()` | alias for `CURRENT_USER()` |
+
+These functions are keywords and not identifiers, so you must write them in bare form.
+
+### Standard function-like expressions
+
+Some expressions are similar to functions but have a special syntax for the parameters.
+Like system functions, their names are keywords.
+
+### The `INTERVAL` expression
+
+While `INTERVAL` is also a type name, it can also be used for introducing interval literals.
+The simple `INTERVAL` expression has a single parameter, which can be of multiple types:
+
+- a number or numeric string means seconds, optionally with fractional part
+- ISO 8601 duration (e.g. `'P2Y-1DT3H2M'`)
+- SQL standard interval (e.g. `3-2 5 12:30`)
+- PostgreSQL style verbose interval (e.g. `2 years 1 month 4 hours ago`)
+
+| Expression | Meaning |
+| ---------- | ------- |
+| `INTERVAL 0` | zero-length interval |
+| `INTERVAL 30` | 30 seconds |
+| `INTERVAL 7200` | 2 hours |
+| `INTERVAL 0.03` | 30 milliseconds |
+| `INTERVAL 0.000023047` | 23 047 nanoseconds |
+| `INTERVAL '17.12'` | 17 seconds 120 milliseconds |
+| `INTERVAL 'P2Y-1DT3H2M'` | 2 years minus 1 days, plus 3 hours and 2 minutes |
+| `INTERVAL '10:32:01.5'` | 10 hours 32 minutes 1 second 500 milliseconds |
+| `INTERVAL '1-2 3'` | 1 year 2 months 3 days |
+| `INTERVAL '1-0 0 00:00:01'` | 1 year and 1 second |
+| `INTERVAL '5 days ago` | 5 days ago |
+| `INTERVAL '-3 days` | 3 days ago |
+| `INTERVAL '2 days -1 hour ago` | 1 hour short of 2 days |
+
+In the PostgreSQL style verbose interval format the unit words are case-insensitive.
+These are the supported unit words:
+
+| Unit word | Alternative forms |
+| --------- | ----------------- |
+| `nanosecond` | `nanoseconds`, `nanos` |
+| `microsecond` | `microseconds`, `micros` |
+| `millisecond` | `milliseconds`, `millis` |
+| `second` | `seconds` |
+| `minute` | `minutes` |
+| `hour` | `hours` |
+| `day` | `days` |
+| `week` | `weeks` |
+| `month` | `months` |
+| `year` | `years` |
+| `decade` | `decades` |
+| `century` | `centurys`, `centuries` |
+| `millennium` | `millenniums`, `millennia` |
+| `era` | `eras` |
+
+The simple `INTERVAL` expression is equivalent to the `INTERVAL(s)` converter method.
+
+Beyond the simple form, there is an optional second parameter: the time unit qualifier.
+If it's specified the meaning of the first parameter changes:
+
+- number or numeric string: quantity in the specified unit (for any other unit than seconds the fractional part will be erased)
+- string in `12:34` format plus `SECOND` format: minutes and seconds
+- other case with string input: interpret as in the simple case then erase accordingly
+
+Some examples with unit:
+
+| Expression | Meaning |
+| ---------- | ------- |
+| `INTERVAL 0 HOUR` | zero-length interval |
+| `INTERVAL 4 MINUTE` | 4 minutes |
+| `INTERVAL 7.5 SECOND` | 7 second 500 millis |
+| `INTERVAL 7.5 DAY` | 7 days |
+| `INTERVAL '12:30' SECOND` | 12 minutes 30 seconds |
+| `INTERVAL '12:30' MINUTE` | 12 hours 30 minutes |
+| `INTERVAL '12:30' HOUR` | 12 hours |
+
+The same set of unit names are supported as for the `INTERVAL` type specification.
+Unit parameters and the `TO` syntax is also supported in the same way
+(e.g. `INTERVAL '1:23:42.1' HOUR(2) TO SECOND(1)`).
+
+### The `TRIM` expression
+
+The expression `TRIM(x)` or `TRIM(FROM x)` removes all leading and trailing spaces from `x` (interpreted as a string).
+The expression `TRIM(c FROM x)` removes all leading and trailing occurences of the first character of `c`
+(if `c` is an empty string then it will return with `x` unchanged).
+
+Some examples:
+
+| Expression | Result |
+| ---------- | ------ |
+| `TRIM('')` | `''` |
+| `TRIM('     ')` | `''` |
+| `TRIM('   lorem')` | `'lorem'` |
+| `TRIM(FROM '   lorem')` | `'lorem'` |
+| `TRIM('m' FROM '   lorem')` | `'   lore'` |
+
+If any specified parameter is null then null will be returned.
+
+### The `SUBSTRING` expression
+
+The `SUBSTRING` (or `SUBSTR`) expression extracts a substring from an input interpreted as string.
+It contains at least one of the `FROM` clause and the `FOR` clause.
+The `FROM` clause specifies the starting position of the substring,
+while the `FOR` clause specifies the length.
+Both are 1-indexed, following the standard.
+The substring is allowed partially or entirely out of bounds either in the negative or positive (or both) direction.
+
+Some examples:
+
+| Expression | Result |
+| ---------- | ------ |
+| `SUBSTRING('lorem' FROM 2)` | `'orem'` |
+| `SUBSTRING('lorem' FOR 3)` | `'lor'` |
+| `SUBSTRING('lorem' FROM 3 FOR 2)` | `'re'` |
+| `SUBSTRING('lorem' FROM -4)` | `'lorem'` |
+| `SUBSTRING('lorem' FOR -2)` | `''` |
+| `SUBSTRING('lorem' FROM -1 FOR 4)` | `'lo'` |
+| `SUBSTRING('lorem' FROM -5 FOR 2)` | `''` |
+| `SUBSTRING('lorem' FROM -1 FOR 12)` | `'lorem'` |
+
+If any specified parameter is null then null will be returned.
+
+### The `POSITION` expression
+
+The expression `POSITION(x IN a)` searches for the first occurence position of `x` in `a` (both interpreted as a string).
+The resulting position is 1-indexed.
+If no occurence is found then `0` will be returned.
+
+Some examples:
+
+| Expression | Result |
+| ---------- | ------ |
+| `POSITION('x' in 'lorem')` | `0` |
+| `POSITION('r' in 'lorem')` | `3` |
+| `POSITION('ore' in 'lorem')` | `2` |
+| `POSITION('lorem' in 'ore')` | `0` |
+
+If any specified parameter is null then null will be returned.
+
+### The `EXTRACT` expression
+
+The expression `EXTRACT(f FROM x)` extract the field `f` from `x` (interpreted as a temporal or interval value).
+
+Some examples:
+
+| Expression | Result |
+| ---------- | ------ |
+| `EXTRACT(MONTH FROM INTERVAL '1 year 2 months 2 days 3 hours')` | `2` |
+| `EXTRACT(MINUTE FROM TIME('12:30:03'))` | `30` |
+| `EXTRACT(TIMEZONE_HOUR FROM TIMEO('12:45:00-04:00'))` | `-4` |
+| `EXTRACT(TIMEZONE_MINUTE FROM TIMEO('12:45:00-01:30'))` | `-30` |
+| `EXTRACT(DAY FROM NULL)` | `NULL` |
+
+These are the supported extraction fields:
+
+`YEAR`, `MONTH`, `DAY`, `HOUR`, `MINUTE`, `SECOND`, `TIMEZONE_HOUR`, `TIMEZONE_MINUTE`
+
+### The `CAST` expression
+
+The expression `CAST(x AS t)` converts `x` to the type `t`.
+
+Some examples:
+
+| Expression | Result |
+| ---------- | ------ |
+| `CAST('12' AS INT)` | `12` |
+| `CAST(34.2 AS INT)` | `34` |
+| `CAST('lorem' AS INT)` | `0` |
+| `CAST(43.257 AS DECIMAL(4, 2))` | `43.25` |
+| `CAST('lorem' AS CHAR(3))` | `'lor'` |
+| `CAST('lorem' AS NULL)` | `NULL` |
+| `CAST(NULL AS CHAR(3))` | `NULL` |
+
+For more information, see the section about types and cast.
+
+### The `CONVERT` expression
+
+The expression `CONVERT(x, t)` or `CONVERT(t, x)` converts `x` to the type `t`.
+It's equivalent to the corresponding `CAST(x AS t)` expression.
+
+Some examples:
+
+| Expression | Result |
+| ---------- | ------ |
+| `CONVERT('12', INT)` | `12` |
+| `CONVERT(INT, '12')` | `12` |
+| `CONVERT('lorem', CHAR(3))` | `'lor'` |
 
 ## Select data from tables
 
@@ -509,8 +686,6 @@ A very simple joined select looks like this:
 SELECT t1.id, t2.* FROM table1 t1 LEFT JOIN table2 t2 ON t2.t1_id = t1.id;
 ```
 
-TODO
-
 Finally, here is a complex example including most of the supported features for table select:
 
 ```sql
@@ -518,7 +693,13 @@ SELECT
   t3.*,
   t1.label,
   t1.created t_created,
-  CONCAT(@somevar, ': ', t4.col1) AS `concatenated value`
+  CONCAT(UPPER(@somevar), ': ', t4.col1) AS `concatenated value`,
+  LEAST(5, POW(t1.level, 2) + 1) AS `normalized level`,
+  CASE t1.level
+    WHEN 1 THEN 'one'
+    WHEN 2 THEN 'two'
+    ELSE 'other'
+  END AS `level name`
 FROM base_table t1
 INNER JOIN inner_joined_table t2 ON t2.id = t1.i_id
 LEFT JOIN left_joined_table t3 ON t3.id = t1.l_id
@@ -534,6 +715,24 @@ ORDER BY
   1 DESC,
   t3.price ASC NULLS LAST
 LIMIT 10
+OFFSET 5
+```
+
+## Aggregated queries
+
+Currently there is only a very limited support for count queries.
+There is a wildcarded form: `COUNT(*)`, and a field form: `COUNT(x)` (where `x` is a table field).
+These can be used in restricted `SELECT` queries that selects only the count field,
+and contains only these clauses
+
+- `FROM`, with optional table alias
+- `WHERE` (optional)
+- `LIMIT` (optional, necessary for some ORMs)
+
+Here is a tipical example of a count query:
+
+```sql
+SELECT COUNT(*) FROM some_table WHERE some_column > 10
 ```
 
 ## Other statements
