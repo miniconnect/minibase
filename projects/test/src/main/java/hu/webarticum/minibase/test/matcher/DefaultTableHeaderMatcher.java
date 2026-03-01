@@ -16,15 +16,15 @@ public class DefaultTableHeaderMatcher implements TableHeaderMatcher {
     }
 
     @Override
-    public void match(ImmutableList<MiniColumnHeader> givenColumnHeader) throws Exception {
-        int headerCount = givenColumnHeader.size();
+    public void match(ImmutableList<MiniColumnHeader> givenColumnHeaders) throws Exception {
+        int headerCount = givenColumnHeaders.size();
         int tableWidth = columnHeaderMatchers.size();
         if (headerCount != tableWidth) {
             throw new MatchFailedException("column header count: " + headerCount + " != " + tableWidth);
         }
         for (int i = 0; i < tableWidth; i++) {
             try {
-                columnHeaderMatchers.get(i).match(givenColumnHeader.get(i));
+                columnHeaderMatchers.get(i).match(givenColumnHeaders.get(i));
             } catch (Exception e) {
                 throw MatchFailedException.prefix("at column header " + i + ": ", e);
             }
