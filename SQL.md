@@ -1,13 +1,13 @@
-## MiniBase SQL support
+# MiniBase SQL support
 
 ## Overview
 
-This document describes the SQL subset currently implemented by the MiniBase engine.
+This document describes the SQL subset currently implemented in the MiniBase engine.
 
-The syntax is mostly but not entirely based on the SQL 92 Standard, and is heavily inspired by PostgreSQL and MySQL.
-Some of the supported features:
+The syntax is mostly (but not entirely) based on the SQL 92 Standard, and is heavily inspired by PostgreSQL and MySQL.
+Some of the supported features are these:
 
-- schema switching, user variable handling, and other session operations
+- session operations (schema switching, user variables, etc.)
 - CRUD queries (`INSERT`, `SELECT`, `UPDATE`, `DELETE`, `REPLACE`)
 - arbitrarily composable expressions
 - filtering with `WHERE`
@@ -66,7 +66,7 @@ Here is the current complete list of keywords:
 `THEN`, `TIME`, `TIMEO`, `TIMESTAMP`, `TIMESTAMPO`, `TIMESTAMPTZ`, `TIMETZ`, `TIMEZONE`, 
 `TIMEZONE_HOUR`, `TIMEZONE_MINUTE`, `TINYINT`, `TO`, `TRAILING`, `TRIM`, `TRUE`, `UNION`, `UNIT`, 
 `UNKNOWN`, `UPDATE`, `USE`, `UTCOFFSET`, `VALUES`, `VARBINARY`, `VARCHAR`, `WHEN`, `WHERE`, `WITH`, 
-`WITHOUT`, `XOR`, `YEAR`, `ZONE`,
+`WITHOUT`, `XOR`, `YEAR`, `ZONE`
 
 ## Identifiers
 
@@ -212,24 +212,24 @@ These are the supported first-class types
 
 | Type name | Meaning of size | Meaning of scale | Associated java type |
 | --------- | --------------- | ---------------- | -------------------- |
-| `NULL` |  |  | java.lang.Void |
-| `BOOLEAN` |  |  | java.lang.Boolean |
-| `INTEGER` | Digits (co) |  | hu.webarticum.miniconnect.lang.LargeInteger |
-| `BIGINT` | Digits (co) |  | hu.webarticum.miniconnect.lang.LargeInteger |
-| `DECIMAL` | Digits (co) | Fractional digits | java.math.BigDecimal |
-| `FLOAT` |  |  | java.lang.Double |
-| `NVARCHAR` | Characters (co) |  | java.lang.String |
-| `CLOB` | Characters (co) |  | java.lang.String |
-| `VARBINARY` | Bytes (co) |  | hu.webarticum.miniconnect.lang.ByteString |
-| `BLOB` |  |  | hu.webarticum.miniconnect.lang.ByteString |
-| `DATE` | Date digits (mo) |  | java.time.LocalDate |
-| `TIME` | Time digits (mo) |  | java.time.LocalTime |
-| `DATETIME` | Date digits (mo) |  | java.time.LocalDateTime |
-| `INSTANT` |  |  | java.time.Instant |
-| `TIMEO` |  |  | java.time.OffsetTime |
-| `DATETIMEO` |  |  | java.time.OffsetDateTime |
-| `UTCOFFSET` |  |  | java.time.ZoneOffset |
-| `INTERVAL` |  |  | hu.webarticum.miniconnect.lang.DateTimeDelta |
+| `NULL` |  |  | `java.lang.Void` |
+| `BOOLEAN` |  |  | `java.lang.Boolean` |
+| `INTEGER` | Digits (co) |  | `hu.webarticum.miniconnect.lang.LargeInteger` |
+| `BIGINT` | Digits (co) |  | `hu.webarticum.miniconnect.lang.LargeInteger` |
+| `DECIMAL` | Digits (co) | Fractional digits | `java.math.BigDecimal` |
+| `FLOAT` |  |  | `java.lang.Double` |
+| `NVARCHAR` | Characters (co) |  | `java.lang.String` |
+| `CLOB` | Characters (co) |  | `java.lang.String` |
+| `VARBINARY` | Bytes (co) |  | `hu.webarticum.miniconnect.lang.ByteString` |
+| `BLOB` |  |  | `hu.webarticum.miniconnect.lang.ByteString` |
+| `DATE` | Date digits (mo) |  | `java.time.LocalDate` |
+| `TIME` | Time digits (mo) |  | `java.time.LocalTime` |
+| `DATETIME` | Date digits (mo) |  | `java.time.LocalDateTime` |
+| `INSTANT` |  |  | `java.time.Instant` |
+| `TIMEO` |  |  | `java.time.OffsetTime` |
+| `DATETIMEO` |  |  | `java.time.OffsetDateTime` |
+| `UTCOFFSET` |  |  | `java.time.ZoneOffset` |
+| `INTERVAL` |  |  | `hu.webarticum.miniconnect.lang.DateTimeDelta` |
 
 Some of the above types has aliases:
 
@@ -356,7 +356,7 @@ for example `NULL OR TRUE` is evaluated to `TRUE`.
 
 Parentheses can be used to enforce a different execution order, for example:
 
-```
+```sql
 NOT (3 > 5 OR NOT ('1' || '2')::int > 7)
 ```
 
@@ -368,7 +368,7 @@ Several special expressions are supported, taken from the standard, as well as v
 
 The expression `x BETWEEN a AND b` is equivalent to this compound expression:
 
-```
+```sql
 x >= a AND x <= b
 ```
 
