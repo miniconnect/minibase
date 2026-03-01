@@ -47,6 +47,9 @@ tasks.register('queryTest', JavaExec) {
     classpath = sourceSets.queryTest.runtimeClasspath
     mainClass = queryTestMainClass
     args = [ queryTestSuiteListResourcePath ]
+    if (gradle.startParameter.logLevel == LogLevel.QUIET) {
+        args += "--quiet"
+    }
 }
 
 tasks.named('check') {

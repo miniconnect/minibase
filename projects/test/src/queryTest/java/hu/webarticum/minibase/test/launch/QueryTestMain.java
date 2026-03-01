@@ -9,6 +9,7 @@ import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.record.ResultTable;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
+import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
 @Command(name = "QueryTestMain", mixinStandardHelpOptions = true)
@@ -19,6 +20,14 @@ public class QueryTestMain implements Callable<Integer> {
             description = "Resource path to a file containing the list of test suites.",
             arity = "1")
     private String testSuiteListResourcePath;
+
+    @Option(
+            names = "--quiet",
+            paramLabel = "<quiet>",
+            description = "Enables quiet mode that prints no output.",
+            arity = "0..1",
+            defaultValue = "false")
+    private boolean isQuiet;
 
     public static void main(String[] args) {
         int exitCode = new CommandLine(new QueryTestMain()).execute(args);
@@ -40,10 +49,12 @@ public class QueryTestMain implements Callable<Integer> {
                 });
         int totalCount = totalCounter.get();
         int successCount = successCounter.get();
-        System.out.println();
-        System.out.println(String.format(
-                "%2$s/%1$s query test cases passed",
-                totalCount, successCount));
+        if (!isQuiet) {
+            System.out.println();
+            System.out.println(String.format(
+                    "%2$s/%1$s query test cases passed",
+                    totalCount, successCount));
+        }
         return totalCount == successCount ? 0 : 1;
     }
 
@@ -56,11 +67,13 @@ public class QueryTestMain implements Callable<Integer> {
         try {
             tableMatcher.match(givenTable, expectedResult);
         } catch (Exception e) {
-            System.out.println();
-            System.out.println("FAILED query test");
-            System.out.println("    resource:  " + resourcePath);
-            System.out.println("    case:      " + caseName);
-            System.out.println("    message:   " + e.getMessage());
+            if (!isQuiet) {
+                System.err.println();
+                System.err.println("FAILED query test");
+                System.err.println("    resource:  " + resourcePath);
+                System.err.println("    case:      " + caseName);
+                System.err.println("    message:   " + e.getMessage());
+            }
             return false;
         }
         return true;
