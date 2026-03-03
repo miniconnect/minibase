@@ -1,0 +1,35 @@
+schemas:
+  - name: db
+    tables:
+      - name: tbl_1
+        columns:
+          - name: id
+            type: hu.webarticum.miniconnect.lang.LargeInteger
+            unique: true
+            autoIncremented: true
+          - name: label
+            type: java.lang.String
+            defaultValue: ""
+        data:
+          - [ 1, "xyz"]
+      - name: tbl_2
+        addDiffLayer: true
+        columns:
+          - name: id
+            type: hu.webarticum.miniconnect.lang.LargeInteger
+            unique: true
+            autoIncremented: true
+          - name: name
+            type: java.lang.String
+            defaultValue: "hello"
+          - name: type
+            type: java.lang.String
+            enumValues: [ "APPLE", "ORANGE" ]
+          - name: description
+            type: java.lang.String
+            nullable: true
+        indexes:
+          - [ id ]
+        data:
+          - [ 1, "lorem", "APPLE", "Some description"]
+          - [ 2, "ipsum", "ORANGE", null]

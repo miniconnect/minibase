@@ -2,7 +2,7 @@ package hu.webarticum.minibase.execution.impl;
 
 import java.util.Optional;
 
-import hu.webarticum.minibase.execution.ThrowingQueryExecutor;
+import hu.webarticum.minibase.execution.SharedThrowingQueryExecutor;
 import hu.webarticum.minibase.execution.util.ResultUtil;
 import hu.webarticum.minibase.execution.util.TableQueryUtil;
 import hu.webarticum.minibase.query.expression.ColumnParameter;
@@ -13,7 +13,7 @@ import hu.webarticum.minibase.query.expression.VariableParameter;
 import hu.webarticum.minibase.query.query.Query;
 import hu.webarticum.minibase.query.query.StandaloneSelectQuery;
 import hu.webarticum.minibase.query.state.SessionState;
-import hu.webarticum.minibase.query.util.NumberParser;
+import hu.webarticum.minibase.query.util.NumberUtil;
 import hu.webarticum.minibase.storage.api.StorageAccess;
 import hu.webarticum.miniconnect.api.MiniColumnHeader;
 import hu.webarticum.miniconnect.api.MiniResult;
@@ -26,13 +26,13 @@ import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
 import hu.webarticum.miniconnect.record.translator.ValueTranslator;
 
-public class StandaloneSelectExecutor implements ThrowingQueryExecutor {
+public class StandaloneSelectExecutor implements SharedThrowingQueryExecutor {
 
     @Override
     public MiniResult executeThrowing(StorageAccess storageAccess, SessionState state, Query query) {
         return executeInternal(state, (StandaloneSelectQuery) query);
     }
-    
+
     private MiniResult executeInternal(SessionState state, StandaloneSelectQuery standaloneSelectQuery) {
         ImmutableList<ImmutableList<Expression>> expressionMatrix = standaloneSelectQuery.expressionMatrix();
         ImmutableList<Expression> firstRow = expressionMatrix.get(0);
@@ -46,9 +46,9 @@ public class StandaloneSelectExecutor implements ThrowingQueryExecutor {
                 .map((i, a) -> createColumnHeader(a, types.get(i), nullabilities.get(i)));
         ImmutableList<ImmutableList<MiniValue>> values = standaloneSelectQuery.expressionMatrix()
                 .map(r -> r.map((i, e) -> craftValue(e, types.get(i), state)));
-        return new StoredResult(new StoredResultSetData(columnHeaders, values));
+        return StoredResult.of(StoredResultSetData.from(columnHeaders, values));
     }
-    
+
     private String ensureAlias(String alias, Expression firstExpression) {
         if (alias != null) {
             return alias;
@@ -56,7 +56,7 @@ public class StandaloneSelectExecutor implements ThrowingQueryExecutor {
             return firstExpression.automaticName();
         }
     }
-    
+
     private Class<?> findType(
             int columnIndex, ImmutableList<ImmutableList<Expression>> expressionMatrix, SessionState state) {
         Class<?> bestFoundType = Void.class;
@@ -70,14 +70,14 @@ public class StandaloneSelectExecutor implements ThrowingQueryExecutor {
         }
         return bestFoundType;
     }
-    
+
     private Class<?> mergeType(Class<?> bestFoundType, Class<?> type) {
         if (type == bestFoundType || bestFoundType == Void.class) {
             return type;
         } else if (type == Void.class) {
             return bestFoundType;
         } else if (Number.class.isAssignableFrom(type) && Number.class.isAssignableFrom(bestFoundType)) {
-            return NumberParser.commonNumericTypeOf(bestFoundType, type);
+            return NumberUtil.commonNumericTypeOf(bestFoundType, type);
         } else if (CharSequence.class.isAssignableFrom(type) && CharSequence.class.isAssignableFrom(bestFoundType)) {
             return String.class;
         } else {
@@ -90,7 +90,7 @@ public class StandaloneSelectExecutor implements ThrowingQueryExecutor {
         if (fixedType.isPresent()) {
             return fixedType.get();
         }
-        
+
         ImmutableMap<Parameter, Class<?>> types = expression.parameters().assign(p -> getParameterType(p, state));
         return expression.type(types);
     }
@@ -115,12 +115,12 @@ public class StandaloneSelectExecutor implements ThrowingQueryExecutor {
         }
         return false;
     }
-    
+
     private boolean extractNullability(Expression expression, SessionState state) {
         if (!expression.isNullable()) {
             return false;
         }
-        
+
         ImmutableMap<Parameter, Boolean> nullabilities =
                 expression.parameters().assign(p -> isParameterNullable(p, state));
         return expression.isNullable(nullabilities);
@@ -130,20 +130,20 @@ public class StandaloneSelectExecutor implements ThrowingQueryExecutor {
         Object value = substitute(parameter, state);
         return value == null;
     }
-    
+
     private MiniColumnHeader createColumnHeader(String alias, Class<?> type, boolean nullable) {
         ValueTranslator translator = ResultUtil.createValueTranslatorFor(type);
         MiniValueDefinition columnDefinition = translator.definition();
-        return new StoredColumnHeader(alias, nullable, columnDefinition);
+        return StoredColumnHeader.from(alias, nullable, columnDefinition);
     }
-    
+
     private MiniValue craftValue(Expression expression, Class<?> type, SessionState state) {
         ImmutableMap<Parameter, Object> substitutions = expression.parameters().assign(p -> substitute(p, state));
         Object value = expression.evaluate(substitutions);
         Object convertedValue = TableQueryUtil.convert(value, type);
         return ResultUtil.createValueTranslatorFor(type).encodeFully(convertedValue);
     }
-    
+
     private Object substitute(Parameter parameter, SessionState state) {
         if (parameter instanceof VariableParameter) {
             return state.getUserVariable(((VariableParameter) parameter).variableName());
@@ -155,5 +155,5 @@ public class StandaloneSelectExecutor implements ThrowingQueryExecutor {
             throw new IllegalArgumentException("Unknown parameter type: " + parameter.getClass());
         }
     }
-    
+
 }

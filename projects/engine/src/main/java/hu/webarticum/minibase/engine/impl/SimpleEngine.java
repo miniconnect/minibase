@@ -10,17 +10,17 @@ import hu.webarticum.minibase.query.parser.SqlParser;
 import hu.webarticum.minibase.storage.api.StorageAccess;
 
 public class SimpleEngine implements TackedEngine {
-    
+
     private final SqlParser sqlParser;
-    
+
     private final QueryExecutor queryExecutor;
-    
+
     private final StorageAccess storageAccess;
-    
+
 
     private volatile boolean closed = false;
-    
-    
+
+
     public SimpleEngine(
             SqlParser sqlParser,
             QueryExecutor queryExecutor,
@@ -29,7 +29,7 @@ public class SimpleEngine implements TackedEngine {
         this.queryExecutor = queryExecutor;
         this.storageAccess = storageAccess;
     }
-    
+
 
     @Override
     public EngineSession openSession() {
@@ -40,12 +40,12 @@ public class SimpleEngine implements TackedEngine {
     public SqlParser sqlParser() {
         return sqlParser;
     }
-    
+
     @Override
     public QueryExecutor queryExecutor() {
         return queryExecutor;
     }
-    
+
     @Override
     public StorageAccess storageAccess() {
         return storageAccess;
@@ -69,7 +69,7 @@ public class SimpleEngine implements TackedEngine {
             }
         }
     }
-    
+
     @Override
     public boolean isClosed() {
         return closed;

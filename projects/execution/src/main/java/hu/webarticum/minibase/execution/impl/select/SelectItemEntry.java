@@ -11,8 +11,8 @@ class SelectItemEntry {
     final ValueTranslator valueTranslator;
 
     final ColumnDefinition columnDefinition;
-    
-    
+
+
     SelectItemEntry(SelectItem selectItem, ValueTranslator valueTranslator, ColumnDefinition columnDefinition) {
         this.selectItem = selectItem;
         this.valueTranslator = valueTranslator;

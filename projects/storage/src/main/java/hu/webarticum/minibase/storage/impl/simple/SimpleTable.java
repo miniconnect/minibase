@@ -27,28 +27,28 @@ import hu.webarticum.miniconnect.lang.ImmutableMap;
 import hu.webarticum.miniconnect.lang.LargeInteger;
 
 public class SimpleTable implements Table {
-    
+
     private final String name;
-    
+
     private final boolean writable;
 
     private final ImmutableList<String> columnNames;
-    
+
     private final ImmutableMap<String, ColumnDefinition> columnDefinitions;
 
     private final ImmutableList<String> indexNames;
-    
+
     private final ImmutableMap<String, ImmutableList<String>> indexColumnNames;
-    
+
     private final List<ImmutableList<Object>> rows = new ArrayList<>();
-    
+
     private final SimpleColumnStore columnStore = new SimpleColumnStore();
-    
+
     private final SimpleTableIndexStore tableIndexStore = new SimpleTableIndexStore();
-    
+
     private final SimpleSequence sequence;
 
-    
+
     private SimpleTable(SimpleTableBuilder builder) {
         this.name = builder.name;
         this.writable = builder.writable;
@@ -59,7 +59,7 @@ public class SimpleTable implements Table {
         this.rows.addAll(builder.rows);
         this.sequence = new SimpleSequence(calculateSequenceValue(builder.sequenceValue, builder.rows));
     }
-    
+
     private LargeInteger calculateSequenceValue(LargeInteger sequenceValue, List<ImmutableList<Object>> rows) {
         if (sequenceValue != null) {
             return sequenceValue;
@@ -67,11 +67,11 @@ public class SimpleTable implements Table {
             return LargeInteger.of(rows.size()).increment();
         }
     }
-    
+
     public static SimpleTableBuilder builder() {
         return new SimpleTableBuilder();
     }
-    
+
 
     @Override
     public String name() {
@@ -108,9 +108,9 @@ public class SimpleTable implements Table {
         checkWritable();
         TablePatchUtil.checkIndividualValues(this, patch);
         checkUniqueInPatch(patch);
-        
+
         rows.addAll(patch.insertedRows());
-        
+
         for (Map.Entry<LargeInteger, ImmutableMap<Integer, Object>> entry : patch.updates().entrySet()) {
             int rowIndex = entry.getKey().intValueExact();
             ImmutableMap<Integer, Object> rowUpdates = entry.getValue();
@@ -118,14 +118,14 @@ public class SimpleTable implements Table {
             ImmutableList<Object> updatedRow = currentRow.map(rowUpdates::getOrDefault);
             rows.set(rowIndex, updatedRow);
         }
-        
+
         Iterator<LargeInteger> deletionsIterator = patch.deletions().descendingIterator();
         while (deletionsIterator.hasNext()) {
             int deletedRowIndex = deletionsIterator.next().intValueExact();
             rows.remove(deletedRowIndex);
         }
     }
-    
+
     private void checkWritable() {
         if (!writable) {
             throw PredefinedError.TABLE_READONLY.toException(name);
@@ -146,7 +146,7 @@ public class SimpleTable implements Table {
         if (uniqueColumnValues.isEmpty()) {
             return;
         }
-        
+
         int rowCount = rows.size();
         for (int i = 0; i < rowCount; i++) {
             LargeInteger rowIndex = LargeInteger.of(i);
@@ -164,7 +164,7 @@ public class SimpleTable implements Table {
                 }
             }
         }
-        
+
         for (ImmutableMap<Integer, Object> rowUpdates : patch.updates().values()) {
             for (Map.Entry<Integer, Object> updateEntry : rowUpdates.entrySet()) {
                 checkAndAddUniqueValue(updateEntry.getKey(), updateEntry.getValue(), uniqueColumnValues);
@@ -176,26 +176,26 @@ public class SimpleTable implements Table {
             }
         }
     }
-    
+
     private void checkAndAddUniqueValue(
             int columnIndex, Object newValue, Map<Integer, Set<Object>> uniqueColumnValues) {
         if (newValue == null) {
             return;
         }
-        
+
         Set<Object> values = uniqueColumnValues.get(columnIndex);
         if (values != null && !values.add(newValue)) {
             String columnName = columnNames.get(columnIndex);
             throw PredefinedError.COLUMN_VALUE_NOT_UNIQUE.toException(columnName, newValue);
         }
     }
-    
+
     @Override
     public Sequence sequence() {
         return sequence;
     }
 
-    
+
     private class SimpleColumnStore implements NamedResourceStore<Column> {
 
         @Override
@@ -212,20 +212,20 @@ public class SimpleTable implements Table {
         public boolean contains(String name) {
             return columnNames.contains(name);
         }
-        
+
         @Override
         public Column get(String name) {
             return new SimpleColumn(name, columnDefinitions.get(name));
         }
-        
+
     }
-    
+
 
     private class SimpleTableIndexStore implements NamedResourceStore<TableIndex> {
 
         private final Map<String, TableIndex> cache = Collections.synchronizedMap(new HashMap<>());
-        
-        
+
+
         @Override
         public ImmutableList<String> names() {
             return indexNames;
@@ -240,12 +240,12 @@ public class SimpleTable implements Table {
         public boolean contains(String name) {
             return indexNames.contains(name);
         }
-        
+
         @Override
         public TableIndex get(String name) {
             return cache.computeIfAbsent(name, this::createIndex);
         }
-        
+
         private TableIndex createIndex(String name) {
             ImmutableList<String> columnNames = indexColumnNames.get(name);
             if (columnNames == null) {
@@ -253,25 +253,25 @@ public class SimpleTable implements Table {
             }
             return new ScanningTableIndex(SimpleTable.this, name, columnNames);
         }
-        
+
     }
-    
-    
+
+
     public static final class SimpleTableBuilder {
 
         private String name = "data";
-        
+
         private boolean writable = true;
-        
+
         private Map<String, ColumnDefinition> columnDefinitions = new LinkedHashMap<>();
-        
+
         private Map<String, ImmutableList<String>> indexes = new LinkedHashMap<>();
-        
+
         private final List<ImmutableList<Object>> rows = new ArrayList<>();
 
         private LargeInteger sequenceValue = null;
-        
-        
+
+
         public SimpleTableBuilder name(String name) {
             this.name = name;
             return this;
@@ -286,7 +286,7 @@ public class SimpleTable implements Table {
                 ImmutableMap<String, ColumnDefinition> columnDefinitions) {
             return columnDefinitions(columnDefinitions.asMap());
         }
-        
+
         public SimpleTableBuilder columnDefinitions(
                 Map<String, ColumnDefinition> columnDefinitions) {
             this.columnDefinitions.clear();
@@ -309,7 +309,7 @@ public class SimpleTable implements Table {
         public SimpleTableBuilder indexes(ImmutableMap<String, ImmutableList<String>> indexes) {
             return indexes(indexes.asMap());
         }
-        
+
         public SimpleTableBuilder indexes(Map<String, ImmutableList<String>> indexes) {
             this.indexes.clear();
             this.indexes.putAll(indexes);
@@ -345,7 +345,7 @@ public class SimpleTable implements Table {
         public SimpleTable build() {
             return new SimpleTable(this);
         }
-        
+
     }
 
 }

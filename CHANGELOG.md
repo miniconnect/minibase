@@ -1,6 +1,35 @@
 # Changelog
 
 
+## Version 0.5.0
+
+Released on *2026-03-03*
+
+### Fixed:
+
+- Fixed several query parsing issues
+- Fixed several nullability issues
+- Added normalization of unquoted identifiers
+- Fixed issues with parallel query execution
+- Fixed a sorting problem in `DiffTable`
+
+### Added:
+
+- Added many new functions and expressions
+- Added date/time/interval types and sematics
+
+### Improved:
+
+- Improved conversion and unnification rules between types
+- Improved the type system
+- Improved literal support (e.g. scientific notation)
+
+### Development:
+
+- Updated to gradle 9 and improved build
+- Introduced the query test framework
+
+
 ## Version 0.4.0
 
 Released on *2025-09-29*

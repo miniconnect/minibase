@@ -10,9 +10,9 @@ import hu.webarticum.minibase.storage.impl.simple.MultiComparator;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 
 public class SelectionPredicate implements Predicate<ImmutableList<Object>> {
-    
+
     private final Predicate<ImmutableList<Object>> wrappedPredicate;
-    
+
 
     public SelectionPredicate(
             ImmutableList<?> from,
@@ -28,7 +28,7 @@ public class SelectionPredicate implements Predicate<ImmutableList<Object>> {
         predicate = ensureFallback(predicate);
         this.wrappedPredicate = predicate;
     }
-    
+
     private static Predicate<ImmutableList<Object>> applyNullsModes(
             Predicate<ImmutableList<Object>> predicate,
             ImmutableList<NullsMode> nullsModes) {
@@ -39,16 +39,16 @@ public class SelectionPredicate implements Predicate<ImmutableList<Object>> {
     private static Predicate<ImmutableList<Object>> applySpecialNullsModeMap(
             Predicate<ImmutableList<Object>> predicate,
             Map<Integer, NullsMode> specialNullsModeMap) {
-        
+
         if (specialNullsModeMap.isEmpty()) {
             return predicate;
         }
-        
-        Predicate<ImmutableList<Object>> specialNullsModePredicate = v -> xxxxx(v, specialNullsModeMap);
+
+        Predicate<ImmutableList<Object>> specialNullsModePredicate = v -> testSpecialNullsMode(v, specialNullsModeMap);
         return predicate != null ? predicate.and(specialNullsModePredicate) : specialNullsModePredicate;
     }
 
-    private static boolean xxxxx(ImmutableList<Object> values, Map<Integer, NullsMode> specialNullsModeMap) {
+    private static boolean testSpecialNullsMode(ImmutableList<Object> values, Map<Integer, NullsMode> specialNullsModeMap) {
         for (Map.Entry<Integer, NullsMode> entry : specialNullsModeMap.entrySet()) {
             int i = entry.getKey();
             NullsMode nullsMode = entry.getValue();
@@ -65,7 +65,7 @@ public class SelectionPredicate implements Predicate<ImmutableList<Object>> {
         }
         return true;
     }
-    
+
     private static Map<Integer, NullsMode> buildSpecialNullsModeMap(ImmutableList<NullsMode> nullsModes) {
         Map<Integer, NullsMode> specialNullsModeMap = new HashMap<>(nullsModes.size());
         int i = 0;
@@ -83,11 +83,11 @@ public class SelectionPredicate implements Predicate<ImmutableList<Object>> {
             ImmutableList<?> from,
             InclusionMode fromInclusionMode,
             MultiComparator multiComparator) {
-        
+
         if (from == null) {
             return predicate;
         }
-        
+
         @SuppressWarnings("unchecked")
         ImmutableList<Object> fromAsObjects = (ImmutableList<Object>) from;
         Predicate<ImmutableList<Object>> fromPredicate;
@@ -98,7 +98,7 @@ public class SelectionPredicate implements Predicate<ImmutableList<Object>> {
         }
         return predicate != null ? predicate.and(fromPredicate) : fromPredicate;
     }
-    
+
     private static Predicate<ImmutableList<Object>> applyTo(
             Predicate<ImmutableList<Object>> predicate,
             ImmutableList<?> to,
@@ -108,7 +108,7 @@ public class SelectionPredicate implements Predicate<ImmutableList<Object>> {
         if (to == null) {
             return predicate;
         }
-        
+
         @SuppressWarnings("unchecked")
         ImmutableList<Object> toAsObjects = (ImmutableList<Object>) to;
         Predicate<ImmutableList<Object>> toPredicate;
@@ -119,7 +119,7 @@ public class SelectionPredicate implements Predicate<ImmutableList<Object>> {
         }
         return predicate != null ? predicate.and(toPredicate) : toPredicate;
     }
-    
+
     private static Predicate<ImmutableList<Object>> ensureFallback(Predicate<ImmutableList<Object>> predicate) {
         return predicate != null ? predicate : v -> true;
     }

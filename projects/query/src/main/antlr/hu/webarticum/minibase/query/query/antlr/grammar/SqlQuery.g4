@@ -5,8 +5,8 @@ package hu.webarticum.minibase.query.query.antlr.grammar;
 }
 
 sqlQuery: (
-    selectQuery |
     selectCountQuery |
+    selectQuery |
     standaloneSelectQuery |
     showSpecialQuery |
     updateQuery |
@@ -17,6 +17,13 @@ sqlQuery: (
     useQuery |
     setVariableQuery
 ) EOF ;
+
+selectCountQuery: (
+    SELECT COUNT PAR_START ( wildcardSelectItem | scopeableFieldName ) PAR_END fieldAliasPart=aliasPart?
+    FROM ( schemaName DOT )? tableName tableAliasPart=aliasPart?
+    wherePart?
+    limitPart?
+);
 
 selectQuery: (
     SELECT selectPart
@@ -35,13 +42,6 @@ joinPart: (
 innerJoin: INNER? JOIN;
 leftJoin: LEFT OUTER? JOIN;
 
-selectCountQuery: (
-    SELECT COUNT PAR_START ( wildcardSelectItem | DISTINCT? scopeableFieldName ) PAR_END fieldAliasPart=aliasPart?
-    FROM ( schemaName DOT )? tableName tableAliasPart=aliasPart?
-    wherePart?
-    limitPart?
-);
-
 selectPart: selectItem ( COMMA selectItem )*;
 selectItem: aliasableExpression | wildcardSelectItem;
 wildcardSelectItem: ( tableName DOT )? ASTERISK;
@@ -49,7 +49,7 @@ offsetLimitPart: offsetPart limitPart?  | limitPart offsetPart? | commaLimitPart
 offsetPart: OFFSET limitParameter ( ROW | ROWS )?;
 limitPart: ( LIMIT | FETCH ( FIRST | NEXT ) ) limitParameter ( ( ROW | ROWS ) ONLY? )?;
 commaLimitPart: LIMIT offsetValue=limitParameter COMMA limitValue=limitParameter;
-limitParameter: TOKEN_INTEGER | TOKEN_STRING | variable;
+limitParameter: TOKEN_INTEGER | stringLiteral | variable;
 
 standaloneSelectQuery: standaloneSelectRow ( UNION standaloneSelectRow )*;
 standaloneSelectRow: SELECT aliasableExpression ( COMMA aliasableExpression )* ( FROM UNIT )?;
@@ -60,9 +60,9 @@ updateQuery: UPDATE ( schemaName DOT )? tableName updatePart wherePart?;
 updatePart: SET updateItem ( COMMA updateItem )*;
 updateItem: fieldName EQ extendedValue;
 
-insertQuery: ( INSERT | REPLACE ) INTO ( schemaName DOT )? tableName fieldList? VALUES valueList;
+insertQuery: ( INSERT | REPLACE ) INTO ( schemaName DOT )? tableName fieldList? VALUES insertValueList;
 fieldList: PAR_START fieldName ( COMMA fieldName )* PAR_END;
-valueList: PAR_START insertValue ( COMMA insertValue )* PAR_END;
+insertValueList: PAR_START insertValue ( COMMA insertValue )* PAR_END;
 insertValue: extendedValue | DEFAULT;
 
 deleteQuery: DELETE FROM ( schemaName DOT )? tableName wherePart?;
@@ -80,8 +80,8 @@ whereItem: scopeableFieldName postfixCondition | PAR_START whereItem PAR_END;
 postfixCondition: simpleRelation extendedValue | betweenRelation | isNull | isNotNull;
 simpleRelation: EQ | LESS | LESS_EQ | GREATER| GREATER_EQ;
 betweenRelation: BETWEEN firstValue=extendedValue AND secondValue=extendedValue;
-isNull: IS NULL;
-isNotNull: IS NOT NULL;
+isNull: IS ( NULL | UNKNOWN );
+isNotNull: IS NOT ( NULL | UNKNOWN );
 orderByPart: ORDER BY orderByItem ( COMMA orderByItem )*;
 orderByItem: ( scopeableFieldName | orderByPosition ) ( ASC | DESC )? ( nullsFirst | nullsLast )?;
 nullsFirst: NULLS FIRST;
@@ -90,36 +90,110 @@ orderByPosition: TOKEN_INTEGER;
 aliasableExpression: expression aliasPart?;
 aliasPart: AS? alias=identifier;
 expression:
-    leftExpression=expression ( ASTERISK | MOD | PERCENT | DIV | SLASH ) rightExpression=expression |
-    leftExpression=expression ( PLUS | MINUS ) rightExpression=expression |
+    subExpression=expression DOUBLE_COLON typeConstruct |
+    leftExpression=expression binaryOperator=( ASTERISK | MOD | PERCENT | DIV | SLASH ) rightExpression=expression |
+    leftExpression=expression binaryOperator=( PLUS | MINUS ) rightExpression=expression |
+    leftExpression=expression binaryOperator=AND rightExpression=expression |
+    leftExpression=expression binaryOperator=XOR rightExpression=expression |
+    leftExpression=expression binaryOperator=OR rightExpression=expression |
+    leftExpression=expression binaryOperator=( LESS | LESS_EQ | GREATER | GREATER_EQ ) rightExpression=expression |
+    leftExpression=expression binaryOperator=( EQ | NEQ_ANG | NEQ_BANG ) rightExpression=expression |
+    givenExpression=expression NOT? BETWEEN minExpression=expression AND maxExpression=expression |
+    leftExpression=expression binaryOperator=DOUBLE_PIPE rightExpression=expression |
+    givenExpression=expression NOT? IN inValueList |
+    subExpression=expression IS NOT? isNullOperator=( NULL | UNKNOWN ) |
+    givenExpression=expression NOT? likeOperator=( LIKE | ILIKE ) patternExpression=expression ( ESCAPE escapeExpression=expression )? |
+    givenExpression=expression NOT? regexpOperator=( REGEXP | RLIKE ) patternExpression=expression |
+    prefixableExpression ;
+prefixableExpression:
+    unaryArithmeticExpression |
+    notExpression |
+    PAR_START start1Expression=expression COMMA end1Expression=expression PAR_END
+        OVERLAPS PAR_START start2Expression=expression COMMA end2Expression=expression PAR_END |
+    caseExpression |
+    COUNT PAR_START DISTINCT? ASTERISK PAR_END |
+    COUNT PAR_START DISTINCT subExpression=expression PAR_END |
+    intervalExpression |
+    trimExpression |
+    substringExpression |
+    positionExpression |
+    extractExpression |
+    castExpression |
     atomicExpression;
+notExpression: NOT prefixableExpression;
+unaryArithmeticExpression: ( PLUS | MINUS ) prefixableExpression;
+inValueList: PAR_START expression ( COMMA expression )* PAR_END;
+caseExpression: CASE (givenExpression=expression)? whenPart+ elsePart? END;
+whenPart: WHEN conditionExpression=expression THEN resultExpression=expression;
+elsePart: ELSE expression;
+intervalExpression: INTERVAL ( integerLiteral | decimalLiteral | stringLiteral ) intervalSpecifier?;
+trimExpression: TRIM PAR_START trimSpecification? charsExpression=expression? FROM inputExpression=expression PAR_END;
+trimSpecification: LEADING | TRAILING | BOTH;
+substringExpression: ( SUBSTRING | SUBSTR ) PAR_START inputExpression=expression
+    ( FROM fromExpression=expression ( FOR forExpression=expression )? | FOR forExpression=expression ) PAR_END;
+positionExpression: POSITION PAR_START subjectExpression=expression IN contextExpression=expression PAR_END;
+extractExpression: EXTRACT PAR_START extractFieldName FROM inputExpression=expression PAR_END;
+extractFieldName: YEAR | MONTH | DAY | HOUR | MINUTE | SECOND | TIMEZONE_HOUR | TIMEZONE_MINUTE;
+castExpression:
+    CAST PAR_START expression AS typeConstruct PAR_END |
+    CONVERT PAR_START expression COMMA typeConstruct PAR_END |
+    CONVERT PAR_START typeConstruct COMMA expression PAR_END;
+typeConstruct: simpleTypeConstruct | intervalTypeConstruct;
+simpleTypeConstruct: typeName ( PAR_START ( size=sizeParameter ( COMMA scale=sizeParameter )? )? PAR_END )?;
+intervalTypeConstruct: INTERVAL intervalSpecifier;
+sizeParameter: TOKEN_INTEGER | stringLiteral;
 atomicExpression:
     literal |
     variable |
     specialSelectable |
     scopeableFieldName |
-    functionCall |PAR_START
-    PAR_START paredExpression=expression PAR_END |
-    MINUS negatedExpression=expression;
+    functionCall |
+    PAR_START paredExpression=expression PAR_END;
 specialSelectable: specialSelectableName ( parentheses )?;
 specialSelectableName:
+    SYSTEM_USER |
+    SESSION_USER |
     CURRENT_USER |
     CURRENT_SCHEMA |
     CURRENT_CATALOG |
+    CURRENT_DATE |
+    CURRENT_TIME |
+    CURRENT_TIMESTAMP |
     READONLY |
     AUTOCOMMIT |
     IDENTITY |
     LAST_INSERT_ID;
-functionCall: identifier PAR_START expression ( COMMA expression )* PAR_END;
+functionCall: functionName PAR_START ( expression ( COMMA expression )* )? PAR_END;
+functionName: identifier | functionNameToken;
+functionNameToken: LEFT | RIGHT | TRIM | SUBSTRING | SUBSTR | REPLACE | typeName;
+typeName:
+    NULL | BOOL | BOOLEAN | INTEGER | BIGINT | DEC | DECIMAL | FLOAT |
+    NVARCHAR | CLOB | BINARY | VARBINARY | BLOB | DATE |
+    ( TIME | DATETIME | TIMESTAMP ) ( ( WITH | WITHOUT ) ( TIME ZONE | OFFSET | UTCOFFSET ) )? |
+    TIMETZ | DATETIMETZ | TIMESTAMPTZ |
+    INSTANT |
+    TIMEO | DATETIMEO | TIMESTAMPO |
+    UTCOFFSET | TIMEZONE |
+    INTERVAL |
+    TINYINT | SMALLINT | INT | NUMERIC | REAL | DOUBLE PRECISION? | CHAR | VARCHAR | NCHAR | TEXT;
+intervalSpecifier: ( fromItem=intervalSpecifierItem TO )? toItem=intervalSpecifierItem;
+intervalSpecifierItem: intervalFieldName ( PAR_START integerLiteral PAR_END )?;
+intervalFieldName: YEAR | MONTH | DAY | HOUR | MINUTE | SECOND;
 scopeableFieldName: ( tableName DOT )? fieldName;
 extendedValue: literal | variable;
 variable: AT identifier;
 fieldName: identifier;
 tableName: identifier;
 identifier: TOKEN_SIMPLENAME | TOKEN_QUOTEDNAME | TOKEN_BACKTICKEDNAME;
-literal: NULL | TOKEN_STRING | TOKEN_INTEGER | booleanLiteral;
+literal: NULL | stringLiteral | integerLiteral | decimalLiteral | booleanLiteral;
+integerLiteral: ( MINUS | PLUS )? TOKEN_INTEGER;
+decimalLiteral: ( MINUS | PLUS )? TOKEN_DECIMAL;
 booleanLiteral: TRUE | FALSE;
-likePart: LIKE TOKEN_STRING;
+likePart: LIKE stringLiteral;
+stringLiteral: stringTokenList | escapeStringTokenList;
+stringTokenList: TOKEN_STRING+;
+escapeStringTokenList: TOKEN_ESTRING escapeStringContinuation*;
+escapeStringContinuation: TOKEN_STRING | TOKEN_ESTRING_CONTINUATION;
 schemaName: identifier;
 parentheses: PAR_START PAR_END;
 
@@ -133,9 +207,76 @@ CALL: C A L L;
 USE: U S E;
 SET: S E T;
 
+CAST: C A S T;
+CONVERT: C O N V E R T;
+TRIM: T R I M;
+LEADING: L E A D I N G;
+TRAILING: T R A I L I N G;
+BOTH: B O T H;
+SUBSTRING: S U B S T R I N G;
+SUBSTR: S U B S T R;
+FOR: F O R;
+POSITION: P O S I T I O N;
+IN: I N;
+EXTRACT: E X T R A C T;
+
+BOOL: B O O L;
+BOOLEAN: B O O L E A N;
+INTEGER: I N T E G E R;
+BIGINT: B I G I N T;
+DEC: D E C;
+DECIMAL: D E C I M A L;
+FLOAT: F L O A T;
+NVARCHAR: N V A R C H A R;
+CLOB: C L O B;
+BINARY: B I N A R Y;
+VARBINARY: V A R B I N A R Y;
+BLOB: B L O B;
+DATE: D A T E;
+TIME: T I M E;
+DATETIME: D A T E T I M E;
+TIMESTAMP: T I M E S T A M P;
+TIMETZ: T I M E T Z;
+DATETIMETZ: D A T E T I M E T Z;
+TIMESTAMPTZ: T I M E S T A M P T Z;
+INSTANT: I N S T A N T;
+TIMEO: T I M E O;
+DATETIMEO: D A T E T I M E O;
+TIMESTAMPO: T I M E S T A M P O;
+UTCOFFSET: U T C O F F S E T;
+TIMEZONE: T I M E Z O N E;
+INTERVAL: I N T E R V A L;
+SECOND: S E C O N D;
+MINUTE: M I N U T E;
+HOUR: H O U R;
+DAY: D A Y;
+MONTH: M O N T H;
+YEAR: Y E A R;
+TIMEZONE_HOUR: T I M E Z O N E UNDERSCORE H O U R;
+TIMEZONE_MINUTE: T I M E Z O N E UNDERSCORE M I N U T E;
+WITH: W I T H;
+WITHOUT: W I T H O U T;
+ZONE: Z O N E;
+TINYINT: T I N Y I N T;
+SMALLINT: S M A L L I N T;
+INT: I N T;
+NUMERIC: N U M E R I C;
+REAL: R E A L;
+DOUBLE: D O U B L E;
+PRECISION: P R E C I S I O N;
+CHAR: C H A R;
+VARCHAR: V A R C H A R;
+NCHAR: N C H A R;
+TEXT: T E X T;
+
+SYSTEM_USER: S Y S T E M UNDERSCORE U S E R;
+SESSION_USER: S E S S I O N UNDERSCORE U S E R;
 CURRENT_USER: C U R R E N T UNDERSCORE U S E R;
 CURRENT_SCHEMA: C U R R E N T UNDERSCORE S C H E M A;
 CURRENT_CATALOG: C U R R E N T UNDERSCORE C A T A L O G;
+CURRENT_DATE: C U R R E N T UNDERSCORE D A T E;
+CURRENT_TIME: C U R R E N T UNDERSCORE T I M E;
+CURRENT_TIMESTAMP: C U R R E N T UNDERSCORE T I M E S T A M P;
 READONLY: R E A D O N L Y;
 AUTOCOMMIT: A U T O C O M M I T;
 IDENTITY: I D E N T I T Y;
@@ -149,8 +290,8 @@ FROM: F R O M;
 UNIT: U N I T;
 INTO: I N T O;
 WHERE: W H E R E;
-AND: A N D;
 BETWEEN: B E T W E E N;
+OVERLAPS: O V E R L A P S;
 ORDER: O R D E R;
 BY: B Y;
 ASC: A S C;
@@ -169,16 +310,33 @@ VALUES: V A L U E S;
 IS: I S;
 NOT: N O T;
 NULL: N U L L;
+UNKNOWN: U N K N O W N;
 SCHEMAS: S C H E M A S;
 DATABASES: D A T A B A S E S;
 TABLES: T A B L E S;
-LIKE: L I K E;
 LEFT: L E F T;
+RIGHT: R I G H T;
 INNER: I N N E R;
 OUTER: O U T E R;
 JOIN: J O I N;
 ON: O N;
 UNION: U N I O N;
+
+LIKE: L I K E;
+ILIKE: I L I K E;
+ESCAPE: E S C A P E;
+RLIKE: R L I K E;
+REGEXP: R E G E X P;
+
+CASE: C A S E;
+WHEN: W H E N;
+THEN: T H E N;
+ELSE: E L S E;
+END: E N D;
+
+AND: A N D;
+OR: O R;
+XOR: X O R;
 
 MOD: M O D;
 DIV: D I V;
@@ -186,16 +344,26 @@ DIV: D I V;
 TRUE: T R U E;
 FALSE: F A L S E;
 
+TO: T O;
+
 TOKEN_SIMPLENAME: [\p{L}_] [\p{N}\p{L}_]* ;
-TOKEN_QUOTEDNAME: '"' ( '\\' . | '""' | ~[\\"] )* '"';
+TOKEN_QUOTEDNAME: '"' ( '""' | ~["] )* '"';
 TOKEN_BACKTICKEDNAME: '`' ( '``' | ~[`] )* '`';
 
-TOKEN_STRING: '\'' ( '\\' . | '\'\'' | ~[\\'] )* '\'';
-TOKEN_INTEGER: MINUS? [0-9]+;
+TOKEN_STRING: '\'' ( '\'\'' | ~['] )* '\'';
+TOKEN_ESTRING: E FRAGMENT_ESTRING;
+TOKEN_ESTRING_CONTINUATION: FRAGMENT_ESTRING;
+fragment FRAGMENT_ESTRING: '\'' ( '\\' . | '\'\'' | ~[\\'] )* '\'';
+TOKEN_DECIMAL: ( [0-9]+ '.' [0-9]* | '.' [0-9]+ ) FRAGMENT_EXPONENT? | [0-9]+ FRAGMENT_EXPONENT;
+fragment FRAGMENT_EXPONENT: E [-+]? [0-9]+;
+TOKEN_INTEGER: [0-9]+;
 
 DOT: '.';
 COMMA: ',';
 AT: '@';
+
+DOUBLE_PIPE: '||';
+DOUBLE_COLON: '::';
 
 ASTERISK: '*';
 PERCENT: '%';
@@ -205,6 +373,9 @@ PLUS: '+';
 MINUS: '-';
 
 EQ: '=';
+NEQ_ANG: '<>';
+NEQ_BANG: '!=';
+
 LESS: '<';
 LESS_EQ: '<=';
 GREATER: '>';
@@ -213,9 +384,7 @@ GREATER_EQ: '>=';
 PAR_START: '(';
 PAR_END: ')';
 
-WHITESPACE: [ \n\t\r] -> skip;
-
-ANY: .;
+WHITESPACE: [ \n\t\r]+ -> channel(HIDDEN);
 
 fragment UNDERSCORE: [_];
 

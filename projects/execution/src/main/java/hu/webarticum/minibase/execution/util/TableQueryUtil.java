@@ -1,5 +1,8 @@
 package hu.webarticum.minibase.execution.util;
 
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.OffsetTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -49,10 +52,10 @@ import hu.webarticum.miniconnect.util.SortedLimitingIterator;
 import hu.webarticum.miniconnect.util.SortingIterator;
 
 public class TableQueryUtil {
-    
+
     // TODO: move this to StorageAccess or similar place
     private static final DefaultConverter CONVERTER = new DefaultConverter();
-    
+
 
     private TableQueryUtil() {
         // utility class
@@ -68,7 +71,7 @@ public class TableQueryUtil {
             throw PredefinedError.COLUMN_NOT_FOUND.toException(table.name(), columnName);
         }
     }
-    
+
     public static Map<String, Object> mergeAndConvertFilters(
             ImmutableList<WhereItem> where, Table table, SessionState state) {
         Map<String, Object> result = new LinkedHashMap<>();
@@ -113,14 +116,14 @@ public class TableQueryUtil {
         if (existingValue == null) {
             return newValue;
         }
-        
+
         if (
                 !(existingValue instanceof SpecialCondition) &&
                 !(newValue instanceof SpecialCondition) &&
                 comparator.compare(newValue, existingValue) == 0) {
             return newValue;
         }
-        
+
         if (existingValue == NullCondition.IS_NOT_NULL) {
             if (newValue == NullCondition.IS_NULL) {
                 throw new IncompatibleFiltersException(existingValue, newValue);
@@ -140,7 +143,7 @@ public class TableQueryUtil {
             throw new IncompatibleFiltersException(existingValue, newValue);
         }
     }
-    
+
     private static RangeCondition mergeRangeConditions(
             RangeCondition existingRange, RangeCondition newRange, Comparator<Object> comparator) {
         boolean narrowFrom = checkNarrowing(
@@ -155,15 +158,15 @@ public class TableQueryUtil {
                 newRange.to(),
                 newRange.toInclusive(),
                 comparator.reversed());
-        
+
         Object from = narrowFrom ? newRange.from() : existingRange.from();
         boolean fromInclusive = narrowFrom ? newRange.fromInclusive() : existingRange.fromInclusive();
         Object to = narrowTo ? newRange.to() : existingRange.to();
         boolean toInclusive = narrowTo ? newRange.toInclusive() : existingRange.toInclusive();
-        
+
         return new RangeCondition(from, fromInclusive, to, toInclusive);
     }
-    
+
     private static boolean checkNarrowing(
             Object value, boolean inclusive, Object liftValue, boolean liftInclusive, Comparator<Object> comparator) {
         if (liftValue == null) {
@@ -171,25 +174,25 @@ public class TableQueryUtil {
         } else if (value == null) {
             return true;
         }
-        
+
         int cmp = comparator.compare(value, liftValue);
         if (cmp > 0) {
             return false;
         } else if (cmp < 0) {
             return true;
         }
-        
+
         if (inclusive == liftInclusive) {
             return false;
         }
-        
+
         return !liftInclusive;
     }
 
     public static LargeInteger countRows(Table table, Map<String, Object> queryWhere) {
         Map<ImmutableList<String>, TableIndex> indexesByColumnName = new LinkedHashMap<>();
         Set<String> unindexedColumnNames = collectIndexes(table, queryWhere, indexesByColumnName);
-        
+
         List<TableSelection> moreSelections = new ArrayList<>();
         TableSelection firstSelection = collectIndexSelections(
                 table.size(), queryWhere, Collections.emptyList(), indexesByColumnName, moreSelections);
@@ -209,13 +212,13 @@ public class TableQueryUtil {
         Iterator<LargeInteger> iterator = filterRows(table, filter, Collections.emptyList(), null);
         return iterator.hasNext();
     }
-    
+
     public static List<LargeInteger> filterRowsToList(
             Table table, Map<String, Object> filter, List<OrderByEntry> orderBy, LargeInteger limit) {
         Iterator<LargeInteger> iterator = filterRows(table, filter, orderBy, limit);
         return collectIterator(iterator);
     }
-    
+
     public static Iterator<LargeInteger> filterRows(
             Table table, Map<String, Object> filter, List<OrderByEntry> orderBy, LargeInteger limit) {
         Set<String> filterIndexColumns = new HashSet<>(filter.keySet());
@@ -233,9 +236,9 @@ public class TableQueryUtil {
         List<TableSelection> moreSelections = new ArrayList<>();
         TableSelection firstSelection = collectIndexSelections(
                 table.size(), filter, matchedOrderByEntries, indexesByColumnName, moreSelections);
-        
+
         Iterator<LargeInteger> result = matchRows(table, filter, firstSelection, moreSelections, unindexedColumnNames);
-        
+
         if (!orderBy.isEmpty() && orderIndex == null) {
             MultiComparator rowComparator = createMultiComparator(orderBy, s -> table);
             Comparator<LargeInteger> rowIndexComparator = createRowIndexComparator(rowComparator, table, orderBy);
@@ -260,10 +263,10 @@ public class TableQueryUtil {
         } else if (limit != null) {
             result = new LimitingIterator<>(result, limit);
         }
-        
+
         return result;
     }
-    
+
     private static Iterator<LargeInteger> sortGroup(
             Iterator<LargeInteger> groupItems,
             Comparator<LargeInteger> comparator,
@@ -272,12 +275,12 @@ public class TableQueryUtil {
         if (limit == null) {
             return new SortingIterator<>(groupItems, comparator);
         }
-        
+
         LargeInteger remainingLimit = limit.subtract(position);
         if (remainingLimit.isLessThanOrEqualTo(LargeInteger.ZERO)) {
             return null;
         }
-        
+
         return new SortedLimitingIterator<>(groupItems, comparator, remainingLimit);
     }
 
@@ -301,7 +304,7 @@ public class TableQueryUtil {
                 TableQueryUtil.extractOrderValues(orderByEntries, s -> table, s -> i1),
                 TableQueryUtil.extractOrderValues(orderByEntries, s -> table, s -> i2));
     }
-    
+
     private static TableIndex findOrderIndex(
             Table table,
             List<OrderByEntry> orderBy,
@@ -311,12 +314,12 @@ public class TableQueryUtil {
         if (orderBy.isEmpty()) {
             return null;
         }
-        
+
         Set<String> columnNames = filterIndexColumns;
         if (columnNames.isEmpty()) {
             columnNames = new HashSet<>(table.columns().names().asList());
         }
-        
+
         List<OrderByEntry> indexableOrderByEntries = new ArrayList<>();
         for (OrderByEntry orderByEntry : orderBy) {
             if (!columnNames.contains(orderByEntry.fieldName)) {
@@ -353,7 +356,7 @@ public class TableQueryUtil {
         matchedFilterColumns.addAll(maxfilterColumns);
         return result;
     }
-    
+
     private static boolean matchOrderByIndex(
             TableIndex tableIndex,
             List<OrderByEntry> orderByEntries,
@@ -362,7 +365,7 @@ public class TableQueryUtil {
             List<String> filterColumnsOut) {
         boolean result = false;
         ImmutableList<String> indexColumnNames = tableIndex.columnNames();
-        
+
         int indexLength = indexColumnNames.size();
         int orderLength = Math.min(indexLength, orderByEntries.size());
         for (int i = 0; i < orderLength; i++) {
@@ -375,7 +378,7 @@ public class TableQueryUtil {
             orderByEntriesOut.add(orderByEntry);
             filterColumnsOut.add(orderByEntry.fieldName);
         }
-        
+
         for (int i = orderLength; i < indexLength; i++) {
             String indexColumnName = indexColumnNames.get(i);
             if (!columnNames.contains(indexColumnName)) {
@@ -383,22 +386,22 @@ public class TableQueryUtil {
             }
             filterColumnsOut.add(indexColumnName);
         }
-        
+
         return result;
     }
-    
+
     private static Map<ImmutableList<String>, TableIndex> prependIndex(
             List<String> columnNames, TableIndex index, Map<ImmutableList<String>, TableIndex> indexes) {
         if (index == null) {
             return indexes;
         }
-        
+
         Map<ImmutableList<String>, TableIndex> result = new LinkedHashMap<>();
         result.put(ImmutableList.fromCollection(columnNames), index);
         result.putAll(indexes);
         return result;
     }
-    
+
     private static Set<String> collectIndexes(
             Table table, Map<String, Object> queryWhere, Map<ImmutableList<String>, TableIndex> map) {
         NamedResourceStore<TableIndex> indexStore = table.indexes();
@@ -439,7 +442,7 @@ public class TableQueryUtil {
         if (indexColumnNames.size() < columnCount) {
             return false;
         }
-        
+
         for (int i = 0; i < columnCount; i++) {
             String columnName = indexColumnNames.get(i);
             if (!availableColumnNames.contains(columnName)) {
@@ -451,7 +454,7 @@ public class TableQueryUtil {
                 }
             }
         }
-        
+
         return true;
     }
 
@@ -464,12 +467,24 @@ public class TableQueryUtil {
         if (filter.containsValue(null)) {
             return new SimpleSelection(ImmutableList.empty());
         }
-        
+
         TableSelection firstSelection = null;
         for (Map.Entry<ImmutableList<String>, TableIndex> entry : indexesByColumnName.entrySet()) {
             ImmutableList<String> columnNames = entry.getKey();
             TableIndex tableIndex = entry.getValue();
             ImmutableList<Object> values = columnNames.map(filter::get);
+
+            ImmutableList<Object> fromCondition = values.map(TableQueryUtil::rangeFromForValue);
+            ImmutableList<Object> toCondition = values.map(TableQueryUtil::rangeToForValue);
+
+            // FIXME: hotfix: this is an alignment to save MultiComparator from unexpected null values in SelectionPredicate
+            if (fromCondition.get(0) == null) {
+                fromCondition = null;
+            }
+            if (toCondition.get(0) == null) {
+                toCondition = null;
+            }
+
             ImmutableList<SortMode> sortModes;
             if (firstSelection == null && !orderBy.isEmpty()) {
                 sortModes = values.map((i, v) -> getIndexNthSortMode(i, orderBy));
@@ -477,9 +492,9 @@ public class TableQueryUtil {
                 sortModes = values.map(v -> SortMode.UNSORTED);
             }
             TableSelection selection = tableIndex.findMulti(
-                    values.map(TableQueryUtil::rangeFromForValue),
+                    fromCondition,
                     rangeFromInclusionModeForValues(values),
-                    values.map(TableQueryUtil::rangeToForValue),
+                    toCondition,
                     rangeToInclusionModeForValues(values),
                     values.map(TableQueryUtil::nullsModeForValue),
                     sortModes);
@@ -492,10 +507,10 @@ public class TableQueryUtil {
         if (firstSelection == null) {
             firstSelection = new RangeSelection(LargeInteger.ZERO, tableSize);
         }
-        
+
         return firstSelection;
     }
-    
+
     private static Object rangeFromForValue(Object value) {
         if (value instanceof RangeCondition) {
             return ((RangeCondition) value).from();
@@ -521,7 +536,7 @@ public class TableQueryUtil {
         if (rangeLastValue == null) {
             return InclusionMode.INCLUDE;
         }
-        
+
         return rangeLastValue.fromInclusive() ? InclusionMode.INCLUDE : InclusionMode.EXCLUDE;
     }
 
@@ -530,7 +545,7 @@ public class TableQueryUtil {
         if (rangeLastValue == null) {
             return InclusionMode.INCLUDE;
         }
-        
+
         return rangeLastValue.toInclusive() ? InclusionMode.INCLUDE : InclusionMode.EXCLUDE;
     }
 
@@ -538,12 +553,12 @@ public class TableQueryUtil {
         if (values.isEmpty()) {
             return null;
         }
-        
+
         Object lastValue = values.get(values.size() - 1);
         if (!(lastValue instanceof RangeCondition)) {
             return null;
         }
-        
+
         return (RangeCondition) lastValue;
     }
 
@@ -558,15 +573,15 @@ public class TableQueryUtil {
             return NullsMode.WITH_NULLS;
         }
     }
-    
+
     private static SortMode getIndexNthSortMode(int i, List<OrderByEntry> orderBy) {
         if (orderBy.size() <= i) {
             return SortMode.UNSORTED;
         }
-        
+
         return getSortModeOf(orderBy.get(i));
     }
-    
+
     private static SortMode getSortModeOf(OrderByEntry orderByEntry) {
         boolean nullsFirst;
         if (orderByEntry.nullsOrderMode == NullsOrderMode.NULLS_AUTO) {
@@ -574,14 +589,14 @@ public class TableQueryUtil {
         } else {
             nullsFirst = (orderByEntry.nullsOrderMode == NullsOrderMode.NULLS_FIRST);
         }
-        
+
         if (orderByEntry.ascOrder) {
             return nullsFirst ? SortMode.ASC_NULLS_FIRST : SortMode.ASC_NULLS_LAST;
         } else {
             return nullsFirst ? SortMode.DESC_NULLS_FIRST : SortMode.DESC_NULLS_LAST;
         }
     }
-    
+
     private static Iterator<LargeInteger> matchRows(
             Table table,
             Map<String, Object> queryWhere,
@@ -591,7 +606,7 @@ public class TableQueryUtil {
         if (moreSelections.isEmpty() && unindexedColumnNames.isEmpty()) {
             return firstSelection.iterator();
         }
-        
+
         return new FilteringIterator<>(
                 firstSelection.iterator(),
                 rowIndex -> isRowMatchingWithMore(table, rowIndex, queryWhere, moreSelections, unindexedColumnNames));
@@ -608,7 +623,7 @@ public class TableQueryUtil {
                 return false;
             }
         }
-        
+
         if (!unindexedColumnNames.isEmpty()) {
             for (String columnName : unindexedColumnNames) {
                 Column column = table.columns().get(columnName);
@@ -619,10 +634,10 @@ public class TableQueryUtil {
                 }
             }
         }
-        
+
         return true;
     }
-    
+
     private static boolean isValueMatching(Object expectedValue, Object actualValue, Column column) {
         if (expectedValue == NullCondition.IS_NULL) {
             return actualValue == null;
@@ -631,13 +646,13 @@ public class TableQueryUtil {
         } else if (actualValue == null) {
             return false;
         }
-        
+
         @SuppressWarnings("unchecked")
         Comparator<Object> comparator = (Comparator<Object>) column.definition().comparator();
         if (expectedValue instanceof RangeCondition) {
             return checkRange((RangeCondition) expectedValue, actualValue, comparator);
         }
-        
+
         return comparator.compare(actualValue, expectedValue) == 0;
     }
 
@@ -660,10 +675,10 @@ public class TableQueryUtil {
                 return false;
             }
         }
-        
+
         return true;
     }
-    
+
     @SuppressWarnings("unchecked")
     public static <T> T convert(Object source, Class<T> targetClazz) {
         return (T) CONVERTER.convert(source, targetClazz);
@@ -705,10 +720,10 @@ public class TableQueryUtil {
                 return column;
             }
         }
-        
+
         return null;
     }
-    
+
     public static List<LargeInteger> findAllNonNull(Table table, String columnName, Object value) {
         List<LargeInteger> result = new ArrayList<>();
         for (TableIndex tableIndex : table.indexes().resources()) {
@@ -717,7 +732,7 @@ public class TableQueryUtil {
                 return result;
             }
         }
-        
+
         @SuppressWarnings("unchecked")
         Comparator<Object> comparator = (Comparator<Object>) table.columns().get(columnName).definition().comparator();
         LargeInteger size = table.size();
@@ -728,7 +743,7 @@ public class TableQueryUtil {
                 result.add(i);
             }
         }
-        
+
         return result;
     }
 
@@ -739,7 +754,7 @@ public class TableQueryUtil {
         }
         return result;
     }
-    
+
     public static MultiComparator createMultiComparator(
             List<OrderByEntry> orderByEntries, Function<String, Table> tableResolver) {
         MultiComparatorBuilder builder = MultiComparator.builder();
@@ -753,7 +768,7 @@ public class TableQueryUtil {
         }
         return builder.build();
     }
-    
+
     public static boolean isNullsLow(OrderByEntry orderByEntry) {
         if (orderByEntry.nullsOrderMode == NullsOrderMode.NULLS_AUTO) {
             return true;
@@ -781,15 +796,25 @@ public class TableQueryUtil {
         }
         return ImmutableList.fromCollection(result);
     }
-    
+
     public static Object getSpecialValue(SpecialValueParameter specialValueParameter, SessionState state) {
         switch (specialValueParameter) {
+            case SYSTEM_USER:
+                return "";
+            case SESSION_USER:
+                return "";
             case CURRENT_USER:
                 return "";
             case CURRENT_SCHEMA:
                 return state.getCurrentSchema();
             case CURRENT_CATALOG:
                 return state.getCurrentSchema();
+            case CURRENT_DATE:
+                return LocalDate.now();
+            case CURRENT_TIME:
+                return OffsetTime.now();
+            case CURRENT_TIMESTAMP:
+                return Instant.now();
             case READONLY:
                 return false;
             case AUTOCOMMIT:
@@ -801,5 +826,5 @@ public class TableQueryUtil {
                 throw PredefinedError.OTHER_ERROR.toException();
         }
     }
-    
+
 }

@@ -1,0 +1,17 @@
+description: This is another sample test suite
+datasetResource: dataset.yaml
+cases:
+  - name: sole-case
+    query: "SELECT 1 AS one, 2 AS two, 3 AS three"
+    columns:
+      - name: one
+        type: hu.webarticum.miniconnect.lang.LargeInteger
+        nullable: false
+      - name: two
+        type: hu.webarticum.miniconnect.lang.LargeInteger
+        nullable: false
+      - name: three
+        type: hu.webarticum.miniconnect.lang.LargeInteger
+        nullable: false
+    expectedResult:
+      - [ 1, 2, 3 ]

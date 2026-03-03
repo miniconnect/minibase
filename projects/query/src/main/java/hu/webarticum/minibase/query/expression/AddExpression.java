@@ -1,0 +1,321 @@
+package hu.webarticum.minibase.query.expression;
+
+import java.math.BigDecimal;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
+import java.time.Period;
+import java.time.ZoneOffset;
+import java.time.temporal.Temporal;
+import java.time.temporal.TemporalAmount;
+import java.util.Optional;
+
+import hu.webarticum.minibase.query.util.DateTimeDeltaUtil;
+import hu.webarticum.minibase.query.util.NumberUtil;
+import hu.webarticum.miniconnect.lang.DateTimeDelta;
+import hu.webarticum.miniconnect.lang.ImmutableList;
+import hu.webarticum.miniconnect.lang.ImmutableMap;
+import hu.webarticum.miniconnect.lang.LargeInteger;
+
+public class AddExpression implements Expression {
+
+    private final Expression leftOperand;
+
+    private final Expression rightOperand;
+
+
+    public AddExpression(Expression leftOperand, Expression rightOperand) {
+        this.leftOperand = leftOperand;
+        this.rightOperand = rightOperand;
+    }
+
+
+    public Expression leftOperand() {
+        return leftOperand;
+    }
+
+    public Expression rightOperand() {
+        return rightOperand;
+    }
+
+    @Override
+    public ImmutableList<Parameter> parameters() {
+        return leftOperand.parameters().concat(rightOperand.parameters());
+    }
+
+    @Override
+    public Optional<Class<?>> type() {
+        Class<?> leftType = leftOperand.type().orElse(null);
+        Class<?> rightType = rightOperand.type().orElse(null);
+        if (leftType != null && Temporal.class.isAssignableFrom(leftType)) {
+            return typeForTemporal(leftType, rightOperand);
+        } else if (rightType != null && Temporal.class.isAssignableFrom(rightType)) {
+            return typeForTemporal(rightType, leftOperand);
+        } else if (leftType == null || rightType == null) {
+            return Optional.empty();
+        } else if (TemporalAmount.class.isAssignableFrom(leftType) || TemporalAmount.class.isAssignableFrom(rightType)) {
+            return Optional.of(DateTimeDelta.class);
+        }
+        Class<?> leftNumericType = NumberUtil.numberifyType(leftType);
+        Class<?> rightNumericType = NumberUtil.numberifyType(rightType);
+        if (leftNumericType == Void.class || rightNumericType == Void.class) {
+            return Optional.of(Void.class);
+        } else if (leftNumericType == Double.class || rightNumericType == Double.class) {
+            return Optional.of(Double.class);
+        } else if (leftNumericType == BigDecimal.class || rightNumericType == BigDecimal.class) {
+            return Optional.of(BigDecimal.class);
+        } else if (leftNumericType == LargeInteger.class || rightNumericType == LargeInteger.class) {
+            return Optional.of(LargeInteger.class);
+        } else {
+            throw new IllegalArgumentException("Type detection failed");
+        }
+    }
+
+    private Optional<Class<?>> typeForTemporal(Class<?> temporalType, Expression otherExpression) {
+        Class<?> otherType = getTypeReluctantly(otherExpression);
+        if (temporalType == null || otherType == null) {
+            return Optional.empty();
+        } else if (otherType == ZoneOffset.class) {
+            if (temporalType == LocalDateTime.class || temporalType == Instant.class) {
+                return Optional.of(OffsetDateTime.class);
+            } else if (temporalType == LocalTime.class) {
+                return Optional.of(OffsetTime.class);
+            } else {
+                return Optional.of(temporalType);
+            }
+        } else if (Temporal.class.isAssignableFrom(otherType)) {
+            if (temporalType == LocalDate.class) {
+                if (otherType == LocalTime.class) {
+                    return Optional.of(LocalDateTime.class);
+                } else if (otherType == OffsetTime.class) {
+                    return Optional.of(OffsetDateTime.class);
+                }
+            } else if (otherType == LocalDate.class) {
+                if (temporalType == LocalTime.class) {
+                    return Optional.of(LocalDateTime.class);
+                } else if (temporalType == OffsetTime.class) {
+                    return Optional.of(OffsetDateTime.class);
+                }
+            }
+        } else if (temporalType != LocalDate.class && temporalType != LocalTime.class && temporalType != OffsetTime.class) {
+            return Optional.of(temporalType);
+        }
+        if (temporalType == LocalDate.class) {
+            if (
+                    otherType != null &&
+                    !TemporalAmount.class.isAssignableFrom(otherType) &&
+                    NumberUtil.numberifyType(otherType) == LargeInteger.class) {
+                return Optional.of(LocalDate.class);
+            }
+        }
+        DateTimeDelta delta = DateTimeDeltaUtil.deltaify(otherExpression.evaluate(ImmutableMap.empty()));
+        if (temporalType == LocalDate.class) {
+            return delta.getDuration().isZero() ? Optional.of(LocalDate.class) : Optional.of(LocalDateTime.class);
+        } else if (temporalType == LocalTime.class) {
+            return delta.getPeriod().isZero() ? Optional.of(LocalTime.class) : Optional.of(LocalDateTime.class);
+        } else {
+            return delta.getPeriod().isZero() ? Optional.of(OffsetTime.class) : Optional.of(OffsetDateTime.class);
+        }
+    }
+
+    private Class<?> getTypeReluctantly(Expression expression) {
+        if (expression.isNullable() || !expression.parameters().isEmpty()) {
+            return null;
+        }
+        return expression.type(ImmutableMap.empty());
+    }
+
+    @Override
+    public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
+        Class<?> leftType = leftOperand.type(types);
+        Class<?> rightType = rightOperand.type(types);
+        if (Temporal.class.isAssignableFrom(leftType)) {
+            return typeForTemporal(leftType, rightOperand, types);
+        } else if (Temporal.class.isAssignableFrom(rightType)) {
+            return typeForTemporal(rightType, leftOperand, types);
+        } else if (TemporalAmount.class.isAssignableFrom(leftType) || TemporalAmount.class.isAssignableFrom(rightType)) {
+            return DateTimeDelta.class;
+        }
+        Class<?> leftNumericType = NumberUtil.numberifyType(leftType);
+        Class<?> rightNumericType = NumberUtil.numberifyType(rightType);
+        if (leftNumericType == Void.class || rightNumericType == Void.class) {
+            return Void.class;
+        } else if (leftNumericType == Double.class || rightNumericType == Double.class) {
+            return Double.class;
+        } else if (leftNumericType == BigDecimal.class || rightNumericType == BigDecimal.class) {
+            return BigDecimal.class;
+        } else if (leftNumericType == LargeInteger.class || rightNumericType == LargeInteger.class) {
+            return LargeInteger.class;
+        } else {
+            throw new IllegalArgumentException("Type detection failed");
+        }
+    }
+
+    private Class<?> typeForTemporal(Class<?> temporalType, Expression otherExpression, ImmutableMap<Parameter, Class<?>> types) {
+        Class<?> otherType = otherExpression.type(types);
+        if (otherType == ZoneOffset.class) {
+            if (temporalType == LocalDateTime.class || temporalType == Instant.class) {
+                return OffsetDateTime.class;
+            } else if (temporalType == LocalTime.class) {
+                return OffsetTime.class;
+            } else {
+                return temporalType;
+            }
+        } else if (Temporal.class.isAssignableFrom(otherType)) {
+            if (temporalType == LocalDate.class) {
+                if (otherType == LocalTime.class) {
+                    return LocalDateTime.class;
+                } else if (otherType == OffsetTime.class) {
+                    return OffsetDateTime.class;
+                }
+            } else if (otherType == LocalDate.class) {
+                if (temporalType == LocalTime.class) {
+                    return LocalDateTime.class;
+                } else if (temporalType == OffsetTime.class) {
+                    return OffsetDateTime.class;
+                }
+            }
+        } else if (temporalType != LocalDate.class && temporalType != LocalTime.class && temporalType != OffsetTime.class) {
+            return temporalType;
+        }
+        if (temporalType == LocalDate.class) {
+            Class<?> temporalAmountType = otherExpression.type(types);
+            if (
+                    !TemporalAmount.class.isAssignableFrom(temporalAmountType) &&
+                    NumberUtil.numberifyType(temporalAmountType) == LargeInteger.class) {
+                return LocalDate.class;
+            }
+        }
+        boolean hasPeriod = true;
+        boolean hasDuration = true;
+        if (otherExpression.parameters().isEmpty()) {
+            Object otherValue = otherExpression.evaluate(ImmutableMap.empty());
+            if (otherValue == null) {
+                return Void.class;
+            }
+            DateTimeDelta delta = DateTimeDeltaUtil.deltaify(otherValue);
+            hasPeriod = !delta.getPeriod().isZero();
+            hasDuration = !delta.getDuration().isZero();
+        } else {
+            if (otherType == Period.class) {
+                hasDuration = false;
+            } else if (otherType == Duration.class) {
+                hasPeriod = false;
+            } else {
+                // final fallback
+                return Instant.class;
+            }
+        }
+        if (temporalType == LocalDate.class) {
+            return hasDuration ? LocalDateTime.class : LocalDate.class;
+        } else if (temporalType == LocalTime.class) {
+            return hasPeriod ? LocalDateTime.class : LocalTime.class;
+        } else {
+            return hasPeriod ? OffsetDateTime.class : OffsetTime.class;
+        }
+    }
+
+    @Override
+    public boolean isNullable() {
+        return leftOperand.isNullable() || rightOperand.isNullable();
+    }
+
+    @Override
+    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
+        return leftOperand.isNullable(nullabilities) || rightOperand.isNullable(nullabilities);
+    }
+
+    @Override
+    public Object evaluate(ImmutableMap<Parameter, Object> values) {
+        Object leftValue = leftOperand.evaluate(values);
+        Object rightValue = rightOperand.evaluate(values);
+        if (leftValue == null || rightValue == null) {
+            return null;
+        } else if (leftValue instanceof Temporal) {
+            return operate((Temporal) leftValue, rightValue);
+        } else if (rightValue instanceof Temporal) {
+            return operate((Temporal) rightValue, leftValue);
+        } else if (leftValue instanceof TemporalAmount || rightValue instanceof TemporalAmount) {
+            return DateTimeDeltaUtil.deltaify(leftValue).plus(DateTimeDeltaUtil.deltaify(rightValue));
+        }
+        Object leftNumericValue = NumberUtil.numberify(leftValue);
+        Object rightNumericValue = NumberUtil.numberify(rightValue);
+        if (leftNumericValue instanceof Double || rightNumericValue instanceof Double) {
+            double leftDouble = (Double) NumberUtil.promote(leftNumericValue, Double.class);
+            double rightDouble = (Double) NumberUtil.promote(rightNumericValue, Double.class);
+            return operate(leftDouble, rightDouble);
+        } else if (leftNumericValue instanceof BigDecimal || rightNumericValue instanceof BigDecimal) {
+            BigDecimal leftBigDecimal = (BigDecimal) NumberUtil.promote(leftNumericValue, BigDecimal.class);
+            BigDecimal rightBigDecimal = (BigDecimal) NumberUtil.promote(rightNumericValue, BigDecimal.class);
+            return operate(leftBigDecimal, rightBigDecimal);
+        } else if (leftNumericValue instanceof LargeInteger || rightNumericValue instanceof LargeInteger) {
+            LargeInteger leftLargeInteger = (LargeInteger) NumberUtil.promote(leftNumericValue, LargeInteger.class);
+            LargeInteger rightLargeInteger = (LargeInteger) NumberUtil.promote(rightNumericValue, LargeInteger.class);
+            return operate(leftLargeInteger, rightLargeInteger);
+        } else {
+            throw new IllegalArgumentException("Can not unify values for addition");
+        }
+    }
+
+    private Temporal operate(Temporal temporal, Object otherValue) {
+        if (otherValue instanceof ZoneOffset) {
+            ZoneOffset offset = (ZoneOffset) otherValue;
+            if (temporal instanceof LocalTime) {
+                return ((LocalTime) temporal).atOffset(offset);
+            } else if (temporal instanceof LocalDateTime) {
+                return ((LocalDateTime) temporal).atOffset(offset);
+            } else if (temporal instanceof Instant) {
+                return ((Instant) temporal).atOffset(offset);
+            } else {
+                return temporal;
+            }
+        }
+        if (temporal instanceof LocalDate) {
+            if (otherValue instanceof LocalTime) {
+                return ((LocalDate) temporal).atTime((LocalTime) otherValue);
+            } else if (otherValue instanceof OffsetTime) {
+                return ((LocalDate) temporal).atTime((OffsetTime) otherValue);
+            }
+        } else if (otherValue instanceof LocalDate) {
+            if (temporal instanceof LocalTime) {
+                return ((LocalDate) otherValue).atTime((LocalTime) temporal);
+            } else if (temporal instanceof OffsetTime) {
+                return ((LocalDate) otherValue).atTime((OffsetTime) temporal);
+            }
+        }
+        DateTimeDelta delta;
+        if (otherValue instanceof TemporalAmount || !(temporal instanceof LocalDate)) {
+            delta = DateTimeDeltaUtil.deltaify(otherValue);
+        } else {
+            Number deltaNumber = NumberUtil.numberify(otherValue);
+            if (deltaNumber instanceof LargeInteger) {
+                delta = DateTimeDelta.of(Period.ofDays(((LargeInteger) deltaNumber).intValueExact()));
+            } else {
+                delta = DateTimeDeltaUtil.deltaifyDays(NumberUtil.bigDecimalify(deltaNumber));
+            }
+        }
+        return delta.addToWidening(temporal);
+    }
+
+    private double operate(double left, double right) {
+        return left + right;
+    }
+
+    private BigDecimal operate(BigDecimal left, BigDecimal right) {
+        return left.add(right);
+    }
+
+    private LargeInteger operate(LargeInteger left, LargeInteger right) {
+        return left.add(right);
+    }
+
+    @Override
+    public String automaticName() {
+        return leftOperand.automaticName() + " + " + rightOperand.automaticName();
+    }
+
+}

@@ -40,13 +40,19 @@ public interface SingleColumnTableIndex extends TableIndex {
             throw new IllegalArgumentException(
                     "Parameter 'sortModes' must not contain multiple values");
         }
-        return find(
-                from == null ? null : from.get(0),
-                fromInclusionMode,
-                to == null ? null : to.get(0),
-                toInclusionMode,
-                nullsModes.isEmpty() ? NullsMode.WITH_NULLS : nullsModes.get(0),
-                sortModes.isEmpty() ? SortMode.UNSORTED : sortModes.get(0));
+
+        Object fromValue = from == null ? null : from.get(0);
+        Object toValue = to == null ? null : to.get(0);
+        NullsMode nullsMode = nullsModes.isEmpty() ? NullsMode.WITH_NULLS : nullsModes.get(0);
+        SortMode sortMode = sortModes.isEmpty() ? SortMode.UNSORTED : sortModes.get(0);
+
+        // FIXME: hotfix: currently, single value indices expects low-to-high parameter order
+        Object lowValue = sortMode.isAsc() ? fromValue : toValue;
+        InclusionMode lowInclusionMode = sortMode.isAsc() ? fromInclusionMode : toInclusionMode;
+        Object highValue = sortMode.isAsc() ? toValue : fromValue;
+        InclusionMode highInclusionMode = sortMode.isAsc() ? toInclusionMode : fromInclusionMode;
+
+        return find(lowValue, lowInclusionMode, highValue, highInclusionMode, nullsMode, sortMode);
     }
 
     @Override

@@ -15,8 +15,8 @@ public final class DiffTableUtil {
     private DiffTableUtil() {
         // utility class
     }
-    
-    
+
+
     public static <T> ImmutableList<T> mergeUnique(
             ImmutableList<T> existingValues, Iterable<T> newValues, Comparator<T> comparator) {
         SortedSet<T> insertedValues = new TreeSet<>();
@@ -48,7 +48,7 @@ public final class DiffTableUtil {
             }
         }
         return ImmutableList.fromCollection(resultBuilder);
-        
+
     }
-    
+
 }

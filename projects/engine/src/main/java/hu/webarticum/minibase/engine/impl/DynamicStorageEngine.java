@@ -11,17 +11,17 @@ import hu.webarticum.minibase.query.parser.SqlParser;
 import hu.webarticum.minibase.storage.api.StorageAccess;
 
 public class DynamicStorageEngine implements TackedEngine {
-    
+
     private final SqlParser sqlParser;
-    
+
     private final QueryExecutor queryExecutor;
-    
-    
+
+
     private volatile Supplier<StorageAccess> storageAccessSupplier; // NOSONAR volatile is necessary
-    
-    
+
+
     private volatile boolean closed = false;
-    
+
 
     public DynamicStorageEngine(
             SqlParser sqlParser,
@@ -31,7 +31,7 @@ public class DynamicStorageEngine implements TackedEngine {
         this.queryExecutor = queryExecutor;
         this.storageAccessSupplier = storageAccessSupplier;
     }
-    
+
 
     @Override
     public EngineSession openSession() {
@@ -41,16 +41,16 @@ public class DynamicStorageEngine implements TackedEngine {
     public SqlParser sqlParser() {
         return sqlParser;
     }
-    
+
     public QueryExecutor queryExecutor() {
         return queryExecutor;
     }
-    
+
     public StorageAccess storageAccess() {
         if (closed) {
             throw new IllegalArgumentException("This engine was already closed");
         }
-        
+
         return storageAccessSupplier.get();
     }
 
@@ -73,17 +73,17 @@ public class DynamicStorageEngine implements TackedEngine {
             }
         }
     }
-    
+
     @Override
     public boolean isClosed() {
         return closed;
     }
-    
-    
+
+
     public static class StorageAccessNotReadyException extends RuntimeException {
 
         private static final long serialVersionUID = 1L;
-        
+
     }
 
 }

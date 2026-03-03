@@ -6,34 +6,34 @@ import java.util.NoSuchElementException;
 import hu.webarticum.miniconnect.lang.LargeInteger;
 
 public class Sequence implements Iterable<LargeInteger> {
-    
+
     private final LargeInteger until;
-    
+
 
     public Sequence(long until) {
         this(LargeInteger.of(until));
     }
-    
+
     public Sequence(LargeInteger until) {
         if (until.isNegative()) {
             throw new IllegalArgumentException();
         }
-        
+
         this.until = until;
     }
-    
+
 
     @Override
     public Iterator<LargeInteger> iterator() {
         return new SequenceIterator();
     }
-    
-    
+
+
     private class SequenceIterator implements Iterator<LargeInteger> {
-        
+
         private LargeInteger counter = LargeInteger.ZERO;
 
-        
+
         @Override
         public boolean hasNext() {
             return counter.compareTo(until) < 0;
@@ -44,12 +44,12 @@ public class Sequence implements Iterable<LargeInteger> {
             if (!hasNext()) {
                 throw new NoSuchElementException();
             }
-            
+
             LargeInteger result = counter;
             counter = counter.add(LargeInteger.ONE);
             return result;
         }
-        
+
     }
 
 }

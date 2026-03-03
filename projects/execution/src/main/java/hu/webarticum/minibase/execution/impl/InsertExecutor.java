@@ -36,19 +36,19 @@ public class InsertExecutor implements ThrowingQueryExecutor {
     private MiniResult executeInternal(StorageAccess storageAccess, SessionState state, InsertQuery insertQuery) {
         String schemaName = insertQuery.schemaName();
         String tableName = insertQuery.tableName();
-        
+
         if (schemaName == null) {
             schemaName = state.getCurrentSchema();
         }
         if (schemaName == null) {
             throw PredefinedError.SCHEMA_NOT_SELECTED.toException();
         }
-        
+
         Schema schema = storageAccess.schemas().get(schemaName);
         if (schema == null) {
             throw PredefinedError.SCHEMA_NOT_FOUND.toException(schemaName);
         }
-        
+
         Table table = schema.tables().get(tableName);
         if (table == null) {
             throw PredefinedError.TABLE_NOT_FOUND.toException(tableName);
@@ -60,13 +60,13 @@ public class InsertExecutor implements ThrowingQueryExecutor {
         ImmutableList<String> givenInsertFields = insertQuery.fields();
         ImmutableList<String> insertFields = givenInsertFields != null ? givenInsertFields : table.columns().names();
         ImmutableList<Object> insertValues = insertQuery.values();
-        
+
         Map<String, Object> insertValueMap =
                 insertFields.assign((v, i) -> ResultUtil.resolveValue(insertValues.get(i), state)).toHashMap();
         TableQueryUtil.checkFields(table, insertValueMap.keySet());
 
         LargeInteger lastInsertId = includeDefaultValues(insertValueMap, table, state);
-        
+
         Map<String, Object> convertedInsertValues =
                 TableQueryUtil.convertColumnNewValues(table, insertValueMap, state, true);
 
@@ -82,19 +82,19 @@ public class InsertExecutor implements ThrowingQueryExecutor {
             rowDataBuilder.add(values.get(i));
         }
         ImmutableList<Object> rowData = ImmutableList.fromCollection(rowDataBuilder);
-        
+
         TablePatch.TablePatchBuilder patchBuilder = TablePatch.builder();
         patchBuilder.insert(rowData);
-        
+
         if (insertQuery.replace()) {
             Set<LargeInteger> conflictingRowIndices = collectConflictingRowIndices(convertedInsertValues, table);
             for (LargeInteger conflictingRowIndex : conflictingRowIndices) {
                 patchBuilder.delete(conflictingRowIndex);
             }
         }
-        
+
         TablePatch patch = patchBuilder.build();
-        
+
         table.applyPatch(patch);
 
         Column autoIncrementedColumn = TableQueryUtil.getAutoIncrementedColumn(table);
@@ -109,10 +109,10 @@ public class InsertExecutor implements ThrowingQueryExecutor {
         if (lastInsertId != null) {
             state.setLastInsertId(lastInsertId);
         }
-        
-        return new StoredResult();
+
+        return StoredResult.ofSuccess();
     }
-    
+
     private LargeInteger includeDefaultValues(Map<String, Object> insertValueMap, Table table, SessionState state) {
         LargeInteger lastInsertId = null;
         for (Column column : table.columns().resources()) {
@@ -128,21 +128,21 @@ public class InsertExecutor implements ThrowingQueryExecutor {
                 lastInsertId = TableQueryUtil.convert(insertValueMap.get(columnName), LargeInteger.class);
             }
         }
-        
+
         return lastInsertId;
     }
-    
+
     private Object getDefaultValue(Table table, Column column) {
         ColumnDefinition definition = column.definition();
         if (definition.isAutoIncremented()) {
             return generateAutoIncrementedValue(table, column.name());
         }
-        
+
         Object defaultValue = definition.defaultValue();
         if (defaultValue == null && !definition.isNullable()) {
             throw PredefinedError.COLUMN_VALUE_NULL.toException(column.name());
         }
-        
+
         return defaultValue;
     }
 
@@ -168,7 +168,7 @@ public class InsertExecutor implements ThrowingQueryExecutor {
             if (!definition.isUnique()) {
                 continue;
             }
-            
+
             result.addAll(TableQueryUtil.findAllNonNull(table, columnName, value));
         }
         return result;

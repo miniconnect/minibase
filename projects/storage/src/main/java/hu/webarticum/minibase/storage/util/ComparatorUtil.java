@@ -18,7 +18,7 @@ public final class ComparatorUtil {
     private ComparatorUtil() {
         // utility class
     }
-    
+
 
     @SuppressWarnings("unchecked")
     public static <T> Comparator<T> createDefaultComparatorFor(Class<T> clazz) {
@@ -28,7 +28,7 @@ public final class ComparatorUtil {
             return (Comparator<T>) Comparator.naturalOrder();
         }
     }
-    
+
     public static MultiComparator createMultiComparator(
             Table table,
             ImmutableList<String> columnNames,
@@ -47,5 +47,5 @@ public final class ComparatorUtil {
         }
         return builder.build();
     }
-    
+
 }

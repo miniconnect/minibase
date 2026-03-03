@@ -1,0 +1,38 @@
+description: This is a sample test suite
+datasetResource: dataset.yaml
+initQueries:
+  - "USE db"
+cases:
+  - name: case-1
+    description: This is a test case
+    query: "SELECT id, label FROM tbl_1 ORDER BY id LIMIT 1"
+    columns:
+      - type: hu.webarticum.miniconnect.lang.LargeInteger
+        key: true
+        groupKey: true
+      - name: label
+        type: java.lang.String
+        nullable: false
+    ordered: false
+    expectedResult:
+      - [ 1, "xyz"]
+  - name: case-2
+    description: This is another test case
+    initQueries:
+      - "INSERT INTO tbl_2(id, name, type, description) VALUES(99, 'dolor', 'APPLE', '')"
+    query: "SELECT id, description, name FROM tbl_2 ORDER BY id DESC"
+    columns:
+      - name: id
+        type: hu.webarticum.miniconnect.lang.LargeInteger
+        nullable: false
+        key: true
+      - name: description
+        type: java.lang.String
+        nullable: true
+      - name: name
+        type: java.lang.String
+        nullable: false
+    expectedResult:
+      - [ 99, "", "dolor"]
+      - [ 2, null, "ipsum"]
+      - [ 1, "Some description", "lorem"]

@@ -8,22 +8,22 @@ import hu.webarticum.miniconnect.lang.ImmutableList;
 public final class DeleteQuery implements Query {
 
     private final String schemaName;
-    
+
     private final String tableName;
-    
+
     private final ImmutableList<WhereItem> where;
-    
-    
+
+
     private DeleteQuery(DeleteQueryBuilder builder) {
         this.schemaName = builder.schemaName;
         this.tableName = Objects.requireNonNull(builder.tableName);
         this.where = builder.where;
     }
-    
+
     public static DeleteQueryBuilder builder() {
         return new DeleteQueryBuilder();
     }
-    
+
 
     public String schemaName() {
         return schemaName;
@@ -36,22 +36,22 @@ public final class DeleteQuery implements Query {
     public ImmutableList<WhereItem> where() {
         return where;
     }
-    
-    
+
+
     public static final class DeleteQueryBuilder {
 
         private String schemaName = null;
-        
+
         private String tableName = null;
-        
+
         private ImmutableList<WhereItem> where = ImmutableList.empty();
 
-        
+
         private DeleteQueryBuilder() {
             // use builder()
         }
-        
-        
+
+
         public DeleteQueryBuilder inSchema(String schemaName) {
             this.schemaName = schemaName;
             return this;
@@ -67,11 +67,11 @@ public final class DeleteQuery implements Query {
             return this;
         }
 
-        
+
         public DeleteQuery build() {
             return new DeleteQuery(this);
         }
-        
+
     }
-    
+
 }

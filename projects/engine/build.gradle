@@ -11,6 +11,6 @@ dependencies {
     api "hu.webarticum.miniconnect.api:api:${miniConnectApiVersion}"
     api "hu.webarticum.miniconnect.api:lang:${miniConnectApiVersion}"
     api "hu.webarticum.miniconnect:impl:${miniConnectVersion}"
-    
+
     implementation 'org.slf4j:slf4j-api:2.0.17'
 }

@@ -8,17 +8,17 @@ import hu.webarticum.miniconnect.lang.ImmutableMap;
 public interface Expression {
 
     public ImmutableList<Parameter> parameters();
-    
+
     public Optional<Class<?>> type();
-    
+
     public Class<?> type(ImmutableMap<Parameter, Class<?>> types);
 
     public boolean isNullable();
-    
+
     public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities);
-    
+
     public Object evaluate(ImmutableMap<Parameter, Object> values);
-    
+
     public String automaticName();
-    
+
 }

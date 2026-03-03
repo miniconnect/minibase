@@ -5,16 +5,21 @@ import java.util.Optional;
 import hu.webarticum.miniconnect.lang.ByteString;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
+import hu.webarticum.miniconnect.lang.LargeInteger;
 
 public class ConstantExpression implements Expression {
 
     private final Object value;
-    
-    
+
+
     public ConstantExpression(Object value) {
         this.value = value;
     }
-    
+
+
+    public Object value() {
+        return value;
+    }
 
     @Override
     public ImmutableList<Parameter> parameters() {
@@ -23,22 +28,28 @@ public class ConstantExpression implements Expression {
 
     @Override
     public Optional<Class<?>> type() {
+        if (value instanceof LargeInteger) {
+            return Optional.of(LargeInteger.class);
+        }
         Class<?> clazz = value != null ? value.getClass() : Void.class;
         return Optional.of(clazz);
     }
-    
+
     @Override
     public boolean isNullable() {
         return value == null;
     }
-    
+
     @Override
     public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
         return value == null;
     }
-    
+
     @Override
     public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
+        if (value instanceof LargeInteger) {
+            return LargeInteger.class;
+        }
         return value != null ? value.getClass() : Void.class;
     }
 
@@ -52,7 +63,7 @@ public class ConstantExpression implements Expression {
         if (value == null) {
             return "NULL";
         }
-        
+
         String stringValue = value.toString();
         boolean stringLike = (value instanceof CharSequence) || (value instanceof ByteString);
         return stringLike ? "'" + stringValue + "'" : stringValue;

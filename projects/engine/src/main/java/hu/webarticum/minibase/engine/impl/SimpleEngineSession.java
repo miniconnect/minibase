@@ -7,16 +7,16 @@ import hu.webarticum.minibase.query.parser.SqlParser;
 import hu.webarticum.minibase.storage.api.StorageAccess;
 
 public class SimpleEngineSession implements EngineSession {
-    
+
     private final TackedEngine engine;
-    
+
     private final SimpleEngineSessionState state = new SimpleEngineSessionState();
-    
-    
+
+
     public SimpleEngineSession(TackedEngine engine) {
         this.engine = engine;
     }
-    
+
 
     @Override
     public TackedEngine engine() {
@@ -27,17 +27,17 @@ public class SimpleEngineSession implements EngineSession {
     public SimpleEngineSessionState state() {
         return state;
     }
-    
+
     @Override
     public SqlParser sqlParser() {
         return engine.sqlParser();
     }
-    
+
     @Override
     public QueryExecutor queryExecutor() {
         return engine.queryExecutor();
     }
-    
+
     @Override
     public StorageAccess storageAccess() {
         return engine.storageAccess();
@@ -52,5 +52,5 @@ public class SimpleEngineSession implements EngineSession {
     public boolean isClosed() {
         return engine.isClosed();
     }
-    
+
 }

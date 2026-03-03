@@ -14,19 +14,20 @@ configurations {
 
 dependencies {
     api "hu.webarticum.miniconnect.api:lang:${miniConnectApiVersion}"
-    
+
     implementation 'org.antlr:antlr4-runtime:4.13.2'
-    
+
     antlr 'org.antlr:antlr4:4.13.2'
-    
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.13.4'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.13.4'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.13.4'
-    testImplementation 'org.assertj:assertj-core:3.27.3'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.14.3'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.14.3'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.14.3'
+    testImplementation 'org.assertj:assertj-core:3.27.7'
+    testImplementation "hu.webarticum.miniconnect.api:lang-assertj:${miniConnectApiVersion}"
 }
 
-afterEvaluate {
-    sourcesJar.dependsOn generateGrammarSource
+tasks.named("sourcesJar") {
+    dependsOn(tasks.named("generateGrammarSource"))
 }
 
 generateGrammarSource {

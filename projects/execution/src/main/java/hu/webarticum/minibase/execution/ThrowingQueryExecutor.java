@@ -14,16 +14,20 @@ public interface ThrowingQueryExecutor extends QueryExecutor {
 
     @Override
     public default MiniResult execute(StorageAccess storageAccess, SessionState state, Query query) {
-        try (CheckableCloseable lock = storageAccess.lockManager().lockExclusively()) {
+        try (CheckableCloseable lock = lock(storageAccess)) {
             return executeThrowing(storageAccess, state, query);
         } catch (MiniErrorException e) {
-            return new StoredResult(StoredError.of(e));
+            return StoredResult.ofError(StoredError.from(e));
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             return PredefinedError.QUERY_INTERRUPTED.toResult();
         }
     }
-    
+
+    public default CheckableCloseable lock(StorageAccess storageAccess) throws InterruptedException {
+        return storageAccess.lockManager().lockExclusively();
+    }
+
     public MiniResult executeThrowing(StorageAccess storageAccess, SessionState state, Query query);
 
 }

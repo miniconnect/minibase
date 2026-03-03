@@ -29,23 +29,23 @@ public class UpdateExecutor implements ThrowingQueryExecutor {
     public MiniResult executeThrowing(StorageAccess storageAccess, SessionState state, Query query) {
         return executeInternal(storageAccess, state, (UpdateQuery) query);
     }
-    
+
     private MiniResult executeInternal(StorageAccess storageAccess, SessionState state, UpdateQuery updateQuery) {
         String schemaName = updateQuery.schemaName();
         String tableName = updateQuery.tableName();
-        
+
         if (schemaName == null) {
             schemaName = state.getCurrentSchema();
         }
         if (schemaName == null) {
             throw PredefinedError.SCHEMA_NOT_SELECTED.toException();
         }
-        
+
         Schema schema = storageAccess.schemas().get(schemaName);
         if (schema == null) {
             throw PredefinedError.SCHEMA_NOT_FOUND.toException(schemaName);
         }
-        
+
         Table table = schema.tables().get(tableName);
         if (table == null) {
             throw PredefinedError.TABLE_NOT_FOUND.toException(tableName);
@@ -56,7 +56,7 @@ public class UpdateExecutor implements ThrowingQueryExecutor {
 
         Map<String, Object> queryUpdates = updateQuery.values();
         TableQueryUtil.checkFields(table, queryUpdates.keySet());
-        
+
         ImmutableList<WhereItem> queryWhere = updateQuery.where();
         Map<String, Object> convertedQueryUpdates =
                 TableQueryUtil.convertColumnNewValues(table, queryUpdates, state, true);
@@ -65,7 +65,7 @@ public class UpdateExecutor implements ThrowingQueryExecutor {
 
         List<LargeInteger> rowIndexes = TableQueryUtil.filterRowsToList(
                 table, convertedQueryWhere, Collections.emptyList(), null);
-        
+
         ImmutableMap<Integer, Object> updates =
                 TableQueryUtil.toByColumnPositionedImmutableMap(table, convertedQueryUpdates);
         TablePatchBuilder patchBuilder = TablePatch.builder();
@@ -83,8 +83,8 @@ public class UpdateExecutor implements ThrowingQueryExecutor {
                 table.sequence().ensureGreaterThan(largeIntegerValue);
             }
         }
-        
-        return new StoredResult();
+
+        return StoredResult.ofSuccess();
     }
-    
+
 }

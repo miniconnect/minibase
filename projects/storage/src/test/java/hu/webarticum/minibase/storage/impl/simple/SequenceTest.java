@@ -23,10 +23,10 @@ class SequenceTest {
     void testSingle() {
         assertThat(new Sequence(1)).containsExactly(LargeInteger.ZERO);
     }
-    
+
     @Test
     void testUntilFive() {
         assertThat(new Sequence(5)).containsExactly(LargeInteger.arrayOf(0, 1, 2, 3, 4));
     }
-    
+
 }

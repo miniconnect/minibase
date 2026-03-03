@@ -17,29 +17,29 @@ import hu.webarticum.miniconnect.record.translator.ValueTranslator;
 import hu.webarticum.miniconnect.record.type.StandardValueType;
 
 public final class ResultUtil {
-    
+
     private ResultUtil() {
         // utility class
     }
-    
+
 
     public static MiniResult createEmptySingleColumnResult(String columnName, Class<?> clazz) {
         ValueTranslator translator = createValueTranslatorFor(clazz);
         MiniValueDefinition columnDefinition = translator.definition();
-        MiniColumnHeader columnHeader = new StoredColumnHeader(columnName, false, columnDefinition);
-        return new StoredResult(new StoredResultSetData(ImmutableList.of(columnHeader), ImmutableList.empty()));
+        MiniColumnHeader columnHeader = StoredColumnHeader.from(columnName, false, columnDefinition);
+        return StoredResult.of(StoredResultSetData.from(ImmutableList.of(columnHeader), ImmutableList.empty()));
     }
-    
+
     public static MiniResult createSingleValueResult(String columnName, Object content) {
         Class<?> clazz = content == null ? String.class : content.getClass();
         ValueTranslator translator = createValueTranslatorFor(clazz);
         MiniValueDefinition columnDefinition = translator.definition();
         boolean nullable = content == null;
-        MiniColumnHeader columnHeader = new StoredColumnHeader(columnName, nullable, columnDefinition);
+        MiniColumnHeader columnHeader = StoredColumnHeader.from(columnName, nullable, columnDefinition);
         MiniValue value = translator.encodeFully(content);
-        return new StoredResult(new StoredResultSetData(ImmutableList.of(columnHeader), ImmutableList.of(ImmutableList.of(value))));
+        return StoredResult.of(StoredResultSetData.from(ImmutableList.of(columnHeader), ImmutableList.of(ImmutableList.of(value))));
     }
-    
+
     // FIXME: custom translators?
     public static ValueTranslator createValueTranslatorFor(Class<?> clazz) {
         Optional<StandardValueType> valueTypeOptional = StandardValueType.forClazz(clazz);
@@ -49,7 +49,7 @@ public final class ResultUtil {
             return JavaTranslator.of(clazz);
         }
     }
-    
+
     public static Object resolveValue(Object value, SessionState state) {
         if (value instanceof VariableValue) {
             String variableName = ((VariableValue) value).name();

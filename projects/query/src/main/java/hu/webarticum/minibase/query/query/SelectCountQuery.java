@@ -6,7 +6,7 @@ import hu.webarticum.minibase.query.query.SelectQuery.WhereItem;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 
 public final class SelectCountQuery implements Query {
-    
+
     private final String schemaName;
 
     private final String tableName;
@@ -14,12 +14,12 @@ public final class SelectCountQuery implements Query {
     private final String fieldName;
 
     private final String alias;
-    
+
     private final ImmutableList<WhereItem> where;
-    
+
     private final Object limit;
-    
-    
+
+
     private SelectCountQuery(SelectCountQueryBuilder builder) {
         this.schemaName = builder.schemaName;
         this.tableName = Objects.requireNonNull(builder.tableName);
@@ -28,11 +28,11 @@ public final class SelectCountQuery implements Query {
         this.where = builder.where;
         this.limit = builder.limit;
     }
-    
+
     public static SelectCountQueryBuilder builder() {
         return new SelectCountQueryBuilder();
     }
-    
+
 
     public String schemaName() {
         return schemaName;
@@ -57,10 +57,10 @@ public final class SelectCountQuery implements Query {
     public Object limit() {
         return limit;
     }
-    
-    
+
+
     public static final class SelectCountQueryBuilder {
-        
+
         private String schemaName = null;
 
         private String tableName = null;
@@ -68,17 +68,17 @@ public final class SelectCountQuery implements Query {
         private String fieldName = null;
 
         private String alias = null;
-        
+
         private ImmutableList<WhereItem> where = ImmutableList.empty();
 
         private Object limit = null;
-        
-        
+
+
         private SelectCountQueryBuilder() {
             // use builder()
         }
-        
-        
+
+
         public SelectCountQueryBuilder inSchema(String schemaName) {
             this.schemaName = schemaName;
             return this;
@@ -109,11 +109,11 @@ public final class SelectCountQuery implements Query {
             return this;
         }
 
-        
+
         public SelectCountQuery build() {
             return new SelectCountQuery(this);
         }
-        
+
     }
-    
+
 }

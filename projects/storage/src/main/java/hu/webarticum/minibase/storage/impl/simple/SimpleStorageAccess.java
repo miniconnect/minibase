@@ -9,15 +9,15 @@ import hu.webarticum.minibase.storage.api.StorageAccess;
 public class SimpleStorageAccess implements StorageAccess {
 
     private final SimpleResourceManager<Schema> schemaManager = new SimpleResourceManager<>();
-    
+
     private final SimpleStorageAccessLockManager lockManager = new SimpleStorageAccessLockManager();
-    
+
 
     @Override
     public SimpleStorageAccessLockManager lockManager() {
         return lockManager;
     }
-    
+
     @Override
     public SimpleResourceManager<Schema> schemas() {
         return schemaManager;
@@ -27,5 +27,5 @@ public class SimpleStorageAccess implements StorageAccess {
     public NamedResourceStore<Constraint> constraints() {
         return new EmptyNamedResourceStore<>();
     }
-    
+
 }

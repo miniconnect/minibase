@@ -13,21 +13,21 @@ import hu.webarticum.minibase.storage.api.StorageAccess;
 import hu.webarticum.minibase.storage.impl.simple.SimpleStorageAccess;
 
 public class LazyStorageEngine implements TackedEngine {
-    
+
     private final SqlParser sqlParser;
-    
+
     private final QueryExecutor queryExecutor;
-    
-    
+
+
     private volatile Supplier<StorageAccess> storageAccessFactory; // NOSONAR volatile is necessary
-    
+
     private volatile StorageAccess storageAccess = null; // NOSONAR volatile is necessary
-    
+
     private volatile Consumer<LazyStorageEngine> onLoadedCallback = null; // NOSONAR volatile is necessary
-    
-    
+
+
     private volatile boolean closed = false;
-    
+
 
     public LazyStorageEngine(
             SqlParser sqlParser,
@@ -35,7 +35,7 @@ public class LazyStorageEngine implements TackedEngine {
             Supplier<StorageAccess> storageAccessSupplier) {
         this(sqlParser, queryExecutor, storageAccessSupplier, e -> {});
     }
-    
+
     public LazyStorageEngine(
             SqlParser sqlParser,
             QueryExecutor queryExecutor,
@@ -46,7 +46,7 @@ public class LazyStorageEngine implements TackedEngine {
         this.storageAccessFactory = storageAccessFactory;
         this.onLoadedCallback = onLoadedCallback;
     }
-    
+
 
     @Override
     public EngineSession openSession() {
@@ -56,16 +56,16 @@ public class LazyStorageEngine implements TackedEngine {
     public SqlParser sqlParser() {
         return sqlParser;
     }
-    
+
     public QueryExecutor queryExecutor() {
         return queryExecutor;
     }
-    
+
     public StorageAccess storageAccess() {
         if (closed) {
             throw new IllegalArgumentException("This engine was already closed");
         }
-        
+
         StorageAccess result = storageAccess;
         if (result != null) {
             return result;
@@ -104,17 +104,17 @@ public class LazyStorageEngine implements TackedEngine {
             }
         }
     }
-    
+
     @Override
     public boolean isClosed() {
         return closed;
     }
-    
-    
+
+
     public static class StorageAccessNotReadyException extends RuntimeException {
 
         private static final long serialVersionUID = 1L;
-        
+
     }
 
 }

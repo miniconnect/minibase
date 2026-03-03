@@ -8,26 +8,26 @@ import hu.webarticum.minibase.storage.util.ComparatorUtil;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 
 public class SimpleColumnDefinition implements ColumnDefinition {
-    
+
     private final Class<?> clazz;
 
     private final boolean nullable;
 
     private final boolean unique;
-    
+
     private final boolean autoIncremented;
-    
+
     private final Optional<ImmutableList<Object>> enumValues;
-    
+
     private final Comparator<?> comparator;
-    
+
     private final Object defaultValue;
-    
+
 
     public SimpleColumnDefinition() {
         this(Object.class);
     }
-    
+
     public SimpleColumnDefinition(Class<?> clazz) {
         this(clazz, true);
     }
@@ -62,7 +62,7 @@ public class SimpleColumnDefinition implements ColumnDefinition {
             Comparator<?> comparator) {
         this(clazz, nullable, unique, autoIncremented, enumValues, comparator, null);
     }
-    
+
     public SimpleColumnDefinition(
             Class<?> clazz,
             boolean nullable,
@@ -79,7 +79,7 @@ public class SimpleColumnDefinition implements ColumnDefinition {
         this.comparator = comparator != null ? comparator : ComparatorUtil.createDefaultComparatorFor(clazz);
         this.defaultValue = defaultValue;
     }
-    
+
 
     @Override
     public Class<?> clazz() {
@@ -95,7 +95,7 @@ public class SimpleColumnDefinition implements ColumnDefinition {
     public boolean isUnique() {
         return unique;
     }
-    
+
     @Override
     public boolean isAutoIncremented() {
         return autoIncremented;
@@ -110,7 +110,7 @@ public class SimpleColumnDefinition implements ColumnDefinition {
     public Comparator<?> comparator() {
         return comparator;
     }
-    
+
     @Override
     public Object defaultValue() {
         return defaultValue;

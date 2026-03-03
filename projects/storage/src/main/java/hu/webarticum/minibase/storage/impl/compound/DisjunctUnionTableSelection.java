@@ -10,14 +10,14 @@ import hu.webarticum.miniconnect.lang.LargeInteger;
 import hu.webarticum.miniconnect.util.ChainedIterator;
 
 public class DisjunctUnionTableSelection implements TableSelection {
-    
+
     private TableSelection[] selections;
-    
+
 
     private DisjunctUnionTableSelection(TableSelection[] selections) {
         this.selections = selections;
     }
-    
+
     public static DisjunctUnionTableSelection of(TableSelection... selections) {
         return new DisjunctUnionTableSelection(Arrays.copyOf(selections, selections.length));
     }
@@ -25,8 +25,8 @@ public class DisjunctUnionTableSelection implements TableSelection {
     public static DisjunctUnionTableSelection ofCollection(Collection<TableSelection> selections) {
         return new DisjunctUnionTableSelection(selections.toArray(new TableSelection[selections.size()]));
     }
-    
-    
+
+
     @Override
     public Iterator<LargeInteger> iterator() {
         return ChainedIterator.allOf(ImmutableList.of(selections).map(Iterable::iterator));

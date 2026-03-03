@@ -13,20 +13,20 @@ import hu.webarticum.miniconnect.lang.ImmutableMap;
 import hu.webarticum.miniconnect.lang.LargeInteger;
 
 public class TablePatch {
-    
+
     private final List<ImmutableList<Object>> insertedRows;
-    
+
     private final NavigableMap<LargeInteger, ImmutableMap<Integer, Object>> updates;
-    
+
     private final NavigableSet<LargeInteger> deletions;
 
-    
+
     private TablePatch(TablePatchBuilder builder) {
         this.insertedRows =  Collections.unmodifiableList(builder.insertedRows);
         this.updates = Collections.unmodifiableNavigableMap(builder.updates);
         this.deletions = Collections.unmodifiableNavigableSet(builder.deletions);
     }
-    
+
     public static TablePatchBuilder builder() {
         return new TablePatchBuilder();
     }
@@ -43,25 +43,25 @@ public class TablePatch {
     public NavigableSet<LargeInteger> deletions() {
         return deletions;
     }
-    
-    
+
+
     public static class TablePatchBuilder {
-        
+
         private final List<ImmutableList<Object>> insertedRows = new ArrayList<>();
-        
+
         private final NavigableMap<LargeInteger, ImmutableMap<Integer, Object>> updates =
                 new TreeMap<>();
-        
+
         private final NavigableSet<LargeInteger> deletions = new TreeSet<>();
-        
+
         private volatile boolean closed = false;
-        
-        
+
+
         private TablePatchBuilder() {
             // use builder()
         }
-        
-        
+
+
         public TablePatchBuilder insert(ImmutableList<Object> rowData) {
             checkClosed();
             insertedRows.add(rowData);
@@ -79,19 +79,19 @@ public class TablePatch {
             deletions.add(index);
             return this;
         }
-        
+
         private void checkClosed() {
             if (closed) {
                 throw new IllegalStateException("This builder was already closed");
             }
         }
-        
-        
+
+
         public synchronized TablePatch build() {
             closed = true;
             return new TablePatch(this);
         }
 
     }
-    
+
 }

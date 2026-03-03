@@ -22,11 +22,11 @@ public class TablePatchUtil {
     private TablePatchUtil() {
         // utility class
     }
-    
+
 
     public static void checkIndividualValues(Table table, TablePatch patch) {
         NamedResourceStore<Column> columnStore = table.columns();
-        
+
         ImmutableList<ColumnDefinition> columnDefinitions = columnStore.resources().map(Column::definition);
 
         Set<Integer> nonNullableColumnIndices = new HashSet<>();
@@ -63,7 +63,7 @@ public class TablePatchUtil {
             }
         }
     }
-    
+
     private static Set<Object> toTreeSet(ImmutableList<Object> values, Comparator<?> comparator) {
         @SuppressWarnings("unchecked")
         Comparator<Object> objectComparator = (Comparator<Object>) comparator;
@@ -71,7 +71,7 @@ public class TablePatchUtil {
         result.addAll(values.asList());
         return result;
     }
-    
+
     private static void checkValue(
             Object value,
             Integer columnIndex,
@@ -88,5 +88,5 @@ public class TablePatchUtil {
             throw PredefinedError.COLUMN_VALUE_NOT_IN_ENUM.toException(columnName, enumValues);
         }
     }
-    
+
 }

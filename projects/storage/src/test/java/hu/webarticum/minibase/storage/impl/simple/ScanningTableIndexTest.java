@@ -15,9 +15,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class ScanningTableIndexTest {
-    
+
     private Table table;
-    
+
 
     @BeforeEach
     void init() {
@@ -45,7 +45,7 @@ class ScanningTableIndexTest {
     void testFindValueNoResult() {
         assertThat(index("id").find(99)).isEmpty();
     }
-    
+
     @Test
     void testFindValueSingleResult() {
         assertThat(index("id").find(3)).containsExactly(LargeInteger.of(2));
@@ -157,7 +157,7 @@ class ScanningTableIndexTest {
                 ImmutableList.fill(2, SortMode.ASC_NULLS_FIRST));
         assertThat(selection).containsExactly(LargeInteger.arrayOf(0, 1, 2));
     }
-    
+
     @Test
     void testFindRangeExclusiveSingleResult() {
         TableSelection selection = index("lastname", "firstname").findMulti(
@@ -169,7 +169,7 @@ class ScanningTableIndexTest {
                 ImmutableList.fill(2, SortMode.ASC_NULLS_FIRST));
         assertThat(selection).containsExactly(LargeInteger.ZERO);
     }
-    
+
     @Test
     void testFindOddRangeInclusiveSomeResults() {
         TableSelection selection = index("lastname", "firstname").findMulti(
@@ -181,10 +181,10 @@ class ScanningTableIndexTest {
                 ImmutableList.fill(2, SortMode.ASC_NULLS_FIRST));
         assertThat(selection).containsExactly(LargeInteger.arrayOf(3, 0, 1));
     }
-    
-    
+
+
     private ScanningTableIndex index(String... columnNames) {
         return new ScanningTableIndex(table, "index", ImmutableList.of(columnNames));
     }
-    
+
 }

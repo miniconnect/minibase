@@ -1,0 +1,43 @@
+schemas:
+  - name: library
+    tables:
+      - name: books
+        columns:
+          - name: id
+            type: hu.webarticum.miniconnect.lang.LargeInteger
+            unique: true
+            autoIncremented: true
+          - name: title
+            type: java.lang.String
+          - name: author
+            type: java.lang.String
+          - name: pub_year
+            type: hu.webarticum.miniconnect.lang.LargeInteger
+        indexes:
+          - [ id ]
+        data:
+          - [ 1, "Don Quixote", "Miguel de Cervantes", 1605 ]
+          - [ 2, "Gulliver's Travels", "Jonathan Swift", 1726 ]
+          - [ 3, "Frankenstein", "Mary Shelley", 1818 ]
+          - [ 4, "Père Goriot", "Honoré de Balzac", 1835 ]
+          - [ 5, "Oliver Twist", "Charles Dickens", 1838 ]
+          - [ 6, "Wuthering Heights", "Emily Brontë", 1847 ]
+          - [ 7, "Moby Dick", "Herman Melville", 1851 ]
+          - [ 8, "Uncle Tom's Cabin", "Harriet Beecher Stowe", 1852 ]
+          - [ 9, "Madame Bovary", "Gustave Flaubert", 1857 ]
+          - [ 10, "Misérables, Les", "Victor Hugo", 1862 ]
+          - [ 11, "War and Peace", "Leo Tolstoy", 1869 ]
+          - [ 12, "Twenty Thousand Leagues Under the Seas", "Jules Verne", 1870 ]
+          - [ 13, "Anna Karenina", "Leo Tolstoy", 1877 ]
+          - [ 14, "Brothers Karamazov, The", "Fyodor Dostoyevsky", 1880 ]
+          - [ 15, "Ulysses", "James Joyce", 1922 ]
+          - [ 16, "Trial, The", "Franz Kafka", 1925 ]
+          - [ 17, "All Quiet on the Western Front", "Erich Maria Remarque", 1929 ]
+          - [ 18, "Gone with the Wind", "Margaret Mitchell", 1936 ]
+          - [ 19, "Grapes of Wrath, The", "John Steinbeck", 1939 ]
+          - [ 20, "Nineteen Eighty-Four", "George Orwell", 1949 ]
+          - [ 21, "Catcher in the Rye, The", "J.D. Salinger", 1951 ]
+          - [ 22, "Fahrenheit 451", "Ray Bradbury", 1953 ]
+          - [ 23, "Lord of the Flies", "William Golding", 1954 ]
+          - [ 24, "Doctor Zhivago", "Boris Leonidovich Pasternak", 1957 ]
+          - [ 25, "One Hundred Years of Solitude", "Gabriel Garcia Márquez", 1967 ]

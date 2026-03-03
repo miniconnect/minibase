@@ -1,0 +1,161 @@
+package hu.webarticum.minibase.query.util;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
+
+import org.junit.jupiter.api.Test;
+
+import hu.webarticum.miniconnect.lang.ByteString;
+import hu.webarticum.miniconnect.lang.DateTimeDelta;
+import hu.webarticum.miniconnect.lang.LargeInteger;
+
+class StringUtilTest {
+
+    @Test
+    void testStringifyNull() {
+        assertThat(StringUtil.stringify(null)).isNull();
+    }
+
+    @Test
+    void testStringifyString() {
+        assertThat(StringUtil.stringify("")).isEqualTo("");
+        assertThat(StringUtil.stringify("lorem")).isEqualTo("lorem");
+    }
+
+    @Test
+    void testStringifyLocalDate() {
+        assertThat(StringUtil.stringify(LocalDate.of(1926, 1, 4))).isEqualTo("1926-01-04");
+        assertThat(StringUtil.stringify(LocalDate.of(2025, 2, 12))).isEqualTo("2025-02-12");
+    }
+
+    @Test
+    void testStringifyLocalTime() {
+        assertThat(StringUtil.stringify(LocalTime.of(13, 4))).isEqualTo("13:04:00");
+        assertThat(StringUtil.stringify(LocalTime.of(20, 7, 16))).isEqualTo("20:07:16");
+        assertThat(StringUtil.stringify(LocalTime.of(15, 25, 34, 106356473))).isEqualTo("15:25:34.106356473");
+    }
+
+    @Test
+    void testStringifyLocalDateTime() {
+        assertThat(StringUtil.stringify(LocalDateTime.of(1910, 4, 5, 0, 1))).isEqualTo("1910-04-05T00:01:00");
+        assertThat(StringUtil.stringify(LocalDateTime.of(1999, 12, 31, 12, 0, 12))).isEqualTo("1999-12-31T12:00:12");
+        assertThat(StringUtil.stringify(LocalDateTime.of(2025, 10, 20, 10, 35, 22, 648801627))).isEqualTo("2025-10-20T10:35:22.648801627");
+    }
+
+    @Test
+    void testStringifyInstant() {
+        assertThat(StringUtil.stringify(Instant.ofEpochSecond(1763141529))).isEqualTo("2025-11-14T17:32:09Z");
+        assertThat(StringUtil.stringify(Instant.ofEpochSecond(1763141522, 622703525))).isEqualTo("2025-11-14T17:32:02.622703525Z");
+        assertThat(StringUtil.stringify(Instant.ofEpochMilli(1763141522321L))).isEqualTo("2025-11-14T17:32:02.321Z");
+    }
+
+    @Test
+    void testStringifyByteString() {
+        assertThat(StringUtil.stringify(ByteString.of("lorem"))).isEqualTo("lorem");
+        assertThat(StringUtil.stringify(ByteString.of(new byte[] { 116, -59, -79 }))).isEqualTo("tű");
+    }
+
+    @Test
+    void testStringifyOther() {
+        assertThat(StringUtil.stringify(12L)).isEqualTo("12");
+        assertThat(StringUtil.stringify(LargeInteger.of("436780617018127680712"))).isEqualTo("436780617018127680712");
+        assertThat(StringUtil.stringify(LocalTime.of(11, 20).atOffset(ZoneOffset.ofHours(-3)))).isEqualTo("11:20:00-03:00");
+        assertThat(StringUtil.stringify(LocalDateTime.of(2000, 1, 2, 3, 4, 5).atOffset(ZoneOffset.ofHours(1))))
+                .isEqualTo("2000-01-02T03:04:05+01:00");
+        assertThat(StringUtil.stringify(ZoneOffset.of("-02:45:10"))).isEqualTo("-02:45:10");
+        assertThat(StringUtil.stringify(DateTimeDelta.of(-10, ChronoUnit.MINUTES))).isEqualTo("PT-10M");
+        assertThat(StringUtil.stringify(new Object() { @Override public String toString() { return "ipsum"; } })).isEqualTo("ipsum");
+    }
+
+    @Test
+    void testStringifyWithSize() {
+        assertThat(StringUtil.stringify(null, null)).isNull();
+        assertThat(StringUtil.stringify(null, 3)).isNull();
+        assertThat(StringUtil.stringify(123, null)).isEqualTo("123");
+        assertThat(StringUtil.stringify("lorem", null)).isEqualTo("lorem");
+        assertThat(StringUtil.stringify(4321, 3)).isEqualTo("432");
+        assertThat(StringUtil.stringify("ipsum", 3)).isEqualTo("ips");
+        assertThat(StringUtil.stringify("ipsum", 10)).isEqualTo("ipsum");
+        assertThat(StringUtil.stringify(new BigDecimal("12.34567"), 4)).isEqualTo("12.3");
+        assertThat(StringUtil.stringify(new BigDecimal("12.34567"), 20)).isEqualTo("12.34567");
+        assertThat(StringUtil.stringify(new Object() { @Override public String toString() { return "dolor"; } }, null)).isEqualTo("dolor");
+        assertThat(StringUtil.stringify(new Object() { @Override public String toString() { return "sit"; } }, 2)).isEqualTo("si");
+        assertThat(StringUtil.stringify(new Object() { @Override public String toString() { return "amet"; } }, 15)).isEqualTo("amet");
+    }
+
+    @Test
+    void testToTitleCase() {
+        assertThat(StringUtil.toTitleCase("")).isEmpty();
+        assertThat(StringUtil.toTitleCase("?:-")).isEqualTo("?:-");
+        assertThat(StringUtil.toTitleCase("a")).isEqualTo("A");
+        assertThat(StringUtil.toTitleCase(" b")).isEqualTo(" B");
+        assertThat(StringUtil.toTitleCase(" xYz")).isEqualTo(" Xyz");
+        assertThat(StringUtil.toTitleCase("lorem")).isEqualTo("Lorem");
+        assertThat(StringUtil.toTitleCase("lorem ipsum")).isEqualTo("Lorem Ipsum");
+        assertThat(StringUtil.toTitleCase("lorem iPsum, dolor SIT aMeT")).isEqualTo("Lorem Ipsum, Dolor Sit Amet");
+        assertThat(StringUtil.toTitleCase("hello_world!")).isEqualTo("Hello_World!");
+        assertThat(StringUtil.toTitleCase("a/b.c:de___f(G.HI)")).isEqualTo("A/B.C:De___F(G.Hi)");
+        assertThat(StringUtil.toTitleCase("űz TÁR Ú ŰrR")).isEqualTo("Űz Tár Ú Űrr");
+    }
+
+    @Test
+    void testExtractSlot() {
+        assertThat(StringUtil.extractSlot("", "", -1)).isEmpty();
+        assertThat(StringUtil.extractSlot("", "", 0)).isEmpty();
+        assertThat(StringUtil.extractSlot("", "", 5)).isEmpty();
+        assertThat(StringUtil.extractSlot("", ",", 0)).isEmpty();
+        assertThat(StringUtil.extractSlot("", ",", -1)).isEmpty();
+        assertThat(StringUtil.extractSlot("", ",", 5)).isEmpty();
+        assertThat(StringUtil.extractSlot("lorem", "", -2)).isEmpty();
+        assertThat(StringUtil.extractSlot("lorem", "", 0)).isEqualTo("l");
+        assertThat(StringUtil.extractSlot("lorem", "", 2)).isEqualTo("r");
+        assertThat(StringUtil.extractSlot("lorem", "", 7)).isEmpty();
+        assertThat(StringUtil.extractSlot("lorem,ipsum", ",", -1)).isEmpty();
+        assertThat(StringUtil.extractSlot("lorem,ipsum", ",", 0)).isEqualTo("lorem");
+        assertThat(StringUtil.extractSlot("lorem,ipsum", ",", 1)).isEqualTo("ipsum");
+        assertThat(StringUtil.extractSlot("lorem,ipsum", ",", 2)).isEmpty();
+        assertThat(StringUtil.extractSlot("lorem, ipsum", ",", 1)).isEqualTo(" ipsum");
+        assertThat(StringUtil.extractSlot("lorem::ipsum::::dolor:::sit:::", "::", -1)).isEmpty();
+        assertThat(StringUtil.extractSlot("lorem::ipsum::::dolor:::sit:::", "::", 0)).isEqualTo("lorem");
+        assertThat(StringUtil.extractSlot("lorem::ipsum::::dolor:::sit:::", "::", 1)).isEqualTo("ipsum");
+        assertThat(StringUtil.extractSlot("lorem::ipsum::::dolor:::sit:::", "::", 2)).isEmpty();
+        assertThat(StringUtil.extractSlot("lorem::ipsum::::dolor:::sit:::", "::", 3)).isEqualTo("dolor");
+        assertThat(StringUtil.extractSlot("lorem::ipsum::::dolor:::sit:::", "::", 4)).isEqualTo(":sit");
+        assertThat(StringUtil.extractSlot("lorem::ipsum::::dolor:::sit:::", "::", 5)).isEqualTo(":");
+        assertThat(StringUtil.extractSlot("lorem::ipsum::::dolor:::sit:::", "::", 6)).isEmpty();
+        assertThat(StringUtil.extractSlot("=:lorem=:=ipsum=:=:=dolor:=sit:=:=amet", "=:=", -1)).isEmpty();
+        assertThat(StringUtil.extractSlot("=:lorem=:=ipsum=:=:=dolor:=sit:=:=amet", "=:=", 0)).isEqualTo("=:lorem");
+        assertThat(StringUtil.extractSlot("=:lorem=:=ipsum=:=:=dolor:=sit:=:=amet", "=:=", 1)).isEqualTo("ipsum");
+        assertThat(StringUtil.extractSlot("=:lorem=:=ipsum=:=:=dolor:=sit:=:=amet", "=:=", 2)).isEqualTo(":=dolor:=sit:");
+        assertThat(StringUtil.extractSlot("=:lorem=:=ipsum=:=:=dolor:=sit:=:=amet", "=:=", 3)).isEqualTo("amet");
+        assertThat(StringUtil.extractSlot("=:lorem=:=ipsum=:=:=dolor:=sit:=:=amet", "=:=", 4)).isEmpty();
+    }
+
+    @Test
+    void testReplace() {
+        assertThat(StringUtil.replace("", "", "")).isEmpty();
+        assertThat(StringUtil.replace("", "lorem", "")).isEmpty();
+        assertThat(StringUtil.replace("", "", "lorem")).isEmpty();
+        assertThat(StringUtil.replace("", "lorem", "ipsum")).isEmpty();
+        assertThat(StringUtil.replace("hello", "", "")).isEqualTo("hello");
+        assertThat(StringUtil.replace("hello", "", "lorem")).isEqualTo("hello");
+        assertThat(StringUtil.replace("hello", "lorem", "")).isEqualTo("hello");
+        assertThat(StringUtil.replace("hello", "lorem", "ipsum")).isEqualTo("hello");
+        assertThat(StringUtil.replace("hello", "lorem", "ipsum")).isEqualTo("hello");
+        assertThat(StringUtil.replace("hello", "hello", "")).isEmpty();
+        assertThat(StringUtil.replace("hello", "el", "xxx")).isEqualTo("hxxxlo");
+        assertThat(StringUtil.replace("hello world", "l", "(%)")).isEqualTo("he(%)(%)o wor(%)d");
+        assertThat(StringUtil.replace("hello world", "l+", "=")).isEqualTo("hello world");
+        assertThat(StringUtil.replace("hello world", "o", "")).isEqualTo("hell wrld");
+        assertThat(StringUtil.replace("hellollobello", "ello", "he")).isEqualTo("hhellobhe");
+        assertThat(StringUtil.replace("hellx", "hello", "x")).isEqualTo("hellx");
+    }
+
+}

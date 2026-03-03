@@ -76,5 +76,5 @@ class DisjunctUnionTableSelectionTest {
         assertThat(selection.containsRow(LargeInteger.of(20))).isTrue();
         assertThat(selection.containsRow(LargeInteger.of(30))).isFalse();
     }
-    
+
 }

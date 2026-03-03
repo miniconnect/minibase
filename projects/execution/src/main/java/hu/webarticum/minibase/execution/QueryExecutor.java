@@ -8,5 +8,5 @@ import hu.webarticum.miniconnect.api.MiniResult;
 public interface QueryExecutor {
 
     public MiniResult execute(StorageAccess storageAccess, SessionState state, Query query);
-    
+
 }

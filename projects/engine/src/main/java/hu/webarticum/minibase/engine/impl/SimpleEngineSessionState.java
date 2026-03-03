@@ -14,8 +14,8 @@ public class SimpleEngineSessionState implements SessionState {
     private volatile LargeInteger lastInsertId = null;
 
     private final Map<String, Object> userVariables = Collections.synchronizedMap(new HashMap<>());
-    
-    
+
+
     @Override
     public String getCurrentSchema() {
         return currentSchema;
@@ -49,5 +49,5 @@ public class SimpleEngineSessionState implements SessionState {
             userVariables.remove(variableName);
         }
     }
-    
+
 }
