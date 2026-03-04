@@ -326,7 +326,7 @@ These are the supported operators in precedence order (higher precedence first):
 | Name | Symbol | Example | Result |
 | ---- | :----: | :-----: | :----: |
 | Unary minus | `-` | `- 3` | `-3` |
-| Unary plus | `+` | `+5` | `5` |
+| Unary plus | `+` | `+ 5` | `5` |
 | Logical NOT | `NOT` | `NOT TRUE` | `FALSE` |
 | Inline cast | `::` | `'12'::int` | `12` |
 | Multiplication | `*` | `2 * 3` | `6` |
@@ -347,7 +347,7 @@ These are the supported operators in precedence order (higher precedence first):
 | Different from | `!=` OR `<>` | `2 != 5` | `TRUE` |
 | Inline concatenation | `||` | `'Value: ' || 3` | `'Value: 3'` |
 
-Currently, division-by-zero behavior is lenient,
+Currently, division-by-zero behavior is lenient (just like in MySQL),
 so a zero operand after a division operator (`/`, `DIV`, or `%`) will result in `NULL`.
 
 In most cases, each of these returns with `NULL` if any of the given operands is `NULL`.
@@ -980,7 +980,7 @@ SELECT 2 AS no, @some_other_variable AS var
 SELECT 3 AS no, @some_more_variable AS var;
 ```
 
-### Insert (or replace) records to table
+### Insert (or replace) a record into table
 
 New records can be inserted to a table with the `INSERT` statement:
 
@@ -1000,9 +1000,9 @@ The `REPLACE` statement is roughly the same, but it deletes all the conflicting 
 REPLACE INTO tbl (col1, col2) VALUES ('lorem', 42);
 ```
 
-### Update records in table
+### Update records in a table
 
-Existing values can be chaged using the `UPDATE` statement:
+Existing values can be changed using the `UPDATE` statement:
 
 ```sql
 UPDATE tbl SET col1 = 'lorem', col2 = 42 WHERE id BETWEEN 16 AND 23;
@@ -1010,7 +1010,7 @@ UPDATE tbl SET col1 = 'lorem', col2 = 42 WHERE id BETWEEN 16 AND 23;
 
 The `WHERE` clause is optional, if omitted, all records will be updated.
 
-### Delete records from table
+### Delete records from a table
 
 Records can be deleted from a table with the `DELETE` statement:
 
