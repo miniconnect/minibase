@@ -666,7 +666,7 @@ Some examples with unit:
 | ---------- | ------- |
 | `INTERVAL 0 HOUR` | zero-length interval |
 | `INTERVAL 4 MINUTE` | 4 minutes |
-| `INTERVAL 7.5 SECOND` | 7 second 500 millis |
+| `INTERVAL 7.5 SECOND` | 7 seconds 500 millis |
 | `INTERVAL 7.5 DAY` | 7 days |
 | `INTERVAL '12:30' SECOND` | 12 minutes 30 seconds |
 | `INTERVAL '12:30' MINUTE` | 12 hours 30 minutes |
@@ -700,7 +700,7 @@ The `SUBSTRING` (or `SUBSTR`) expression extracts a substring from an input inte
 It contains at least one of the `FROM` clause and the `FOR` clause.
 The `FROM` clause specifies the starting position of the substring,
 while the `FOR` clause specifies the length.
-Both are 1-indexed, following the standard.
+Both parameters are 1-based, following the standard.
 The substring is allowed partially or entirely out of bounds either in the negative or positive (or both) direction.
 
 Some examples:
@@ -721,8 +721,8 @@ If any specified parameter is null then null will be returned.
 ### The `POSITION` expression
 
 The expression `POSITION(x IN a)` searches for the first occurence position of `x` in `a` (both interpreted as a string).
-The resulting position is 1-indexed.
-If no occurence is found then `0` will be returned.
+The resulting position is 1-based.
+If no occurence is found then the expression will evaluate to `0`.
 
 Some examples:
 
