@@ -9,6 +9,7 @@ import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 import java.time.ZoneOffset;
 
+import hu.webarticum.miniconnect.lang.BitString;
 import hu.webarticum.miniconnect.lang.ByteString;
 import hu.webarticum.miniconnect.lang.DateTimeDelta;
 import hu.webarticum.miniconnect.lang.LargeInteger;
@@ -19,6 +20,7 @@ public class TypeConstruct {
 
         NULL(Void.class),
         BOOLEAN(Boolean.class),
+        BIT(BitString.class),
         INTEGER(LargeInteger.class), BIGINT(LargeInteger.class),
         DECIMAL(BigDecimal.class), FLOAT(Double.class),
         NVARCHAR(String.class), CLOB(String.class),
@@ -47,6 +49,7 @@ public class TypeConstruct {
 
         NULL(Symbol.NULL),
         BOOLEAN(Symbol.BOOLEAN),
+        BIT(Symbol.BIT),
         INTEGER(Symbol.INTEGER), BIGINT(Symbol.BIGINT),
         DECIMAL(Symbol.DECIMAL), FLOAT(Symbol.FLOAT),
         NVARCHAR(Symbol.NVARCHAR), CLOB(Symbol.CLOB),
