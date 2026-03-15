@@ -167,7 +167,7 @@ functionCall: functionName PAR_START ( expression ( COMMA expression )* )? PAR_E
 functionName: identifier | functionNameToken;
 functionNameToken: LEFT | RIGHT | TRIM | SUBSTRING | SUBSTR | REPLACE | typeName;
 typeName:
-    NULL | BOOL | BOOLEAN | INTEGER | BIGINT | DEC | DECIMAL | FLOAT |
+    NULL | BOOL | BOOLEAN | BIT | INTEGER | BIGINT | DEC | DECIMAL | FLOAT |
     NVARCHAR | CLOB | BINARY | VARBINARY | BLOB | DATE |
     ( TIME | DATETIME | TIMESTAMP ) ( ( WITH | WITHOUT ) ( TIME ZONE | OFFSET | UTCOFFSET ) )? |
     TIMETZ | DATETIMETZ | TIMESTAMPTZ |
@@ -222,6 +222,7 @@ EXTRACT: E X T R A C T;
 
 BOOL: B O O L;
 BOOLEAN: B O O L E A N;
+BIT: B I T;
 INTEGER: I N T E G E R;
 BIGINT: B I G I N T;
 DEC: D E C;
