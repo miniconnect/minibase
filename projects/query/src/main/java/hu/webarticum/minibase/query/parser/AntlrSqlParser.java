@@ -23,6 +23,12 @@ import hu.webarticum.minibase.query.expression.AsciiExpression;
 import hu.webarticum.minibase.query.expression.Atan2Expression;
 import hu.webarticum.minibase.query.expression.BetweenExpression;
 import hu.webarticum.minibase.query.expression.BitLengthExpression;
+import hu.webarticum.minibase.query.expression.BitwiseAndExpression;
+import hu.webarticum.minibase.query.expression.BitwiseNotExpression;
+import hu.webarticum.minibase.query.expression.BitwiseOrExpression;
+import hu.webarticum.minibase.query.expression.BitwiseShiftLeftExpression;
+import hu.webarticum.minibase.query.expression.BitwiseShiftRightExpression;
+import hu.webarticum.minibase.query.expression.BitwiseXorExpression;
 import hu.webarticum.minibase.query.expression.CaseExpression;
 import hu.webarticum.minibase.query.expression.CastExpression;
 import hu.webarticum.minibase.query.expression.CharLengthExpression;
@@ -125,6 +131,7 @@ import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.AliasPart
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.AliasableExpressionContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.AtomicExpressionContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.BetweenRelationContext;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.BitwiseNotExpressionContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.BooleanLiteralContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.CaseExpressionContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.CastExpressionContext;
@@ -671,43 +678,56 @@ public class AntlrSqlParser implements SqlParser {
             return new CastExpression(subExpression, typeConstruct);
         }
 
-        Object operation = extractOperation(expressionNode);
-        if (operation == null) {
-            throw new IllegalArgumentException("Unknown operation type in: " + expressionNode.getText());
-        }
-
         Expression leftExpression = parseExpressionNode(expressionNode.leftExpression);
         Expression rightExpression = parseExpressionNode(expressionNode.rightExpression);
 
-        if (operation == EqualsExpression.class) {
+        if (expressionNode.EQ() != null) {
             return new EqualsExpression(leftExpression, rightExpression);
-        } else if (operation == NotEqualsExpression.class) {
+        } else if (expressionNode.NEQ_ANG() != null || expressionNode.NEQ_BANG() != null) {
             return new NotEqualsExpression(leftExpression, rightExpression);
-        } else if (operation instanceof OrderRelationExpression.Operation) {
-            OrderRelationExpression.Operation relationOperation = (OrderRelationExpression.Operation) operation;
-            return new OrderRelationExpression(relationOperation, leftExpression, rightExpression);
-        } else if (operation == MultiplyExpression.class) {
+        } else if (expressionNode.LESS() != null) {
+            return new OrderRelationExpression(OrderRelationExpression.Operation.LESS, leftExpression, rightExpression);
+        } else if (expressionNode.LESS_EQ() != null) {
+            return new OrderRelationExpression(OrderRelationExpression.Operation.LESS_EQ, leftExpression, rightExpression);
+        } else if (expressionNode.GREATER() != null) {
+            return new OrderRelationExpression(OrderRelationExpression.Operation.GREATER, leftExpression, rightExpression);
+        } else if (expressionNode.GREATER_EQ() != null) {
+            return new OrderRelationExpression(OrderRelationExpression.Operation.GREATER_EQ, leftExpression, rightExpression);
+        } else if (expressionNode.ET() != null) {
+            return new BitwiseAndExpression(leftExpression, rightExpression);
+        } else if (expressionNode.SHIFT_LEFT() != null) {
+            return new BitwiseShiftLeftExpression(leftExpression, rightExpression);
+        } else if (expressionNode.SHIFT_RIGHT() != null) {
+            return new BitwiseShiftRightExpression(leftExpression, rightExpression);
+        } else if (expressionNode.PIPE() != null) {
+            return new BitwiseOrExpression(leftExpression, rightExpression);
+        } else if (expressionNode.HAT() != null || expressionNode.HASH() != null) {
+            return new BitwiseXorExpression(leftExpression, rightExpression);
+        } else if (expressionNode.ASTERISK() != null) {
             return new MultiplyExpression(leftExpression, rightExpression);
-        } else if (operation == ModExpression.class) {
+        } else if (expressionNode.MOD() != null) {
             return new ModExpression(leftExpression, rightExpression);
-        } else if (operation == RemainderExpression.class) {
+        } else if (expressionNode.PERCENT() != null) {
             return new RemainderExpression(leftExpression, rightExpression);
-        } else if (operation == DivideExpression.class) {
+        } else if (expressionNode.DIV() != null) {
+            // FIXME
             return new DivideExpression(leftExpression, rightExpression);
-        } else if (operation == AddExpression.class) {
+        } else if (expressionNode.SLASH() != null) {
+            return new DivideExpression(leftExpression, rightExpression);
+        } else if (expressionNode.PLUS() != null) {
             return new AddExpression(leftExpression, rightExpression);
-        } else if (operation == SubtractExpression.class) {
+        } else if (expressionNode.MINUS() != null) {
             return new SubtractExpression(leftExpression, rightExpression);
-        } else if (operation == AndExpression.class) {
+        } else if (expressionNode.AND() != null) {
             return new AndExpression(leftExpression, rightExpression);
-        } else if (operation == XorExpression.class) {
+        } else if (expressionNode.XOR() != null) {
             return new XorExpression(leftExpression, rightExpression);
-        } else if (operation == OrExpression.class) {
+        } else if (expressionNode.OR() != null) {
             return new OrExpression(leftExpression, rightExpression);
-        } else if (operation == ConcatExpression.class) {
+        } else if (expressionNode.DOUBLE_PIPE() != null) {
             return new ConcatExpression(ImmutableList.of(leftExpression, rightExpression));
         } else {
-            throw new IllegalArgumentException("Unknown operation: " + operation);
+            throw new IllegalArgumentException("Unknown operation type in: " + expressionNode.getText());
         }
     }
 
@@ -747,6 +767,11 @@ public class AntlrSqlParser implements SqlParser {
             return parseCastExpressionNode(castExpressionNode);
         }
 
+        BitwiseNotExpressionContext bitwiseNotExpression = prefixableExpressionNode.bitwiseNotExpression();
+        if (bitwiseNotExpression != null) {
+            return parseBitwiseNotExpressionNode(bitwiseNotExpression);
+        }
+
         NotExpressionContext notExpressionNode = prefixableExpressionNode.notExpression();
         if (notExpressionNode != null) {
             return parseNotExpressionNode(notExpressionNode);
@@ -775,47 +800,6 @@ public class AntlrSqlParser implements SqlParser {
         }
 
         throw new IllegalArgumentException("Unknown expression: " + prefixableExpressionNode.getText());
-    }
-
-    private Object extractOperation(ExpressionContext expressionNode) {
-        if (expressionNode.EQ() != null) {
-            return EqualsExpression.class;
-        } else if (expressionNode.NEQ_ANG() != null || expressionNode.NEQ_BANG() != null) {
-            return NotEqualsExpression.class;
-        } else if (expressionNode.LESS() != null) {
-            return OrderRelationExpression.Operation.LESS;
-        } else if (expressionNode.LESS_EQ() != null) {
-            return OrderRelationExpression.Operation.LESS_EQ;
-        } else if (expressionNode.GREATER() != null) {
-            return OrderRelationExpression.Operation.GREATER;
-        } else if (expressionNode.GREATER_EQ() != null) {
-            return OrderRelationExpression.Operation.GREATER_EQ;
-        } else if (expressionNode.ASTERISK() != null) {
-            return MultiplyExpression.class;
-        } else if (expressionNode.MOD() != null) {
-            return ModExpression.class;
-        } else if (expressionNode.PERCENT() != null) {
-            return RemainderExpression.class;
-        } else if (expressionNode.DIV() != null) {
-            // FIXME
-            return DivideExpression.class;
-        } else if (expressionNode.SLASH() != null) {
-            return DivideExpression.class;
-        } else if (expressionNode.PLUS() != null) {
-            return AddExpression.class;
-        } else if (expressionNode.MINUS() != null) {
-            return SubtractExpression.class;
-        } else if (expressionNode.AND() != null) {
-            return AndExpression.class;
-        } else if (expressionNode.XOR() != null) {
-            return XorExpression.class;
-        } else if (expressionNode.OR() != null) {
-            return OrExpression.class;
-        } else if (expressionNode.DOUBLE_PIPE() != null) {
-            return ConcatExpression.class;
-        } else {
-            return null;
-        }
     }
 
     private Expression parseAtomicExpressionNode(AtomicExpressionContext atomicExpressionNode) {
@@ -1070,6 +1054,10 @@ public class AntlrSqlParser implements SqlParser {
             throw new IllegalArgumentException(
                     "Function " + name + " expects " + minCount + " to " + maxCount + " parameters, " + actualCount + " given");
         }
+    }
+
+    private Expression parseBitwiseNotExpressionNode(BitwiseNotExpressionContext bitwiseNotExpression) {
+        return new BitwiseNotExpression(parsePrefixableExpressionNode(bitwiseNotExpression.prefixableExpression()));
     }
 
     private Expression parseNotExpressionNode(NotExpressionContext notExpressionNode) {
