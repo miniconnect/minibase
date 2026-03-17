@@ -3,6 +3,7 @@ package hu.webarticum.minibase.query.expression;
 import java.util.Optional;
 
 import hu.webarticum.minibase.query.util.StringUtil;
+import hu.webarticum.miniconnect.lang.BitString;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
 import hu.webarticum.miniconnect.lang.LargeInteger;
@@ -51,14 +52,16 @@ public class CharLengthExpression implements Expression {
         Object value = subExpression.evaluate(values);
         if (value == null) {
             return null;
+        } else if (value instanceof BitString) {
+            return LargeInteger.of(((BitString) value).length());
+        } else {
+            return LargeInteger.of(StringUtil.stringify(value).length());
         }
-
-        return LargeInteger.of(StringUtil.stringify(value).length());
     }
 
     @Override
     public String automaticName() {
-        return "OCTET_LENGTH(" + subExpression.automaticName() + ")";
+        return "CHAR_LENGTH(" + subExpression.automaticName() + ")";
     }
 
 }

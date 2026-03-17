@@ -2,7 +2,9 @@ package hu.webarticum.minibase.query.expression;
 
 import java.util.Optional;
 
+import hu.webarticum.minibase.query.util.BitStringUtil;
 import hu.webarticum.minibase.query.util.ByteStringUtil;
+import hu.webarticum.miniconnect.lang.BitString;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
 import hu.webarticum.miniconnect.lang.LargeInteger;
@@ -51,14 +53,18 @@ public class BitLengthExpression implements Expression {
         Object value = subExpression.evaluate(values);
         if (value == null) {
             return null;
+        } else if (value instanceof BitString) {
+            return LargeInteger.of(((BitString) value).length());
+        } else if (value instanceof Number) {
+            return LargeInteger.of(BitStringUtil.bitStringify(value).length());
+        } else {
+            return LargeInteger.of(ByteStringUtil.byteStringify(value).length() << 3);
         }
-
-        return LargeInteger.of(ByteStringUtil.byteStringify(value).length() * 8);
     }
 
     @Override
     public String automaticName() {
-        return "OCTET_LENGTH(" + subExpression.automaticName() + ")";
+        return "BIT_LENGTH(" + subExpression.automaticName() + ")";
     }
 
 }

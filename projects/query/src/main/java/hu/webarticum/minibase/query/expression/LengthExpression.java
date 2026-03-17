@@ -3,6 +3,7 @@ package hu.webarticum.minibase.query.expression;
 import java.util.Optional;
 
 import hu.webarticum.minibase.query.util.StringUtil;
+import hu.webarticum.miniconnect.lang.BitString;
 import hu.webarticum.miniconnect.lang.ByteString;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
@@ -54,7 +55,9 @@ public class LengthExpression implements Expression {
             return null;
         }
 
-        if (value instanceof ByteString) {
+        if (value instanceof BitString) {
+            return LargeInteger.of(((BitString) value).length());
+        } else if (value instanceof ByteString) {
             return LargeInteger.of(((ByteString) value).length());
         } else {
             return LargeInteger.of(StringUtil.stringify(value).length());
