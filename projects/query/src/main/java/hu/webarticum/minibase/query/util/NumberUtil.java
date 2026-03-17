@@ -16,6 +16,8 @@ import java.time.ZonedDateTime;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import hu.webarticum.miniconnect.lang.BitString;
+import hu.webarticum.miniconnect.lang.ByteString;
 import hu.webarticum.miniconnect.lang.DateTimeDelta;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.LargeInteger;
@@ -69,6 +71,8 @@ public final class NumberUtil {
                 type == Integer.class ||
                 type == Short.class ||
                 type == Byte.class ||
+                type == BitString.class ||
+                type == ByteString.class ||
                 type == BigInteger.class ||
                 type == Boolean.class ||
                 type == Character.class ||
@@ -252,6 +256,15 @@ public final class NumberUtil {
                 object instanceof Short ||
                 object instanceof Byte) {
             return LargeInteger.of(((Number) object).longValue());
+        } else if (object instanceof BitString) {
+            BitString bitStringValue = (BitString) object;
+            if (bitStringValue.length() <= 64) {
+                return LargeInteger.ofUnsignedLong(bitStringValue.toLong());
+            } else {
+                return LargeInteger.of(bitStringValue.toUnsignedBigInteger());
+            }
+        } else if (object instanceof ByteString) {
+            return LargeInteger.of(((ByteString) object).extract());
         } else if (object instanceof BigInteger) {
             return LargeInteger.of((BigInteger) object);
         } else if (object instanceof Number) {
