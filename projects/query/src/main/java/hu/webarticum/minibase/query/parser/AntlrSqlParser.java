@@ -122,6 +122,7 @@ import hu.webarticum.minibase.query.query.SelectQuery.SelectItem;
 import hu.webarticum.minibase.query.query.SelectQuery.ExpressionSelectItem;
 import hu.webarticum.minibase.query.query.SelectQuery.WildcardSelectItem;
 import hu.webarticum.minibase.query.query.SelectQuery.WhereItem;
+import hu.webarticum.miniconnect.lang.BitString;
 import hu.webarticum.miniconnect.lang.DateTimeDelta;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.LargeInteger;
@@ -131,6 +132,8 @@ import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.AliasPart
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.AliasableExpressionContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.AtomicExpressionContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.BetweenRelationContext;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.BinaryStringTokenListContext;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.BitStringLiteralContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.BitwiseNotExpressionContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.BooleanLiteralContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.CaseExpressionContext;
@@ -149,6 +152,8 @@ import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.FieldList
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.FieldNameContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.FunctionCallContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.FunctionNameContext;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.HexadecimalStringContinuationContext;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.HexadecimalStringTokenListContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.IdentifierContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.InsertQueryContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.InsertValueContext;
@@ -191,6 +196,7 @@ import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.SqlQueryC
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.StandaloneSelectQueryContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.StandaloneSelectRowContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.StringLiteralContext;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.StringTokenContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.StringTokenListContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.SubstringExpressionContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.TableNameContext;
@@ -1586,6 +1592,11 @@ public class AntlrSqlParser implements SqlParser {
             return parseStringLiteralNode(stringLiteralNode);
         }
 
+        BitStringLiteralContext bitStringLiteralNode = literalNode.bitStringLiteral();
+        if (bitStringLiteralNode != null) {
+            return parseBitStringLiteralNode(bitStringLiteralNode);
+        }
+
         BooleanLiteralContext booleanLiteralNode = literalNode.booleanLiteral();
         if (booleanLiteralNode != null) {
             return parseBooleanLiteralNode(booleanLiteralNode);
@@ -1630,14 +1641,14 @@ public class AntlrSqlParser implements SqlParser {
 
     private String parseStringTokenListNode(StringTokenListContext stringTokenListNode) {
         StringBuilder resultBuilder = new StringBuilder();
-        for (TerminalNode stringNode : stringTokenListNode.TOKEN_STRING()) {
-            resultBuilder.append(parseStringNode(stringNode));
+        for (StringTokenContext stringTokenNode : stringTokenListNode.stringToken()) {
+            resultBuilder.append(parseStringTokenNode(stringTokenNode));
         }
         return resultBuilder.toString();
     }
 
-    private String parseStringNode(TerminalNode stringNode) {
-        return unquote(stringNode.getText(), '\'');
+    private String parseStringTokenNode(StringTokenContext stringTokenNode) {
+        return unquote(stringTokenNode.getText(), '\'');
     }
 
     private static String unquote(String quotedLiteralText, char quoteChar) {
@@ -1786,6 +1797,71 @@ public class AntlrSqlParser implements SqlParser {
         resultBuilder.append((char) codePoint);
         return p;
     }
+
+    public static BitString parseBitStringLiteralNode(BitStringLiteralContext bitStringLiteralNode) {
+        BinaryStringTokenListContext binaryStringTokenListNode = bitStringLiteralNode.binaryStringTokenList();
+        if (binaryStringTokenListNode != null) {
+            return parseBinaryStringTokenListNode(binaryStringTokenListNode);
+        }
+
+        HexadecimalStringTokenListContext hexadecimalStringTokenListNode = bitStringLiteralNode.hexadecimalStringTokenList();
+        if (hexadecimalStringTokenListNode != null) {
+            return parseHexadecimalStringTokenListNode(hexadecimalStringTokenListNode);
+        }
+
+        throw new IllegalArgumentException("Unexpected bit string syntax: " + bitStringLiteralNode.getText());
+    }
+
+    public static BitString parseBinaryStringTokenListNode(BinaryStringTokenListContext binaryStringTokenListNode) {
+        StringBuilder bitStringBuilder = new StringBuilder();
+        bitStringBuilder.append(parseBinaryStringNode(binaryStringTokenListNode.TOKEN_BSTRING()));
+        for (TerminalNode binaryStringContinuationNode : binaryStringTokenListNode.TOKEN_BSTRING_CONTINUATION()) {
+            bitStringBuilder.append(parseBinaryStringContinuationNode(binaryStringContinuationNode));
+        }
+        return BitString.of(bitStringBuilder.toString());
+    }
+
+    public static String parseBinaryStringNode(TerminalNode binaryStringTokenNode) {
+        String nodeText = binaryStringTokenNode.getText();
+        return nodeText.substring(2, nodeText.length() - 1);
+    }
+
+    public static String parseBinaryStringContinuationNode(TerminalNode binaryStringContinuationNode) {
+        String nodeText = binaryStringContinuationNode.getText();
+        return nodeText.substring(1, nodeText.length() - 1);
+    }
+
+    public static BitString parseHexadecimalStringTokenListNode(HexadecimalStringTokenListContext hexadecimalStringTokenListNode) {
+        StringBuilder hexadecimalStringBuilder = new StringBuilder();
+        hexadecimalStringBuilder.append(parseHexadecimalStringTokenNode(hexadecimalStringTokenListNode.TOKEN_XSTRING()));
+        for (
+                HexadecimalStringContinuationContext hexadecimalStringContinuationNode :
+                hexadecimalStringTokenListNode.hexadecimalStringContinuation()) {
+            hexadecimalStringBuilder.append(parseHexadecimalStringContinuationNode(hexadecimalStringContinuationNode));
+        }
+        String hexadecimalString = hexadecimalStringBuilder.toString();
+        int hexadecimalStringLength = hexadecimalString.length();
+        StringBuilder bitStringBuilder = new StringBuilder(hexadecimalString.length() * 4);
+        for (int i = 0; i < hexadecimalStringLength; i++) {
+            int intValue = Integer.parseInt("" + hexadecimalString.charAt(i), 16);
+            bitStringBuilder.append((intValue & 8) != 0 ? '1' : '0');
+            bitStringBuilder.append((intValue & 4) != 0 ? '1' : '0');
+            bitStringBuilder.append((intValue & 2) != 0 ? '1' : '0');
+            bitStringBuilder.append((intValue & 1) != 0 ? '1' : '0');
+        }
+        return BitString.of(bitStringBuilder.toString());
+    }
+
+    public static String parseHexadecimalStringTokenNode(TerminalNode hexadecimalStringTokenNode) {
+        String nodeText = hexadecimalStringTokenNode.getText();
+        return nodeText.substring(2, nodeText.length() - 1);
+    }
+
+    public static String parseHexadecimalStringContinuationNode(HexadecimalStringContinuationContext hexadecimalStringContinuationNode) {
+        String nodeText = hexadecimalStringContinuationNode.getText();
+        return nodeText.substring(1, nodeText.length() - 1);
+    }
+
 
     public static Boolean parseBooleanLiteralNode(BooleanLiteralContext booleanLiteralNode) {
         return booleanLiteralNode.TRUE() != null;
