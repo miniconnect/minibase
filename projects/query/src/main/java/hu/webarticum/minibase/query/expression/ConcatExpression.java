@@ -1,10 +1,17 @@
 package hu.webarticum.minibase.query.expression;
 
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import hu.webarticum.minibase.query.util.BitStringUtil;
+import hu.webarticum.minibase.query.util.ByteStringUtil;
 import hu.webarticum.minibase.query.util.StringUtil;
+import hu.webarticum.minibase.query.util.UnifyUtil;
+import hu.webarticum.miniconnect.lang.BitString;
+import hu.webarticum.miniconnect.lang.ByteString;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
 
@@ -33,15 +40,39 @@ public class ConcatExpression implements Expression {
 
     @Override
     public Optional<Class<?>> type() {
-        return Optional.of(String.class);
+        Class<?> result = null;
+        for (Expression parameterExpression : parameterExpressions) {
+            Class<?> nextType = parameterExpression.type().orElse(null);
+            if (nextType == null) {
+                return Optional.empty();
+            } else if (nextType == BitString.class) {
+                result = BitString.class;
+            } else if (nextType != ByteString.class) {
+                return Optional.of(String.class);
+            } else if (result == null) {
+                result = ByteString.class;
+            }
+        }
+        return Optional.ofNullable(result != null ? result : String.class);
     }
 
     @Override
     public Class<?> type(ImmutableMap<Parameter, Class<?>> values) {
-        return String.class;
+        Class<?> result = null;
+        for (Expression parameterExpression : parameterExpressions) {
+            Class<?> nextType = parameterExpression.type(values);
+            if (nextType == BitString.class) {
+                result = BitString.class;
+            } else if (nextType != ByteString.class) {
+                return String.class;
+            } else if (result == null) {
+                result = ByteString.class;
+            }
+        }
+        return result != null ? result : String.class;
     }
 
-    @Override
+	@Override
     public boolean isNullable() {
         for (Expression parameterExpression : parameterExpressions.reverseOrder()) {
             if (parameterExpression.isNullable()) {
@@ -63,15 +94,49 @@ public class ConcatExpression implements Expression {
 
     @Override
     public Object evaluate(ImmutableMap<Parameter, Object> values) {
-        StringBuilder resultBuilder = new StringBuilder();
+        java.util.List<Object> parameterValues = new ArrayList<>(parameterExpressions.size());
         for (Expression parameterExpression : parameterExpressions) {
             Object value = parameterExpression.evaluate(values);
             if (value == null) {
                 return null;
             }
-            resultBuilder.append(StringUtil.stringify(value));
+            parameterValues.add(value);
         }
-        return resultBuilder.toString();
+        Class<?> resultType = detectRuntimeType(parameterValues);
+        if (resultType == BitString.class) {
+            BitString result = BitString.empty();
+            for (Object value : parameterValues) {
+                result = result.concat(BitStringUtil.bitStringify(value));
+            }
+            return result;
+        } else if (resultType == ByteString.class) {
+            ByteString.Builder resultBuilder = ByteString.builder();
+            for (Object value : parameterValues) {
+                resultBuilder.append(ByteStringUtil.byteStringify(value));
+            }
+            return resultBuilder.build();
+        } else {
+            StringBuilder resultBuilder = new StringBuilder();
+            for (Object value : parameterValues) {
+                resultBuilder.append(StringUtil.stringify(value));
+            }
+            return resultBuilder.toString();
+        }
+    }
+
+    private Class<?> detectRuntimeType(List<Object> parameterValues) {
+        Class<?> result = null;
+        for (Object parameterValue : parameterValues) {
+            Class<?> nextType = UnifyUtil.typeOf(parameterValue);
+            if (nextType == BitString.class) {
+                result = BitString.class;
+            } else if (nextType != ByteString.class) {
+                return String.class;
+            } else if (result == null) {
+                result = ByteString.class;
+            }
+        }
+        return result != null ? result : String.class;
     }
 
     @Override
