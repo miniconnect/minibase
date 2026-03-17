@@ -3,6 +3,7 @@ package hu.webarticum.minibase.query.expression;
 import java.util.Optional;
 
 import hu.webarticum.minibase.query.util.ByteStringUtil;
+import hu.webarticum.miniconnect.lang.BitString;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
 import hu.webarticum.miniconnect.lang.LargeInteger;
@@ -51,9 +52,11 @@ public class OctetLengthExpression implements Expression {
         Object value = subExpression.evaluate(values);
         if (value == null) {
             return null;
+        } else if (value instanceof BitString) {
+            return LargeInteger.of((((BitString) value).length() + 7) >>> 3);
+        } else {
+            return LargeInteger.of(ByteStringUtil.byteStringify(value).length());
         }
-
-        return LargeInteger.of(ByteStringUtil.byteStringify(value).length());
     }
 
     @Override

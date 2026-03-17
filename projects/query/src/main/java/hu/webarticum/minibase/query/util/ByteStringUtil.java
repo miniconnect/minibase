@@ -1,5 +1,6 @@
 package hu.webarticum.minibase.query.util;
 
+import hu.webarticum.miniconnect.lang.BitString;
 import hu.webarticum.miniconnect.lang.ByteString;
 
 public final class ByteStringUtil {
@@ -12,6 +13,8 @@ public final class ByteStringUtil {
     public static ByteString byteStringify(Object value) {
         if (value == null) {
             return null;
+        } else if (value instanceof BitString) {
+            return ByteString.wrap(((BitString) value).toByteArrayLeftAligned());
         } else if (value instanceof ByteString) {
             return (ByteString) value;
         } else {
