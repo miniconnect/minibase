@@ -85,7 +85,7 @@ public class BitwiseShiftLeftExpression implements Expression {
         }
 
         BitString bitStringValue = (BitString) ConvertUtil.convert(baseValue, BitString.class);
-        return isShiftOut ? BitString.empty().resize(bitStringValue.size()) : bitStringValue.shiftLeft(shift);
+        return isShiftOut ? BitString.empty().resize(bitStringValue.length()) : bitStringValue.shiftLeft(shift);
     }
 
     @Override

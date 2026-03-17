@@ -31,7 +31,7 @@ public final class BitStringUtil {
                 bitLength++;
             }
             BitString converted = BitString.of(largeIntegerValue.toByteArray());
-            int convertedSize = converted.size();
+            int convertedSize = converted.length();
             return converted.substring(convertedSize - bitLength, convertedSize);
         } else if (value instanceof Byte) {
             return BitString.of(new byte[] { (byte) value });
@@ -57,16 +57,16 @@ public final class BitStringUtil {
         if (value == null || size == null) {
             return bitStringValue;
         }
-        int convertedSize = bitStringValue.size();
-        if (size == convertedSize) {
+        int convertedLength = bitStringValue.length();
+        if (size == convertedLength) {
             return bitStringValue;
         }
 
         if (value instanceof Number) {
-            if (size > convertedSize) {
+            if (size > convertedLength) {
                 return bitStringValue.padLeft(size);
             } else {
-                return bitStringValue.substring(convertedSize - size, convertedSize);
+                return bitStringValue.substring(convertedLength - size, convertedLength);
             }
         } else {
             return bitStringValue.resize(size);
