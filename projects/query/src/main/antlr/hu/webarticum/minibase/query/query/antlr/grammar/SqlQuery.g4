@@ -90,12 +90,12 @@ orderByPosition: TOKEN_INTEGER;
 aliasableExpression: expression aliasPart?;
 aliasPart: AS? alias=identifier;
 expression:
+    subExpression=expression DOUBLE_COLON typeConstruct |
     leftExpression=expression binaryOperator=ET rightExpression=expression |
     leftExpression=expression binaryOperator=SHIFT_LEFT rightExpression=expression |
     leftExpression=expression binaryOperator=SHIFT_RIGHT rightExpression=expression |
     leftExpression=expression binaryOperator=PIPE rightExpression=expression |
-    leftExpression=expression binaryOperator=( HAT | HASH ) rightExpression=expression |
-    subExpression=expression DOUBLE_COLON typeConstruct |
+    leftExpression=expression binaryOperator=HASH rightExpression=expression |
     leftExpression=expression binaryOperator=( ASTERISK | MOD | PERCENT | DIV | SLASH ) rightExpression=expression |
     leftExpression=expression binaryOperator=( PLUS | MINUS ) rightExpression=expression |
     leftExpression=expression binaryOperator=AND rightExpression=expression |
@@ -378,7 +378,6 @@ PIPE: '|';
 SHIFT_LEFT: '<<';
 SHIFT_RIGHT: '>>';
 TILDE: '~';
-HAT: '^';
 HASH: '#';
 
 ASTERISK: '*';
