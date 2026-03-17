@@ -95,7 +95,7 @@ public class BitwiseXorExpression implements Expression {
         BitString leftBitString = (BitString) ConvertUtil.convert(leftValue, BitString.class);
         BitString rightBitString = (BitString) ConvertUtil.convert(rightValue, BitString.class);
         if (leftIsNumber || rightIsNumber) {
-            int coveringLength = Math.max(leftBitString.size(), rightBitString.size());
+            int coveringLength = Math.max(leftBitString.length(), rightBitString.length());
             leftBitString = leftBitString.padLeft(coveringLength);
             rightBitString = rightBitString.padLeft(coveringLength);
         }
