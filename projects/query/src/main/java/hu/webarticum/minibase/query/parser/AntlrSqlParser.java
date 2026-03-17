@@ -701,7 +701,7 @@ public class AntlrSqlParser implements SqlParser {
             return new BitwiseShiftRightExpression(leftExpression, rightExpression);
         } else if (expressionNode.PIPE() != null) {
             return new BitwiseOrExpression(leftExpression, rightExpression);
-        } else if (expressionNode.HAT() != null || expressionNode.HASH() != null) {
+        } else if (expressionNode.HASH() != null) {
             return new BitwiseXorExpression(leftExpression, rightExpression);
         } else if (expressionNode.ASTERISK() != null) {
             return new MultiplyExpression(leftExpression, rightExpression);
