@@ -104,11 +104,11 @@ public class ConcatExpression implements Expression {
         }
         Class<?> resultType = detectRuntimeType(parameterValues);
         if (resultType == BitString.class) {
-            BitString result = BitString.empty();
+            BitString.Builder resultBuilder = BitString.builder();
             for (Object value : parameterValues) {
-                result = result.concat(BitStringUtil.bitStringify(value));
+                resultBuilder.append(BitStringUtil.bitStringify(value));
             }
-            return result;
+            return resultBuilder.build();
         } else if (resultType == ByteString.class) {
             ByteString.Builder resultBuilder = ByteString.builder();
             for (Object value : parameterValues) {
