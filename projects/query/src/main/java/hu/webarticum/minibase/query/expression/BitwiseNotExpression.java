@@ -2,8 +2,10 @@ package hu.webarticum.minibase.query.expression;
 
 import java.util.Optional;
 
+import hu.webarticum.minibase.query.util.BitStringUtil;
 import hu.webarticum.minibase.query.util.ConvertUtil;
 import hu.webarticum.miniconnect.lang.BitString;
+import hu.webarticum.miniconnect.lang.ByteString;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
 import hu.webarticum.miniconnect.lang.LargeInteger;
@@ -32,7 +34,7 @@ public class BitwiseNotExpression implements Expression {
         Class<?> subType = subExpression.type().orElse(null);
         if (subType == null) {
             return Optional.empty();
-        } else if (Number.class.isAssignableFrom(subType)) {
+        } else if (subType == Void.class || Number.class.isAssignableFrom(subType)) {
             return Optional.of(LargeInteger.class);
         } else {
             return Optional.of(BitString.class);
@@ -42,7 +44,7 @@ public class BitwiseNotExpression implements Expression {
     @Override
     public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
         Class<?> subType = subExpression.type(types);
-        if (Number.class.isAssignableFrom(subType)) {
+        if (subType == Void.class || Number.class.isAssignableFrom(subType)) {
             return subType;
         } else {
             return BitString.class;
@@ -69,8 +71,13 @@ public class BitwiseNotExpression implements Expression {
             return largeIntegerValue.not();
         }
 
-        BitString bitStringValue = (BitString) ConvertUtil.convert(subValue, BitString.class);
+        BitString bitStringValue = bitStringify(subValue);
         return bitStringValue.not();
+    }
+
+    private BitString bitStringify(Object value) {
+        Object bitsValue = value instanceof String ? ByteString.of((String) value) : value;
+        return BitStringUtil.bitStringify(bitsValue);
     }
 
     @Override
