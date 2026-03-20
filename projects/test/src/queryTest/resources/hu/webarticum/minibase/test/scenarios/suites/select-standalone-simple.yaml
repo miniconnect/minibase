@@ -6,8 +6,7 @@ cases:
     description: Select single constant
     query: "SELECT 1"
     columns:
-      - type: hu.webarticum.miniconnect.lang.LargeInteger
-        nullable: false
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
     expectedResult:
       - [ 1 ]
 
@@ -15,9 +14,7 @@ cases:
     description: Select single constant with alias
     query: "SELECT 100 AS hundred"
     columns:
-      - name: hundred
-        type: hu.webarticum.miniconnect.lang.LargeInteger
-        nullable: false
+      - { name: hundred, type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
     expectedResult:
       - [ 100 ]
 
@@ -25,26 +22,14 @@ cases:
     description: Select constants in several ways
     query: "SELECT 10, 20 AS twenty, 30, 40, 50 fifty, '60' as `sixty`, null `70`, 80"
     columns:
-      - type: hu.webarticum.miniconnect.lang.LargeInteger
-        nullable: false
-      - name: twenty
-        type: hu.webarticum.miniconnect.lang.LargeInteger
-        nullable: false
-      - type: hu.webarticum.miniconnect.lang.LargeInteger
-        nullable: false
-      - type: hu.webarticum.miniconnect.lang.LargeInteger
-        nullable: false
-      - name: fifty
-        type: hu.webarticum.miniconnect.lang.LargeInteger
-        nullable: false
-      - name: sixty
-        type: java.lang.String
-        nullable: false
-      - name: "70"
-        type: java.lang.Void
-        nullable: true
-      - type: hu.webarticum.miniconnect.lang.LargeInteger
-        nullable: false
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { name: twenty, type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { name: fifty, type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { name: sixty, type: java.lang.String, nullable: false }
+      - { name: "70", type: java.lang.Void, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
     expectedResult:
       - [ 10, 20, 30, 40, 50, "60", null, 80 ]
 
@@ -52,22 +37,14 @@ cases:
     description: Simple mathematical operations
     query: "SELECT 1 + 1, 0.7 + 0.3, 8 / 2, 5 / 2, 5.0 / 2, 3 * -7, 2 - 4, -1 - -12"
     columns:
-      - type: hu.webarticum.miniconnect.lang.LargeInteger
-        nullable: false
-      - type: java.math.BigDecimal
-        nullable: false
-      - type: hu.webarticum.miniconnect.lang.LargeInteger
-        nullable: false
-      - type: hu.webarticum.miniconnect.lang.LargeInteger
-        nullable: false
-      - type: java.math.BigDecimal
-        nullable: false
-      - type: hu.webarticum.miniconnect.lang.LargeInteger
-        nullable: false
-      - type: hu.webarticum.miniconnect.lang.LargeInteger
-        nullable: false
-      - type: hu.webarticum.miniconnect.lang.LargeInteger
-        nullable: false
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
     expectedResult:
       - [ 2, "1.0", 4, 2, "2.5", -21, -2, 11 ]
 
@@ -75,18 +52,12 @@ cases:
     description: Obvious casts between basic types
     query: "SELECT 7::NUMERIC, CAST('12' AS INT), 32::CHAR, '4.3'::NUMERIC::INT::CHAR, null::INT, 5::DECIMAL(3, 2)"
     columns:
-      - type: java.math.BigDecimal
-        nullable: false
-      - type: hu.webarticum.miniconnect.lang.LargeInteger
-        nullable: false
-      - type: java.lang.String
-        nullable: false
-      - type: java.lang.String
-        nullable: false
-      - type: hu.webarticum.miniconnect.lang.LargeInteger
-        nullable: true
-      - type: java.math.BigDecimal
-        nullable: false
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
+      - { type: java.math.BigDecimal, nullable: false }
     expectedResult:
       - [ "7", 12, "32", "4", null, "5.00" ]
 
@@ -102,27 +73,17 @@ cases:
         NULL IS NULL, NULL IS NOT NULL, 2 IS NULL, @var1 IS NULL, @var2 IS NULL,
         NULLIF(@var2, 'lorem'), NULLIF(@var2, 'ipsum')
     columns:
-      - type: java.lang.Void
-        nullable: true
-      - type: hu.webarticum.miniconnect.lang.LargeInteger
-        nullable: false
-      - type: java.lang.Void
-        nullable: true
-      - type: java.lang.String
-        nullable: false
-      - type: java.lang.Boolean
-        nullable: false
-      - type: java.lang.Boolean
-        nullable: false
-      - type: java.lang.Boolean
-        nullable: false
-      - type: java.lang.Boolean
-        nullable: false
-      - type: java.lang.Boolean
-        nullable: false
-      - type: java.lang.String
-        nullable: true
-      - type: java.lang.String
+      - { type: java.lang.Void, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: java.lang.Void, nullable: true }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.String, nullable: true }
+      - { type: java.lang.String }
     expectedResult:
       - [ null, 2, null, "lorem", true, false, false, true, false, null, "lorem" ]
 
@@ -134,27 +95,16 @@ cases:
         CONCAT_WS(',', 'lorem', NULL, 'ipsum', 'dolor', NULL, NULL),
         TRUE AND NULL, TRUE OR NULL, FALSE AND NULL, FALSE OR NULL, NULL AND NULL, NULL OR NULL
     columns:
-      - type: java.lang.Void
-        nullable: true
-      - type: java.lang.Void
-        nullable: true
-      - type: java.lang.String
-        nullable: true
-      - type: java.lang.String
-        nullable: true
-      - type: java.lang.String
-        nullable: false
-      - type: java.lang.Boolean
-        nullable: true
-      - type: java.lang.Boolean
-        nullable: true
-      - type: java.lang.Boolean
-        nullable: true
-      - type: java.lang.Boolean
-        nullable: true
-      - type: java.lang.Boolean
-        nullable: true
-      - type: java.lang.Boolean
-        nullable: true
+      - { type: java.lang.Void, nullable: true }
+      - { type: java.lang.Void, nullable: true }
+      - { type: java.lang.String, nullable: true }
+      - { type: java.lang.String, nullable: true }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
     expectedResult:
       - [ null, null, null, null, "lorem,ipsum,dolor", null, true, false, null, null, null ]

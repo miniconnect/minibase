@@ -11,14 +11,10 @@ cases:
       - "INSERT INTO books (title, author, pub_year) VALUES ('Clockwork Orange, A', 'Anthony Burgess', 1962)"
     query: "SELECT * FROM books ORDER BY id DESC LIMIT 3"
     columns:
-      - name: id
-        type: hu.webarticum.miniconnect.lang.LargeInteger
-      - name: title
-        type: java.lang.String
-      - name: author
-        type: java.lang.String
-      - name: pub_year
-        type: hu.webarticum.miniconnect.lang.LargeInteger
+      - { name: id, type: hu.webarticum.miniconnect.lang.LargeInteger }
+      - { name: title, type: java.lang.String }
+      - { name: author, type: java.lang.String }
+      - { name: pub_year, type: hu.webarticum.miniconnect.lang.LargeInteger }
     expectedResult:
       - [ 27, "Clockwork Orange, A", "Anthony Burgess", 1962 ]
       - [ 26, "Magic Mountain, The", "Thomas Mann", 1924 ]
@@ -30,14 +26,10 @@ cases:
       - "UPDATE books SET title='Idiot, The', author='Fyodor Dostoyevsky' WHERE id=11"
     query: "SELECT * FROM books WHERE id >= 10 ORDER BY id LIMIT 3"
     columns:
-      - name: id
-        type: hu.webarticum.miniconnect.lang.LargeInteger
-      - name: title
-        type: java.lang.String
-      - name: author
-        type: java.lang.String
-      - name: pub_year
-        type: hu.webarticum.miniconnect.lang.LargeInteger
+      - { name: id, type: hu.webarticum.miniconnect.lang.LargeInteger }
+      - { name: title, type: java.lang.String }
+      - { name: author, type: java.lang.String }
+      - { name: pub_year, type: hu.webarticum.miniconnect.lang.LargeInteger }
     expectedResult:
       - [ 10, "Misérables, Les", "Victor Hugo", 1862 ]
       - [ 11, "Idiot, The", "Fyodor Dostoyevsky", 1869 ]
