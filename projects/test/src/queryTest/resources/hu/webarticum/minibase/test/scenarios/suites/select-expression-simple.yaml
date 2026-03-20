@@ -1,0 +1,344 @@
+description: Simple standalone select queries
+datasetResource: ../datasets/empty.yaml
+cases:
+
+  - name: abs
+    description: Abs expression
+    query: |
+      SELECT
+        ABS(0), ABS(-3), ABS(-23), ABS(-256), ABS(2), ABS(-9223372036854775808),
+        ABS(-3.20), ABS(4.0210), ABS('9'), ABS('-1234'), ABS(NULL)
+    columns:
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: java.lang.Void, nullable: true }
+    expectedResult:
+      - [ 0, 3, 23, 256, 2, 9223372036854775808, "3.20", "4.0210", 9, 1234, null ]
+
+  - name: add
+    description: Add expression
+    query: |
+      SELECT
+        0 + 0, 1 + 1, 7 + 12, -2 + 2, -3 + 10, 30 + -1, -10 + -72, 4 + 2.0, 7 + -1.2,
+        34123.02310 + 1203.201,
+        1253752056703516253601011 + 152,
+        2 + '7', '12.030' + 4, '5' + '6',
+        NULL + 3, 2 + NULL, NULL + NULL
+    columns:
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: java.lang.Void, nullable: true }
+      - { type: java.lang.Void, nullable: true }
+      - { type: java.lang.Void, nullable: true }
+    expectedResult:
+      - [ 0, 2, 19, 0, 7, 29, -82, "6.0", "5.8", "35326.22410", 1253752056703516253601163, 9, "16.030", 11, null, null, null ]
+
+  - name: and
+    description: And expression
+    query: |
+      SELECT
+        TRUE AND TRUE, TRUE AND FALSE, FALSE AND TRUE, FALSE AND FALSE,
+        TRUE AND NULL, FALSE AND NULL, NULL AND TRUE, NULL AND FALSE, NULL AND NULL
+    columns:
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+    expectedResult:
+      - [ true, false, false, false, null, false, null, false, null ]
+
+  - name: ascii
+    description: Ascii expression
+    query: "SELECT ASCII('5'), ASCII('A'), ASCII('~'), ASCII(NULL)"
+    columns:
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
+    expectedResult:
+      - [ 53, 65, 126, null ]
+
+  - name: atan2
+    description: Atan2 expression
+    query: "SELECT ATAN2(3, 3), ATAN2(1.5574077246549023, 1), ATAN(NULL)"
+    columns:
+      - { type: java.lang.Double, nullable: false }
+      - { type: java.lang.Double, nullable: false }
+      - { type: java.lang.Double, nullable: true }
+    expectedResult:
+      - [ 0.7853981633974483, 1, null ]
+
+  - name: between
+    description: Between expression
+    query: |
+      SELECT
+        3 BETWEEN 5 AND 10, 4 BETWEEN 5 AND 10, 5 BETWEEN 5 AND 10, 7 BETWEEN 5 AND 10,
+        9 BETWEEN 5 AND 10, 10 BETWEEN 5 AND 10, 11 BETWEEN 5 AND 10,
+        3 BETWEEN 10 AND 5, 7 BETWEEN 10 AND 5, 10 BETWEEN 10 AND 5, 15 BETWEEN 10 AND 5,
+        3 BETWEEN NULL AND 10, 10 BETWEEN NULL AND 10, 12 BETWEEN NULL AND 10,
+        7 BETWEEN 10 AND NULL, 10 BETWEEN 10 AND NULL, 12 BETWEEN 10 AND NULL,
+        7 BETWEEN NULL AND NULL,
+        NULL BETWEEN 5 AND 10, NULL BETWEEN NULL AND 10, NULL BETWEEN 5 AND NULL, NULL BETWEEN NULL AND NULL
+    columns:
+      - { type: java.lang.Boolean,  nullable: false }
+      - { type: java.lang.Boolean,  nullable: false }
+      - { type: java.lang.Boolean,  nullable: false }
+      - { type: java.lang.Boolean,  nullable: false }
+      - { type: java.lang.Boolean,  nullable: false }
+      - { type: java.lang.Boolean,  nullable: false }
+      - { type: java.lang.Boolean,  nullable: false }
+      - { type: java.lang.Boolean,  nullable: false }
+      - { type: java.lang.Boolean,  nullable: false }
+      - { type: java.lang.Boolean,  nullable: false }
+      - { type: java.lang.Boolean,  nullable: false }
+      - { type: java.lang.Boolean,  nullable: true }
+      - { type: java.lang.Boolean,  nullable: true }
+      - { type: java.lang.Boolean,  nullable: true }
+      - { type: java.lang.Boolean,  nullable: true }
+      - { type: java.lang.Boolean,  nullable: true }
+      - { type: java.lang.Boolean,  nullable: true }
+      - { type: java.lang.Boolean,  nullable: true }
+      - { type: java.lang.Boolean,  nullable: true }
+      - { type: java.lang.Boolean,  nullable: true }
+      - { type: java.lang.Boolean,  nullable: true }
+      - { type: java.lang.Boolean,  nullable: true }
+    expectedResult:
+      - [ false, false, true, true, true, true, false, false, false, false, false,
+          null, null, false, false, null, null, null, null, null, null, null ]
+
+  - name: bit-length
+    description: BitLength expression
+    query: |
+      SELECT
+        BIT_LENGTH(b''), BIT_LENGTH(b'000'), BIT_LENGTH(b'10111010'),
+        BIT_LENGTH('10'), BIT_LENGTH('lorem'), BIT_LENGTH(14), BIT_LENGTH(NULL)
+    columns:
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
+    expectedResult:
+      - [ 0, 3, 8, 16, 40, 4, null ]
+
+  - name: bitwise-and
+    description: BitwiseAnd expression
+    query: |
+      SELECT
+        b'10' & b'11', b'110' & b'011', b'' & b'10', b'10' & b'0011',
+        b'101011111111' & 'AB', b'101' & 7, 2 & 7, b'101' & NULL, NULL & 4, NULL & NULL
+    columns:
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
+    expectedResult:
+      - [ "10", "010", "00", "0000", "0000000101000000", "101", 2, null, null, null ]
+
+  - name: bitwise-not
+    description: BitwiseNot expression
+    query: |
+      SELECT
+        ~ b'10', ~ b'11', ~ b'0000000', ~ b'11111111', ~ b'101111010',
+        ~ 4, ~ 0, ~ -123, ~ 'lorem', ~ NULL
+    columns:
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
+    expectedResult:
+      - [ "01", "00", "1111111", "00000000", "010000101", -5, -1, 122, "1001001110010000100011011001101010010010", null ]
+
+  - name: bitwise-or
+    description: BitwiseOr expression
+    query: |
+      SELECT
+        b'10' | b'11', b'10010' | b'00110', b'' | b'10', b'10' | b'0011',
+        b'101011111111' | 'AB', b'101' | 12, 5 | 9, b'101' | NULL, NULL | 4, NULL | NULL
+    columns:
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
+    expectedResult:
+      - [ "11", "10110", "10", "1011", "1110111111110010", "1101", 13, null, null, null ]
+
+  - name: bitwise-shift-left
+    description: BitwiseShiftLeft expression
+    query: |
+      SELECT
+        b'11010' << 5, b'11010' << 2, b'11010' << 0, b'11010' << -1,
+        5 << 3, 5 << 0, 5 << -1, b'11010' << NULL, 3 << NULL, NULL << 1, NULL << NULL
+    columns:
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
+    expectedResult:
+      - [ "00000", "01000", "11010", "00000", 40, 5, 0, null, null, null, null ]
+
+  - name: bitwise-shift-right
+    description: BitwiseShiftRight expression
+    query: |
+      SELECT
+        b'11010' >> 5, b'11010' >> 2, b'11010' >> 0, b'11010' >> -1,
+        5 >> 2, 5 >> 0, 5 >> -1, b'11010' >> NULL, 3 >> NULL, NULL >> 1, NULL >> NULL
+    columns:
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
+    expectedResult:
+      - [ "00000", "00110", "11010", "00000", 1, 5, 0, null, null, null, null ]
+
+  - name: bitwise-xor
+    description: BitwiseXor expression
+    query: |
+      SELECT
+        b'10' # b'11', b'10010' # b'00110', b'' # b'10', b'10' # b'0011',
+        b'101011111111' # 'AB', b'101' # 12, 5 # 9, b'101' # NULL, NULL # 4, NULL # NULL
+    columns:
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
+    expectedResult:
+      - [ "01", "10100", "10", "1011", "1110111010110010", "1001", 12, null, null, null ]
+
+# TODO:
+# CaseExpression.java
+# CastExpression.java
+# CharLengthExpression.java
+# ChrExpression.java
+# CoalesceExpression.java
+# ColumnExpression.java
+# ColumnParameter.java
+# ConcatExpression.java
+# ConcatWithSeparatorExpression.java
+# ConstantExpression.java
+# DecodeExpression.java
+# DivideExpression.java
+# EncodeExpression.java
+# EqualsExpression.java
+# Expression.java
+# ExtractExpression.java
+# GcdExpression.java
+# GreatestExpression.java
+# InExpression.java
+# InitcapExpression.java
+# IsNullExpression.java
+# LcmExpression.java
+# LeastExpression.java
+# LeftExpression.java
+# LeftPadExpression.java
+# LengthExpression.java
+# LikeExpression.java
+# LogExpression.java
+# LowerExpression.java
+# ModExpression.java
+# MultiplyExpression.java
+# NegateExpression.java
+# NotEqualsExpression.java
+# NotExpression.java
+# NowExpression.java
+# NullifExpression.java
+# OctetLengthExpression.java
+# OrderRelationExpression.java
+# OrdExpression.java
+# OrExpression.java
+# OverlapsExpression.java
+# Parameter.java
+# PiExpression.java
+# PositionExpression.java
+# PowExpression.java
+# RandomExpression.java
+# RegexpExpression.java
+# RegexpReplaceExpression.java
+# RemainderExpression.java
+# RepeatExpression.java
+# ReplaceExpression.java
+# ReverseExpression.java
+# RightExpression.java
+# RightPadExpression.java
+# RightRightPadExpression.java
+# RoundExpression.java
+# Sha256Expression.java
+# SignExpression.java
+# SpecialValueExpression.java
+# SpecialValueParameter.java
+# SplitPartExpression.java
+# SubstringExpression.java
+# SubtractExpression.java
+# TranslateExpression.java
+# TrimExpression.java
+# TypeConstruct.java
+# UnaryRealMathFunctionExpression.java
+# UpperExpression.java
+# VariableExpression.java
+# VariableParameter.java
+# XorExpression.java
