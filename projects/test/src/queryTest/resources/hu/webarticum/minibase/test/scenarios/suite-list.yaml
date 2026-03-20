@@ -1,4 +1,5 @@
 suites:
+  - suites/select-expression-simple.yaml
   - suites/select-standalone-simple.yaml
   - suites/crud-simple.yaml
   - suites/select-table-simple.yaml
