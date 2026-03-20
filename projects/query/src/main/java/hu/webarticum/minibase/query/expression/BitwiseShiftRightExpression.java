@@ -2,8 +2,10 @@ package hu.webarticum.minibase.query.expression;
 
 import java.util.Optional;
 
+import hu.webarticum.minibase.query.util.BitStringUtil;
 import hu.webarticum.minibase.query.util.ConvertUtil;
 import hu.webarticum.miniconnect.lang.BitString;
+import hu.webarticum.miniconnect.lang.ByteString;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
 import hu.webarticum.miniconnect.lang.LargeInteger;
@@ -39,7 +41,7 @@ public class BitwiseShiftRightExpression implements Expression {
         Class<?> baseType = baseExpression.type().orElse(null);
         if (baseType == null) {
             return Optional.empty();
-        } else if (Number.class.isAssignableFrom(baseType)) {
+        } else if (baseType == Void.class || Number.class.isAssignableFrom(baseType)) {
             return Optional.of(LargeInteger.class);
         } else {
             return Optional.of(BitString.class);
@@ -84,8 +86,13 @@ public class BitwiseShiftRightExpression implements Expression {
             return isShiftOut ? 0 : largeIntegerValue.shiftRight(shift);
         }
 
-        BitString bitStringValue = (BitString) ConvertUtil.convert(baseValue, BitString.class);
+        BitString bitStringValue = bitStringify(baseValue);
         return isShiftOut ? BitString.empty().resize(bitStringValue.length()) : bitStringValue.shiftRight(shift);
+    }
+
+    private BitString bitStringify(Object value) {
+        Object bitsValue = value instanceof String ? ByteString.of((String) value) : value;
+        return BitStringUtil.bitStringify(bitsValue);
     }
 
     @Override
