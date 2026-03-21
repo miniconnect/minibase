@@ -57,11 +57,11 @@ public class InExpression implements Expression {
             return true;
         }
         for (Expression listedExpression : listedExpressions) {
-            if (!listedExpression.isNullable()) {
-                return false;
+            if (listedExpression.isNullable()) {
+                return true;
             }
         }
-        return true;
+        return false;
     }
 
     @Override
@@ -70,11 +70,11 @@ public class InExpression implements Expression {
             return true;
         }
         for (Expression listedExpression : listedExpressions) {
-            if (!listedExpression.isNullable(nullabilities)) {
-                return false;
+            if (listedExpression.isNullable(nullabilities)) {
+                return true;
             }
         }
-        return true;
+        return false;
     }
 
     @Override
@@ -84,19 +84,19 @@ public class InExpression implements Expression {
             return null;
         }
         Class<?> givenType = UnifyUtil.typeOf(givenValue);
-        boolean foundNotNull = false;
+        boolean foundNull = false;
         for (Expression listedExpression : listedExpressions) {
             Object listedValue = listedExpression.evaluate(values);
             if (listedValue == null) {
+                foundNull = true;
                 continue;
             }
             Object convertedValue = ConvertUtil.convert(listedValue, givenType);
             if (ValueUtil.evalEquality(givenValue, convertedValue)) {
                 return true;
             }
-            foundNotNull = true;
         }
-        return foundNotNull ? false : null;
+        return foundNull ? null : false;
     }
 
     @Override
