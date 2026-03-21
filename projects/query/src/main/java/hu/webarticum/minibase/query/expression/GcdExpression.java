@@ -37,15 +37,17 @@ public class GcdExpression implements Expression {
 
     @Override
     public Optional<Class<?>> type() {
-        Class<?> leftNumericType = NumberUtil.numberifyType(aExpression.type().orElse(Void.class));
-        Class<?> rightNumericType = NumberUtil.numberifyType(bExpression.type().orElse(Void.class));
+        Class<?> leftType = aExpression.type().orElse(null);
+        Class<?> rightType = bExpression.type().orElse(null);
+        Class<?> leftNumericType = leftType != null ? NumberUtil.numberifyType(leftType) : null;
+        Class<?> rightNumericType = rightType != null ? NumberUtil.numberifyType(rightType) : null;
         if (
                 leftNumericType == Double.class ||
                 leftNumericType == BigDecimal.class ||
                 rightNumericType == Double.class ||
                 rightNumericType == BigDecimal.class) {
             return Optional.of(BigDecimal.class);
-        } else if (leftNumericType == Void.class || rightNumericType == Void.class) {
+        } else if (leftNumericType == null || rightNumericType == null) {
             return Optional.empty();
         } else {
             return Optional.of(LargeInteger.class);
@@ -56,12 +58,14 @@ public class GcdExpression implements Expression {
     public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
         Class<?> leftNumericType = NumberUtil.numberifyType(aExpression.type(types));
         Class<?> rightNumericType = NumberUtil.numberifyType(bExpression.type(types));
-        if (leftNumericType == LargeInteger.class && rightNumericType == LargeInteger.class) {
-            return LargeInteger.class;
-        } else if (leftNumericType == Void.class || rightNumericType == Void.class) {
-            return Void.class;
-        } else {
+        if (
+                leftNumericType == Double.class ||
+                leftNumericType == BigDecimal.class ||
+                rightNumericType == Double.class ||
+                rightNumericType == BigDecimal.class) {
             return BigDecimal.class;
+        } else {
+            return LargeInteger.class;
         }
     }
 
