@@ -270,14 +270,144 @@ cases:
     expectedResult:
       - [ "01", "10100", "10", "1011", "1110111010110010", "1001", 12, null, null, null ]
 
+  - name: case
+    description: Case expression
+    query: |
+      SELECT
+        CASE WHEN TRUE THEN 1 ELSE 2 END,
+        CASE WHEN FALSE THEN 1 ELSE 2 END,
+        CASE WHEN FALSE THEN 1 WHEN FALSE THEN 2 WHEN TRUE THEN 3 WHEN TRUE THEN 4 ELSE 5 END,
+        CASE WHEN TRUE THEN 1 ELSE NULL END,
+        CASE WHEN TRUE THEN NULL ELSE 2 END,
+        CASE WHEN TRUE THEN NULL ELSE NULL END,
+        CASE WHEN NULL THEN 1 ELSE 2 END,
+        CASE WHEN NULL THEN NULL ELSE NULL END,
+        CASE 1 WHEN 1 THEN 'A' ELSE 'B' END,
+        CASE 2 WHEN 1 THEN 'A' ELSE 'B' END,
+        CASE 3 WHEN 1 THEN 'A' WHEN 2 THEN 'B' WHEN 3 THEN 'C' WHEN 4 THEN 'D' ELSE 'E' END,
+        CASE 1 WHEN 1 THEN 'A' ELSE NULL END,
+        CASE 2 WHEN 1 THEN NULL ELSE 'B' END,
+        CASE 2 WHEN 1 THEN NULL ELSE NULL END,
+        CASE NULL WHEN NULL THEN 'A' ELSE 'B' END,
+        CASE NULL WHEN NULL THEN NULL ELSE 'B' END,
+        CASE NULL WHEN NULL THEN 'A' ELSE NULL END,
+        CASE NULL WHEN NULL THEN NULL ELSE NULL END,
+        CASE 1 WHEN '1' THEN 'A' WHEN 2 THEN 'B' WHEN 1 THEN 'C' ELSE '' END
+    columns:
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
+      - { type: java.lang.Void, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: java.lang.Void, nullable: true }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: true }
+      - { type: java.lang.String, nullable: true }
+      - { type: java.lang.Void, nullable: true }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: true }
+      - { type: java.lang.String, nullable: true }
+      - { type: java.lang.Void, nullable: true }
+      - { type: java.lang.String, nullable: false }
+    expectedResult:
+      - [ 1, 2, 3, 1, null, null, 2, null, "A", "B", "C", "A", "B", null, "B", "B", null, null, "A" ]
+
+  - name: cast
+    description: Cast expression
+    query: |
+      SELECT
+        CAST(3 AS INT), CAST(3 AS CHAR), CAST('lorem' AS CHAR(2)), CAST(NULL AS INT),
+        14::INT, 14::BIGINT, 14::INT(3), 14::INT(1), 14::CHAR, 14::CHAR(5), 14::CHAR(1), 14::DECIMAL, 14::DECIMAL(5, 2),
+        -23::INT(1), 12.3::INT, 12.7::INT, 45.671::DECIMAL(3, 1), 12.01::DECIMAL(2, 1), 132.01::DECIMAL(6, 4),
+        1750000000::INSTANT, 3621.54::INTERVAL, INTERVAL '2 hours'::INT,
+        'lorem'::NULL, NULL::CHAR, NULL::BINARY, NULL::BOOL, NULL::NULL
+    columns:
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: java.time.Instant, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.DateTimeDelta, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: java.lang.Void, nullable: true }
+      - { type: java.lang.String, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Void, nullable: true }
+    expectedResult:
+      - [ 3, "3", "lo", null, 14, 14, 14, 9, "14", "14", "1", "14", "14.00", -9, 12, 12, "45.6", "9.9", "99.9999",
+          "2025-06-15T15:06:40Z", "PT1H21.54S", 7200, null, null, null, null, null ]
+
+  - name: char-length
+    description: CharLength expression
+    query: |
+      SELECT
+        CHARACTER_LENGTH('lorem'), CHARACTER_LENGTH(''), CHARACTER_LENGTH(123), CHARACTER_LENGTH(NULL),
+        CHAR_LENGTH('lorem'), CHAR_LENGTH(''), CHAR_LENGTH(123), CHAR_LENGTH(NULL)
+    columns:
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
+    expectedResult:
+      - [ 5, 0, 3, null, 5, 0, 3, null ]
+
+  - name: chr
+    description: Chr expression
+    query: "SELECT CHR(65), CHR(126), CHR(b'01000000'), CHR(8594), CHR(NULL)"
+    columns:
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: true }
+    expectedResult:
+      - [ "A", "~", "@", "→", null ]
+
+  - name: coalesce
+    description: Coalesce expression
+    query: |
+      SELECT
+        COALESCE(1), COALESCE('lorem'), COALESCE(1, NULL), COALESCE('lorem', NULL), COALESCE(NULL, 1), COALESCE(NULL, 'lorem'),
+        COALESCE(1, '2', 3.4), COALESCE(NULL, NULL, '2', NULL, 3.4), COALESCE(NULL), COALESCE(NULL, NULL, NULL, NULL, NULL)
+    columns:
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: java.lang.Void, nullable: true }
+      - { type: java.lang.Void, nullable: true }
+    expectedResult:
+      - [ 1, 'lorem', 1, 'lorem',  1, 'lorem', "1", "2", null, null ]
+
 # TODO:
-# CaseExpression.java
-# CastExpression.java
-# CharLengthExpression.java
-# ChrExpression.java
-# CoalesceExpression.java
-# ColumnExpression.java
-# ColumnParameter.java
 # ConcatExpression.java
 # ConcatWithSeparatorExpression.java
 # ConstantExpression.java
