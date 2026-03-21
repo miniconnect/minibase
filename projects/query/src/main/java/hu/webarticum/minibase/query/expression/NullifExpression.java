@@ -1,5 +1,6 @@
 package hu.webarticum.minibase.query.expression;
 
+import java.util.Objects;
 import java.util.Optional;
 
 import hu.webarticum.minibase.query.util.ValueUtil;
@@ -56,8 +57,8 @@ public class NullifExpression implements Expression {
     public Object evaluate(ImmutableMap<Parameter, Object> values) {
         Object value1 = firstExpression.evaluate(values);
         Object value2 = secondExpression.evaluate(values);
-        boolean areEqual = ValueUtil.evalEquality(value1, value2);
-        return areEqual ? null : value1;
+        Boolean areEqual = ValueUtil.evalEquality(value1, value2);
+        return Objects.equals(areEqual, true) ? null : value1;
     }
 
     @Override
