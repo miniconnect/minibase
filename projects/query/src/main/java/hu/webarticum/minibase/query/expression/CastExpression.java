@@ -44,12 +44,12 @@ public class CastExpression implements Expression {
 
     @Override
     public boolean isNullable() {
-        return subExpression.isNullable();
+        return targetTypeConstruct.symbol().type() == Void.class || subExpression.isNullable();
     }
 
     @Override
     public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
-        return subExpression.isNullable(nullabilities);
+        return targetTypeConstruct.symbol().type() == Void.class || subExpression.isNullable(nullabilities);
     }
 
     @Override
