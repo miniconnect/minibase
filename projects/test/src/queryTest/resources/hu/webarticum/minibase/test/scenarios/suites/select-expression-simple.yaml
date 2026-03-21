@@ -525,16 +525,260 @@ cases:
     expectedResult:
       - [ "bG9SRU0=", null, "495073756D", null, null, null ]
 
+  - name: equals
+    description: Equals expression
+    query: |
+      SELECT
+        0 = 0, 1 = 1, 0 = 1, 1 = 0, -1 = 1, 'lorem' = 'lorem', 'lorem' = 'ipsum', b'010' = b'010', b'010' = b'0100',
+        '1' = 1, 1.0 = 1, '1.00' = 1.0, '1' = 2, 2.3 = 2, 2 = 2.3, 2.3 = 2.3, 2.3 = 2.30, 2.3 = 2.33,
+        INTERVAL '1 hour' = INTERVAL '1 hour', INTERVAL '1 hour' = INTERVAL '1 hour 5 minutes',
+        INTERVAL '1 hour' = 3600, 3600 = INTERVAL '1 hour', INTERVAL '1 hour' = 3700, 3700 = INTERVAL '1 hour',
+        1 = NULL, 0 = NULL, 'NULL' = NULL, NULL = 1, NULL = 0, NULL = 'NULL', NULL = NULL
+    columns:
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+    expectedResult:
+      - [ true, true, false, false, false, true, false, true, false,
+          true, true, true, false, false, false, true, true, false,
+          true, false, true, true, false, false, null, null, null, null, null, null, null ]
+
+  - name: extract
+    description: Extract expression
+    query: |
+      SELECT
+        EXTRACT(YEAR FROM DATETIMEO('2025-06-01T12:30:17.2-01:30')),
+        EXTRACT(MONTH FROM DATETIMEO('2025-06-01T12:30:17.2-01:30')),
+        EXTRACT(DAY FROM DATETIMEO('2025-06-01T12:30:17.2-01:30')),
+        EXTRACT(HOUR FROM DATETIMEO('2025-06-01T12:30:17.2-01:30')),
+        EXTRACT(MINUTE FROM DATETIMEO('2025-06-01T12:30:17.2-01:30')),
+        EXTRACT(SECOND FROM DATETIMEO('2025-06-01T12:30:17.2-01:30')),
+        EXTRACT(TIMEZONE_HOUR FROM DATETIMEO('2025-06-01T12:30:17.2-01:30')),
+        EXTRACT(TIMEZONE_MINUTE FROM DATETIMEO('2025-06-01T12:30:17.2-01:30')),
+        EXTRACT(MINUTE FROM DATETIMEO(NULL)),
+        EXTRACT(YEAR FROM INTERVAL 'P2Y2DT3H12M25.41S'),
+        EXTRACT(MONTH FROM INTERVAL 'P2Y2DT3H12M25.41S'),
+        EXTRACT(DAY FROM INTERVAL 'P2Y2DT3H12M25.41S'),
+        EXTRACT(HOUR FROM INTERVAL 'P2Y2DT3H12M25.41S'),
+        EXTRACT(MINUTE FROM INTERVAL 'P2Y2DT3H12M25.41S'),
+        EXTRACT(SECOND FROM INTERVAL 'P2Y2DT3H12M25.41S'),
+        EXTRACT(YEAR FROM INTERVAL 'P-2Y-2DT-3H-12M-25.41S'),
+        EXTRACT(SECOND FROM INTERVAL 'P-2Y-2DT-3H-12M-25.41S'),
+        EXTRACT(MINUTE FROM INTERVAL(NULL)),
+        EXTRACT(MINUTE FROM NULL)
+    columns:
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
+    expectedResult:
+      - [ 2025, 6, 1, 12, 30, "17.2", -1, -30, null, 2, 0, 2, 3, 12, "25.41", -2, "-25.41", null, null ]
+
+  - name: gcd
+    description: Gcd expression
+    query: |
+      SELECT
+        GCD(5, 7), GCD(-5, 7), GCD(5, -7), GCD(-5, -7), GCD(10, 14), GCD(384, 240),
+        GCD('5', 7.), GCD(5.00, 7.0), GCD(3.2, '-5.55555'), GCD(-3.3, '-5.55555'),
+        GCD(5, NULL), GCD(NULL, '7'), GCD(NULL, NULL)
+    columns:
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
+      - { type: java.math.BigDecimal, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
+    expectedResult:
+      - [ 1, 1, 1, 1, 2, 48, "1", "1.00", "0.00005", "0.00165", null, null, null ]
+
+  - name: greatest
+    description: Greatest expression
+    query: |
+      SELECT
+        GREATEST(1), GREATEST('lorem'), GREATEST(INTERVAL '1 year'),
+        GREATEST(2, 3, 1, 3, 2), GREATEST(1, 2, 100, -3000, 4), GREATEST(0, -1),
+        GREATEST(INTERVAL '1 year 3 months', INTERVAL '2 years'), GREATEST(4.3, '22.000'), GREATEST(0, true),
+        GREATEST(1, NULL), GREATEST(2, -13, NULL, 5.0, 6, NULL, 0), GREATEST(NULL), GREATEST(NULL, NULL)
+    columns:
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.DateTimeDelta, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.DateTimeDelta, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: java.lang.Void, nullable: true }
+      - { type: java.lang.Void, nullable: true }
+    expectedResult:
+      - [ 1, "lorem", "P1Y", 3, 100, 0, "P2Y", "22.000", 1, 1, "6", null, null ]
+
+  - name: in
+    description: In expression
+    query: |
+      SELECT
+        3 IN (3), 3 IN (1), 3 IN (-3), 3 IN (2, 3), 3 IN (1, 2), 3 IN (2, 2, 2), 3 IN (2, 3, 3),
+        3 NOT IN (3), 3 NOT IN (1), 3 NOT IN (-3), 3 NOT IN (2, 3), 3 NOT IN (1, 2), 3 NOT IN (2, 2, 2), 3 NOT IN (2, 3, 3),
+        3 IN (NULL), 3 IN (3, NULL), 3 IN (NULL, 3), 3 IN (2, 3, NULL, 3, -10), 3 IN (1, NULL, 2),
+        NULL IN (1, 2), NULL IN (1, NULL), NULL IN (NULL, 2), NULL IN (NULL), NULL IN (NULL, NULL)
+    columns:
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+    expectedResult:
+      - [ true, false, false, true, false, false, true, false, true, true, false, true, true, false,
+          null, true, true, true, null, null, null, null, null, null ]
+
+  - name: initcap
+    description: Initcap expression
+    query: "SELECT INITCAP(''), INITCAP('lorem'), INITCAP('lorem ipsum'), INITCAP('loRem IPSUM-DoLoR'), INITCAP(NULL)"
+    columns:
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: true }
+    expectedResult:
+      - [ "", "Lorem", "Lorem Ipsum", "Lorem Ipsum-Dolor", null ]
+
+  - name: is-null
+    description: IsNull expression
+    query: "SELECT 3 IS NULL, 'lorem' IS NULL, NULL IS NULL, 3 IS NOT NULL, 'lorem' IS NOT NULL, NULL IS NOT NULL"
+    columns:
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+    expectedResult:
+      - [ false, false, true, true, true, false ]
+
+  - name: lcm
+    description: Lcm expression
+#      SELECT
+    query: |
+      SELECT
+        LCM(5, 7), LCM(-5, 7), LCM(5, -7), LCM(-5, -7), LCM(10, 14), LCM(384, 240),
+        LCM('5', 7.), LCM(5.00, 7.0), LCM(3.2, '-5.55555'), LCM(-3.3, '-5.55555'),
+        LCM(5, NULL), LCM(NULL, '7'), LCM(NULL, NULL)
+    columns:
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
+      - { type: java.math.BigDecimal, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
+    expectedResult:
+      - [ 35, 35, 35, 35, 70, 1920, "35", "35.00", "355555.20000", "11111.10000", null, null, null ]
+
+  - name: least
+    description: Least expression
+    query: |
+      SELECT
+        LEAST(1), LEAST('lorem'), LEAST(INTERVAL '1 year'),
+        LEAST(2, 1, 3, 1, 2), LEAST(1, 2, 100, -3000, 4), LEAST(0, 1),
+        LEAST(INTERVAL '2 year 3 months', INTERVAL '2 years'), LEAST(22.0, '1.30000'), LEAST(1, false),
+        LEAST(1, NULL), LEAST(2, -13, NULL, 5.0, 6, NULL, 0), LEAST(NULL), LEAST(NULL, NULL)
+    columns:
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.DateTimeDelta, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.DateTimeDelta, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: java.lang.Void, nullable: true }
+      - { type: java.lang.Void, nullable: true }
+    expectedResult:
+      - [ 1, "lorem", "P1Y", 1, -3000, 0, "P2Y", "1.30000", 0, 1, "-13", null, null ]
+
 # TODO:
-# EqualsExpression.java
-# ExtractExpression.java
-# GcdExpression.java
-# GreatestExpression.java
-# InExpression.java
-# InitcapExpression.java
-# IsNullExpression.java
-# LcmExpression.java
-# LeastExpression.java
 # LeftExpression.java
 # LeftPadExpression.java
 # LengthExpression.java
