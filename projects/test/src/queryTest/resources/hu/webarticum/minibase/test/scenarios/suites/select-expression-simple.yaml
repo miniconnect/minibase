@@ -705,7 +705,7 @@ cases:
 
   - name: initcap
     description: Initcap expression
-    query: "SELECT INITCAP(''), INITCAP('lorem'), INITCAP('lorem ipsum'), INITCAP('loRem IPSUM-DoLoR'), INITCAP(NULL)"
+    query: "SELECT INITCAP(''), INITCAP('lorem'), INITCAP('lorem ipsum'), INITCAP('loRem íPSUM-DoLoR'), INITCAP(NULL)"
     columns:
       - { type: java.lang.String, nullable: false }
       - { type: java.lang.String, nullable: false }
@@ -713,7 +713,7 @@ cases:
       - { type: java.lang.String, nullable: false }
       - { type: java.lang.String, nullable: true }
     expectedResult:
-      - [ "", "Lorem", "Lorem Ipsum", "Lorem Ipsum-Dolor", null ]
+      - [ "", "Lorem", "Lorem Ipsum", "Lorem Ípsum-Dolor", null ]
 
   - name: is-null
     description: IsNull expression
@@ -730,7 +730,6 @@ cases:
 
   - name: lcm
     description: Lcm expression
-#      SELECT
     query: |
       SELECT
         LCM(5, 7), LCM(-5, 7), LCM(5, -7), LCM(-5, -7), LCM(10, 14), LCM(384, 240),
@@ -778,49 +777,352 @@ cases:
     expectedResult:
       - [ 1, "lorem", "P1Y", 1, -3000, 0, "P2Y", "1.30000", 0, 1, "-13", null, null ]
 
-# TODO:
-# LeftExpression.java
-# LeftPadExpression.java
-# LengthExpression.java
-# LikeExpression.java
-# LogExpression.java
-# LowerExpression.java
-# ModExpression.java
-# MultiplyExpression.java
-# NegateExpression.java
-# NotEqualsExpression.java
-# NotExpression.java
-# NowExpression.java
-# NullifExpression.java
-# OctetLengthExpression.java
-# OrderRelationExpression.java
-# OrdExpression.java
-# OrExpression.java
-# OverlapsExpression.java
-# PiExpression.java
-# PositionExpression.java
-# PowExpression.java
-# RandomExpression.java
-# RegexpExpression.java
-# RegexpReplaceExpression.java
-# RemainderExpression.java
-# RepeatExpression.java
-# ReplaceExpression.java
-# ReverseExpression.java
-# RightExpression.java
-# RightPadExpression.java
-# RightRightPadExpression.java
-# RoundExpression.java
-# Sha256Expression.java
-# SignExpression.java
-# SpecialValueExpression.java
-# SpecialValueParameter.java
-# SplitPartExpression.java
-# SubstringExpression.java
-# SubtractExpression.java
-# TranslateExpression.java
-# TrimExpression.java
-# TypeConstruct.java
-# UnaryRealMathFunctionExpression.java
-# UpperExpression.java
-# XorExpression.java
+  - name: left
+    description: Left expression
+    query: |
+      SELECT
+        LEFT('', 1), LEFT('lorem', 3), LEFT('lorem', 10), LEFT('lorem', 0), LEFT('lorem', -3), LEFT('lorem', -10),
+        LEFT(binary(''), 1), LEFT(binary('lorem'), 3), LEFT(binary('lorem'), 10), LEFT(binary('lorem'), 0),
+        LEFT(binary('lorem'), -3), LEFT(binary('lorem'), -10), LEFT(binary('háztűznéző'), 8),
+        LEFT(b'', 1), LEFT(b'0110', 3), LEFT(b'0110', 10), LEFT(b'0110', 0), LEFT(b'0110', -3), LEFT(b'0110', -10),
+        LEFT('abc', NULL), LEFT(binary('abc'), NULL), LEFT(b'011', NULL), LEFT(NULL, 1), LEFT(NULL, NULL)
+    columns:
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: java.lang.String, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: true }
+      - { type: java.lang.String, nullable: true }
+      - { type: java.lang.String, nullable: true }
+    expectedResult:
+      - [ "", "lor", "lorem", "", "lo", "", "", "lor", "lorem", "", "lo", "", "háztűz",
+          "", "011", "0110", "", "0", "", null, null, null, null, null ]
+
+  - name: left-pad
+    description: LeftPad expression
+    query: |
+      SELECT
+        LPAD('', 0), LPAD('', 5), LPAD('abc', 5), LPAD('lorem', 3), LPAD('abc', 7, '='), LPAD('abc', 7, '+-.'),
+        LPAD(BINARY(''), 0), LPAD(BINARY(''), 5), LPAD(BINARY('abc'), 5), LPAD(BINARY('lorem'), 3),
+        LPAD(BINARY('abc'), 7, '='), LPAD(BINARY('abc'), 7, '+-.'),
+        LPAD(b'', 0), LPAD(b'', 5), LPAD(b'101', 5), LPAD(b'10110', 3), LPAD(b'101', 7, b'1'), LPAD(b'101', 7, b'011'),
+        LPAD('abc', NULL), LPAD('abc', NULL, 'x'), LPAD(BINARY('abc'), NULL), LPAD(b'101', NULL),
+        LPAD(NULL, 3, 'x'), LPAD(NULL, 3), LPAD(NULL, 2, NULL), LPAD(NULL, NULL), LPAD(NULL, NULL, NULL)
+    columns:
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: java.lang.String, nullable: true }
+      - { type: java.lang.String, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: true }
+      - { type: java.lang.String, nullable: true }
+      - { type: java.lang.String, nullable: true }
+      - { type: java.lang.String, nullable: true }
+      - { type: java.lang.String, nullable: true }
+      - { type: java.lang.String, nullable: true }
+    expectedResult:
+      - [ "", "     ", "  abc", "lorem", "====abc", "+-.+abc",
+          "", "\0\0\0\0\0", "\0\0abc", "lorem", "====abc", "+-.+abc",
+          "", "00000", "00101", "10110", "1111101", "0110101",
+          null, null, null, null, null, null, null, null, null ]
+
+# TODO: LengthExpression.java
+# TODO: LikeExpression.java
+# TODO: LogExpression.java
+
+  - name: lower
+    description: Lower expression
+    query: "SELECT LOWER(''), LOWER('LOREM'), LOWER('lOreM IPsUm'), LOWER('ŰR'), LOWER(NULL)"
+    columns:
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: true }
+    expectedResult:
+      - [ "", "lorem", "lorem ipsum", "űr", null ]
+
+# TODO: ModExpression.java
+# TODO: MultiplyExpression.java
+# TODO: NegateExpression.java
+# TODO: NotEqualsExpression.java
+
+  - name: not
+    description: Not expression
+    query: "SELECT NOT TRUE, NOT FALSE, NOT 1, NOT 0, NOT NULL"
+    columns:
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: true }
+    expectedResult:
+      - [ false, true, false, true, null ]
+
+  - name: nullif
+    description: Nullif expression
+    query: |
+      SELECT
+        NULLIF(1, 2), NULLIF(2, 2), NULLIF('A', 'B'), NULLIF('B', 'B'), NULLIF(1, 'A'), NULLIF(1, '1'),
+        NULLIF(1, NULL), NULLIF('A', NULL)
+    columns:
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
+      - { type: java.lang.String, nullable: true }
+      - { type: java.lang.String, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
+      - { type: java.lang.String, nullable: true }
+    expectedResult:
+      - [ 1, null, 'A', null, 1, null, 1, "A" ]
+
+# TODO: OctetLengthExpression.java
+# TODO: OrderRelationExpression.java
+# TODO: OrdExpression.java
+
+  - name: or
+    description: Or expression
+    query: |
+      SELECT
+        TRUE OR TRUE, TRUE OR FALSE, FALSE OR TRUE, FALSE OR FALSE,
+        TRUE OR NULL, FALSE OR NULL, NULL OR TRUE, NULL OR FALSE, NULL OR NULL
+    columns:
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+    expectedResult:
+      - [ true, true, true, false, true, null, true, null, null ]
+
+# TODO: OverlapsExpression.java
+
+  - name: pi
+    description: Pi expression
+    query: "SELECT PI()"
+    columns:
+      - { type: java.lang.Double, nullable: false }
+    expectedResult:
+      - [ "3.141592653589793" ]
+
+# TODO: PositionExpression.java
+# TODO: PowExpression.java
+# TODO: RegexpExpression.java
+# TODO: RegexpReplaceExpression.java
+# TODO: RemainderExpression.java
+# TODO: RepeatExpression.java
+# TODO: ReplaceExpression.java
+# TODO: ReverseExpression.java
+
+  - name: right
+    description: Right expression
+    query: |
+      SELECT
+        RIGHT('', 1), RIGHT('lorem', 3), RIGHT('lorem', 10), RIGHT('lorem', 0), RIGHT('lorem', -3), RIGHT('lorem', -10),
+        RIGHT(binary(''), 1), RIGHT(binary('lorem'), 3), RIGHT(binary('lorem'), 10), RIGHT(binary('lorem'), 0),
+        RIGHT(binary('lorem'), -3), RIGHT(binary('lorem'), -10), RIGHT(binary('háztűznéző'), 6),
+        RIGHT(b'', 1), RIGHT(b'0110', 3), RIGHT(b'0110', 10), RIGHT(b'0110', 0), RIGHT(b'0110', -3), RIGHT(b'0110', -10),
+        RIGHT('abc', NULL), RIGHT(binary('abc'), NULL), RIGHT(b'011', NULL), RIGHT(NULL, 1), RIGHT(NULL, NULL)
+    columns:
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: java.lang.String, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: true }
+      - { type: java.lang.String, nullable: true }
+      - { type: java.lang.String, nullable: true }
+    expectedResult:
+      - [ "", "rem", "lorem", "", "em", "", "", "rem", "lorem", "", "em", "", "néző",
+          "", "110", "0110", "", "0", "", null, null, null, null, null ]
+
+  - name: right-pad
+    description: RightPad expression
+    query: |
+      SELECT
+        RPAD('', 0), RPAD('', 5), RPAD('abc', 5), RPAD('lorem', 3), RPAD('abc', 7, '='), RPAD('abc', 7, '+-.'),
+        RPAD(BINARY(''), 0), RPAD(BINARY(''), 5), RPAD(BINARY('abc'), 5), RPAD(BINARY('lorem'), 3),
+        RPAD(BINARY('abc'), 7, '='), RPAD(BINARY('abc'), 7, '+-.'),
+        RPAD(b'', 0), RPAD(b'', 5), RPAD(b'101', 5), RPAD(b'10110', 3), RPAD(b'101', 7, b'1'), RPAD(b'101', 7, b'011'),
+        RPAD('abc', NULL), RPAD('abc', NULL, 'x'), RPAD(BINARY('abc'), NULL), RPAD(b'101', NULL),
+        RPAD(NULL, 3, 'x'), RPAD(NULL, 3), RPAD(NULL, 2, NULL), RPAD(NULL, NULL), RPAD(NULL, NULL, NULL)
+    columns:
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: java.lang.String, nullable: true }
+      - { type: java.lang.String, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: true }
+      - { type: java.lang.String, nullable: true }
+      - { type: java.lang.String, nullable: true }
+      - { type: java.lang.String, nullable: true }
+      - { type: java.lang.String, nullable: true }
+      - { type: java.lang.String, nullable: true }
+    expectedResult:
+      - [ "", "     ", "abc  ", "lorem", "abc====", "abc+-.+",
+          "", "\0\0\0\0\0", "abc\0\0", "lorem", "abc====", "abc+-.+",
+          "", "00000", "10100", "10110", "1011111", "1010110",
+          null, null, null, null, null, null, null, null, null ]
+
+  - name: right-right-pad
+    description: RightRightPad expression
+    query: |
+      SELECT
+        RRPAD('', 0), RRPAD('', 5), RRPAD('abc', 5), RRPAD('lorem', 3), RRPAD('abc', 7, '='), RRPAD('abc', 7, '+-.'),
+        RRPAD(BINARY(''), 0), RRPAD(BINARY(''), 5), RRPAD(BINARY('abc'), 5), RRPAD(BINARY('lorem'), 3),
+        RRPAD(BINARY('abc'), 7, '='), RRPAD(BINARY('abc'), 7, '+-.'),
+        RRPAD(b'', 0), RRPAD(b'', 5), RRPAD(b'101', 5), RRPAD(b'10110', 3), RRPAD(b'101', 7, b'1'), RRPAD(b'101', 7, b'011'),
+        RRPAD('abc', NULL), RRPAD('abc', NULL, 'x'), RRPAD(BINARY('abc'), NULL), RRPAD(b'101', NULL),
+        RRPAD(NULL, 3, 'x'), RRPAD(NULL, 3), RRPAD(NULL, 2, NULL), RRPAD(NULL, NULL), RRPAD(NULL, NULL, NULL)
+    columns:
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: java.lang.String, nullable: true }
+      - { type: java.lang.String, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: true }
+      - { type: java.lang.String, nullable: true }
+      - { type: java.lang.String, nullable: true }
+      - { type: java.lang.String, nullable: true }
+      - { type: java.lang.String, nullable: true }
+      - { type: java.lang.String, nullable: true }
+    expectedResult:
+      - [ "", "     ", "abc  ", "lorem", "abc====", "abc.+-.",
+          "", "\0\0\0\0\0", "abc\0\0", "lorem", "abc====", "abc.+-.",
+          "", "00000", "10100", "10110", "1011111", "1011011",
+          null, null, null, null, null, null, null, null, null ]
+
+# TODO: RoundExpression.java
+
+  - name: sha256
+    description: Sha256 expression
+    query: "SELECT HEX(SHA256(x'C7FA24193B10C5')), SHA256(null)"
+    columns:
+      - { type: java.lang.String, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: true }
+    expectedResult:
+      - [ "DAB8BA1858484527A211C2D8F1765A67669BC7F7CBA72A03FA69EC352DA79E84", null ]
+
+# TODO: SplitPartExpression.java
+# TODO: SubstringExpression.java
+# TODO: SubtractExpression.java
+# TODO: TranslateExpression.java
+# TODO: TrimExpression.java
+# TODO: UnaryRealMathFunctionExpression.java
+
+  - name: upper
+    description: Upper expression
+    query: "SELECT UPPER(''), UPPER('lorem'), UPPER('lOreM IPsUm'), UPPER('űr'), UPPER(NULL)"
+    columns:
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: true }
+    expectedResult:
+      - [ "", "LOREM", "LOREM IPSUM", "ŰR", null ]
+
+  - name: xor
+    description: Xor expression
+    query: |
+      SELECT
+        TRUE XOR TRUE, TRUE XOR FALSE, FALSE XOR TRUE, FALSE XOR FALSE,
+        TRUE XOR NULL, FALSE XOR NULL, NULL XOR TRUE, NULL XOR FALSE, NULL XOR NULL
+    columns:
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+    expectedResult:
+      - [ false, true, true, false, null, null, null, null, null ]
