@@ -589,4 +589,12 @@ public final class NumberUtil {
         return divisor.abs().isEqualTo(LargeInteger.ONE);
     }
 
+    public static BigDecimal gcd(BigDecimal a, BigDecimal b) {
+        int commonScale = Math.max(a.scale(), b.scale());
+        BigInteger aBigInteger = a.movePointRight(commonScale).toBigInteger();
+        BigInteger bBigInteger = b.movePointRight(commonScale).toBigInteger();
+        BigInteger unscaledResult = aBigInteger.gcd(bBigInteger);
+        return new BigDecimal(unscaledResult, commonScale);
+    }
+
 }

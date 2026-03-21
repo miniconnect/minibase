@@ -1,7 +1,6 @@
 package hu.webarticum.minibase.query.expression;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.util.Optional;
 
 import hu.webarticum.minibase.query.util.ConvertUtil;
@@ -94,11 +93,7 @@ public class GcdExpression implements Expression {
         } else {
             BigDecimal a = (BigDecimal) ConvertUtil.convert(aNumber, BigDecimal.class);
             BigDecimal b = (BigDecimal) ConvertUtil.convert(bNumber, BigDecimal.class);
-            int commonScale = Math.max(a.scale(), b.scale());
-            BigInteger aBigInteger = a.movePointRight(commonScale).toBigInteger();
-            BigInteger bBigInteger = b.movePointRight(commonScale).toBigInteger();
-            BigInteger unscaledResult = aBigInteger.gcd(bBigInteger);
-            return new BigDecimal(unscaledResult, commonScale).stripTrailingZeros();
+            return NumberUtil.gcd(a, b);
         }
     }
 

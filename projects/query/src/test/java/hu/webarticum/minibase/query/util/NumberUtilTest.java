@@ -602,6 +602,17 @@ class NumberUtilTest {
         assertThatThrownBy(() -> NumberUtil.divideBigDecimals(BigDecimal.valueOf(-21), BigDecimal.ZERO)).isInstanceOf(ArithmeticException.class);
     }
 
+    @Test
+    void testGcd() {
+        assertThat(NumberUtil.gcd(new BigDecimal("3"), new BigDecimal("7"))).isEqualTo(new BigDecimal("1"));
+        assertThat(NumberUtil.gcd(new BigDecimal("-3"), new BigDecimal("4"))).isEqualTo(new BigDecimal("1"));
+        assertThat(NumberUtil.gcd(new BigDecimal("15"), new BigDecimal("12"))).isEqualTo(new BigDecimal("3"));
+        assertThat(NumberUtil.gcd(new BigDecimal("15"), new BigDecimal("-12.0"))).isEqualTo(new BigDecimal("3.0"));
+        assertThat(NumberUtil.gcd(new BigDecimal("2.000"), new BigDecimal("3"))).isEqualTo(new BigDecimal("1.000"));
+        assertThat(NumberUtil.gcd(new BigDecimal("4.2"), new BigDecimal("1.500"))).isEqualTo(new BigDecimal("0.300"));
+        assertThat(NumberUtil.gcd(new BigDecimal("-1.234"), new BigDecimal("-5.6789"))).isEqualTo(new BigDecimal("0.0001"));
+    }
+
     private Number normalizeDouble(Double doubleValue) {
         if (doubleValue == null || !Double.isFinite(doubleValue)) {
             return null;
