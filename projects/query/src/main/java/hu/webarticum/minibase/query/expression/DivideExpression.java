@@ -84,11 +84,12 @@ public class DivideExpression implements Expression {
     public Object evaluate(ImmutableMap<Parameter, Object> values) {
         Object leftValue = leftOperand.evaluate(values);
         Object rightValue = rightOperand.evaluate(values);
-        if (NumberUtil.isZero(rightValue)) {
+        if (leftValue == null || rightValue == null) {
+            return null;
+        } else if (NumberUtil.isZero(rightValue)) {
             // TODO: raise SQL warning
             return null;
-        }
-        if (leftValue instanceof TemporalAmount) {
+        } else if (leftValue instanceof TemporalAmount) {
             return divideTemporalAmount(leftValue, rightValue);
         }
         Class<?> commonType = NumberUtil.commonNumericTypeOf(leftValue.getClass(), rightValue.getClass());
