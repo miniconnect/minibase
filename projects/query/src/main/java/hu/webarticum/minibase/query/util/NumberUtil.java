@@ -560,25 +560,33 @@ public final class NumberUtil {
     public static BigDecimal divideBigDecimals(BigDecimal divident, BigDecimal divisor) {
         if (divisor.signum() == 0) {
             throw new ArithmeticException("Division by zero");
-        } else if (isExactDecimalDivisor(divisor)) {
-            return divident.divide(divisor);
         } else if (divident.signum() == 0) {
-            return BigDecimal.ZERO;
+            return divident;
+        } else if (canBeDividedExactly(divident, divisor)) {
+            return divident.divide(divisor);
         } else {
             int scale = Math.max(0, divident.scale()) + UNEXACT_DIVISION_SCALE;
             return divident.divide(divisor, scale, RoundingMode.HALF_UP);
         }
     }
 
-    private static boolean isExactDecimalDivisor(BigDecimal divisor) {
-        LargeInteger n = LargeInteger.of(divisor.unscaledValue());
-        while (n.isDivisibleBy(2)) {
-            n = n.half();
+    private static boolean canBeDividedExactly(BigDecimal divident, BigDecimal divisor) {
+        return canBeDividedExactly(LargeInteger.of(divident.unscaledValue()), LargeInteger.of(divisor.unscaledValue()));
+    }
+
+    private static boolean canBeDividedExactly(LargeInteger divident, LargeInteger divisor) {
+        LargeInteger gcd = divident.gcd(divisor);
+        return isExactDecimalDivisor(divisor.divide(gcd));
+    }
+
+    private static boolean isExactDecimalDivisor(LargeInteger divisor) {
+        while (divisor.isDivisibleBy(2)) {
+            divisor = divisor.half();
         }
-        while (n.isDivisibleBy(5)) {
-            n = n.divide(5);
+        while (divisor.isDivisibleBy(5)) {
+            divisor = divisor.divide(5);
         }
-        return n.abs().isEqualTo(LargeInteger.ONE);
+        return divisor.abs().isEqualTo(LargeInteger.ONE);
     }
 
 }
