@@ -581,6 +581,8 @@ class NumberUtilTest {
         assertThat(NumberUtil.divideBigDecimals(BigDecimal.valueOf(14), BigDecimal.valueOf(-20))).isEqualTo(new BigDecimal("-0.7"));
         assertThat(NumberUtil.divideBigDecimals(new BigDecimal("-5.6"), BigDecimal.valueOf(10))).isEqualTo(new BigDecimal("-0.56"));
         assertThat(NumberUtil.divideBigDecimals(new BigDecimal("93"), new BigDecimal("-1.6"))).isEqualTo(new BigDecimal("-58.125"));
+        assertThat(NumberUtil.divideBigDecimals(new BigDecimal("4.2"), new BigDecimal("3"))).isEqualTo(new BigDecimal("1.4"));
+        assertThat(NumberUtil.divideBigDecimals(new BigDecimal("-0.49"), new BigDecimal("70"))).isEqualTo(new BigDecimal("-0.007"));
     }
 
     @Test
