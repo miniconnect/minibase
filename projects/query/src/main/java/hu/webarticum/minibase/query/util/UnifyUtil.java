@@ -97,6 +97,8 @@ public final class UnifyUtil {
     private static Class<?> mergeNumericTypeWith(Class<?> numericType, Class<?> otherType) {
         if (Number.class.isAssignableFrom(otherType)) {
             return NumberUtil.commonNumericTypeOf(numericType, otherType);
+        } else if (otherType == Boolean.class) {
+            return numericType;
         } else if (Temporal.class.isAssignableFrom(otherType)) {
             return BigDecimal.class;
         } else {
