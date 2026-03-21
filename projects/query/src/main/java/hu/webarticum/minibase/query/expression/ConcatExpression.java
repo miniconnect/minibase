@@ -47,13 +47,18 @@ public class ConcatExpression implements Expression {
                 return Optional.empty();
             } else if (nextType == BitString.class) {
                 result = BitString.class;
+            } else if (nextType == Void.class) {
+                if (result == null) {
+                    result = Void.class;
+                }
             } else if (nextType != ByteString.class) {
                 return Optional.of(String.class);
-            } else if (result == null) {
+            } else if (result == null || nextType == Void.class) {
                 result = ByteString.class;
             }
         }
-        return Optional.ofNullable(result != null ? result : String.class);
+        result = (result != null && result != Void.class) ? result : String.class;
+        return Optional.ofNullable(result);
     }
 
     @Override
@@ -63,13 +68,17 @@ public class ConcatExpression implements Expression {
             Class<?> nextType = parameterExpression.type(values);
             if (nextType == BitString.class) {
                 result = BitString.class;
+            } else if (nextType == Void.class) {
+                if (result == null) {
+                    result = Void.class;
+                }
             } else if (nextType != ByteString.class) {
                 return String.class;
-            } else if (result == null) {
+            } else if (result == null || nextType == Void.class) {
                 result = ByteString.class;
             }
         }
-        return result != null ? result : String.class;
+        return (result != null && result != Void.class) ? result : String.class;
     }
 
 	@Override
