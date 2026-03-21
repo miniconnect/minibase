@@ -4,6 +4,8 @@ import java.util.Optional;
 
 import hu.webarticum.minibase.query.util.NumberUtil;
 import hu.webarticum.minibase.query.util.StringUtil;
+import hu.webarticum.miniconnect.lang.BitString;
+import hu.webarticum.miniconnect.lang.ByteString;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
 
@@ -35,12 +37,22 @@ public class RightExpression implements Expression {
 
     @Override
     public Optional<Class<?>> type() {
-        return Optional.of(String.class);
+        Class<?> inputType = inputExpression.type().orElse(null);
+        if (inputType == null || inputType == ByteString.class || inputType == BitString.class) {
+            return Optional.ofNullable(inputType);
+        } else {
+            return Optional.of(String.class);
+        }
     }
 
     @Override
     public Class<?> type(ImmutableMap<Parameter, Class<?>> values) {
-        return String.class;
+        Class<?> inputType = inputExpression.type(values);
+        if (inputType == ByteString.class || inputType == BitString.class) {
+            return inputType;
+        } else {
+            return String.class;
+        }
     }
 
     @Override
@@ -64,23 +76,48 @@ public class RightExpression implements Expression {
         if (lengthValue == null) {
             return null;
         }
-
-        String inputString = StringUtil.stringify(inputValue);
-        int inputLength = inputString.length();
         int length = NumberUtil.asInt(lengthValue);
 
-        if (length >= inputLength) {
-            return inputString;
+        if (inputValue instanceof ByteString) {
+            return operate((ByteString) inputValue, length);
+        } else if (inputValue instanceof BitString) {
+            return operate((BitString) inputValue, length);
+        } else {
+            return operate(StringUtil.stringify(inputValue), length);
         }
+    }
 
+    private String operate(String input, int length) {
+        int inputLength = input.length();
+        if (length >= inputLength) {
+            return input;
+        }
         if (length < 0) {
             length = inputLength + length;
         }
-        if (length <= 0) {
-            return "";
-        }
+        return length > 0 ? input.substring(inputLength - length) : "";
+    }
 
-        return inputString.substring(inputLength - length);
+    private ByteString operate(ByteString input, int length) {
+        int inputLength = input.length();
+        if (length >= inputLength) {
+            return input;
+        }
+        if (length < 0) {
+            length = inputLength + length;
+        }
+        return length > 0 ? input.substring(inputLength - length) : ByteString.empty();
+    }
+
+    private BitString operate(BitString input, int length) {
+        int inputLength = input.length();
+        if (length >= inputLength) {
+            return input;
+        }
+        if (length < 0) {
+            length = inputLength + length;
+        }
+        return length > 0 ? input.substring(inputLength - length) : BitString.empty();
     }
 
     @Override
