@@ -407,15 +407,126 @@ cases:
     expectedResult:
       - [ 1, 'lorem', 1, 'lorem',  1, 'lorem', "1", "2", null, null ]
 
+  - name: concat
+    description: Concat expression
+    query: |
+      SELECT
+        CONCAT('lorem'), CONCAT('lorem', 'ipsum'),  CONCAT('lorem', b'10', 2), CONCAT(binary('A'), 'B'), CONCAT(b'0', 4),
+        CONCAT(binary('A'), binary('B')), CONCAT(b'100', b'11'), CONCAT(binary('A'), b'10011'),
+        CONCAT(NULL, 'A'), CONCAT('A', NULL), CONCAT('A', NULL, 'B'), CONCAT(b'100', NULL), CONCAT(NULL), CONCAT(NULL, NULL)
+    columns:
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: java.lang.String, nullable: true }
+      - { type: java.lang.String, nullable: true }
+      - { type: java.lang.String, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: true }
+      - { type: java.lang.String, nullable: true }
+      - { type: java.lang.String, nullable: true }
+    expectedResult:
+      - [ "lorem", "loremipsum", "lorem102", "AB", "04", "AB", "10011", "0100000110011", null, null, null, null, null, null ]
+
+  - name: concat-with-separator
+    description: ConcatWithSeparator expression
+    query: |
+      SELECT
+        CONCAT_WS(','), CONCAT_WS(',', 'lorem'), CONCAT_WS(',', 'lorem', 'ipsum'), CONCAT_WS(',', 'lorem', 'ipsum', 'dolor'),
+        CONCAT_WS(',', NULL), CONCAT_WS(',', 'A', NULL), CONCAT_WS(',', NULL, 'B'), CONCAT_WS(',', NULL, NULL),
+        CONCAT_WS(',', 'A', NULL, NULL, 'B', 'C', NULL, 'D', NULL),
+        CONCAT_WS(NULL), CONCAT_WS(NULL, 'A', 'B'), CONCAT_WS(NULL, 'A', NULL), CONCAT_WS(NULL, NULL, NULL)
+    columns:
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.Void, nullable: true }
+      - { type: java.lang.Void, nullable: true }
+      - { type: java.lang.Void, nullable: true }
+      - { type: java.lang.Void, nullable: true }
+    expectedResult:
+      - [ "", "lorem", "lorem,ipsum", "lorem,ipsum,dolor", "", "A", "B", "", "A,B,C,D", null, null, null, null ]
+
+  - name: decode
+    description: Decode expression
+    query: |
+      SELECT
+        DECODE('RE9MT1I=', 'BASE64'), DECODE(NULL, 'BASE64'),
+        DECODE('4C4F52454D', 'HEX'), DECODE(NULL, 'HEX'),
+        DECODE('00', NULL), DECODE(NULL, NULL)
+    columns:
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: true }
+    expectedResult:
+      - [ "DOLOR", null, "LOREM", null, null, null ]
+
+  - name: divide
+    description: Divide expression
+    query: |
+      SELECT
+        8 / 2, 5 / 2, 0 / 3, -9 / 3, 4 / -2, -10 / -2, -11 / -3,
+        8. / 2., 8.0 / 2,  5 / 2.0, 5.0 / 2, 5.0 / 2.0, -5. / 2.,
+        '4.2' / 3, '1' / '2', '-3' / 0.020,
+        interval '6 years' / 3, interval '2 months 5 hours' / 2,
+        NULL / 7, 2.3 / NULL, NULL / NULL
+    columns:
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.DateTimeDelta, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.DateTimeDelta, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
+      - { type: java.math.BigDecimal, nullable: true }
+      - { type: java.lang.Void, nullable: true }
+    expectedResult:
+      - [ 4, 2, 0, -3, -2, 5, 3, "4", "4.0", "2.5", "2.5", "2.5", "-2.5", "1.4", "0.5", "-1.5E+2", "P2Y", "P1MT2H30M", null, null, null ]
+
+  - name: encode
+    description: Encode expression
+    query: |
+      SELECT
+        ENCODE('loREM', 'BASE64'), ENCODE(NULL, 'BASE64'),
+        ENCODE('IPsum', 'HEX'), ENCODE(NULL, 'HEX'),
+        ENCODE('00', NULL), ENCODE(NULL, NULL)
+    columns:
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: true }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: true }
+      - { type: java.lang.String, nullable: true }
+      - { type: java.lang.String, nullable: true }
+    expectedResult:
+      - [ "bG9SRU0=", null, "495073756D", null, null, null ]
+
 # TODO:
-# ConcatExpression.java
-# ConcatWithSeparatorExpression.java
-# ConstantExpression.java
-# DecodeExpression.java
-# DivideExpression.java
-# EncodeExpression.java
 # EqualsExpression.java
-# Expression.java
 # ExtractExpression.java
 # GcdExpression.java
 # GreatestExpression.java
@@ -442,7 +553,6 @@ cases:
 # OrdExpression.java
 # OrExpression.java
 # OverlapsExpression.java
-# Parameter.java
 # PiExpression.java
 # PositionExpression.java
 # PowExpression.java
@@ -469,6 +579,4 @@ cases:
 # TypeConstruct.java
 # UnaryRealMathFunctionExpression.java
 # UpperExpression.java
-# VariableExpression.java
-# VariableParameter.java
 # XorExpression.java
