@@ -80,11 +80,14 @@ public class ModExpression implements Expression {
     @Override
     public Object evaluate(ImmutableMap<Parameter, Object> values) {
         Object rightValue = rightOperand.evaluate(values);
-        if (NumberUtil.isZero(rightValue)) {
+        if (rightValue == null || NumberUtil.isZero(rightValue)) {
             // TODO: raise SQL warning
             return null;
         }
         Object leftValue = leftOperand.evaluate(values);
+        if (leftValue == null) {
+            return null;
+        }
         Class<?> commonType;
         if (rightValue instanceof TemporalAmount) {
             commonType = DateTimeDelta.class;
