@@ -361,19 +361,22 @@ cases:
     description: CharLength expression
     query: |
       SELECT
-        CHARACTER_LENGTH('lorem'), CHARACTER_LENGTH(''), CHARACTER_LENGTH(123), CHARACTER_LENGTH(NULL),
-        CHAR_LENGTH('lorem'), CHAR_LENGTH(''), CHAR_LENGTH(123), CHAR_LENGTH(NULL)
+        CHARACTER_LENGTH('lorem'), CHARACTER_LENGTH(''), CHARACTER_LENGTH('háztűznéző'),
+        CHARACTER_LENGTH(123), CHARACTER_LENGTH(NULL),
+        CHAR_LENGTH('lorem'), CHAR_LENGTH(''), CHAR_LENGTH('háztűznéző'), CHAR_LENGTH(123), CHAR_LENGTH(NULL)
     columns:
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
     expectedResult:
-      - [ 5, 0, 3, null, 5, 0, 3, null ]
+      - [ 5, 0, 10, 3, null, 5, 0, 10, 3, null ]
 
   - name: chr
     description: Chr expression
@@ -859,9 +862,41 @@ cases:
           "", "00000", "00101", "10110", "1111101", "0110101",
           null, null, null, null, null, null, null, null, null ]
 
-# TODO: LengthExpression.java
+  - name: length
+    description: Length expression
+    query: |
+      SELECT
+        LENGTH(''), LENGTH('lorem'), LENGTH('háztűznéző'),
+        LENGTH(BINARY('')), LENGTH(BINARY('lorem')), LENGTH(BINARY('háztűznéző')),
+        LENGTH(b''), LENGTH(b'1101010'), LENGTH(NULL)
+    columns:
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
+    expectedResult:
+      - [ 0, 5, 10, 0, 5, 14, 0, 7, null ]
+
 # TODO: LikeExpression.java
-# TODO: LogExpression.java
+
+  - name: log
+    description: Log expression
+    query: "SELECT LOG(2, 1), LOG(2.4, 1.5), LOG(10, 100), LOG('7', 49.000), LOG(3, NULL), LOG(NULL, 5), LOG(NULL, NULL)"
+    columns:
+      - { type: java.lang.Double, nullable: false }
+      - { type: java.lang.Double, nullable: false }
+      - { type: java.lang.Double, nullable: false }
+      - { type: java.lang.Double, nullable: false }
+      - { type: java.lang.Double, nullable: true }
+      - { type: java.lang.Double, nullable: true }
+      - { type: java.lang.Double, nullable: true }
+    expectedResult:
+      - [ 0, 0.4631405906436828, 2, 2, null, null, null ]
 
   - name: lower
     description: Lower expression
@@ -875,10 +910,120 @@ cases:
     expectedResult:
       - [ "", "lorem", "lorem ipsum", "űr", null ]
 
-# TODO: ModExpression.java
-# TODO: MultiplyExpression.java
-# TODO: NegateExpression.java
-# TODO: NotEqualsExpression.java
+  - name: mod
+    description: Mod expression
+    query: |
+      SELECT
+        0 MOD 7, 1 MOD 1, 1 MOD 2, 78 MOD 13, 9 MOD 6, -81 MOD 7, -14 MOD 3., 8 MOD 3.30,
+        INTERVAL '3 hours 47 minutes' MOD INTERVAL '10 minutes', INTERVAL '2 hours 5 minutes ago' MOD 3600,
+        TIME('5:30') MOD INTERVAL '1 hour 30 minutes', DATETIMETZ('2026-01-01T01:20:00Z') MOD INTERVAL '1 day',
+        3 MOD NULL, NULL MOD 2, NULL MOD NULL
+    columns:
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.DateTimeDelta, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.DateTimeDelta, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.DateTimeDelta, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
+      - { type: java.lang.Void, nullable: true }
+    expectedResult:
+      - [ 0, 0, 1, 0, 3, 3, "1", "1.40", "PT7M", "3300", "PT1H", "PT1H20M", null, null, null ]
+
+  - name: multiply
+    description: Multiply expression
+    query: |
+      SELECT
+        1 * 1, 2 * 3, 4 * -11, -23 * 12, -5 * -2, 4.2 * 7, 6. * 6, 3 * '9',
+        5 * 0, 0 * 9, 0 * 0, 0.0 * 9.400, 0 * 0.00, 2 * NULL, NULL * 9, 0 * NULL, NULL * NULL
+    columns:
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
+      - { type: java.lang.Void, nullable: true }
+    expectedResult:
+      - [ 1, 6, -44, -276, 10, "29.4", "36", "27", 0, 0, 0, "0.0000", "0.00", null, null, null, null ]
+
+  - name: negate
+    description: Negate expression
+    query: "SELECT - (3), - (-2), - (4.2), - (-2.230), - '12', - '-6.4', - INTERVAL '3 years', - NULL"
+    columns:
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.DateTimeDelta, nullable: false }
+      - { type: java.lang.Void, nullable: true }
+    expectedResult:
+      - [ -3, 2, "-4.2", "2.230", "-12", "6.4", "P-3Y", null ]
+
+  - name: not-equals
+    description: NotEquals expression
+    query: |
+      SELECT
+        0 != 0, 1 <> 1, 0 != 1, 1 <> 0, -1 != 1, 'lorem' != 'lorem', 'lorem' != 'ipsum', b'010' != b'010', b'010' != b'0100',
+        '1' != 1, 1.0 != 1, '1.00' != 1.0, '1' != 2, 2.3 != 2, 2 != 2.3, 2.3 <> 2.3, 2.3 != 2.30, 2.3 <> 2.33,
+        INTERVAL '1 hour' != INTERVAL '1 hour', INTERVAL '1 hour' != INTERVAL '1 hour 5 minutes',
+        INTERVAL '1 hour' != 3600, 3600 != INTERVAL '1 hour', INTERVAL '1 hour' != 3700, 3700 != INTERVAL '1 hour',
+        1 != NULL, 0 != NULL, 'NULL' != NULL, NULL != 1, NULL != 0, NULL != 'NULL', NULL != NULL
+    columns:
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+    expectedResult:
+      - [ false, false, true, true, true, false, true, false, true,
+          false, false, false, true, true, true, false, false, true,
+          false, true, false, false, true, true, null, null, null, null, null, null, null ]
 
   - name: not
     description: Not expression
@@ -947,7 +1092,34 @@ cases:
 # TODO: PowExpression.java
 # TODO: RegexpExpression.java
 # TODO: RegexpReplaceExpression.java
-# TODO: RemainderExpression.java
+
+  - name: remainder
+    description: Remainder expression
+    query: |
+      SELECT
+        0 % 7, 1 % 1, 1 % 2, 78 % -13, 9 % -6, -81 % 7, -14 % -3., 8 % 3.30,
+        INTERVAL '3 hours 47 minutes' % INTERVAL '10 minutes', INTERVAL '2 hours 5 minutes ago' % 3600,
+        TIME('5:30') % INTERVAL '1 hour 30 minutes', DATETIMETZ('2026-01-01T01:20:00Z') % INTERVAL '1 day',
+        3 % NULL, NULL % 2, NULL % NULL
+    columns:
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.DateTimeDelta, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.DateTimeDelta, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.DateTimeDelta, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
+      - { type: java.lang.Void, nullable: true }
+    expectedResult:
+      - [ 0, 0, 1, 0, 3, -4, "-2", "1.40", "PT7M", "-300", "PT1H", "PT1H20M", null, null, null ]
+
 # TODO: RepeatExpression.java
 # TODO: ReplaceExpression.java
 # TODO: ReverseExpression.java
