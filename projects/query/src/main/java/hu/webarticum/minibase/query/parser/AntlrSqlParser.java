@@ -132,6 +132,7 @@ import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.AliasPart
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.AliasableExpressionContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.AtomicExpressionContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.BetweenRelationContext;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.BinaryStringContinuationContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.BinaryStringTokenListContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.BitStringLiteralContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.BitwiseNotExpressionContext;
@@ -1683,7 +1684,11 @@ public class AntlrSqlParser implements SqlParser {
 
     private String parseEscapeContinuationNode(EscapeStringContinuationContext escapeStringContinuationNode) {
         String text = escapeStringContinuationNode.getText();
-        return unfoldEscapeStringContent(text.substring(1, text.length() - 1));
+        if (text.charAt(0) == '\'') {
+            return unquote(text, '\'');
+        } else {
+            return unfoldEscapeStringContent(text.substring(2, text.length() - 1));
+        }
     }
 
     private String unfoldEscapeStringContent(String escapeStringContent) {
@@ -1815,7 +1820,7 @@ public class AntlrSqlParser implements SqlParser {
     public static BitString parseBinaryStringTokenListNode(BinaryStringTokenListContext binaryStringTokenListNode) {
         StringBuilder bitStringBuilder = new StringBuilder();
         bitStringBuilder.append(parseBinaryStringNode(binaryStringTokenListNode.TOKEN_BSTRING()));
-        for (TerminalNode binaryStringContinuationNode : binaryStringTokenListNode.TOKEN_BSTRING_CONTINUATION()) {
+        for (BinaryStringContinuationContext binaryStringContinuationNode : binaryStringTokenListNode.binaryStringContinuation()) {
             bitStringBuilder.append(parseBinaryStringContinuationNode(binaryStringContinuationNode));
         }
         return BitString.of(bitStringBuilder.toString());
@@ -1826,9 +1831,9 @@ public class AntlrSqlParser implements SqlParser {
         return nodeText.substring(2, nodeText.length() - 1);
     }
 
-    public static String parseBinaryStringContinuationNode(TerminalNode binaryStringContinuationNode) {
+    public static String parseBinaryStringContinuationNode(BinaryStringContinuationContext  binaryStringContinuationNode) {
         String nodeText = binaryStringContinuationNode.getText();
-        return nodeText.substring(1, nodeText.length() - 1);
+        return nodeText.substring(nodeText.charAt(0) == '\'' ? 1 : 2, nodeText.length() - 1);
     }
 
     public static BitString parseHexadecimalStringTokenListNode(HexadecimalStringTokenListContext hexadecimalStringTokenListNode) {
@@ -1859,9 +1864,8 @@ public class AntlrSqlParser implements SqlParser {
 
     public static String parseHexadecimalStringContinuationNode(HexadecimalStringContinuationContext hexadecimalStringContinuationNode) {
         String nodeText = hexadecimalStringContinuationNode.getText();
-        return nodeText.substring(1, nodeText.length() - 1);
+        return nodeText.substring(nodeText.charAt(0) == '\'' ? 1 : 2, nodeText.length() - 1);
     }
-
 
     public static Boolean parseBooleanLiteralNode(BooleanLiteralContext booleanLiteralNode) {
         return booleanLiteralNode.TRUE() != null;
