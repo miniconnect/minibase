@@ -6,10 +6,13 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
+import java.time.Instant;
+import java.time.LocalTime;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 
+import hu.webarticum.miniconnect.lang.DateTimeDelta;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.LargeInteger;
 
@@ -33,7 +36,13 @@ class NumberUtilTest {
                 LargeInteger.class,
                 BigDecimal.class,
                 LargeInteger.class,
-                LargeInteger.class);
+                LargeInteger.class,
+                BigDecimal.class,
+                BigDecimal.class,
+                BigDecimal.class,
+                BigDecimal.class,
+                BigDecimal.class,
+                BigDecimal.class);
         assertThat(types).isEqualTo(exceptedTypes);
     }
 
@@ -140,7 +149,13 @@ class NumberUtilTest {
                 LargeInteger.of(55),
                 new BigDecimal("82.123"),
                 LargeInteger.of(12),
-                LargeInteger.of(15));
+                LargeInteger.of(15),
+                new BigDecimal("300"),
+                new BigDecimal("192.34"),
+                new BigDecimal("45000"),
+                new BigDecimal("25924.123"),
+                new BigDecimal("11400"),
+                new BigDecimal("7200.01"));
         assertThat(numbers).isEqualTo(exceptedNumbers);
     }
 
@@ -293,7 +308,13 @@ class NumberUtilTest {
                 new BigDecimal("55"),
                 new BigDecimal("82.123"),
                 new BigDecimal("12"),
-                new BigDecimal("15"));
+                new BigDecimal("15"),
+                new BigDecimal("300"),
+                new BigDecimal("192.34"),
+                new BigDecimal("45000"),
+                new BigDecimal("25924.123"),
+                new BigDecimal("11400"),
+                new BigDecimal("7200.01"));
         assertThat(numbers).isEqualTo(exceptedNumbers);
     }
 
@@ -315,7 +336,13 @@ class NumberUtilTest {
                 (byte) 55,
                 (byte) 82,
                 (byte) 12,
-                (byte) 15);
+                (byte) 15,
+                (byte) 44,
+                (byte) -64,
+                (byte) -56,
+                (byte) 68,
+                (byte) -120,
+                (byte) 32);
         assertThat(numbers).isEqualTo(exceptedNumbers);
     }
 
@@ -337,7 +364,13 @@ class NumberUtilTest {
                 (short) 55,
                 (short) 82,
                 (short) 12,
-                (short) 15);
+                (short) 15,
+                (short) 300,
+                (short) 192,
+                (short) -20536,
+                (short) 25924,
+                (short) 11400,
+                (short) 7200);
         assertThat(numbers).isEqualTo(exceptedNumbers);
     }
 
@@ -359,7 +392,13 @@ class NumberUtilTest {
                 55,
                 82,
                 12,
-                15);
+                15,
+                300,
+                192,
+                45000,
+                25924,
+                11400,
+                7200);
         assertThat(numbers).isEqualTo(exceptedNumbers);
     }
 
@@ -381,7 +420,13 @@ class NumberUtilTest {
                 55L,
                 82L,
                 12L,
-                15L);
+                15L,
+                300L,
+                192L,
+                45000L,
+                25924L,
+                11400L,
+                7200L);
         assertThat(numbers).isEqualTo(exceptedNumbers);
     }
 
@@ -403,7 +448,13 @@ class NumberUtilTest {
                 LargeInteger.of("55"),
                 LargeInteger.of("82"),
                 LargeInteger.of("12"),
-                LargeInteger.of("15"));
+                LargeInteger.of("15"),
+                LargeInteger.of("300"),
+                LargeInteger.of("192"),
+                LargeInteger.of("45000"),
+                LargeInteger.of("25924"),
+                LargeInteger.of("11400"),
+                LargeInteger.of("7200"));
         assertThat(numbers).isEqualTo(exceptedNumbers);
     }
 
@@ -434,7 +485,13 @@ class NumberUtilTest {
                 new BigInteger("55"),
                 new BigInteger("82"),
                 new BigInteger("12"),
-                new BigInteger("15"));
+                new BigInteger("15"),
+                new BigInteger("300"),
+                new BigInteger("192"),
+                new BigInteger("45000"),
+                new BigInteger("25924"),
+                new BigInteger("11400"),
+                new BigInteger("7200"));
         assertThat(numbers).isEqualTo(exceptedNumbers);
     }
 
@@ -465,7 +522,13 @@ class NumberUtilTest {
                 new BigDecimal("55"),
                 new BigDecimal("82.123"),
                 new BigDecimal("12"),
-                new BigDecimal("15"));
+                new BigDecimal("15"),
+                new BigDecimal("300"),
+                new BigDecimal("192.34"),
+                new BigDecimal("45000"),
+                new BigDecimal("25924.123"),
+                new BigDecimal("11400"),
+                new BigDecimal("7200.01"));
         assertThat(numbers).isEqualTo(exceptedNumbers);
     }
 
@@ -522,7 +585,13 @@ class NumberUtilTest {
                 55f,
                 82.123f,
                 12f,
-                15f);
+                15f,
+                300f,
+                192.34f,
+                45000f,
+                25924.123f,
+                11400f,
+                7200.01f);
         assertThat(numbers.map(this::normalizeFloat)).isEqualTo(exceptedNumbers.map(this::normalizeFloat));
     }
 
@@ -552,8 +621,22 @@ class NumberUtilTest {
                 55d,
                 82.123d,
                 12d,
-                15d);
+                15d,
+                300d,
+                192.34d,
+                45000d,
+                25924.123d,
+                11400d,
+                7200.01d);
         assertThat(numbers.map(this::normalizeDouble)).isEqualTo(exceptedNumbers.map(this::normalizeDouble));
+    }
+
+    private Number normalizeDouble(Double doubleValue) {
+        if (doubleValue == null || !Double.isFinite(doubleValue)) {
+            return null;
+        } else {
+            return BigDecimal.valueOf(doubleValue).setScale(10, RoundingMode.HALF_UP).stripTrailingZeros();
+        }
     }
 
     @Test
@@ -613,14 +696,6 @@ class NumberUtilTest {
         assertThat(NumberUtil.gcd(new BigDecimal("-1.234"), new BigDecimal("-5.6789"))).isEqualTo(new BigDecimal("0.0001"));
     }
 
-    private Number normalizeDouble(Double doubleValue) {
-        if (doubleValue == null || !Double.isFinite(doubleValue)) {
-            return null;
-        } else {
-            return BigDecimal.valueOf(doubleValue).setScale(10, RoundingMode.HALF_UP).stripTrailingZeros();
-        }
-    }
-
     private Class<?> classOf(Object object) {
         if (object == null) {
             return Void.class;
@@ -645,7 +720,13 @@ class NumberUtilTest {
                 BigInteger.valueOf(55),
                 new BigDecimal("82.123"),
                 (short) 12,
-                (byte) 15);
+                (byte) 15,
+                DateTimeDelta.parse("PT5M"),
+                DateTimeDelta.parse("PT3M12.34S"),
+                LocalTime.parse("12:30:00"),
+                LocalTime.parse("07:12:04.123"),
+                Instant.parse("1970-01-01T03:10:00Z"),
+                Instant.parse("1970-01-01T02:00:00.01Z"));
     }
 
     private ImmutableList<String> createStringValues() {

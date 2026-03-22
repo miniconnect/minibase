@@ -13,6 +13,7 @@ import java.time.OffsetTime;
 import java.time.Period;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.time.temporal.TemporalAmount;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -77,13 +78,7 @@ public final class NumberUtil {
                 type == Boolean.class ||
                 type == Character.class ||
                 type == LocalDate.class ||
-                type == LocalTime.class ||
-                type == OffsetTime.class ||
-                type == LocalDateTime.class ||
-                type == OffsetDateTime.class ||
-                type == ZonedDateTime.class ||
                 type == ZoneOffset.class ||
-                type == Instant.class ||
                 type == Period.class) {
             return LargeInteger.class;
         } else if (
@@ -91,7 +86,14 @@ public final class NumberUtil {
                 type == DateTimeDelta.class ||
                 type == Duration.class ||
                 type == String.class ||
-                CharSequence.class.isAssignableFrom(type)) {
+                type == LocalTime.class ||
+                type == OffsetTime.class ||
+                type == LocalDateTime.class ||
+                type == OffsetDateTime.class ||
+                type == ZonedDateTime.class ||
+                type == Instant.class ||
+                CharSequence.class.isAssignableFrom(type) ||
+                TemporalAmount.class.isAssignableFrom(type)) {
             return BigDecimal.class;
         } else if (Number.class.isAssignableFrom(type)) {
             return Double.class;
@@ -276,19 +278,19 @@ public final class NumberUtil {
         } else if (object instanceof LocalDate) {
             return LargeInteger.of(((LocalDate) object).toEpochDay());
         } else if (object instanceof LocalTime) {
-            return LargeInteger.of(((LocalTime) object).toSecondOfDay());
+            return localTimeToBigDecimal((LocalTime) object);
         } else if (object instanceof OffsetTime) {
-            return numberify(((OffsetTime) object).toLocalTime());
+            return localTimeToBigDecimal(((OffsetTime) object).toLocalTime());
         } else if (object instanceof LocalDateTime) {
-            return LargeInteger.of(((LocalDateTime) object).toEpochSecond(ZoneOffset.UTC));
+            return instantToBigDecimal(((LocalDateTime) object).toInstant(ZoneOffset.UTC));
         } else if (object instanceof OffsetDateTime) {
-            return numberify(((OffsetDateTime) object).toInstant());
+            return instantToBigDecimal(((OffsetDateTime) object).toInstant());
         } else if (object instanceof ZonedDateTime) {
-            return numberify(((ZonedDateTime) object).toInstant());
+            return instantToBigDecimal(((ZonedDateTime) object).toInstant());
         } else if (object instanceof ZoneOffset) {
             return LargeInteger.of(((ZoneOffset) object).getTotalSeconds());
         } else if (object instanceof Instant) {
-            return LargeInteger.of(((Instant) object).getEpochSecond());
+            return instantToBigDecimal((Instant) object);
         } else if (object instanceof DateTimeDelta) {
             return durationToBigDecimal(((DateTimeDelta) object).toCollapsedDuration());
         } else if (object instanceof Duration) {
@@ -302,9 +304,23 @@ public final class NumberUtil {
         }
     }
 
+    private static BigDecimal instantToBigDecimal(Instant instant) {
+        return temporalToBigDecimal(instant.getEpochSecond(), instant.getNano());
+    }
+
+    private static BigDecimal localTimeToBigDecimal(LocalTime time) {
+        return temporalToBigDecimal(time.toSecondOfDay(), time.getNano());
+    }
+
     private static BigDecimal durationToBigDecimal(Duration duration) {
-        BigDecimal result = BigDecimal.valueOf(duration.getSeconds());
-        result = result.add(new BigDecimal(BigInteger.valueOf(duration.getNano()), 9));
+        return temporalToBigDecimal(duration.getSeconds(), duration.getNano());
+    }
+
+    private static BigDecimal temporalToBigDecimal(long seconds, int nanos) {
+        BigDecimal result = BigDecimal.valueOf(seconds);
+        if (nanos != 0) {
+            result = result.add(new BigDecimal(BigInteger.valueOf(nanos), 9).stripTrailingZeros());
+        }
         return result;
     }
 
