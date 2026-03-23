@@ -3,6 +3,7 @@ package hu.webarticum.minibase.query.expression;
 import java.time.Instant;
 import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAmount;
+import java.util.Objects;
 import java.util.Optional;
 
 import hu.webarticum.minibase.query.util.DateTimeDeltaUtil;
@@ -85,8 +86,14 @@ public class OverlapsExpression implements Expression {
 
     @Override
     public Object evaluate(ImmutableMap<Parameter, Object> values) {
-        Temporal[] normalized1 = normalize(start1Expression.evaluate(values), end1Expression.evaluate(values));
-        Temporal[] normalized2 = normalize(start2Expression.evaluate(values), end2Expression.evaluate(values));
+        Object start1Value = start1Expression.evaluate(values);
+        Object end1Value = end1Expression.evaluate(values);
+        Object start2Value = start2Expression.evaluate(values);
+        Object end2Value = end2Expression.evaluate(values);
+        boolean eq1 = Objects.equals(start1Value, end1Value);
+        boolean eq2 = Objects.equals(start2Value, end2Value);
+        Temporal[] normalized1 = normalize(start1Value, end1Value);
+        Temporal[] normalized2 = normalize(start2Value, end2Value);
         Class<?> commonType = unifyTypesOf(normalized1[0], normalized1[1], normalized2[0], normalized2[1]);
         Temporal[] ordered1 = order(
                 TemporalUtil.convert(normalized1[0], commonType), TemporalUtil.convert(normalized1[1], commonType));
@@ -94,7 +101,15 @@ public class OverlapsExpression implements Expression {
                 TemporalUtil.convert(normalized2[0], commonType), TemporalUtil.convert(normalized2[1], commonType));
         int nullPos = findSoleNull(ordered1[0], ordered1[1], ordered2[0], ordered2[1]);
         if (nullPos == -1) {
-            return (cmp(ordered1[0], ordered2[1]) < 0 && cmp(ordered2[0], ordered1[1]) < 0);
+            int cmp1 = cmp(ordered1[0], ordered2[1]);
+            if (eq2 ? cmp1 > 0 : cmp1 >= 0) {
+                return false;
+            }
+            int cmp2 = cmp(ordered2[0], ordered1[1]);
+            if (eq1 ? cmp2 > 0 : cmp2 >= 0) {
+                return false;
+            }
+            return true;
         } else if (nullPos == 0) {
             return checkHalfEnd(ordered1[1], ordered2[0], ordered2[1]);
         } else if (nullPos == 1) {
