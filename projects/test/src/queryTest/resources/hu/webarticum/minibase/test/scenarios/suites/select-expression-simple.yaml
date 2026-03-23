@@ -27,14 +27,13 @@ cases:
     description: Add expression
     query: |
       SELECT
-        0 + 0, 1 + 1, 7 + 12, -2 + 2, -3 + 10, 30 + -1, -10 + -72, 4 + 2.0, 7 + -1.2,
-        34123.02310 + 1203.201,
-        1253752056703516253601011 + 152,
-        2 + '7', '12.030' + 4, '5' + '6',
+        0 + 0, 1 + 1, 7 + 4, 7 + 12, -2 + 2, -3 + 10, 30 + -1, -10 + -72,
+        4 + 2.0, 7 + -1.2, 34123.02310 + 1203.201, 1253752056703516253601011 + 152, 2 + '7', '12.030' + 4, '5' + '6',
         NULL + 3, 2 + NULL, NULL + NULL
     expectedResult:
-      - [ 0, 2, 19, 0, 7, 29, -82, "6.0", "5.8", "35326.22410", 1253752056703516253601163, 9, "16.030", 11, null, null, null ]
+      - [ 0, 2, 11, 19, 0, 7, 29, -82, "6.0", "5.8", "35326.22410", 1253752056703516253601163, 9, "16.030", 11, null, null, null ]
     columns:
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
@@ -1677,7 +1676,36 @@ cases:
 
 # TODO: SplitPartExpression.java
 # TODO: SubstringExpression.java
-# TODO: SubtractExpression.java
+
+  - name: subtract
+    description: Subtract expression
+    query: |
+      SELECT
+        0 - 0, 1 - 1, 7 - 4, 7 - 12, -2 - 2, -3 - 10, 30 - -1, -10 - -72,
+        4 - 2.0, 7 - -1.2, 34123.02310 - 1203.201, 1253752056703516253601011 - 152, 2 - '7', '12.030' - 4, '5' - '6',
+        NULL + 3, 2 + NULL, NULL + NULL
+    expectedResult:
+      - [ 0, 0, 3, -5, -4, -13, 31, 62, "2.0", "8.2", "32919.82210", 1253752056703516253600859, -5, "8.030", -1,
+          null, null, null ]
+    columns:
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: java.lang.Void, nullable: true }
+      - { type: java.lang.Void, nullable: true }
+      - { type: java.lang.Void, nullable: true }
 
   - name: translate
     description: Translate expression
