@@ -1132,7 +1132,64 @@ cases:
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
 
-# TODO: OrderRelationExpression.java
+  - name: order-relation
+    description: OrderRelation expression
+    query: |
+      SELECT
+        2 < 3, 3 < 2, 2 < 2, 2 < 2.0, 2.0 < 2, 2.5 < 3.2, 3.2 < 2.5, 2 < -3, NULL < 3, 2 < NULL, NULL < NULL,
+        2 <= 3, 3 <= 2, 2 <= 2, 2 <= 2.0, 2.0 <= 2, 2.5 <= 3.2, 3.2 <= 2.5, 2 <= -3, NULL <= 3, 2 <= NULL, NULL <= NULL,
+        2 > 3, 3 > 2, 2 > 2, 2 > 2.0, 2.0 > 2, 2.5 > 3.2, 3.2 > 2.5, 2 > -3, NULL > 3, 2 > NULL, NULL > NULL,
+        2 >= 3, 3 >= 2, 2 >= 2, 2 >= 2.0, 2.0 >= 2, 2.5 >= 3.2, 3.2 >= 2.5, 2 >= -3, NULL >= 3, 2 >= NULL, NULL >= NULL
+    expectedResult:
+      - [ true, false, false, false, false, true, false, false, null, null, null,
+          true, false, true, true, true, true, false, false, null, null, null,
+          false, true, false, false, false, false, true, true, null, null, null,
+          false, true, true, true, true, false, true, true, null, null, null ]
+    columns:
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
 
   - name: ord
     description: Ord expression
@@ -1464,9 +1521,75 @@ cases:
 # TODO: SplitPartExpression.java
 # TODO: SubstringExpression.java
 # TODO: SubtractExpression.java
-# TODO: TranslateExpression.java
+
+  - name: translate
+    description: Translate expression
+    query: |
+      SELECT
+        TRANSLATE('alma', 't', 'v'), TRANSLATE('alma', 'fmx', 'gny'), TRANSLATE('alma', 'abm', 'ecd'), TRANSLATE('alma', 'am', 'ma'),
+        TRANSLATE('', 'a', 'e'), TRANSLATE('alma', 'ax', 'iys'), TRANSLATE('alma', 'max', 'n'),
+        TRANSLATE(NULL, 'ae', 'bc'), TRANSLATE('abc', NULL, 'bc'), TRANSLATE('abc', 'ae', NULL), TRANSLATE(NULL, NULL, NULL)
+    expectedResult:
+      - [ "alma", "alna", "elde", "mlam", "", "ilmi", "ln", null, null, null, null ]
+    columns:
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: true }
+      - { type: java.lang.String, nullable: true }
+      - { type: java.lang.String, nullable: true }
+      - { type: java.lang.String, nullable: true }
+
 # TODO: TrimExpression.java
-# TODO: UnaryRealMathFunctionExpression.java
+
+  - name: unary-real-math-function
+    description: UnaryRealMathFunction expression
+    query: |
+      SELECT
+        SQRT(17), CBRT(23), EXP(4.5), LN(5), LOG10(741), LOG2(3),
+        SIN(1), COS(1), TAN(1), COT(1), ASIN(1), ACOS(0.3), ATAN(1), DEGREES(2.5), RADIANS(60),
+        SQRT(NULL), CBRT(NULL), EXP(NULL), LN(NULL), LOG10(NULL), LOG2(NULL),
+        SIN(NULL), COS(NULL), TAN(NULL), COT(NULL), ASIN(NULL), ACOS(NULL), ATAN(NULL), DEGREES(NULL), RADIANS(NULL)
+    expectedResult:
+      - [ 4.123105625617661, 2.8438669798515654, 90.01713130052181, 1.6094379124341003, 2.869818207979328, 1.5849625007211563,
+          0.8414709848078965, 0.5403023058681398, 1.5574077246549023, 0.6420926159343306,
+          1.5707963267948966, 1.2661036727794992, 0.7853981633974483, 143.2394487827058, 1.0471975511965976,
+         null, null, null, null, null, null, null, null, null, null, null, null, null, null, null ]
+    columns:
+      - { type: java.lang.Double, nullable: false }
+      - { type: java.lang.Double, nullable: false }
+      - { type: java.lang.Double, nullable: false }
+      - { type: java.lang.Double, nullable: false }
+      - { type: java.lang.Double, nullable: false }
+      - { type: java.lang.Double, nullable: false }
+      - { type: java.lang.Double, nullable: false }
+      - { type: java.lang.Double, nullable: false }
+      - { type: java.lang.Double, nullable: false }
+      - { type: java.lang.Double, nullable: false }
+      - { type: java.lang.Double, nullable: false }
+      - { type: java.lang.Double, nullable: false }
+      - { type: java.lang.Double, nullable: false }
+      - { type: java.lang.Double, nullable: false }
+      - { type: java.lang.Double, nullable: false }
+      - { type: java.lang.Double, nullable: true }
+      - { type: java.lang.Double, nullable: true }
+      - { type: java.lang.Double, nullable: true }
+      - { type: java.lang.Double, nullable: true }
+      - { type: java.lang.Double, nullable: true }
+      - { type: java.lang.Double, nullable: true }
+      - { type: java.lang.Double, nullable: true }
+      - { type: java.lang.Double, nullable: true }
+      - { type: java.lang.Double, nullable: true }
+      - { type: java.lang.Double, nullable: true }
+      - { type: java.lang.Double, nullable: true }
+      - { type: java.lang.Double, nullable: true }
+      - { type: java.lang.Double, nullable: true }
+      - { type: java.lang.Double, nullable: true}
+      - { type: java.lang.Double, nullable: true }
 
   - name: upper
     description: Upper expression
