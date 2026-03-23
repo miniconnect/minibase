@@ -29,9 +29,12 @@ cases:
       SELECT
         0 + 0, 1 + 1, 7 + 4, 7 + 12, -2 + 2, -3 + 10, 30 + -1, -10 + -72,
         4 + 2.0, 7 + -1.2, 34123.02310 + 1203.201, 1253752056703516253601011 + 152, 2 + '7', '12.030' + 4, '5' + '6',
+        INTERVAL 'P2DT3H' + INTERVAL 'P1DT20M', DATETIME('2025-12-20 03:40:17') + INTERVAL 'P1DT20M',
+        DATE('2025-11-01') + TIME('12:30:00'), DATETIME('2025-12-20 03:40:17') + UTCOFFSET('+01:00'),
         NULL + 3, 2 + NULL, NULL + NULL
     expectedResult:
-      - [ 0, 2, 11, 19, 0, 7, 29, -82, "6.0", "5.8", "35326.22410", 1253752056703516253601163, 9, "16.030", 11, null, null, null ]
+      - [ 0, 2, 11, 19, 0, 7, 29, -82, "6.0", "5.8", "35326.22410", 1253752056703516253601163, 9, "16.030", 11,
+          "P3DT3H20M", "2025-12-21 04:00:17", "2025-11-01 12:30:00", "2025-12-20T03:40:17+01:00", null, null, null ]
     columns:
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
@@ -48,6 +51,10 @@ cases:
       - { type: java.math.BigDecimal, nullable: false }
       - { type: java.math.BigDecimal, nullable: false }
       - { type: java.math.BigDecimal, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.DateTimeDelta, nullable: false }
+      - { type: java.time.LocalDateTime, nullable: false }
+      - { type: java.time.LocalDateTime, nullable: false }
+      - { type: java.time.OffsetDateTime, nullable: false }
       - { type: java.lang.Void, nullable: true }
       - { type: java.lang.Void, nullable: true }
       - { type: java.lang.Void, nullable: true }
@@ -1683,10 +1690,12 @@ cases:
       SELECT
         0 - 0, 1 - 1, 7 - 4, 7 - 12, -2 - 2, -3 - 10, 30 - -1, -10 - -72,
         4 - 2.0, 7 - -1.2, 34123.02310 - 1203.201, 1253752056703516253601011 - 152, 2 - '7', '12.030' - 4, '5' - '6',
+        INTERVAL 'P2DT3H' - INTERVAL 'P1DT20M', DATETIME('2025-12-20 03:40:17') - INTERVAL 'P1DT20M',
+        DATETIME('2025-12-20 03:40:17') - DATETIME('2025-11-12 07:25:02'),
         NULL + 3, 2 + NULL, NULL + NULL
     expectedResult:
       - [ 0, 0, 3, -5, -4, -13, 31, 62, "2.0", "8.2", "32919.82210", 1253752056703516253600859, -5, "8.030", -1,
-          null, null, null ]
+          "P1DT2H40M", "2025-12-19 03:20:17", "P1M7DT20H15M15S", null, null, null ]
     columns:
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
@@ -1703,6 +1712,9 @@ cases:
       - { type: java.math.BigDecimal, nullable: false }
       - { type: java.math.BigDecimal, nullable: false }
       - { type: java.math.BigDecimal, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.DateTimeDelta, nullable: false }
+      - { type: java.time.LocalDateTime, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.DateTimeDelta, nullable: false }
       - { type: java.lang.Void, nullable: true }
       - { type: java.lang.Void, nullable: true }
       - { type: java.lang.Void, nullable: true }
