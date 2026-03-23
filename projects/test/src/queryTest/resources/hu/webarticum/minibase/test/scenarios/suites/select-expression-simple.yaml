@@ -1222,7 +1222,164 @@ cases:
       - { type: java.lang.Boolean, nullable: true }
       - { type: java.lang.Boolean, nullable: true }
 
-# TODO: OverlapsExpression.java
+  - name: overlaps
+    description: Overlaps expression
+    query: |
+      SELECT
+        (5, 5) OVERLAPS (1, 3), (5, 5) OVERLAPS (3, 1), (5, 5) OVERLAPS (1, 5), (5, 5) OVERLAPS (5, 1),
+          (5, 5) OVERLAPS (1, 7), (5, 5) OVERLAPS (7, 1), (5, 5) OVERLAPS (5, 5),
+          (5, 5) OVERLAPS (5, 7), (5, 5) OVERLAPS (7, 5), (5, 5) OVERLAPS (7, 9), (5, 5) OVERLAPS (9, 7),
+        (1, 3) OVERLAPS (5, 5), (3, 1) OVERLAPS (5, 5), (1, 5) OVERLAPS (5, 5), (5, 1) OVERLAPS (5, 5),
+          (1, 7) OVERLAPS (5, 5), (7, 1) OVERLAPS (5, 5), (5, 5) OVERLAPS (5, 5),
+          (5, 7) OVERLAPS (5, 5), (7, 5) OVERLAPS (5, 5), (7, 9) OVERLAPS (5, 5), (9, 7) OVERLAPS (5, 5),
+        (4, 7) OVERLAPS (1, 2), (4, 7) OVERLAPS (2, 1), (4, 7) OVERLAPS (1, 4), (4, 7) OVERLAPS (4, 1),
+          (4, 7) OVERLAPS (1, 5), (4, 7) OVERLAPS (5, 1), (4, 7) OVERLAPS (1, 7), (4, 7) OVERLAPS (7, 1),
+          (4, 7) OVERLAPS (1, 9), (4, 7) OVERLAPS (9, 1), (4, 7) OVERLAPS (4, 5), (4, 7) OVERLAPS (5, 4),
+          (4, 7) OVERLAPS (4, 7), (4, 7) OVERLAPS (7, 4), (4, 7) OVERLAPS (4, 9), (4, 7) OVERLAPS (9, 4),
+          (4, 7) OVERLAPS (5, 6), (4, 7) OVERLAPS (6, 5), (4, 7) OVERLAPS (5, 7), (4, 7) OVERLAPS (7, 5),
+          (4, 7) OVERLAPS (5, 9), (4, 7) OVERLAPS (9, 5), (4, 7) OVERLAPS (7, 9), (4, 7) OVERLAPS (9, 7),
+          (4, 7) OVERLAPS (8, 9), (4, 7) OVERLAPS (9, 8),
+        (7, 4) OVERLAPS (1, 2), (7, 4) OVERLAPS (2, 1), (7, 4) OVERLAPS (1, 4), (7, 4) OVERLAPS (4, 1),
+          (7, 4) OVERLAPS (1, 5), (7, 4) OVERLAPS (5, 1), (7, 4) OVERLAPS (1, 7), (7, 4) OVERLAPS (7, 1),
+          (7, 4) OVERLAPS (1, 9), (7, 4) OVERLAPS (9, 1), (7, 4) OVERLAPS (4, 5), (7, 4) OVERLAPS (5, 4),
+          (7, 4) OVERLAPS (7, 4), (7, 4) OVERLAPS (7, 4), (7, 4) OVERLAPS (4, 9), (7, 4) OVERLAPS (9, 4),
+          (7, 4) OVERLAPS (5, 6), (7, 4) OVERLAPS (6, 5), (7, 4) OVERLAPS (5, 7), (7, 4) OVERLAPS (7, 5),
+          (7, 4) OVERLAPS (5, 9), (7, 4) OVERLAPS (9, 5), (7, 4) OVERLAPS (7, 9), (7, 4) OVERLAPS (9, 7),
+          (7, 4) OVERLAPS (8, 9), (7, 4) OVERLAPS (9, 8),
+        ('2025-01-05'::DATE, '2025-01-05'::DATE) OVERLAPS ('2025-01-05'::DATE, '2025-01-05'::DATE),
+          ('2025-01-01'::DATE, '2025-01-05'::DATE) OVERLAPS ('2025-01-05'::DATE, '2025-01-05'::DATE),
+          ('2025-01-01'::DATE, '2025-01-05'::DATE) OVERLAPS ('2025-01-03'::DATE, '2025-01-07'::DATE),
+          ('2025-01-01'::DATE, INTERVAL 2 DAY) OVERLAPS ('2025-01-03'::DATE, '2025-01-07'::DATE),
+          ('2025-01-03'::DATE, '2025-01-07'::DATE) OVERLAPS ('2025-01-01'::DATE, INTERVAL 2 DAY),
+          ('2025-01-01'::DATE, INTERVAL 3 DAY) OVERLAPS ('2025-01-03'::DATE, '2025-01-07'::DATE),
+          ('2025-01-03'::DATE, '2025-01-07'::DATE) OVERLAPS ('2025-01-01'::DATE, INTERVAL 3 DAY),
+          ('2025-01-01'::DATE, INTERVAL 4 DAY) OVERLAPS ('2025-01-03'::DATE, '2025-01-07'::DATE),
+          ('2025-01-03'::DATE, '2025-01-07'::DATE) OVERLAPS ('2025-01-01'::DATE, INTERVAL 4 DAY),
+          ('2025-01-01 12:30:00'::DATETIME, '2025-01-02 15:23:00'::DATETIME)
+            OVERLAPS ('2025-01-02 07:41:42'::DATETIME, '2025-01-07 03:12:01'::DATETIME),
+          ('2025-01-01 12:30:00'::DATETIME, '2025-01-02 01:12:55'::DATETIME)
+            OVERLAPS ('2025-01-02 07:41:42'::DATETIME, '2025-01-07 03:12:01'::DATETIME),
+          ('2025-01-04'::DATE, '2025-01-04'::DATE) OVERLAPS ('2025-01-04 12:01:04'::DATETIME, '2025-01-04 12:50:01'::DATETIME),
+        (NULL, '2025-01-05'::DATE) OVERLAPS ('2025-01-05'::DATE, '2025-01-05'::DATE),
+          ('2025-01-05'::DATE, NULL) OVERLAPS ('2025-01-05'::DATE, '2025-01-05'::DATE),
+          ('2025-01-05'::DATE, '2025-01-05'::DATE) OVERLAPS (NULL, '2025-01-05'::DATE),
+          ('2025-01-05'::DATE, '2025-01-05'::DATE) OVERLAPS ('2025-01-05'::DATE, NULL),
+          (NULL, '2025-01-05'::DATE) OVERLAPS ('2025-01-04'::DATE, '2025-01-06'::DATE),
+          ('2025-01-05'::DATE, NULL) OVERLAPS ('2025-01-04'::DATE, '2025-01-06'::DATE),
+          ('2025-01-04'::DATE, '2025-01-06'::DATE) OVERLAPS (NULL, '2025-01-05'::DATE),
+          ('2025-01-04'::DATE, '2025-01-06'::DATE) OVERLAPS ('2025-01-05'::DATE, NULL),
+          ('2025-01-04'::DATE, NULL) OVERLAPS ('2025-01-05'::DATE, NULL),
+          ('2025-01-04'::DATE, '2025-01-06'::DATE) OVERLAPS (NULL, NULL),
+          ('2025-01-04'::DATE, NULL) OVERLAPS (NULL, NULL),
+          (NULL, NULL) OVERLAPS (NULL, NULL)
+    expectedResult:
+      - [ false, false, false, false, true, true, true, true, true, false, false,
+          false, false, false, false, true, true, true, true, true, false, false,
+          false, false, false, false, true, true, true, true, true, true, true, true, true,
+            true, true, true, true, true, true, true, true, true, false, false, false, false,
+          false, false, false, false, true, true, true, true, true, true, true, true, true,
+            true, true, true, true, true, true, true, true, true, false, false, false, false,
+          true, false, true, false, false, true, true, true, true, true, false, false,
+          null, null, null, null, true, true, true, true, null, null, null, null ]
+    columns:
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
 
   - name: pi
     description: Pi expression
