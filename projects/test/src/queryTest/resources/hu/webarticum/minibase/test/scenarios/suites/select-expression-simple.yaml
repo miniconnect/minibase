@@ -1205,8 +1205,68 @@ cases:
     expectedResult:
       - [ 1, 0, 1, 1, 25, 9, -1, 0.0625, 0.001, -0.125, 2.25, 2.25, 4, null, null, null, null, null ]
 
-# TODO: RegexpExpression.java
-# TODO: RegexpReplaceExpression.java
+  - name: regexp
+    description: Regexp expression
+    query: |
+      SELECT
+        'lorem' REGEXP '^l[aeiou]r[gem]+$', 'lorem' REGEXP '[ao]re', 'lorem' REGEXP '[aei]r[ao]',
+        'lorem' NOT REGEXP '^lo', 'lorem' NOT REGEXP 'merol',
+        NULL REGEXP '^x', 'a' REGEXP NULL, NULL REGEXP NULL, NULL NOT REGEXP '^x', 'a' NOT REGEXP NULL, NULL NOT REGEXP NULL,
+        'lorem' RLIKE '^l[aeiou]r[gem]+$', 'lorem' RLIKE '[ao]re', 'lorem' REGEXP '[aei]r[ao]',
+        'lorem' NOT RLIKE '^lo', 'lorem' NOT RLIKE 'merol',
+        NULL RLIKE '^x', 'a' RLIKE NULL, NULL RLIKE NULL, NULL NOT RLIKE '^x', 'a' NOT RLIKE NULL, NULL NOT RLIKE NULL
+    columns:
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+    expectedResult:
+      - [ true, true, false, false, true, null, null, null, null, null, null,
+          true, true, false, false, true, null, null, null, null, null, null ]
+
+  - name: regexp-replace
+    description: RegexpReplace expression
+    query: |
+      SELECT
+        REGEXP_REPLACE('lorem', '[rx]', 'wg'), REGEXP_REPLACE('lorem', '[rm]', 'wg'),
+        REGEXP_REPLACE('lorem', '[df]', 'wg'), REGEXP_REPLACE('lorem', '[rm]', 'wg', 'g'),
+        REGEXP_REPLACE('Haha', '[th]', 'wg', 'g'), REGEXP_REPLACE('Haha', '[th]', 'wg', 'gi'),
+        REGEXP_REPLACE(NULL, '[rx]', 'wg'), REGEXP_REPLACE('lorem', NULL, 'wg'),
+        REGEXP_REPLACE('lorem', '[rx]', NULL), REGEXP_REPLACE(NULL, NULL, NULL),
+        REGEXP_REPLACE('lorem', '[rm]', 'wg', NULL), REGEXP_REPLACE(NULL, NULL, NULL, NULL)
+    columns:
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: true }
+      - { type: java.lang.String, nullable: true }
+      - { type: java.lang.String, nullable: true }
+      - { type: java.lang.String, nullable: true }
+      - { type: java.lang.String, nullable: true }
+      - { type: java.lang.String, nullable: true }
+    expectedResult:
+      - [ "lowgem", "lowgem", "lorem", "lowgewg", "Hawga", "wgawga", null, null, null, null, null, null ]
 
   - name: remainder
     description: Remainder expression
