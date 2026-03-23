@@ -1,4 +1,4 @@
-description: Simple standalone select queries
+description: Simple expression select queries
 datasetResource: ../datasets/empty.yaml
 cases:
 

@@ -1,4 +1,4 @@
-description: Simple standalone select queries
+description: Simple table select queries
 datasetResource: ../datasets/single-table.yaml
 initQueries:
   - USE library
