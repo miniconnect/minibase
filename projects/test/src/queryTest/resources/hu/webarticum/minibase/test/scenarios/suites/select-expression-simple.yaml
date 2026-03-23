@@ -8,6 +8,8 @@ cases:
       SELECT
         ABS(0), ABS(-3), ABS(-23), ABS(-256), ABS(2), ABS(-9223372036854775808),
         ABS(-3.20), ABS(4.0210), ABS('9'), ABS('-1234'), ABS(NULL)
+    expectedResult:
+      - [ 0, 3, 23, 256, 2, 9223372036854775808, "3.20", "4.0210", 9, 1234, null ]
     columns:
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
@@ -20,8 +22,6 @@ cases:
       - { type: java.math.BigDecimal, nullable: false }
       - { type: java.math.BigDecimal, nullable: false }
       - { type: java.lang.Void, nullable: true }
-    expectedResult:
-      - [ 0, 3, 23, 256, 2, 9223372036854775808, "3.20", "4.0210", 9, 1234, null ]
 
   - name: add
     description: Add expression
@@ -32,6 +32,8 @@ cases:
         1253752056703516253601011 + 152,
         2 + '7', '12.030' + 4, '5' + '6',
         NULL + 3, 2 + NULL, NULL + NULL
+    expectedResult:
+      - [ 0, 2, 19, 0, 7, 29, -82, "6.0", "5.8", "35326.22410", 1253752056703516253601163, 9, "16.030", 11, null, null, null ]
     columns:
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
@@ -50,8 +52,6 @@ cases:
       - { type: java.lang.Void, nullable: true }
       - { type: java.lang.Void, nullable: true }
       - { type: java.lang.Void, nullable: true }
-    expectedResult:
-      - [ 0, 2, 19, 0, 7, 29, -82, "6.0", "5.8", "35326.22410", 1253752056703516253601163, 9, "16.030", 11, null, null, null ]
 
   - name: and
     description: And expression
@@ -59,6 +59,8 @@ cases:
       SELECT
         TRUE AND TRUE, TRUE AND FALSE, FALSE AND TRUE, FALSE AND FALSE,
         TRUE AND NULL, FALSE AND NULL, NULL AND TRUE, NULL AND FALSE, NULL AND NULL
+    expectedResult:
+      - [ true, false, false, false, null, false, null, false, null ]
     columns:
       - { type: java.lang.Boolean, nullable: false }
       - { type: java.lang.Boolean, nullable: false }
@@ -69,29 +71,27 @@ cases:
       - { type: java.lang.Boolean, nullable: true }
       - { type: java.lang.Boolean, nullable: true }
       - { type: java.lang.Boolean, nullable: true }
-    expectedResult:
-      - [ true, false, false, false, null, false, null, false, null ]
 
   - name: ascii
     description: Ascii expression
     query: "SELECT ASCII('5'), ASCII('A'), ASCII('~'), ASCII(NULL)"
+    expectedResult:
+      - [ 53, 65, 126, null ]
     columns:
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
-    expectedResult:
-      - [ 53, 65, 126, null ]
 
   - name: atan2
     description: Atan2 expression
     query: "SELECT ATAN2(3, 3), ATAN2(1.5574077246549023, 1), ATAN(NULL)"
+    expectedResult:
+      - [ 0.7853981633974483, 1, null ]
     columns:
       - { type: java.lang.Double, nullable: false }
       - { type: java.lang.Double, nullable: false }
       - { type: java.lang.Double, nullable: true }
-    expectedResult:
-      - [ 0.7853981633974483, 1, null ]
 
   - name: between
     description: Between expression
@@ -104,6 +104,9 @@ cases:
         7 BETWEEN 10 AND NULL, 10 BETWEEN 10 AND NULL, 12 BETWEEN 10 AND NULL,
         7 BETWEEN NULL AND NULL,
         NULL BETWEEN 5 AND 10, NULL BETWEEN NULL AND 10, NULL BETWEEN 5 AND NULL, NULL BETWEEN NULL AND NULL
+    expectedResult:
+      - [ false, false, true, true, true, true, false, false, false, false, false,
+          null, null, false, false, null, null, null, null, null, null, null ]
     columns:
       - { type: java.lang.Boolean,  nullable: false }
       - { type: java.lang.Boolean,  nullable: false }
@@ -127,9 +130,6 @@ cases:
       - { type: java.lang.Boolean,  nullable: true }
       - { type: java.lang.Boolean,  nullable: true }
       - { type: java.lang.Boolean,  nullable: true }
-    expectedResult:
-      - [ false, false, true, true, true, true, false, false, false, false, false,
-          null, null, false, false, null, null, null, null, null, null, null ]
 
   - name: bit-length
     description: BitLength expression
@@ -137,6 +137,8 @@ cases:
       SELECT
         BIT_LENGTH(b''), BIT_LENGTH(b'000'), BIT_LENGTH(b'10111010'),
         BIT_LENGTH('10'), BIT_LENGTH('lorem'), BIT_LENGTH('tűz'), BIT_LENGTH(14), BIT_LENGTH(260), BIT_LENGTH(NULL)
+    expectedResult:
+      - [ 0, 3, 8, 16, 40, 32, 4, 9, null ]
     columns:
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
@@ -147,8 +149,6 @@ cases:
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
-    expectedResult:
-      - [ 0, 3, 8, 16, 40, 32, 4, 9, null ]
 
   - name: bitwise-and
     description: BitwiseAnd expression
@@ -156,6 +156,8 @@ cases:
       SELECT
         b'10' & b'11', b'110' & b'011', b'' & b'10', b'10' & b'0011',
         b'101011111111' & 'AB', b'101' & 7, 2 & 7, b'101' & NULL, NULL & 4, NULL & NULL
+    expectedResult:
+      - [ "10", "010", "00", "0000", "0000000101000000", "101", 2, null, null, null ]
     columns:
       - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
@@ -167,8 +169,6 @@ cases:
       - { type: hu.webarticum.miniconnect.lang.BitString, nullable: true }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
-    expectedResult:
-      - [ "10", "010", "00", "0000", "0000000101000000", "101", 2, null, null, null ]
 
   - name: bitwise-not
     description: BitwiseNot expression
@@ -176,6 +176,8 @@ cases:
       SELECT
         ~ b'10', ~ b'11', ~ b'0000000', ~ b'11111111', ~ b'101111010',
         ~ 4, ~ 0, ~ -123, ~ 'lorem', ~ NULL
+    expectedResult:
+      - [ "01", "00", "1111111", "00000000", "010000101", -5, -1, 122, "1001001110010000100011011001101010010010", null ]
     columns:
       - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
@@ -187,8 +189,6 @@ cases:
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
-    expectedResult:
-      - [ "01", "00", "1111111", "00000000", "010000101", -5, -1, 122, "1001001110010000100011011001101010010010", null ]
 
   - name: bitwise-or
     description: BitwiseOr expression
@@ -196,6 +196,8 @@ cases:
       SELECT
         b'10' | b'11', b'10010' | b'00110', b'' | b'10', b'10' | b'0011',
         b'101011111111' | 'AB', b'101' | 12, 5 | 9, b'101' | NULL, NULL | 4, NULL | NULL
+    expectedResult:
+      - [ "11", "10110", "10", "1011", "1110111111110010", "1101", 13, null, null, null ]
     columns:
       - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
@@ -207,8 +209,6 @@ cases:
       - { type: hu.webarticum.miniconnect.lang.BitString, nullable: true }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
-    expectedResult:
-      - [ "11", "10110", "10", "1011", "1110111111110010", "1101", 13, null, null, null ]
 
   - name: bitwise-shift-left
     description: BitwiseShiftLeft expression
@@ -216,6 +216,8 @@ cases:
       SELECT
         b'11010' << 5, b'11010' << 2, b'11010' << 0, b'11010' << -1,
         5 << 3, 5 << 0, 5 << -1, b'11010' << NULL, 3 << NULL, NULL << 1, NULL << NULL
+    expectedResult:
+      - [ "00000", "01000", "11010", "00000", 40, 5, 0, null, null, null, null ]
     columns:
       - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
@@ -228,8 +230,6 @@ cases:
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
-    expectedResult:
-      - [ "00000", "01000", "11010", "00000", 40, 5, 0, null, null, null, null ]
 
   - name: bitwise-shift-right
     description: BitwiseShiftRight expression
@@ -237,6 +237,8 @@ cases:
       SELECT
         b'11010' >> 5, b'11010' >> 2, b'11010' >> 0, b'11010' >> -1,
         5 >> 2, 5 >> 0, 5 >> -1, b'11010' >> NULL, 3 >> NULL, NULL >> 1, NULL >> NULL
+    expectedResult:
+      - [ "00000", "00110", "11010", "00000", 1, 5, 0, null, null, null, null ]
     columns:
       - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
@@ -249,8 +251,6 @@ cases:
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
-    expectedResult:
-      - [ "00000", "00110", "11010", "00000", 1, 5, 0, null, null, null, null ]
 
   - name: bitwise-xor
     description: BitwiseXor expression
@@ -258,6 +258,8 @@ cases:
       SELECT
         b'10' # b'11', b'10010' # b'00110', b'' # b'10', b'10' # b'0011',
         b'101011111111' # 'AB', b'101' # 12, 5 # 9, b'101' # NULL, NULL # 4, NULL # NULL
+    expectedResult:
+      - [ "01", "10100", "10", "1011", "1110111010110010", "1001", 12, null, null, null ]
     columns:
       - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
@@ -269,8 +271,6 @@ cases:
       - { type: hu.webarticum.miniconnect.lang.BitString, nullable: true }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
-    expectedResult:
-      - [ "01", "10100", "10", "1011", "1110111010110010", "1001", 12, null, null, null ]
 
   - name: case
     description: Case expression
@@ -295,6 +295,8 @@ cases:
         CASE NULL WHEN NULL THEN 'A' ELSE NULL END,
         CASE NULL WHEN NULL THEN NULL ELSE NULL END,
         CASE 1 WHEN '1' THEN 'A' WHEN 2 THEN 'B' WHEN 1 THEN 'C' ELSE '' END
+    expectedResult:
+      - [ 1, 2, 3, 1, null, null, 2, null, "A", "B", "C", "A", "B", null, "B", "B", null, null, "A" ]
     columns:
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
@@ -315,8 +317,6 @@ cases:
       - { type: java.lang.String, nullable: true }
       - { type: java.lang.Void, nullable: true }
       - { type: java.lang.String, nullable: false }
-    expectedResult:
-      - [ 1, 2, 3, 1, null, null, 2, null, "A", "B", "C", "A", "B", null, "B", "B", null, null, "A" ]
 
   - name: cast
     description: Cast expression
@@ -327,6 +327,9 @@ cases:
         -23::INT(1), 12.3::INT, 12.7::INT, 45.671::DECIMAL(3, 1), 12.01::DECIMAL(2, 1), 132.01::DECIMAL(6, 4),
         1750000000::INSTANT, 3621.54::INTERVAL, INTERVAL '2 hours'::INT,
         'lorem'::NULL, NULL::CHAR, NULL::BINARY, NULL::BOOL, NULL::NULL
+    expectedResult:
+      - [ 3, "3", "lo", null, 14, 14, 14, 9, "14", "14", "1", "14", "14.00", -9, 12, 12, "45.6", "9.9", "99.9999",
+          "2025-06-15T15:06:40Z", "PT1H21.54S", 7200, null, null, null, null, null ]
     columns:
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
       - { type: java.lang.String, nullable: false }
@@ -355,9 +358,6 @@ cases:
       - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: true }
       - { type: java.lang.Boolean, nullable: true }
       - { type: java.lang.Void, nullable: true }
-    expectedResult:
-      - [ 3, "3", "lo", null, 14, 14, 14, 9, "14", "14", "1", "14", "14.00", -9, 12, 12, "45.6", "9.9", "99.9999",
-          "2025-06-15T15:06:40Z", "PT1H21.54S", 7200, null, null, null, null, null ]
 
   - name: char-length
     description: CharLength expression
@@ -366,6 +366,8 @@ cases:
         CHARACTER_LENGTH('lorem'), CHARACTER_LENGTH(''), CHARACTER_LENGTH('háztűznéző'),
         CHARACTER_LENGTH(123), CHARACTER_LENGTH(NULL),
         CHAR_LENGTH('lorem'), CHAR_LENGTH(''), CHAR_LENGTH('háztűznéző'), CHAR_LENGTH(123), CHAR_LENGTH(NULL)
+    expectedResult:
+      - [ 5, 0, 10, 3, null, 5, 0, 10, 3, null ]
     columns:
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
@@ -377,20 +379,18 @@ cases:
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
-    expectedResult:
-      - [ 5, 0, 10, 3, null, 5, 0, 10, 3, null ]
 
   - name: chr
     description: Chr expression
     query: "SELECT CHR(65), CHR(126), CHR(b'01000000'), CHR(8594), CHR(NULL)"
+    expectedResult:
+      - [ "A", "~", "@", "→", null ]
     columns:
       - { type: java.lang.String, nullable: false }
       - { type: java.lang.String, nullable: false }
       - { type: java.lang.String, nullable: false }
       - { type: java.lang.String, nullable: false }
       - { type: java.lang.String, nullable: true }
-    expectedResult:
-      - [ "A", "~", "@", "→", null ]
 
   - name: coalesce
     description: Coalesce expression
@@ -398,6 +398,8 @@ cases:
       SELECT
         COALESCE(1), COALESCE('lorem'), COALESCE(1, NULL), COALESCE('lorem', NULL), COALESCE(NULL, 1), COALESCE(NULL, 'lorem'),
         COALESCE(1, '2', 3.4), COALESCE(NULL, NULL, '2', NULL, 3.4), COALESCE(NULL), COALESCE(NULL, NULL, NULL, NULL, NULL)
+    expectedResult:
+      - [ 1, 'lorem', 1, 'lorem',  1, 'lorem', "1", "2", null, null ]
     columns:
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
       - { type: java.lang.String, nullable: false }
@@ -409,8 +411,6 @@ cases:
       - { type: java.math.BigDecimal, nullable: false }
       - { type: java.lang.Void, nullable: true }
       - { type: java.lang.Void, nullable: true }
-    expectedResult:
-      - [ 1, 'lorem', 1, 'lorem',  1, 'lorem', "1", "2", null, null ]
 
   - name: concat
     description: Concat expression
@@ -419,6 +419,8 @@ cases:
         CONCAT('lorem'), CONCAT('lorem', 'ipsum'),  CONCAT('lorem', b'10', 2), CONCAT(binary('A'), 'B'), CONCAT(b'0', 4),
         CONCAT(binary('A'), binary('B')), CONCAT(b'100', b'11'), CONCAT(binary('A'), b'10011'),
         CONCAT(NULL, 'A'), CONCAT('A', NULL), CONCAT('A', NULL, 'B'), CONCAT(b'100', NULL), CONCAT(NULL), CONCAT(NULL, NULL)
+    expectedResult:
+      - [ "lorem", "loremipsum", "lorem102", "AB", "04", "AB", "10011", "0100000110011", null, null, null, null, null, null ]
     columns:
       - { type: java.lang.String, nullable: false }
       - { type: java.lang.String, nullable: false }
@@ -434,8 +436,6 @@ cases:
       - { type: hu.webarticum.miniconnect.lang.BitString, nullable: true }
       - { type: java.lang.String, nullable: true }
       - { type: java.lang.String, nullable: true }
-    expectedResult:
-      - [ "lorem", "loremipsum", "lorem102", "AB", "04", "AB", "10011", "0100000110011", null, null, null, null, null, null ]
 
   - name: concat-with-separator
     description: ConcatWithSeparator expression
@@ -445,6 +445,8 @@ cases:
         CONCAT_WS(',', NULL), CONCAT_WS(',', 'A', NULL), CONCAT_WS(',', NULL, 'B'), CONCAT_WS(',', NULL, NULL),
         CONCAT_WS(',', 'A', NULL, NULL, 'B', 'C', NULL, 'D', NULL),
         CONCAT_WS(NULL), CONCAT_WS(NULL, 'A', 'B'), CONCAT_WS(NULL, 'A', NULL), CONCAT_WS(NULL, NULL, NULL)
+    expectedResult:
+      - [ "", "lorem", "lorem,ipsum", "lorem,ipsum,dolor", "", "A", "B", "", "A,B,C,D", null, null, null, null ]
     columns:
       - { type: java.lang.String, nullable: false }
       - { type: java.lang.String, nullable: false }
@@ -459,8 +461,6 @@ cases:
       - { type: java.lang.Void, nullable: true }
       - { type: java.lang.Void, nullable: true }
       - { type: java.lang.Void, nullable: true }
-    expectedResult:
-      - [ "", "lorem", "lorem,ipsum", "lorem,ipsum,dolor", "", "A", "B", "", "A,B,C,D", null, null, null, null ]
 
   - name: decode
     description: Decode expression
@@ -469,6 +469,8 @@ cases:
         DECODE('RE9MT1I=', 'BASE64'), DECODE(NULL, 'BASE64'),
         DECODE('4C4F52454D', 'HEX'), DECODE(NULL, 'HEX'),
         DECODE('00', NULL), DECODE(NULL, NULL)
+    expectedResult:
+      - [ "DOLOR", null, "LOREM", null, null, null ]
     columns:
       - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: true }
@@ -476,8 +478,6 @@ cases:
       - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: true }
       - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: true }
       - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: true }
-    expectedResult:
-      - [ "DOLOR", null, "LOREM", null, null, null ]
 
   - name: divide
     description: Divide expression
@@ -488,6 +488,9 @@ cases:
         '4.2' / 3, '1' / '2', '-3' / 0.020,
         interval '6 years' / 3, interval '2 months 5 hours' / 2,
         NULL / 7, 2.3 / NULL, NULL / NULL
+    expectedResult:
+      - [ 4, 2, 0, -3, -2, 5, 3, "4", "4.0", "2.5", "2.5", "2.5", "-2.5", "1.4", "0.5", "-1.5E+2",
+          "P2Y", "P1MT2H30M", null, null, null ]
     columns:
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
@@ -510,8 +513,6 @@ cases:
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
       - { type: java.math.BigDecimal, nullable: true }
       - { type: java.lang.Void, nullable: true }
-    expectedResult:
-      - [ 4, 2, 0, -3, -2, 5, 3, "4", "4.0", "2.5", "2.5", "2.5", "-2.5", "1.4", "0.5", "-1.5E+2", "P2Y", "P1MT2H30M", null, null, null ]
 
   - name: encode
     description: Encode expression
@@ -520,6 +521,8 @@ cases:
         ENCODE('loREM', 'BASE64'), ENCODE(NULL, 'BASE64'),
         ENCODE('IPsum', 'HEX'), ENCODE(NULL, 'HEX'),
         ENCODE('00', NULL), ENCODE(NULL, NULL)
+    expectedResult:
+      - [ "bG9SRU0=", null, "495073756D", null, null, null ]
     columns:
       - { type: java.lang.String, nullable: false }
       - { type: java.lang.String, nullable: true }
@@ -527,8 +530,6 @@ cases:
       - { type: java.lang.String, nullable: true }
       - { type: java.lang.String, nullable: true }
       - { type: java.lang.String, nullable: true }
-    expectedResult:
-      - [ "bG9SRU0=", null, "495073756D", null, null, null ]
 
   - name: equals
     description: Equals expression
@@ -539,6 +540,10 @@ cases:
         INTERVAL '1 hour' = INTERVAL '1 hour', INTERVAL '1 hour' = INTERVAL '1 hour 5 minutes',
         INTERVAL '1 hour' = 3600, 3600 = INTERVAL '1 hour', INTERVAL '1 hour' = 3700, 3700 = INTERVAL '1 hour',
         1 = NULL, 0 = NULL, 'NULL' = NULL, NULL = 1, NULL = 0, NULL = 'NULL', NULL = NULL
+    expectedResult:
+      - [ true, true, false, false, false, true, false, true, false,
+          true, true, true, false, false, false, true, true, false,
+          true, false, true, true, false, false, null, null, null, null, null, null, null ]
     columns:
       - { type: java.lang.Boolean, nullable: false }
       - { type: java.lang.Boolean, nullable: false }
@@ -571,10 +576,6 @@ cases:
       - { type: java.lang.Boolean, nullable: true }
       - { type: java.lang.Boolean, nullable: true }
       - { type: java.lang.Boolean, nullable: true }
-    expectedResult:
-      - [ true, true, false, false, false, true, false, true, false,
-          true, true, true, false, false, false, true, true, false,
-          true, false, true, true, false, false, null, null, null, null, null, null, null ]
 
   - name: extract
     description: Extract expression
@@ -599,6 +600,8 @@ cases:
         EXTRACT(SECOND FROM INTERVAL 'P-2Y-2DT-3H-12M-25.41S'),
         EXTRACT(MINUTE FROM INTERVAL(NULL)),
         EXTRACT(MINUTE FROM NULL)
+    expectedResult:
+      - [ 2025, 6, 1, 12, 30, "17.2", -1, -30, null, 2, 0, 2, 3, 12, "25.41", -2, "-25.41", null, null ]
     columns:
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
@@ -619,8 +622,6 @@ cases:
       - { type: java.math.BigDecimal, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
-    expectedResult:
-      - [ 2025, 6, 1, 12, 30, "17.2", -1, -30, null, 2, 0, 2, 3, 12, "25.41", -2, "-25.41", null, null ]
 
   - name: gcd
     description: Gcd expression
@@ -629,6 +630,8 @@ cases:
         GCD(5, 7), GCD(-5, 7), GCD(5, -7), GCD(-5, -7), GCD(10, 14), GCD(384, 240),
         GCD('5', 7.), GCD(5.00, 7.0), GCD(3.2, '-5.55555'), GCD(-3.3, '-5.55555'),
         GCD(5, NULL), GCD(NULL, '7'), GCD(NULL, NULL)
+    expectedResult:
+      - [ 1, 1, 1, 1, 2, 48, "1", "1.00", "0.00005", "0.00165", null, null, null ]
     columns:
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
@@ -643,8 +646,6 @@ cases:
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
       - { type: java.math.BigDecimal, nullable: true }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
-    expectedResult:
-      - [ 1, 1, 1, 1, 2, 48, "1", "1.00", "0.00005", "0.00165", null, null, null ]
 
   - name: greatest
     description: Greatest expression
@@ -654,6 +655,8 @@ cases:
         GREATEST(2, 3, 1, 3, 2), GREATEST(1, 2, 100, -3000, 4), GREATEST(0, -1),
         GREATEST(INTERVAL '1 year 3 months', INTERVAL '2 years'), GREATEST(4.3, '22.000'), GREATEST(0, true),
         GREATEST(1, NULL), GREATEST(2, -13, NULL, 5.0, 6, NULL, 0), GREATEST(NULL), GREATEST(NULL, NULL)
+    expectedResult:
+      - [ 1, "lorem", "P1Y", 3, 100, 0, "P2Y", "22.000", 1, 1, "6", null, null ]
     columns:
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
       - { type: java.lang.String, nullable: false }
@@ -668,8 +671,6 @@ cases:
       - { type: java.math.BigDecimal, nullable: false }
       - { type: java.lang.Void, nullable: true }
       - { type: java.lang.Void, nullable: true }
-    expectedResult:
-      - [ 1, "lorem", "P1Y", 3, 100, 0, "P2Y", "22.000", 1, 1, "6", null, null ]
 
   - name: in
     description: In expression
@@ -679,6 +680,9 @@ cases:
         3 NOT IN (3), 3 NOT IN (1), 3 NOT IN (-3), 3 NOT IN (2, 3), 3 NOT IN (1, 2), 3 NOT IN (2, 2, 2), 3 NOT IN (2, 3, 3),
         3 IN (NULL), 3 IN (3, NULL), 3 IN (NULL, 3), 3 IN (2, 3, NULL, 3, -10), 3 IN (1, NULL, 2),
         NULL IN (1, 2), NULL IN (1, NULL), NULL IN (NULL, 2), NULL IN (NULL), NULL IN (NULL, NULL)
+    expectedResult:
+      - [ true, false, false, true, false, false, true, false, true, true, false, true, true, false,
+          null, true, true, true, null, null, null, null, null, null ]
     columns:
       - { type: java.lang.Boolean, nullable: false }
       - { type: java.lang.Boolean, nullable: false }
@@ -704,25 +708,24 @@ cases:
       - { type: java.lang.Boolean, nullable: true }
       - { type: java.lang.Boolean, nullable: true }
       - { type: java.lang.Boolean, nullable: true }
-    expectedResult:
-      - [ true, false, false, true, false, false, true, false, true, true, false, true, true, false,
-          null, true, true, true, null, null, null, null, null, null ]
 
   - name: initcap
     description: Initcap expression
     query: "SELECT INITCAP(''), INITCAP('lorem'), INITCAP('lorem ipsum'), INITCAP('loRem íPSUM-DoLoR'), INITCAP(NULL)"
+    expectedResult:
+      - [ "", "Lorem", "Lorem Ipsum", "Lorem Ípsum-Dolor", null ]
     columns:
       - { type: java.lang.String, nullable: false }
       - { type: java.lang.String, nullable: false }
       - { type: java.lang.String, nullable: false }
       - { type: java.lang.String, nullable: false }
       - { type: java.lang.String, nullable: true }
-    expectedResult:
-      - [ "", "Lorem", "Lorem Ipsum", "Lorem Ípsum-Dolor", null ]
 
   - name: is-null
     description: IsNull expression
     query: "SELECT 3 IS NULL, 'lorem' IS NULL, NULL IS NULL, 3 IS NOT NULL, 'lorem' IS NOT NULL, NULL IS NOT NULL"
+    expectedResult:
+      - [ false, false, true, true, true, false ]
     columns:
       - { type: java.lang.Boolean, nullable: false }
       - { type: java.lang.Boolean, nullable: false }
@@ -730,8 +733,6 @@ cases:
       - { type: java.lang.Boolean, nullable: false }
       - { type: java.lang.Boolean, nullable: false }
       - { type: java.lang.Boolean, nullable: false }
-    expectedResult:
-      - [ false, false, true, true, true, false ]
 
   - name: lcm
     description: Lcm expression
@@ -740,6 +741,8 @@ cases:
         LCM(5, 7), LCM(-5, 7), LCM(5, -7), LCM(-5, -7), LCM(10, 14), LCM(384, 240),
         LCM('5', 7.), LCM(5.00, 7.0), LCM(3.2, '-5.55555'), LCM(-3.3, '-5.55555'),
         LCM(5, NULL), LCM(NULL, '7'), LCM(NULL, NULL)
+    expectedResult:
+      - [ 35, 35, 35, 35, 70, 1920, "35", "35.00", "355555.20000", "11111.10000", null, null, null ]
     columns:
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
@@ -754,8 +757,6 @@ cases:
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
       - { type: java.math.BigDecimal, nullable: true }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
-    expectedResult:
-      - [ 35, 35, 35, 35, 70, 1920, "35", "35.00", "355555.20000", "11111.10000", null, null, null ]
 
   - name: least
     description: Least expression
@@ -765,6 +766,8 @@ cases:
         LEAST(2, 1, 3, 1, 2), LEAST(1, 2, 100, -3000, 4), LEAST(0, 1),
         LEAST(INTERVAL '2 year 3 months', INTERVAL '2 years'), LEAST(22.0, '1.30000'), LEAST(1, false),
         LEAST(1, NULL), LEAST(2, -13, NULL, 5.0, 6, NULL, 0), LEAST(NULL), LEAST(NULL, NULL)
+    expectedResult:
+      - [ 1, "lorem", "P1Y", 1, -3000, 0, "P2Y", "1.30000", 0, 1, "-13", null, null ]
     columns:
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
       - { type: java.lang.String, nullable: false }
@@ -779,8 +782,6 @@ cases:
       - { type: java.math.BigDecimal, nullable: false }
       - { type: java.lang.Void, nullable: true }
       - { type: java.lang.Void, nullable: true }
-    expectedResult:
-      - [ 1, "lorem", "P1Y", 1, -3000, 0, "P2Y", "1.30000", 0, 1, "-13", null, null ]
 
   - name: left
     description: Left expression
@@ -791,6 +792,9 @@ cases:
         LEFT(binary('lorem'), -3), LEFT(binary('lorem'), -10), LEFT(binary('háztűznéző'), 8),
         LEFT(b'', 1), LEFT(b'0110', 3), LEFT(b'0110', 10), LEFT(b'0110', 0), LEFT(b'0110', -3), LEFT(b'0110', -10),
         LEFT('abc', NULL), LEFT(binary('abc'), NULL), LEFT(b'011', NULL), LEFT(NULL, 1), LEFT(NULL, NULL)
+    expectedResult:
+      - [ "", "lor", "lorem", "", "lo", "", "", "lor", "lorem", "", "lo", "", "háztűz",
+          "", "011", "0110", "", "0", "", null, null, null, null, null ]
     columns:
       - { type: java.lang.String, nullable: false }
       - { type: java.lang.String, nullable: false }
@@ -816,9 +820,6 @@ cases:
       - { type: hu.webarticum.miniconnect.lang.BitString, nullable: true }
       - { type: java.lang.String, nullable: true }
       - { type: java.lang.String, nullable: true }
-    expectedResult:
-      - [ "", "lor", "lorem", "", "lo", "", "", "lor", "lorem", "", "lo", "", "háztűz",
-          "", "011", "0110", "", "0", "", null, null, null, null, null ]
 
   - name: left-pad
     description: LeftPad expression
@@ -830,6 +831,11 @@ cases:
         LPAD(b'', 0), LPAD(b'', 5), LPAD(b'101', 5), LPAD(b'10110', 3), LPAD(b'101', 7, b'1'), LPAD(b'101', 7, b'011'),
         LPAD('abc', NULL), LPAD('abc', NULL, 'x'), LPAD(BINARY('abc'), NULL), LPAD(b'101', NULL),
         LPAD(NULL, 3, 'x'), LPAD(NULL, 3), LPAD(NULL, 2, NULL), LPAD(NULL, NULL), LPAD(NULL, NULL, NULL)
+    expectedResult:
+      - [ "", "     ", "  abc", "lorem", "====abc", "+-.+abc",
+          "", "\0\0\0\0\0", "\0\0abc", "lorem", "====abc", "+-.+abc",
+          "", "00000", "00101", "10110", "1111101", "0110101",
+          null, null, null, null, null, null, null, null, null ]
     columns:
       - { type: java.lang.String, nullable: false }
       - { type: java.lang.String, nullable: false }
@@ -858,11 +864,6 @@ cases:
       - { type: java.lang.String, nullable: true }
       - { type: java.lang.String, nullable: true }
       - { type: java.lang.String, nullable: true }
-    expectedResult:
-      - [ "", "     ", "  abc", "lorem", "====abc", "+-.+abc",
-          "", "\0\0\0\0\0", "\0\0abc", "lorem", "====abc", "+-.+abc",
-          "", "00000", "00101", "10110", "1111101", "0110101",
-          null, null, null, null, null, null, null, null, null ]
 
   - name: length
     description: Length expression
@@ -871,6 +872,8 @@ cases:
         LENGTH(''), LENGTH('lorem'), LENGTH('háztűznéző'),
         LENGTH(BINARY('')), LENGTH(BINARY('lorem')), LENGTH(BINARY('háztűznéző')),
         LENGTH(b''), LENGTH(b'1101010'), LENGTH(NULL)
+    expectedResult:
+      - [ 0, 5, 10, 0, 5, 14, 0, 7, null ]
     columns:
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
@@ -881,8 +884,6 @@ cases:
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
-    expectedResult:
-      - [ 0, 5, 10, 0, 5, 14, 0, 7, null ]
 
   - name: like
     description: Like expression
@@ -900,6 +901,9 @@ cases:
         'a_b%' NOT LIKE 'a\_b\%' ESCAPE '\', 'a' NOT LIKE 'a%' ESCAPE NULL,
         'alma' NOT ILIKE 'ALm%', 'alma' NOT ILIKE '%' ESCAPE '=',
         NULL NOT LIKE 'a%', 'a' NOT LIKE NULL, NULL NOT LIKE NULL, NULL NOT LIKE NULL ESCAPE NULL
+    expectedResult:
+      - [ true, true, true, true, true, true, false, false, true, false, true, true, true, true, null, null, null, null,
+          false, false, false, false, false, false, true, true, false, true, false, false, false, false, null, null, null, null, ]
     columns:
       - { type: java.lang.Boolean, nullable: false }
       - { type: java.lang.Boolean, nullable: false }
@@ -937,13 +941,12 @@ cases:
       - { type: java.lang.Boolean, nullable: true }
       - { type: java.lang.Boolean, nullable: true }
       - { type: java.lang.Boolean, nullable: true }
-    expectedResult:
-      - [ true, true, true, true, true, true, false, false, true, false, true, true, true, true, null, null, null, null,
-          false, false, false, false, false, false, true, true, false, true, false, false, false, false, null, null, null, null, ]
 
   - name: log
     description: Log expression
     query: "SELECT LOG(2, 1), LOG(2.4, 1.5), LOG(10, 100), LOG('7', 49.000), LOG(3, NULL), LOG(NULL, 5), LOG(NULL, NULL)"
+    expectedResult:
+      - [ 0, 0.4631405906436828, 2, 2, null, null, null ]
     columns:
       - { type: java.lang.Double, nullable: false }
       - { type: java.lang.Double, nullable: false }
@@ -952,20 +955,18 @@ cases:
       - { type: java.lang.Double, nullable: true }
       - { type: java.lang.Double, nullable: true }
       - { type: java.lang.Double, nullable: true }
-    expectedResult:
-      - [ 0, 0.4631405906436828, 2, 2, null, null, null ]
 
   - name: lower
     description: Lower expression
     query: "SELECT LOWER(''), LOWER('LOREM'), LOWER('lOreM IPsUm'), LOWER('ŰR'), LOWER(NULL)"
+    expectedResult:
+      - [ "", "lorem", "lorem ipsum", "űr", null ]
     columns:
       - { type: java.lang.String, nullable: false }
       - { type: java.lang.String, nullable: false }
       - { type: java.lang.String, nullable: false }
       - { type: java.lang.String, nullable: false }
       - { type: java.lang.String, nullable: true }
-    expectedResult:
-      - [ "", "lorem", "lorem ipsum", "űr", null ]
 
   - name: mod
     description: Mod expression
@@ -975,6 +976,8 @@ cases:
         INTERVAL '3 hours 47 minutes' MOD INTERVAL '10 minutes', INTERVAL '2 hours 5 minutes ago' MOD 3600,
         TIME('5:30') MOD INTERVAL '1 hour 30 minutes', DATETIMETZ('2026-01-01T01:20:00Z') MOD INTERVAL '1 day',
         3 MOD NULL, NULL MOD 2, NULL MOD NULL
+    expectedResult:
+      - [ 0, 0, 1, 0, 3, 3, "1", "1.40", "PT7M", "3300", "PT1H", "PT1H20M", null, null, null ]
     columns:
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
@@ -991,8 +994,6 @@ cases:
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
       - { type: java.lang.Void, nullable: true }
-    expectedResult:
-      - [ 0, 0, 1, 0, 3, 3, "1", "1.40", "PT7M", "3300", "PT1H", "PT1H20M", null, null, null ]
 
   - name: multiply
     description: Multiply expression
@@ -1000,6 +1001,8 @@ cases:
       SELECT
         1 * 1, 2 * 3, 4 * -11, -23 * 12, -5 * -2, 4.2 * 7, 6. * 6, 3 * '9',
         5 * 0, 0 * 9, 0 * 0, 0.0 * 9.400, 0 * 0.00, 2 * NULL, NULL * 9, 0 * NULL, NULL * NULL
+    expectedResult:
+      - [ 1, 6, -44, -276, 10, "29.4", "36", "27", 0, 0, 0, "0.0000", "0.00", null, null, null, null ]
     columns:
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
@@ -1018,12 +1021,12 @@ cases:
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
       - { type: java.lang.Void, nullable: true }
-    expectedResult:
-      - [ 1, 6, -44, -276, 10, "29.4", "36", "27", 0, 0, 0, "0.0000", "0.00", null, null, null, null ]
 
   - name: negate
     description: Negate expression
     query: "SELECT - (3), - (-2), - (4.2), - (-2.230), - '12', - '-6.4', - INTERVAL '3 years', - NULL"
+    expectedResult:
+      - [ -3, 2, "-4.2", "2.230", "-12", "6.4", "P-3Y", null ]
     columns:
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
@@ -1033,8 +1036,6 @@ cases:
       - { type: java.math.BigDecimal, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.DateTimeDelta, nullable: false }
       - { type: java.lang.Void, nullable: true }
-    expectedResult:
-      - [ -3, 2, "-4.2", "2.230", "-12", "6.4", "P-3Y", null ]
 
   - name: not-equals
     description: NotEquals expression
@@ -1045,54 +1046,54 @@ cases:
         INTERVAL '1 hour' != INTERVAL '1 hour', INTERVAL '1 hour' != INTERVAL '1 hour 5 minutes',
         INTERVAL '1 hour' != 3600, 3600 != INTERVAL '1 hour', INTERVAL '1 hour' != 3700, 3700 != INTERVAL '1 hour',
         1 != NULL, 0 != NULL, 'NULL' != NULL, NULL != 1, NULL != 0, NULL != 'NULL', NULL != NULL
-    columns:
-      - { type: java.lang.Boolean, nullable: false }
-      - { type: java.lang.Boolean, nullable: false }
-      - { type: java.lang.Boolean, nullable: false }
-      - { type: java.lang.Boolean, nullable: false }
-      - { type: java.lang.Boolean, nullable: false }
-      - { type: java.lang.Boolean, nullable: false }
-      - { type: java.lang.Boolean, nullable: false }
-      - { type: java.lang.Boolean, nullable: false }
-      - { type: java.lang.Boolean, nullable: false }
-      - { type: java.lang.Boolean, nullable: false }
-      - { type: java.lang.Boolean, nullable: false }
-      - { type: java.lang.Boolean, nullable: false }
-      - { type: java.lang.Boolean, nullable: false }
-      - { type: java.lang.Boolean, nullable: false }
-      - { type: java.lang.Boolean, nullable: false }
-      - { type: java.lang.Boolean, nullable: false }
-      - { type: java.lang.Boolean, nullable: false }
-      - { type: java.lang.Boolean, nullable: false }
-      - { type: java.lang.Boolean, nullable: false }
-      - { type: java.lang.Boolean, nullable: false }
-      - { type: java.lang.Boolean, nullable: false }
-      - { type: java.lang.Boolean, nullable: false }
-      - { type: java.lang.Boolean, nullable: false }
-      - { type: java.lang.Boolean, nullable: false }
-      - { type: java.lang.Boolean, nullable: true }
-      - { type: java.lang.Boolean, nullable: true }
-      - { type: java.lang.Boolean, nullable: true }
-      - { type: java.lang.Boolean, nullable: true }
-      - { type: java.lang.Boolean, nullable: true }
-      - { type: java.lang.Boolean, nullable: true }
-      - { type: java.lang.Boolean, nullable: true }
     expectedResult:
       - [ false, false, true, true, true, false, true, false, true,
           false, false, false, true, true, true, false, false, true,
           false, true, false, false, true, true, null, null, null, null, null, null, null ]
+    columns:
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
 
   - name: not
     description: Not expression
     query: "SELECT NOT TRUE, NOT FALSE, NOT 1, NOT 0, NOT NULL"
+    expectedResult:
+      - [ false, true, false, true, null ]
     columns:
       - { type: java.lang.Boolean, nullable: false }
       - { type: java.lang.Boolean, nullable: false }
       - { type: java.lang.Boolean, nullable: false }
       - { type: java.lang.Boolean, nullable: false }
       - { type: java.lang.Boolean, nullable: true }
-    expectedResult:
-      - [ false, true, false, true, null ]
 
   - name: nullif
     description: Nullif expression
@@ -1100,6 +1101,8 @@ cases:
       SELECT
         NULLIF(1, 2), NULLIF(2, 2), NULLIF('A', 'B'), NULLIF('B', 'B'), NULLIF(1, 'A'), NULLIF(1, '1'),
         NULLIF(1, NULL), NULLIF('A', NULL)
+    expectedResult:
+      - [ 1, null, 'A', null, 1, null, 1, "A" ]
     columns:
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
@@ -1109,8 +1112,6 @@ cases:
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
       - { type: java.lang.String, nullable: true }
-    expectedResult:
-      - [ 1, null, 'A', null, 1, null, 1, "A" ]
 
   - name: octet-length
     description: OctetLength expression
@@ -1118,6 +1119,8 @@ cases:
       SELECT
         OCTET_LENGTH(b''), OCTET_LENGTH(b'000'), OCTET_LENGTH(b'10111010'),
         OCTET_LENGTH('10'), OCTET_LENGTH('lorem'), OCTET_LENGTH('tűz'), OCTET_LENGTH(14), OCTET_LENGTH(260), OCTET_LENGTH(NULL)
+    expectedResult:
+      - [ 0, 1, 1, 2, 5, 4, 1, 2, null ]
     columns:
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
@@ -1128,22 +1131,20 @@ cases:
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
-    expectedResult:
-      - [ 0, 1, 1, 2, 5, 4, 1, 2, null ]
 
 # TODO: OrderRelationExpression.java
 
   - name: ord
     description: Ord expression
     query: "SELECT ORD('A'), ORD('@'), ORD('ű'), ORD('lorem'), ORD(null)"
+    expectedResult:
+      - [ 65, 64, 369, 108, null ]
     columns:
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
-    expectedResult:
-      - [ 65, 64, 369, 108, null ]
 
   - name: or
     description: Or expression
@@ -1151,6 +1152,8 @@ cases:
       SELECT
         TRUE OR TRUE, TRUE OR FALSE, FALSE OR TRUE, FALSE OR FALSE,
         TRUE OR NULL, FALSE OR NULL, NULL OR TRUE, NULL OR FALSE, NULL OR NULL
+    expectedResult:
+      - [ true, true, true, false, true, null, true, null, null ]
     columns:
       - { type: java.lang.Boolean, nullable: false }
       - { type: java.lang.Boolean, nullable: false }
@@ -1161,18 +1164,16 @@ cases:
       - { type: java.lang.Boolean, nullable: true }
       - { type: java.lang.Boolean, nullable: true }
       - { type: java.lang.Boolean, nullable: true }
-    expectedResult:
-      - [ true, true, true, false, true, null, true, null, null ]
 
 # TODO: OverlapsExpression.java
 
   - name: pi
     description: Pi expression
     query: "SELECT PI()"
-    columns:
-      - { type: java.lang.Double, nullable: false }
     expectedResult:
       - [ "3.141592653589793" ]
+    columns:
+      - { type: java.lang.Double, nullable: false }
 
 # TODO: PositionExpression.java
 
@@ -1183,6 +1184,8 @@ cases:
         POW(0, 0), POW(0, 1), POW(1, 1), POW(5, 0), POW(5, 2), POW(-3, 2), POW(-1, 5),
         POW(4, -2), POW(10, -3), POW(-2, -3), POW(1.5, 2), POW(-1.5, '2'), POW('0.5', -2),
         POW(NULL, 0), POW(NULL, 2), POW(1, NULL), POW(2, NULL), POW(NULL, NULL)
+    expectedResult:
+      - [ 1, 0, 1, 1, 25, 9, -1, 0.0625, 0.001, -0.125, 2.25, 2.25, 4, null, null, null, null, null ]
     columns:
       - { type: java.lang.Double, nullable: false }
       - { type: java.lang.Double, nullable: false }
@@ -1202,8 +1205,6 @@ cases:
       - { type: java.lang.Double, nullable: true }
       - { type: java.lang.Double, nullable: true }
       - { type: java.lang.Double, nullable: true }
-    expectedResult:
-      - [ 1, 0, 1, 1, 25, 9, -1, 0.0625, 0.001, -0.125, 2.25, 2.25, 4, null, null, null, null, null ]
 
   - name: regexp
     description: Regexp expression
@@ -1215,6 +1216,9 @@ cases:
         'lorem' RLIKE '^l[aeiou]r[gem]+$', 'lorem' RLIKE '[ao]re', 'lorem' REGEXP '[aei]r[ao]',
         'lorem' NOT RLIKE '^lo', 'lorem' NOT RLIKE 'merol',
         NULL RLIKE '^x', 'a' RLIKE NULL, NULL RLIKE NULL, NULL NOT RLIKE '^x', 'a' NOT RLIKE NULL, NULL NOT RLIKE NULL
+    expectedResult:
+      - [ true, true, false, false, true, null, null, null, null, null, null,
+          true, true, false, false, true, null, null, null, null, null, null ]
     columns:
       - { type: java.lang.Boolean, nullable: false }
       - { type: java.lang.Boolean, nullable: false }
@@ -1238,9 +1242,6 @@ cases:
       - { type: java.lang.Boolean, nullable: true }
       - { type: java.lang.Boolean, nullable: true }
       - { type: java.lang.Boolean, nullable: true }
-    expectedResult:
-      - [ true, true, false, false, true, null, null, null, null, null, null,
-          true, true, false, false, true, null, null, null, null, null, null ]
 
   - name: regexp-replace
     description: RegexpReplace expression
@@ -1252,6 +1253,8 @@ cases:
         REGEXP_REPLACE(NULL, '[rx]', 'wg'), REGEXP_REPLACE('lorem', NULL, 'wg'),
         REGEXP_REPLACE('lorem', '[rx]', NULL), REGEXP_REPLACE(NULL, NULL, NULL),
         REGEXP_REPLACE('lorem', '[rm]', 'wg', NULL), REGEXP_REPLACE(NULL, NULL, NULL, NULL)
+    expectedResult:
+      - [ "lowgem", "lowgem", "lorem", "lowgewg", "Hawga", "wgawga", null, null, null, null, null, null ]
     columns:
       - { type: java.lang.String, nullable: false }
       - { type: java.lang.String, nullable: false }
@@ -1265,8 +1268,6 @@ cases:
       - { type: java.lang.String, nullable: true }
       - { type: java.lang.String, nullable: true }
       - { type: java.lang.String, nullable: true }
-    expectedResult:
-      - [ "lowgem", "lowgem", "lorem", "lowgewg", "Hawga", "wgawga", null, null, null, null, null, null ]
 
   - name: remainder
     description: Remainder expression
@@ -1276,6 +1277,8 @@ cases:
         INTERVAL '3 hours 47 minutes' % INTERVAL '10 minutes', INTERVAL '2 hours 5 minutes ago' % 3600,
         TIME('5:30') % INTERVAL '1 hour 30 minutes', DATETIMETZ('2026-01-01T01:20:00Z') % INTERVAL '1 day',
         3 % NULL, NULL % 2, NULL % NULL
+    expectedResult:
+      - [ 0, 0, 1, 0, 3, -4, "-2", "1.40", "PT7M", "-300", "PT1H", "PT1H20M", null, null, null ]
     columns:
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
@@ -1292,8 +1295,6 @@ cases:
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
       - { type: java.lang.Void, nullable: true }
-    expectedResult:
-      - [ 0, 0, 1, 0, 3, -4, "-2", "1.40", "PT7M", "-300", "PT1H", "PT1H20M", null, null, null ]
 
 # TODO: RepeatExpression.java
 # TODO: ReplaceExpression.java
@@ -1308,6 +1309,9 @@ cases:
         RIGHT(binary('lorem'), -3), RIGHT(binary('lorem'), -10), RIGHT(binary('háztűznéző'), 6),
         RIGHT(b'', 1), RIGHT(b'0110', 3), RIGHT(b'0110', 10), RIGHT(b'0110', 0), RIGHT(b'0110', -3), RIGHT(b'0110', -10),
         RIGHT('abc', NULL), RIGHT(binary('abc'), NULL), RIGHT(b'011', NULL), RIGHT(NULL, 1), RIGHT(NULL, NULL)
+    expectedResult:
+      - [ "", "rem", "lorem", "", "em", "", "", "rem", "lorem", "", "em", "", "néző",
+          "", "110", "0110", "", "0", "", null, null, null, null, null ]
     columns:
       - { type: java.lang.String, nullable: false }
       - { type: java.lang.String, nullable: false }
@@ -1333,9 +1337,6 @@ cases:
       - { type: hu.webarticum.miniconnect.lang.BitString, nullable: true }
       - { type: java.lang.String, nullable: true }
       - { type: java.lang.String, nullable: true }
-    expectedResult:
-      - [ "", "rem", "lorem", "", "em", "", "", "rem", "lorem", "", "em", "", "néző",
-          "", "110", "0110", "", "0", "", null, null, null, null, null ]
 
   - name: right-pad
     description: RightPad expression
@@ -1347,6 +1348,11 @@ cases:
         RPAD(b'', 0), RPAD(b'', 5), RPAD(b'101', 5), RPAD(b'10110', 3), RPAD(b'101', 7, b'1'), RPAD(b'101', 7, b'011'),
         RPAD('abc', NULL), RPAD('abc', NULL, 'x'), RPAD(BINARY('abc'), NULL), RPAD(b'101', NULL),
         RPAD(NULL, 3, 'x'), RPAD(NULL, 3), RPAD(NULL, 2, NULL), RPAD(NULL, NULL), RPAD(NULL, NULL, NULL)
+    expectedResult:
+      - [ "", "     ", "abc  ", "lorem", "abc====", "abc+-.+",
+          "", "\0\0\0\0\0", "abc\0\0", "lorem", "abc====", "abc+-.+",
+          "", "00000", "10100", "10110", "1011111", "1010110",
+          null, null, null, null, null, null, null, null, null ]
     columns:
       - { type: java.lang.String, nullable: false }
       - { type: java.lang.String, nullable: false }
@@ -1375,11 +1381,6 @@ cases:
       - { type: java.lang.String, nullable: true }
       - { type: java.lang.String, nullable: true }
       - { type: java.lang.String, nullable: true }
-    expectedResult:
-      - [ "", "     ", "abc  ", "lorem", "abc====", "abc+-.+",
-          "", "\0\0\0\0\0", "abc\0\0", "lorem", "abc====", "abc+-.+",
-          "", "00000", "10100", "10110", "1011111", "1010110",
-          null, null, null, null, null, null, null, null, null ]
 
   - name: right-right-pad
     description: RightRightPad expression
@@ -1391,6 +1392,11 @@ cases:
         RRPAD(b'', 0), RRPAD(b'', 5), RRPAD(b'101', 5), RRPAD(b'10110', 3), RRPAD(b'101', 7, b'1'), RRPAD(b'101', 7, b'011'),
         RRPAD('abc', NULL), RRPAD('abc', NULL, 'x'), RRPAD(BINARY('abc'), NULL), RRPAD(b'101', NULL),
         RRPAD(NULL, 3, 'x'), RRPAD(NULL, 3), RRPAD(NULL, 2, NULL), RRPAD(NULL, NULL), RRPAD(NULL, NULL, NULL)
+    expectedResult:
+      - [ "", "     ", "abc  ", "lorem", "abc====", "abc.+-.",
+          "", "\0\0\0\0\0", "abc\0\0", "lorem", "abc====", "abc.+-.",
+          "", "00000", "10100", "10110", "1011111", "1011011",
+          null, null, null, null, null, null, null, null, null ]
     columns:
       - { type: java.lang.String, nullable: false }
       - { type: java.lang.String, nullable: false }
@@ -1419,11 +1425,6 @@ cases:
       - { type: java.lang.String, nullable: true }
       - { type: java.lang.String, nullable: true }
       - { type: java.lang.String, nullable: true }
-    expectedResult:
-      - [ "", "     ", "abc  ", "lorem", "abc====", "abc.+-.",
-          "", "\0\0\0\0\0", "abc\0\0", "lorem", "abc====", "abc.+-.",
-          "", "00000", "10100", "10110", "1011111", "1011011",
-          null, null, null, null, null, null, null, null, null ]
 
   - name: round
     description: Round expression
@@ -1432,6 +1433,8 @@ cases:
         ROUND(1), ROUND(2.3), ROUND(6.7), ROUND('4.33'), ROUND(NULL),
         CEIL(1), CEIL(2.3), CEIL(6.7), CEIL('4.33'), CEIL(NULL),
         FLOOR(1), FLOOR(2.3), FLOOR(6.7), FLOOR('4.33'), FLOOR(NULL)
+    expectedResult:
+      - [ 1, 2, 7, 4, null, 1, 3, 7, 5, null, 1, 2, 6, 4, null ]
     columns:
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
@@ -1448,17 +1451,15 @@ cases:
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
-    expectedResult:
-      - [ 1, 2, 7, 4, null, 1, 3, 7, 5, null, 1, 2, 6, 4, null ]
 
   - name: sha256
     description: Sha256 expression
     query: "SELECT HEX(SHA256(x'C7FA24193B10C5')), SHA256(null)"
+    expectedResult:
+      - [ "DAB8BA1858484527A211C2D8F1765A67669BC7F7CBA72A03FA69EC352DA79E84", null ]
     columns:
       - { type: java.lang.String, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: true }
-    expectedResult:
-      - [ "DAB8BA1858484527A211C2D8F1765A67669BC7F7CBA72A03FA69EC352DA79E84", null ]
 
 # TODO: SplitPartExpression.java
 # TODO: SubstringExpression.java
@@ -1470,14 +1471,14 @@ cases:
   - name: upper
     description: Upper expression
     query: "SELECT UPPER(''), UPPER('lorem'), UPPER('lOreM IPsUm'), UPPER('űr'), UPPER(NULL)"
+    expectedResult:
+      - [ "", "LOREM", "LOREM IPSUM", "ŰR", null ]
     columns:
       - { type: java.lang.String, nullable: false }
       - { type: java.lang.String, nullable: false }
       - { type: java.lang.String, nullable: false }
       - { type: java.lang.String, nullable: false }
       - { type: java.lang.String, nullable: true }
-    expectedResult:
-      - [ "", "LOREM", "LOREM IPSUM", "ŰR", null ]
 
   - name: xor
     description: Xor expression
@@ -1485,6 +1486,8 @@ cases:
       SELECT
         TRUE XOR TRUE, TRUE XOR FALSE, FALSE XOR TRUE, FALSE XOR FALSE,
         TRUE XOR NULL, FALSE XOR NULL, NULL XOR TRUE, NULL XOR FALSE, NULL XOR NULL
+    expectedResult:
+      - [ false, true, true, false, null, null, null, null, null ]
     columns:
       - { type: java.lang.Boolean, nullable: false }
       - { type: java.lang.Boolean, nullable: false }
@@ -1495,5 +1498,3 @@ cases:
       - { type: java.lang.Boolean, nullable: true }
       - { type: java.lang.Boolean, nullable: true }
       - { type: java.lang.Boolean, nullable: true }
-    expectedResult:
-      - [ false, true, true, false, null, null, null, null, null ]
