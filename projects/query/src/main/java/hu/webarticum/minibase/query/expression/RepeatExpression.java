@@ -4,6 +4,8 @@ import java.util.Optional;
 
 import hu.webarticum.minibase.query.util.NumberUtil;
 import hu.webarticum.minibase.query.util.StringUtil;
+import hu.webarticum.miniconnect.lang.BitString;
+import hu.webarticum.miniconnect.lang.ByteString;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
 
@@ -35,12 +37,28 @@ public class RepeatExpression implements Expression {
 
     @Override
     public Optional<Class<?>> type() {
-        return Optional.of(String.class);
+        Class<?> inputType = inputExpression.type().orElse(null);
+        if (inputType == ByteString.class) {
+            return Optional.of(ByteString.class);
+        } else if (inputType == BitString.class) {
+            return Optional.of(BitString.class);
+        } else if (inputType != null) {
+            return Optional.of(String.class);
+        } else {
+            return Optional.empty();
+        }
     }
 
     @Override
     public Class<?> type(ImmutableMap<Parameter, Class<?>> values) {
-        return String.class;
+        Class<?> inputType = inputExpression.type(values);
+        if (inputType == ByteString.class) {
+            return ByteString.class;
+        } else if (inputType == BitString.class) {
+            return BitString.class;
+        } else {
+            return String.class;
+        }
     }
 
     @Override
@@ -65,18 +83,50 @@ public class RepeatExpression implements Expression {
             return null;
         }
 
-        String inputString = StringUtil.stringify(inputValue);
-        if (inputString.isEmpty()) {
+        int count = NumberUtil.asInt(countValue);
+        if (inputValue instanceof ByteString) {
+            return evaluateByteString((ByteString) inputValue, count);
+        } else if (inputValue instanceof BitString) {
+            return evaluateBitString((BitString) inputValue, count);
+        } else {
+            return evaluateString(StringUtil.stringify(inputValue), count);
+        }
+    }
+
+    private String evaluateString(String input, int count) {
+        if (input.isEmpty()) {
             return "";
         }
 
-        int count = NumberUtil.asInt(countValue);
-
         StringBuilder resultBuilder = new StringBuilder();
         for (int i = 0; i < count; i++) {
-            resultBuilder.append(inputString);
+            resultBuilder.append(input);
         }
         return resultBuilder.toString();
+    }
+
+    private ByteString evaluateByteString(ByteString input, int count) {
+        if (input.isEmpty()) {
+            return ByteString.empty();
+        }
+
+        ByteString.Builder resultBuilder = ByteString.builder();
+        for (int i = 0; i < count; i++) {
+            resultBuilder.append(input);
+        }
+        return resultBuilder.build();
+    }
+
+    private BitString evaluateBitString(BitString input, int count) {
+        if (input.isEmpty()) {
+            return BitString.empty();
+        }
+
+        BitString.Builder resultBuilder = BitString.builder();
+        for (int i = 0; i < count; i++) {
+            resultBuilder.append(input);
+        }
+        return resultBuilder.build();
     }
 
     @Override
