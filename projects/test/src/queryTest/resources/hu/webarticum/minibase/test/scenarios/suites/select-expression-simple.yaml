@@ -1516,9 +1516,46 @@ cases:
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
       - { type: java.lang.Void, nullable: true }
 
-# TODO: RepeatExpression.java
+  - name: repeat
+    description: Repeat expression
+    query: |
+      SELECT
+        REPEAT('', 0), REPEAT('', 3), REPEAT('lorem', 3), REPEAT('lorem', NULL),
+        REPEAT(''::BINARY, 0), REPEAT(''::BINARY, 3), REPEAT('lorem'::BINARY, 3), REPEAT('lorem'::BINARY, NULL),
+        REPEAT(b'', 0), REPEAT(b'', 3), REPEAT(b'11010', 3), REPEAT(b'11010', NULL),
+        REPEAT(NULL, 0), REPEAT(NULL, 3), REPEAT(NULL, NULL)
+    expectedResult:
+      - [ "", "", "loremloremlorem", null, "", "", "loremloremlorem", null, "", "", "110101101011010", null, null, null, null ]
+    columns:
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: true }
+      - { type: java.lang.String, nullable: true }
+      - { type: java.lang.String, nullable: true }
+      - { type: java.lang.String, nullable: true }
+
 # TODO: ReplaceExpression.java
-# TODO: ReverseExpression.java
+
+  - name: reverse
+    description: Reverse expression
+    query: "SELECT REVERSE(''), REVERSE('tűző'), REVERSE('lorem'::BINARY), REVERSE(b'11010010'), REVERSE(NULL)"
+    expectedResult:
+      - [ "", "őzűt", "merol", "01001011", null ]
+    columns:
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: java.lang.String, nullable: true }
 
   - name: right
     description: Right expression
