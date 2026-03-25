@@ -1767,8 +1767,174 @@ cases:
       - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: true }
 
 # TODO: SplitPartExpression.java
-# TODO: SubstringExpression.java
 
+  - name: substring
+    description: Substring expression
+    query: |
+      SELECT
+        SUBSTRING('' FROM 1), SUBSTRING('' FROM 0), SUBSTRING('' FOR 2),
+          SUBSTRING('' FROM 1 FOR 0), SUBSTRING('' FROM 1 FOR 2), SUBSTRING('' FROM 2 FOR 2),
+          SUBSTRING('lorem' FROM -2), SUBSTRING('lorem' FROM 0), SUBSTRING('lorem' FROM 1),
+          SUBSTRING('lorem' FROM 2), SUBSTRING('lorem' FROM 3), SUBSTRING('lorem' FROM 5), SUBSTRING('lorem' FROM 9),
+          SUBSTRING('lorem' FOR -1), SUBSTRING('lorem' FOR 0), SUBSTRING('lorem' FOR 2), SUBSTRING('lorem' FOR 5), SUBSTRING('lorem' FOR 7),
+          SUBSTRING('lorem' FROM -1 FOR 0), SUBSTRING('lorem' FROM 0 FOR -1), SUBSTRING('lorem' FROM 7 FOR 0),
+          SUBSTRING('lorem' FROM -1 FOR 3), SUBSTRING('lorem' FROM -1 FOR 20), SUBSTRING('lorem' FROM 0 FOR 3),
+          SUBSTRING('lorem' FROM 1 FOR 1), SUBSTRING('lorem' FROM 2 FOR 3), SUBSTRING('lorem' FROM 4 FOR 5), SUBSTRING('lorem' FROM 7 FOR 3),
+          SUBSTRING(NULL FROM 2), SUBSTRING('lorem' FROM NULL), SUBSTRING(NULL FOR 2), SUBSTRING('lorem' FOR NULL),
+          SUBSTRING(NULL FROM 2 FOR 3), SUBSTRING('lorem' FROM NULL FOR 3), SUBSTRING('lorem' FROM 2 FOR NULL),
+          SUBSTRING(NULL FROM NULL FOR NULL),
+        SUBSTRING(BINARY('') FROM 1), SUBSTRING(BINARY('') FROM 0), SUBSTRING(BINARY('') FOR 2),
+          SUBSTRING(BINARY('') FROM 1 FOR 0), SUBSTRING(BINARY('') FROM 1 FOR 2), SUBSTRING(BINARY('') FROM 2 FOR 2),
+          SUBSTRING(BINARY('lorem') FROM -2), SUBSTRING(BINARY('lorem') FROM 0), SUBSTRING(BINARY('lorem') FROM 1),
+          SUBSTRING(BINARY('lorem') FROM 2), SUBSTRING(BINARY('lorem') FROM 3),
+          SUBSTRING(BINARY('lorem') FROM 5), SUBSTRING(BINARY('lorem') FROM 9),
+          SUBSTRING(BINARY('lorem') FOR -1), SUBSTRING(BINARY('lorem') FOR 0),
+          SUBSTRING(BINARY('lorem') FOR 2), SUBSTRING(BINARY('lorem') FOR 5), SUBSTRING(BINARY('lorem') FOR 7),
+          SUBSTRING(BINARY('lorem') FROM -1 FOR 0), SUBSTRING(BINARY('lorem') FROM 0 FOR -1), SUBSTRING(BINARY('lorem') FROM 7 FOR 0),
+          SUBSTRING(BINARY('lorem') FROM -1 FOR 3), SUBSTRING(BINARY('lorem') FROM -1 FOR 20), SUBSTRING(BINARY('lorem') FROM 0 FOR 3),
+          SUBSTRING(BINARY('lorem') FROM 1 FOR 1), SUBSTRING(BINARY('lorem') FROM 2 FOR 3),
+          SUBSTRING(BINARY('lorem') FROM 4 FOR 5), SUBSTRING(BINARY('lorem') FROM 7 FOR 3),
+          SUBSTRING(BINARY(NULL) FROM 2), SUBSTRING(BINARY('lorem') FROM NULL),
+          SUBSTRING(BINARY(NULL) FOR 2), SUBSTRING(BINARY('lorem') FOR NULL),
+          SUBSTRING(BINARY(NULL) FROM 2 FOR 3), SUBSTRING(BINARY('lorem') FROM NULL FOR 3), SUBSTRING(BINARY('lorem') FROM 2 FOR NULL),
+          SUBSTRING(BINARY(NULL) FROM NULL FOR NULL),
+        SUBSTRING(b'' FROM 1), SUBSTRING(b'' FROM 0), SUBSTRING(b'' FOR 2),
+          SUBSTRING(b'' FROM 1 FOR 0), SUBSTRING(b'' FROM 1 FOR 2), SUBSTRING(b'' FROM 2 FOR 2),
+          SUBSTRING(b'01101' FROM -2), SUBSTRING(b'01101' FROM 0), SUBSTRING(b'01101' FROM 1),
+          SUBSTRING(b'01101' FROM 2), SUBSTRING(b'01101' FROM 3), SUBSTRING(b'01101' FROM 5), SUBSTRING(b'01101' FROM 9),
+          SUBSTRING(b'01101' FOR -1), SUBSTRING(b'01101' FOR 0), SUBSTRING(b'01101' FOR 2), SUBSTRING(b'01101' FOR 5), SUBSTRING(b'01101' FOR 7),
+          SUBSTRING(b'01101' FROM -1 FOR 0), SUBSTRING(b'01101' FROM 0 FOR -1), SUBSTRING(b'01101' FROM 7 FOR 0),
+          SUBSTRING(b'01101' FROM -1 FOR 3), SUBSTRING(b'01101' FROM -1 FOR 20), SUBSTRING(b'01101' FROM 0 FOR 3),
+          SUBSTRING(b'01101' FROM 1 FOR 1), SUBSTRING(b'01101' FROM 2 FOR 3), SUBSTRING(b'01101' FROM 4 FOR 5), SUBSTRING(b'01101' FROM 7 FOR 3),
+          SUBSTRING(BIT(NULL) FROM 2), SUBSTRING(b'01101' FROM NULL), SUBSTRING(BIT(NULL) FOR 2), SUBSTRING(b'01101' FOR NULL),
+          SUBSTRING(BIT(NULL) FROM 2 FOR 3), SUBSTRING(b'01101' FROM NULL FOR 3), SUBSTRING(b'01101' FROM 2 FOR NULL),
+          SUBSTRING(BIT(NULL) FROM NULL FOR NULL),
+        SUBSTR('lorem' FROM 3), SUBSTR('lorem' FOR 3), SUBSTR('lorem' FROM 2 FOR 3), SUBSTR(NULL FROM 2 FOR 3)
+    expectedResult:
+      - [ "", "", "", "", "", "", "lorem", "lorem", "lorem", "orem", "rem", "m", "",
+          "", "", "lo", "lorem", "lorem", "", "", "", "l", "lorem", "lo", "l", "ore", "em", "",
+          null, null, null, null, null, null, null, null,
+          "", "", "", "", "", "", "lorem", "lorem", "lorem", "orem", "rem", "m", "",
+          "", "", "lo", "lorem", "lorem", "", "", "", "l", "lorem", "lo", "l", "ore", "em", "",
+          null, null, null, null, null, null, null, null,
+          "", "", "", "", "", "", "01101", "01101", "01101", "1101", "101", "1", "",
+          "", "", "01", "01101", "01101", "", "", "", "0", "01101", "01", "0", "110", "01", "",
+          null, null, null, null, null, null, null, null,
+          "rem", "lor", "ore", null ]
+    columns:
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: true }
+      - { type: java.lang.String, nullable: true }
+      - { type: java.lang.String, nullable: true }
+      - { type: java.lang.String, nullable: true }
+      - { type: java.lang.String, nullable: true }
+      - { type: java.lang.String, nullable: true }
+      - { type: java.lang.String, nullable: true }
+      - { type: java.lang.String, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: true }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: true }
+  
   - name: subtract
     description: Subtract expression
     query: |
