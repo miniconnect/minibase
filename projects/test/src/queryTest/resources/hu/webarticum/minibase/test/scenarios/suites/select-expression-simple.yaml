@@ -1395,8 +1395,56 @@ cases:
     columns:
       - { type: java.lang.Double, nullable: false }
 
-# TODO: PositionExpression.java
-
+  - name: position
+    description: Position expression
+    query: |
+      SELECT
+        POSITION('' IN ''), POSITION('' IN 'lorem'), POSITION('lorem' IN ''),
+        POSITION('lor' IN 'lorem'), POSITION('rem' IN 'lorem'), POSITION('wyx' IN 'lorem'), POSITION('ux' IN 'tyuxiwuxtymuxe'),
+        POSITION(BINARY('') IN BINARY('')), POSITION(BINARY('') IN BINARY('lorem')), POSITION(BINARY('lorem') IN BINARY('')),
+        POSITION(BINARY('lor') IN BINARY('lorem')), POSITION(BINARY('rem') IN BINARY('lorem')),
+        POSITION(BINARY('wyx') IN BINARY('lorem')), POSITION(BINARY('ux') IN BINARY('tyuxiwuxtymuxe')),
+        POSITION(b'' IN b''), POSITION(b'' IN b'011010'), POSITION(b'011010' IN b''),
+        POSITION(b'011' IN b'011010'), POSITION(b'010' IN b'011010'), POSITION(b'111' IN b'011010'), POSITION(b'11' IN b'0101101100110'),
+        POSITION('' IN NULL), POSITION(BINARY('') IN NULL), POSITION(b'' IN NULL),
+        POSITION('lorem' IN NULL), POSITION(BINARY('lorem') IN NULL), POSITION(b'110' IN NULL),
+        POSITION(NULL IN 'lorem'), POSITION(NULL IN BINARY('lorem')), POSITION(NULL IN b'110'),
+        POSITION(NULL IN NULL)
+    expectedResult:
+      - [ 1, 1, 0, 1, 3, 0, 3, 1, 1, 0, 1, 3, 0, 3, 1, 1, 0, 1, 4, 0, 4, null, null, null, null, null, null, null, null, null, null ]
+    columns:
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
+  
   - name: pow
     description: Pow expression
     query: |
