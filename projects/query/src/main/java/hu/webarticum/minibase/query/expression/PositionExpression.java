@@ -2,7 +2,11 @@ package hu.webarticum.minibase.query.expression;
 
 import java.util.Optional;
 
+import hu.webarticum.minibase.query.util.BitStringUtil;
+import hu.webarticum.minibase.query.util.ByteStringUtil;
 import hu.webarticum.minibase.query.util.StringUtil;
+import hu.webarticum.miniconnect.lang.BitString;
+import hu.webarticum.miniconnect.lang.ByteString;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
 import hu.webarticum.miniconnect.lang.LargeInteger;
@@ -65,10 +69,19 @@ public class PositionExpression implements Expression {
             return null;
         }
 
-        String contextString = StringUtil.stringify(contextValue);
-        String subjectString = StringUtil.stringify(subjectValue);
-
-        return LargeInteger.of(contextString.indexOf(subjectString) + 1);
+        if (contextValue instanceof ByteString) {
+            ByteString contextByteString = (ByteString) contextValue;
+            ByteString subjectByteString = ByteStringUtil.byteStringify(subjectValue);
+            return LargeInteger.of(contextByteString.indexOf(subjectByteString) + 1);
+        } else if (contextValue instanceof BitString) {
+            BitString contextBitString = (BitString) contextValue;
+            BitString subjectBitString = BitStringUtil.bitStringify(subjectValue);
+            return LargeInteger.of(contextBitString.indexOf(subjectBitString) + 1);
+        } else {
+            String contextString = StringUtil.stringify(contextValue);
+            String subjectString = StringUtil.stringify(subjectValue);
+            return LargeInteger.of(contextString.indexOf(subjectString) + 1);
+        }
     }
 
     @Override
