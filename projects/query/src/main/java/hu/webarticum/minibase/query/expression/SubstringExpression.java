@@ -4,6 +4,8 @@ import java.util.Optional;
 
 import hu.webarticum.minibase.query.util.ConvertUtil;
 import hu.webarticum.minibase.query.util.StringUtil;
+import hu.webarticum.miniconnect.lang.BitString;
+import hu.webarticum.miniconnect.lang.ByteString;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
 
@@ -47,12 +49,28 @@ public class SubstringExpression implements Expression {
 
     @Override
     public Optional<Class<?>> type() {
-        return Optional.of(String.class);
+        Class<?> inputType = inputExpression.type().orElse(null);
+        if (inputType == ByteString.class) {
+            return Optional.of(ByteString.class);
+        } else if (inputType == BitString.class) {
+            return Optional.of(BitString.class);
+        } else if (inputType != null) {
+            return Optional.of(String.class);
+        } else {
+            return Optional.empty();
+        }
     }
 
     @Override
     public Class<?> type(ImmutableMap<Parameter, Class<?>> values) {
-        return String.class;
+        Class<?> inputType = inputExpression.type(values);
+        if (inputType == ByteString.class) {
+            return ByteString.class;
+        } else if (inputType == BitString.class) {
+            return BitString.class;
+        } else {
+            return String.class;
+        }
     }
 
     @Override
@@ -76,44 +94,65 @@ public class SubstringExpression implements Expression {
             return null;
         }
 
-        Object fromValue = evaluateOptionalExpression(fromExpression, values, 1);
-        if (fromValue == null) {
-            return null;
+        int from;
+        if (fromExpression.isPresent()) {
+            Object fromValue = fromExpression.get().evaluate(values);
+            if (fromValue == null) {
+                return null;
+            }
+            from = (Integer) ConvertUtil.convert(fromValue, Integer.class) - 1;
+        } else {
+            from = 0;
         }
 
-        String inputString = StringUtil.stringify(inputValue);
-        int length = inputString.length();
-        int from = (Integer) ConvertUtil.convert(fromValue, Integer.class);
-        int fromZeroBased = from - 1;
-
-        Object forValue = evaluateOptionalExpression(forExpression, values, length - fromZeroBased);
-        if (forValue == null) {
-            return null;
+        Object forValue = null;
+        if (forExpression.isPresent()) {
+            forValue = forExpression.get().evaluate(values);
+            if (forValue == null) {
+                return null;
+            }
         }
+        Integer length = (Integer) ConvertUtil.convert(forValue, Integer.class);
 
-        int forInt = (Integer) ConvertUtil.convert(forValue, Integer.class);
-        if (forInt <= 0) {
-            return "";
+        if (inputValue instanceof ByteString) {
+            return evaluateByteString((ByteString) inputValue, from, length);
+        } else if (inputValue instanceof BitString) {
+            return evaluateBitString((BitString) inputValue, from, length);
+        } else {
+            return evaluateString(StringUtil.stringify(inputValue), from, length);
         }
-
-        if (fromZeroBased >= length) {
-            return "";
-        }
-
-        int untilZeroBased = Math.min(length, fromZeroBased + forInt);
-        if (untilZeroBased <= 0) {
-            return "";
-        }
-
-        return inputString.substring(Math.max(0, fromZeroBased), untilZeroBased);
     }
 
-    private Object evaluateOptionalExpression(
-            Optional<Expression> optionalExpression, ImmutableMap<Parameter, Object> values, Object defaultValue) {
-        if (!optionalExpression.isPresent()) {
-            return defaultValue;
+    private String evaluateString(String input, int from, Integer length) {
+        int[] slice = calculateSlice(input.length(), from, length);
+        return input.substring(slice[0], slice[1]);
+    }
+
+    private ByteString evaluateByteString(ByteString input, int from, Integer length) {
+        int[] slice = calculateSlice(input.length(), from, length);
+        return input.substring(slice[0], slice[1]);
+    }
+
+    private BitString evaluateBitString(BitString input, int from, Integer length) {
+        int[] slice = calculateSlice(input.length(), from, length);
+        return input.substring(slice[0], slice[1]);
+    }
+
+    private int[] calculateSlice(int inputLength, int from, Integer sliceLength) {
+        if (from >= inputLength) {
+            return new int[] { inputLength, inputLength };
         }
-        return optionalExpression.get().evaluate(values);
+        if (sliceLength == null) {
+            return new int[] { Math.max(0, from), inputLength };
+        } else if (sliceLength < 0) {
+            return new int[] { 0, 0 };
+        }
+        int until = from + sliceLength;
+        if (until < 0) {
+            return new int[] { 0, 0 };
+        } else {
+            return new int[] { Math.max(0, from), Math.min(inputLength, until) };
+        }
     }
 
     @Override
