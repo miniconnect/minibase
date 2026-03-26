@@ -50,24 +50,18 @@ public class SubstringExpression implements Expression {
     @Override
     public Optional<Class<?>> type() {
         Class<?> inputType = inputExpression.type().orElse(null);
-        if (inputType == ByteString.class) {
-            return Optional.of(ByteString.class);
-        } else if (inputType == BitString.class) {
-            return Optional.of(BitString.class);
-        } else if (inputType != null) {
-            return Optional.of(String.class);
+        if (inputType == null || inputType == ByteString.class || inputType == BitString.class) {
+            return Optional.ofNullable(inputType);
         } else {
-            return Optional.empty();
+            return Optional.of(String.class);
         }
     }
 
     @Override
     public Class<?> type(ImmutableMap<Parameter, Class<?>> values) {
         Class<?> inputType = inputExpression.type(values);
-        if (inputType == ByteString.class) {
-            return ByteString.class;
-        } else if (inputType == BitString.class) {
-            return BitString.class;
+        if (inputType == ByteString.class || inputType == BitString.class) {
+            return inputType;
         } else {
             return String.class;
         }

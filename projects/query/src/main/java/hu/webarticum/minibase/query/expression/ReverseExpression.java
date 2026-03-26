@@ -30,24 +30,18 @@ public class ReverseExpression implements Expression {
     @Override
     public Optional<Class<?>> type() {
         Class<?> subType = subExpression.type().orElse(null);
-        if (subType == ByteString.class) {
-            return Optional.of(ByteString.class);
-        } else if (subType == BitString.class) {
-            return Optional.of(BitString.class);
-        } else if (subType != null) {
-            return Optional.of(String.class);
+        if (subType == null || subType == ByteString.class || subType == BitString.class) {
+            return Optional.ofNullable(subType);
         } else {
-            return Optional.empty();
+            return Optional.of(String.class);
         }
     }
 
     @Override
     public Class<?> type(ImmutableMap<Parameter, Class<?>> values) {
         Class<?> subType = subExpression.type(values);
-        if (subType == ByteString.class) {
-            return ByteString.class;
-        } else if (subType == BitString.class) {
-            return BitString.class;
+        if (subType == ByteString.class || subType == BitString.class) {
+            return subType;
         } else {
             return String.class;
         }
