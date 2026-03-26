@@ -1591,7 +1591,70 @@ cases:
       - { type: java.lang.String, nullable: true }
       - { type: java.lang.String, nullable: true }
 
-# TODO: ReplaceExpression.java
+  - name: replace
+    description: Replace expression
+    query: |
+      SELECT
+        REPLACE('', '', ''), REPLACE('', '', 'wu'), REPLACE('', 'lor', 'wu'),
+          REPLACE('lorem', '', ''), REPLACE('lorem', 'lor', ''), REPLACE('lorem', 'lor', 'wu'), REPLACE('lorem', 'rem', 'wu'),
+          REPLACE('hatattalatmattuta', 'at', 'ier'), REPLACE('aaabaaaababa', 'aa', 'c'),
+          REPLACE(NULL, 'a', 'e'), REPLACE('lorem', NULL, 'e'), REPLACE('lorem', 'a', NULL), REPLACE(NULL, NULL, NULL),
+        REPLACE(BINARY(''), BINARY(''), BINARY('')), REPLACE(BINARY(''), BINARY(''), BINARY('wu')),
+          REPLACE(BINARY(''), BINARY('lor'), BINARY('wu')),
+          REPLACE(BINARY('lorem'), BINARY(''), BINARY('')), REPLACE(BINARY('lorem'), BINARY('lor'), BINARY('')),
+          REPLACE(BINARY('lorem'), BINARY('lor'), BINARY('wu')), REPLACE(BINARY('lorem'), BINARY('rem'), BINARY('wu')),
+          REPLACE(BINARY('hatattalatmattuta'), BINARY('at'), BINARY('ier')), REPLACE(BINARY('aaabaaaababa'), BINARY('aa'), BINARY('c')),
+          REPLACE(BINARY(NULL), BINARY('a'), BINARY('e')), REPLACE(BINARY('lorem'), NULL, 'e'), REPLACE(BINARY('lorem'), 'a', NULL),
+          REPLACE(BINARY(NULL), NULL, NULL),
+        REPLACE(b'', b'', b''), REPLACE(b'', b'', b'01'), REPLACE(b'', b'110', b'01'),
+          REPLACE(b'11010', b'', b''), REPLACE(b'11010', b'110', b''), REPLACE(b'11010', b'110', b'01'), REPLACE(b'11010', b'010', b'01'),
+          REPLACE(b'110101110010', b'110', b'0101'), REPLACE(b'11101100111101110100', b'11', b'010'),
+          REPLACE(NULL::BIT, b'1', b'0'), REPLACE(b'11010', NULL::BIT, b'0'), REPLACE(b'11010', b'1', NULL::BIT),
+          REPLACE(NULL::BIT, NULL::BIT, NULL::BIT)
+    expectedResult:
+      - [ "", "", "", "lorem", "em", "wuem", "lowu", "hieriertaliermiertuta", "cabccbaba", null, null, null, null,
+          "", "", "", "lorem", "em", "wuem", "lowu", "hieriertaliermiertuta", "cabccbaba", null, null, null, null,
+          "", "", "", "11010", "10", "0110", "1101", "01011010101010", "0101001000010010001010100", null, null, null, null ]
+    columns:
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: true }
+      - { type: java.lang.String, nullable: true }
+      - { type: java.lang.String, nullable: true }
+      - { type: java.lang.String, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: true }
 
   - name: reverse
     description: Reverse expression
