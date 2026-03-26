@@ -40,45 +40,74 @@ public class ConcatExpression implements Expression {
 
     @Override
     public Optional<Class<?>> type() {
-        Class<?> result = null;
+        /*
+        Summary of the logic:
+        - note: String is the default and strongest candidate plus BitString, ByteString are supported;
+              the order by "strongness" is: String, BitString, ByteString
+        - if there are no parameters, then the result type is String
+        - if we found any known type other than BitString, ByteString, and Void, then the result type is String
+        - otherwise if we found any unknown type, then the result type is unknown
+        - otherwise (if one or more BitString, ByteString, and Void were exclusively found), is the result one of these:
+            - if any of them is BitString, then the result type is BitString
+            - else if any of them is ByteString, then the result type is ByteString
+            - else (so if solely Void items were given) the result type is String
+        The very last is a questionable decision, it could be Void as well,
+            but for now it seems to be pausible if we don't introduce a 4th possible result type for such an edge case.
+        */
+        Class<?> bestCandidate = null;
+        boolean foundUknown = false;
         for (Expression parameterExpression : parameterExpressions) {
             Class<?> nextType = parameterExpression.type().orElse(null);
             if (nextType == null) {
-                return Optional.empty();
-            } else if (nextType == BitString.class) {
-                result = BitString.class;
-            } else if (nextType == Void.class) {
-                if (result == null) {
-                    result = Void.class;
+                foundUknown = true;
+                continue;
+            } if (nextType == BitString.class) {
+                bestCandidate = BitString.class;
+            } else if (nextType == ByteString.class) {
+                if (nextType != BitString.class) {
+                    bestCandidate = ByteString.class;
                 }
-            } else if (nextType != ByteString.class) {
+            } else if (nextType == Void.class) {
+                if (bestCandidate == null) {
+                    bestCandidate = Void.class;
+                }
+            } else {
                 return Optional.of(String.class);
-            } else if (result == null || nextType == Void.class) {
-                result = ByteString.class;
             }
         }
-        result = (result != null && result != Void.class) ? result : String.class;
-        return Optional.ofNullable(result);
+        if (foundUknown) {
+            return Optional.empty();
+        } else if (bestCandidate == null || bestCandidate == Void.class) {
+            return Optional.of(String.class);
+        } else {
+            return Optional.of(bestCandidate);
+        }
     }
 
     @Override
     public Class<?> type(ImmutableMap<Parameter, Class<?>> values) {
-        Class<?> result = null;
+        Class<?> bestCandidate = null;
         for (Expression parameterExpression : parameterExpressions) {
             Class<?> nextType = parameterExpression.type(values);
             if (nextType == BitString.class) {
-                result = BitString.class;
-            } else if (nextType == Void.class) {
-                if (result == null) {
-                    result = Void.class;
+                bestCandidate = BitString.class;
+            } else if (nextType == ByteString.class) {
+                if (nextType != BitString.class) {
+                    bestCandidate = ByteString.class;
                 }
-            } else if (nextType != ByteString.class) {
+            } else if (nextType == Void.class) {
+                if (bestCandidate == null) {
+                    bestCandidate = Void.class;
+                }
+            } else {
                 return String.class;
-            } else if (result == null || nextType == Void.class) {
-                result = ByteString.class;
             }
         }
-        return (result != null && result != Void.class) ? result : String.class;
+        if (bestCandidate == null || bestCandidate == Void.class) {
+            return String.class;
+        } else {
+            return bestCandidate;
+        }
     }
 
 	@Override
@@ -134,18 +163,28 @@ public class ConcatExpression implements Expression {
     }
 
     private Class<?> detectRuntimeType(List<Object> parameterValues) {
-        Class<?> result = null;
+        Class<?> bestCandidate = null;
         for (Object parameterValue : parameterValues) {
             Class<?> nextType = UnifyUtil.typeOf(parameterValue);
             if (nextType == BitString.class) {
-                result = BitString.class;
-            } else if (nextType != ByteString.class) {
+                bestCandidate = BitString.class;
+            } else if (nextType == ByteString.class) {
+                if (nextType != BitString.class) {
+                    bestCandidate = ByteString.class;
+                }
+            } else if (nextType == Void.class) {
+                if (bestCandidate == null) {
+                    bestCandidate = Void.class;
+                }
+            } else {
                 return String.class;
-            } else if (result == null) {
-                result = ByteString.class;
             }
         }
-        return result != null ? result : String.class;
+        if (bestCandidate == null || bestCandidate == Void.class) {
+            return String.class;
+        } else {
+            return bestCandidate;
+        }
     }
 
     @Override
