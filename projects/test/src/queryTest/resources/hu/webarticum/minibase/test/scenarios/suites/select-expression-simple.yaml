@@ -422,8 +422,8 @@ cases:
     description: Concat expression
     query: |
       SELECT
-        CONCAT('lorem'), CONCAT('lorem', 'ipsum'),  CONCAT('lorem', b'10', 2), CONCAT(binary('A'), 'B'), CONCAT(b'0', 4),
-        CONCAT(binary('A'), binary('B')), CONCAT(b'100', b'11'), CONCAT(binary('A'), b'10011'),
+        CONCAT('lorem'), CONCAT('lorem', 'ipsum'),  CONCAT('lorem', b'10', 2), CONCAT(BINARY('A'), 'B'), CONCAT(b'0', 4),
+        CONCAT(BINARY('A'), BINARY('B')), CONCAT(b'100', b'11'), CONCAT(BINARY('A'), b'10011'),
         CONCAT(NULL, 'A'), CONCAT('A', NULL), CONCAT('A', NULL, 'B'), CONCAT(b'100', NULL), CONCAT(NULL), CONCAT(NULL, NULL)
     expectedResult:
       - [ "lorem", "loremipsum", "lorem102", "AB", "04", "AB", "10011", "0100000110011", null, null, null, null, null, null ]
@@ -794,10 +794,10 @@ cases:
     query: |
       SELECT
         LEFT('', 1), LEFT('lorem', 3), LEFT('lorem', 10), LEFT('lorem', 0), LEFT('lorem', -3), LEFT('lorem', -10),
-        LEFT(binary(''), 1), LEFT(binary('lorem'), 3), LEFT(binary('lorem'), 10), LEFT(binary('lorem'), 0),
-        LEFT(binary('lorem'), -3), LEFT(binary('lorem'), -10), LEFT(binary('háztűznéző'), 8),
+        LEFT(BINARY(''), 1), LEFT(BINARY('lorem'), 3), LEFT(BINARY('lorem'), 10), LEFT(BINARY('lorem'), 0),
+        LEFT(BINARY('lorem'), -3), LEFT(BINARY('lorem'), -10), LEFT(BINARY('háztűznéző'), 8),
         LEFT(b'', 1), LEFT(b'0110', 3), LEFT(b'0110', 10), LEFT(b'0110', 0), LEFT(b'0110', -3), LEFT(b'0110', -10),
-        LEFT('abc', NULL), LEFT(binary('abc'), NULL), LEFT(b'011', NULL), LEFT(NULL, 1), LEFT(NULL, NULL)
+        LEFT('abc', NULL), LEFT(BINARY('abc'), NULL), LEFT(b'011', NULL), LEFT(NULL, 1), LEFT(NULL, NULL)
     expectedResult:
       - [ "", "lor", "lorem", "", "lo", "", "", "lor", "lorem", "", "lo", "", "háztűz",
           "", "011", "0110", "", "0", "", null, null, null, null, null ]
@@ -1610,10 +1610,10 @@ cases:
     query: |
       SELECT
         RIGHT('', 1), RIGHT('lorem', 3), RIGHT('lorem', 10), RIGHT('lorem', 0), RIGHT('lorem', -3), RIGHT('lorem', -10),
-        RIGHT(binary(''), 1), RIGHT(binary('lorem'), 3), RIGHT(binary('lorem'), 10), RIGHT(binary('lorem'), 0),
-        RIGHT(binary('lorem'), -3), RIGHT(binary('lorem'), -10), RIGHT(binary('háztűznéző'), 6),
+        RIGHT(BINARY(''), 1), RIGHT(BINARY('lorem'), 3), RIGHT(BINARY('lorem'), 10), RIGHT(BINARY('lorem'), 0),
+        RIGHT(BINARY('lorem'), -3), RIGHT(BINARY('lorem'), -10), RIGHT(BINARY('háztűznéző'), 6),
         RIGHT(b'', 1), RIGHT(b'0110', 3), RIGHT(b'0110', 10), RIGHT(b'0110', 0), RIGHT(b'0110', -3), RIGHT(b'0110', -10),
-        RIGHT('abc', NULL), RIGHT(binary('abc'), NULL), RIGHT(b'011', NULL), RIGHT(NULL, 1), RIGHT(NULL, NULL)
+        RIGHT('abc', NULL), RIGHT(BINARY('abc'), NULL), RIGHT(b'011', NULL), RIGHT(NULL, 1), RIGHT(NULL, NULL)
     expectedResult:
       - [ "", "rem", "lorem", "", "em", "", "", "rem", "lorem", "", "em", "", "néző",
           "", "110", "0110", "", "0", "", null, null, null, null, null ]
