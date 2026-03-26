@@ -2,7 +2,11 @@ package hu.webarticum.minibase.query.expression;
 
 import java.util.Optional;
 
+import hu.webarticum.minibase.query.util.BitStringUtil;
+import hu.webarticum.minibase.query.util.ByteStringUtil;
 import hu.webarticum.minibase.query.util.StringUtil;
+import hu.webarticum.miniconnect.lang.BitString;
+import hu.webarticum.miniconnect.lang.ByteString;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
 
@@ -41,12 +45,22 @@ public class ReplaceExpression implements Expression {
 
     @Override
     public Optional<Class<?>> type() {
-        return Optional.of(String.class);
+        Class<?> contextType = contextExpression.type().orElse(null);
+        if (contextType == null || contextType == ByteString.class || contextType == BitString.class) {
+            return Optional.ofNullable(contextType);
+        } else {
+            return Optional.of(String.class);
+        }
     }
 
     @Override
     public Class<?> type(ImmutableMap<Parameter, Class<?>> values) {
-        return String.class;
+        Class<?> contextType = contextExpression.type(values);
+        if (contextType == ByteString.class || contextType == BitString.class) {
+            return contextType;
+        } else {
+            return String.class;
+        }
     }
 
     @Override
@@ -79,11 +93,16 @@ public class ReplaceExpression implements Expression {
             return null;
         }
 
-        String contextString = StringUtil.stringify(contextValue);
-        String fromString = StringUtil.stringify(fromValue);
-        String toString = StringUtil.stringify(toValue);
-
-        return StringUtil.replace(contextString, fromString, toString);
+        if (contextValue instanceof ByteString) {
+            return ByteStringUtil.replace(
+                    (ByteString) contextValue, ByteStringUtil.byteStringify(fromValue), ByteStringUtil.byteStringify(toValue));
+        } else if (contextValue instanceof BitString) {
+            return BitStringUtil.replace(
+                    (BitString) contextValue, BitStringUtil.bitStringify(fromValue), BitStringUtil.bitStringify(toValue));
+        } else {
+            return StringUtil.replace(
+                    StringUtil.stringify(contextValue), StringUtil.stringify(fromValue), StringUtil.stringify(toValue));
+        }
     }
 
     @Override

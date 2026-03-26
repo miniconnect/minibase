@@ -106,6 +106,10 @@ public final class StringUtil {
     }
 
     public static String replace(String context, String from, String to) {
+        /*
+        This is an SQL-style alternative to String.replace(String, String).
+        Unlike the latter, this is a no-op if from is empty.
+        */
         int length = context.length();
         if (length == 0) {
             return "";

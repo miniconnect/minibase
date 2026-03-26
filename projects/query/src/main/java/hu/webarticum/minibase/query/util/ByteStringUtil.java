@@ -36,4 +36,30 @@ public final class ByteStringUtil {
         return byteStringValue.substring(0, size);
     }
 
+    public static ByteString replace(ByteString context, ByteString from, ByteString to) {
+        int length = context.length();
+        if (length == 0) {
+            return ByteString.empty();
+        }
+        int fromLength = from.length();
+        if (fromLength == 0) {
+            return context;
+        }
+
+        ByteString.Builder resultBuilder = ByteString.builder();
+        int pos = 0;
+        while (true) {
+            int foundIndex = context.indexOf(from, pos);
+            if (foundIndex >= 0) {
+                resultBuilder.append(context.substring(pos, foundIndex));
+                resultBuilder.append(to);
+                pos = foundIndex + fromLength;
+            } else {
+                resultBuilder.append(context.substring(pos));
+                break;
+            }
+        }
+        return resultBuilder.build();
+    }
+
 }
