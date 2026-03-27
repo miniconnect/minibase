@@ -94,15 +94,94 @@ public class ReplaceExpression implements Expression {
         }
 
         if (contextValue instanceof ByteString) {
-            return ByteStringUtil.replace(
-                    (ByteString) contextValue, ByteStringUtil.byteStringify(fromValue), ByteStringUtil.byteStringify(toValue));
+            return operate((ByteString) contextValue, ByteStringUtil.byteStringify(fromValue), ByteStringUtil.byteStringify(toValue));
         } else if (contextValue instanceof BitString) {
-            return BitStringUtil.replace(
-                    (BitString) contextValue, BitStringUtil.bitStringify(fromValue), BitStringUtil.bitStringify(toValue));
+            return operate((BitString) contextValue, BitStringUtil.bitStringify(fromValue), BitStringUtil.bitStringify(toValue));
         } else {
-            return StringUtil.replace(
-                    StringUtil.stringify(contextValue), StringUtil.stringify(fromValue), StringUtil.stringify(toValue));
+            return operate(StringUtil.stringify(contextValue), StringUtil.stringify(fromValue), StringUtil.stringify(toValue));
         }
+    }
+
+    public static String operate(String context, String from, String to) {
+        /*
+        This is an SQL-style alternative to String.replace(String, String).
+        Unlike the latter, this is a no-op if from is empty.
+        */
+        int length = context.length();
+        if (length == 0) {
+            return "";
+        }
+        int fromLength = from.length();
+        if (fromLength == 0) {
+            return context;
+        }
+
+        StringBuilder resultBuilder = new StringBuilder();
+        int pos = 0;
+        while (true) {
+            int foundIndex = context.indexOf(from, pos);
+            if (foundIndex >= 0) {
+                resultBuilder.append(context.substring(pos, foundIndex));
+                resultBuilder.append(to);
+                pos = foundIndex + fromLength;
+            } else {
+                resultBuilder.append(context.substring(pos));
+                break;
+            }
+        }
+        return resultBuilder.toString();
+    }
+
+    public static ByteString operate(ByteString context, ByteString from, ByteString to) {
+        int length = context.length();
+        if (length == 0) {
+            return ByteString.empty();
+        }
+        int fromLength = from.length();
+        if (fromLength == 0) {
+            return context;
+        }
+
+        ByteString.Builder resultBuilder = ByteString.builder();
+        int pos = 0;
+        while (true) {
+            int foundIndex = context.indexOf(from, pos);
+            if (foundIndex >= 0) {
+                resultBuilder.append(context.substring(pos, foundIndex));
+                resultBuilder.append(to);
+                pos = foundIndex + fromLength;
+            } else {
+                resultBuilder.append(context.substring(pos));
+                break;
+            }
+        }
+        return resultBuilder.build();
+    }
+
+    public static BitString operate(BitString context, BitString from, BitString to) {
+        int length = context.length();
+        if (length == 0) {
+            return BitString.empty();
+        }
+        int fromLength = from.length();
+        if (fromLength == 0) {
+            return context;
+        }
+
+        BitString.Builder resultBuilder = BitString.builder();
+        int pos = 0;
+        while (true) {
+            int foundIndex = context.indexOf(from, pos);
+            if (foundIndex >= 0) {
+                resultBuilder.append(context.substring(pos, foundIndex));
+                resultBuilder.append(to);
+                pos = foundIndex + fromLength;
+            } else {
+                resultBuilder.append(context.substring(pos));
+                break;
+            }
+        }
+        return resultBuilder.build();
     }
 
     @Override

@@ -109,25 +109,25 @@ public class SubstringExpression implements Expression {
         Integer length = (Integer) ConvertUtil.convert(forValue, Integer.class);
 
         if (inputValue instanceof ByteString) {
-            return evaluateByteString((ByteString) inputValue, from, length);
+            return operate((ByteString) inputValue, from, length);
         } else if (inputValue instanceof BitString) {
-            return evaluateBitString((BitString) inputValue, from, length);
+            return operate((BitString) inputValue, from, length);
         } else {
-            return evaluateString(StringUtil.stringify(inputValue), from, length);
+            return operate(StringUtil.stringify(inputValue), from, length);
         }
     }
 
-    private String evaluateString(String input, int from, Integer length) {
+    private String operate(String input, int from, Integer length) {
         int[] slice = calculateSlice(input.length(), from, length);
         return input.substring(slice[0], slice[1]);
     }
 
-    private ByteString evaluateByteString(ByteString input, int from, Integer length) {
+    private ByteString operate(ByteString input, int from, Integer length) {
         int[] slice = calculateSlice(input.length(), from, length);
         return input.substring(slice[0], slice[1]);
     }
 
-    private BitString evaluateBitString(BitString input, int from, Integer length) {
+    private BitString operate(BitString input, int from, Integer length) {
         int[] slice = calculateSlice(input.length(), from, length);
         return input.substring(slice[0], slice[1]);
     }

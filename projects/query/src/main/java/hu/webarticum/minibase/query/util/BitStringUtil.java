@@ -73,30 +73,4 @@ public final class BitStringUtil {
         }
     }
 
-    public static BitString replace(BitString context, BitString from, BitString to) {
-        int length = context.length();
-        if (length == 0) {
-            return BitString.empty();
-        }
-        int fromLength = from.length();
-        if (fromLength == 0) {
-            return context;
-        }
-
-        BitString.Builder resultBuilder = BitString.builder();
-        int pos = 0;
-        while (true) {
-            int foundIndex = context.indexOf(from, pos);
-            if (foundIndex >= 0) {
-                resultBuilder.append(context.substring(pos, foundIndex));
-                resultBuilder.append(to);
-                pos = foundIndex + fromLength;
-            } else {
-                resultBuilder.append(context.substring(pos));
-                break;
-            }
-        }
-        return resultBuilder.build();
-    }
-
 }

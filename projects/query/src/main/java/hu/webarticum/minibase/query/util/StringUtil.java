@@ -105,34 +105,4 @@ public final class StringUtil {
         }
     }
 
-    public static String replace(String context, String from, String to) {
-        /*
-        This is an SQL-style alternative to String.replace(String, String).
-        Unlike the latter, this is a no-op if from is empty.
-        */
-        int length = context.length();
-        if (length == 0) {
-            return "";
-        }
-        int fromLength = from.length();
-        if (fromLength == 0) {
-            return context;
-        }
-
-        StringBuilder resultBuilder = new StringBuilder();
-        int pos = 0;
-        while (true) {
-            int foundIndex = context.indexOf(from, pos);
-            if (foundIndex >= 0) {
-                resultBuilder.append(context.substring(pos, foundIndex));
-                resultBuilder.append(to);
-                pos = foundIndex + fromLength;
-            } else {
-                resultBuilder.append(context.substring(pos));
-                break;
-            }
-        }
-        return resultBuilder.toString();
-    }
-
 }

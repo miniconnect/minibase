@@ -79,15 +79,15 @@ public class RepeatExpression implements Expression {
 
         int count = NumberUtil.asInt(countValue);
         if (inputValue instanceof ByteString) {
-            return evaluateByteString((ByteString) inputValue, count);
+            return operate((ByteString) inputValue, count);
         } else if (inputValue instanceof BitString) {
-            return evaluateBitString((BitString) inputValue, count);
+            return operate((BitString) inputValue, count);
         } else {
-            return evaluateString(StringUtil.stringify(inputValue), count);
+            return operate(StringUtil.stringify(inputValue), count);
         }
     }
 
-    private String evaluateString(String input, int count) {
+    private String operate(String input, int count) {
         if (input.isEmpty()) {
             return "";
         }
@@ -99,7 +99,7 @@ public class RepeatExpression implements Expression {
         return resultBuilder.toString();
     }
 
-    private ByteString evaluateByteString(ByteString input, int count) {
+    private ByteString operate(ByteString input, int count) {
         if (input.isEmpty()) {
             return ByteString.empty();
         }
@@ -111,7 +111,7 @@ public class RepeatExpression implements Expression {
         return resultBuilder.build();
     }
 
-    private BitString evaluateBitString(BitString input, int count) {
+    private BitString operate(BitString input, int count) {
         if (input.isEmpty()) {
             return BitString.empty();
         }
