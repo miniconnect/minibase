@@ -52,7 +52,23 @@ public class InitcapExpression implements Expression {
             return null;
         }
 
-        return StringUtil.toTitleCase(StringUtil.stringify(value));
+        String input = StringUtil.stringify(value);
+        int length = input.length();
+        StringBuilder resultBuilder = new StringBuilder();
+        boolean wasLetter = false;
+        for (int i = 0; i < length; i++) {
+            char c = input.charAt(i);
+            if (!Character.isLetterOrDigit(c)) {
+                resultBuilder.append(c);
+                wasLetter = false;
+            } else if (wasLetter) {
+                resultBuilder.append(Character.toLowerCase(c));
+            } else {
+                resultBuilder.append(Character.toUpperCase(c));
+                wasLetter = true;
+            }
+        }
+        return resultBuilder.toString();
     }
 
     @Override

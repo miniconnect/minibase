@@ -717,10 +717,15 @@ cases:
 
   - name: initcap
     description: Initcap expression
-    query: "SELECT INITCAP(''), INITCAP('lorem'), INITCAP('lorem ipsum'), INITCAP('loRem íPSUM-DoLoR'), INITCAP(NULL)"
+    query: |
+      SELECT
+        INITCAP(''), INITCAP('?:-'), INITCAP('a'), INITCAP('lorem'), INITCAP('lorem ipsum'),
+        INITCAP(' loRem íPSÜM-ĎoLóR. a 2sIT/amet'), INITCAP(NULL)
     expectedResult:
-      - [ "", "Lorem", "Lorem Ipsum", "Lorem Ípsum-Dolor", null ]
+      - [ "", "?:-", "A", "Lorem", "Lorem Ipsum", " Lorem Ípsüm-Ďolór. A 2sit/Amet", null ]
     columns:
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
       - { type: java.lang.String, nullable: false }
       - { type: java.lang.String, nullable: false }
       - { type: java.lang.String, nullable: false }
