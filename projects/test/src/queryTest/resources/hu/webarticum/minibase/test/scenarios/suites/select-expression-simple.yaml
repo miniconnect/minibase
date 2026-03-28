@@ -1829,7 +1829,82 @@ cases:
       - { type: java.lang.String, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: true }
 
-# TODO: SplitPartExpression.java
+  - name: split-part
+    description: SplitPart expression
+    query: |
+      SELECT
+        SPLIT_PART('', '', 0), SPLIT_PART('', 'r', 1), SPLIT_PART('lorem', '', 1), SPLIT_PART('lorem', 'r', 0),
+          SPLIT_PART('lorem', 'r', 1), SPLIT_PART('lorem', 'r', 2), SPLIT_PART('lorem', 'r', 3), SPLIT_PART('lorem', 'm', 2),
+          SPLIT_PART('wyxaryxmyxhyxux', 'yx', 3), SPLIT_PART('wyxaryxmyxhyxux', 'yx', 5),
+          SPLIT_PART('uwwwwuuwwuuuwwwwwwwwx', 'www', 2), SPLIT_PART('uwwwwuuwwuuuwwwwwwwwx', 'www', 3),
+          SPLIT_PART(NULL, 'r', 1), SPLIT_PART('lorem', NULL, 1), SPLIT_PART('lorem', 'r', NULL), SPLIT_PART(NULL, NULL, NULL),
+        SPLIT_PART(BINARY(''), BINARY(''), 0), SPLIT_PART(BINARY(''), BINARY('r'), 1),
+          SPLIT_PART(BINARY('lorem'), BINARY(''), 1), SPLIT_PART(BINARY('lorem'), BINARY('r'), 0),
+          SPLIT_PART(BINARY('lorem'), BINARY('r'), 1), SPLIT_PART(BINARY('lorem'), BINARY('r'), 2),
+          SPLIT_PART(BINARY('lorem'), BINARY('r'), 3), SPLIT_PART(BINARY('lorem'), BINARY('m'), 2),
+          SPLIT_PART(BINARY('wyxaryxmyxhyxux'), BINARY('yx'), 3), SPLIT_PART(BINARY('wyxaryxmyxhyxux'), BINARY('yx'), 5),
+          SPLIT_PART(BINARY('uwwwwuuwwuuuwwwwwwwwx'), BINARY('www'), 2), SPLIT_PART(BINARY('uwwwwuuwwuuuwwwwwwwwx'), BINARY('www'), 3),
+          SPLIT_PART(BINARY(NULL), BINARY('r'), 1), SPLIT_PART(BINARY('lorem'), NULL, 1),
+          SPLIT_PART(BINARY('lorem'), BINARY('r'), NULL), SPLIT_PART(BINARY(NULL), NULL, NULL),
+        SPLIT_PART(b'', b'', 0), SPLIT_PART(b'', b'11', 1), SPLIT_PART(b'01101', b'', 1), SPLIT_PART(b'01101', b'11', 0),
+          SPLIT_PART(b'01101', b'11', 1), SPLIT_PART(b'01101', b'11', 2), SPLIT_PART(b'01101', b'11', 3), SPLIT_PART(b'01101', b'101', 2),
+          SPLIT_PART(b'01011100111010111001', b'111', 3), SPLIT_PART(b'01011100111010111001', b'111', 4),
+          SPLIT_PART(b'0111100110001111110', b'111', 2), SPLIT_PART(b'0111100110001111110', b'111', 3),
+          SPLIT_PART(BIT(NULL), b'11', 1), SPLIT_PART(b'01101', NULL, 1),
+          SPLIT_PART(b'01101', b'11', NULL), SPLIT_PART(BIT(NULL), NULL, NULL)
+    expectedResult:
+      - [ "", "", "", "", "lo", "em", "", "", "m", "ux", "wuuwwuuu", "", null, null, null, null,
+          "", "", "", "", "lo", "em", "", "", "m", "ux", "wuuwwuuu", "", null, null, null, null,
+          "", "", "", "", "0", "01", "", "", "010", "001", "10011000", "", null, null, null, null ]
+    columns:
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: true }
+      - { type: java.lang.String, nullable: true }
+      - { type: java.lang.String, nullable: true }
+      - { type: java.lang.String, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: true }
 
   - name: substring
     description: Substring expression
