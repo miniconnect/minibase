@@ -10,21 +10,21 @@ import hu.webarticum.miniconnect.lang.LargeInteger;
 
 public class SignExpression implements Expression {
 
-    private final Expression subExpression;
+    private final Expression operand;
 
 
-    public SignExpression(Expression subExpression) {
-        this.subExpression = subExpression;
+    public SignExpression(Expression operand) {
+        this.operand = operand;
     }
 
 
-    public Expression subExpression() {
-        return subExpression;
+    public Expression operand() {
+        return operand;
     }
 
     @Override
     public ImmutableList<Parameter> parameters() {
-        return subExpression.parameters();
+        return operand.parameters();
     }
 
     @Override
@@ -33,23 +33,23 @@ public class SignExpression implements Expression {
     }
 
     @Override
-    public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
+    public Class<?> type(ImmutableMap<Parameter, Class<?>> typeSubstitutions) {
         return LargeInteger.class;
     }
 
     @Override
     public boolean isNullable() {
-        return subExpression.isNullable();
+        return operand.isNullable();
     }
 
     @Override
-    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
-        return subExpression.isNullable(nullabilities);
+    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilitySubstitutions) {
+        return operand.isNullable(nullabilitySubstitutions);
     }
 
     @Override
-    public Object evaluate(ImmutableMap<Parameter, Object> values) {
-        Object subValue = subExpression.evaluate(values);
+    public Object evaluate(ImmutableMap<Parameter, Object> substitutions) {
+        Object subValue = operand.evaluate(substitutions);
         if (subValue == null) {
             return null;
         }
@@ -67,7 +67,7 @@ public class SignExpression implements Expression {
 
     @Override
     public String automaticName() {
-        return "SIGN(" + subExpression.automaticName() + ")";
+        return "SIGN(" + operand.automaticName() + ")";
     }
 
 }

@@ -23,7 +23,7 @@ public class RandomExpression implements Expression {
     }
 
     @Override
-    public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
+    public Class<?> type(ImmutableMap<Parameter, Class<?>> typeSubstitutions) {
         return Double.class;
     }
 
@@ -33,12 +33,12 @@ public class RandomExpression implements Expression {
     }
 
     @Override
-    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
+    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilitySubstitutions) {
         return false;
     }
 
     @Override
-    public Object evaluate(ImmutableMap<Parameter, Object> values) {
+    public Object evaluate(ImmutableMap<Parameter, Object> substitutions) {
         return ThreadLocalRandom.current().nextDouble();
     }
 

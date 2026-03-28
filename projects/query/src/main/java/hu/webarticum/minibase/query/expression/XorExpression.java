@@ -38,7 +38,7 @@ public class XorExpression implements Expression {
     }
 
     @Override
-    public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
+    public Class<?> type(ImmutableMap<Parameter, Class<?>> typeSubstitutions) {
         return Boolean.class;
     }
 
@@ -48,14 +48,14 @@ public class XorExpression implements Expression {
     }
 
     @Override
-    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
-        return leftOperand.isNullable(nullabilities) || rightOperand.isNullable(nullabilities);
+    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilitySubstitutions) {
+        return leftOperand.isNullable(nullabilitySubstitutions) || rightOperand.isNullable(nullabilitySubstitutions);
     }
 
     @Override
-    public Object evaluate(ImmutableMap<Parameter, Object> values) {
-        Boolean leftValue = BooleanUtil.boolify(leftOperand.evaluate(values));
-        Boolean rightValue = BooleanUtil.boolify(rightOperand.evaluate(values));
+    public Object evaluate(ImmutableMap<Parameter, Object> substitutions) {
+        Boolean leftValue = BooleanUtil.boolify(leftOperand.evaluate(substitutions));
+        Boolean rightValue = BooleanUtil.boolify(rightOperand.evaluate(substitutions));
         if (leftValue == null || rightValue == null) {
             return null;
         }

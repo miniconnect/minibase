@@ -8,28 +8,28 @@ import hu.webarticum.miniconnect.lang.ImmutableMap;
 
 public class Atan2Expression implements Expression {
 
-    private final Expression yExpression;
+    private final Expression yOperand;
 
-    private final Expression xExpression;
+    private final Expression xOperand;
 
 
-    public Atan2Expression(Expression yExpression, Expression xExpression) {
-        this.yExpression = yExpression;
-        this.xExpression = xExpression;
+    public Atan2Expression(Expression yOperand, Expression xOperand) {
+        this.yOperand = yOperand;
+        this.xOperand = xOperand;
     }
 
 
-    public Expression yExpression() {
-        return yExpression;
+    public Expression yOperand() {
+        return yOperand;
     }
 
-    public Expression xExpression() {
-        return xExpression;
+    public Expression xOperand() {
+        return xOperand;
     }
 
     @Override
     public ImmutableList<Parameter> parameters() {
-        return yExpression.parameters().concat(xExpression.parameters());
+        return yOperand.parameters().concat(xOperand.parameters());
     }
 
     @Override
@@ -38,27 +38,27 @@ public class Atan2Expression implements Expression {
     }
 
     @Override
-    public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
+    public Class<?> type(ImmutableMap<Parameter, Class<?>> typeSubstitutions) {
         return Double.class;
     }
 
     @Override
     public boolean isNullable() {
-        return yExpression.isNullable() || xExpression.isNullable();
+        return yOperand.isNullable() || xOperand.isNullable();
     }
 
     @Override
-    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
-        return yExpression.isNullable(nullabilities) || xExpression.isNullable(nullabilities);
+    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilitySubstitutions) {
+        return yOperand.isNullable(nullabilitySubstitutions) || xOperand.isNullable(nullabilitySubstitutions);
     }
 
     @Override
-    public Object evaluate(ImmutableMap<Parameter, Object> values) {
-        Object yValue = yExpression.evaluate(values);
+    public Object evaluate(ImmutableMap<Parameter, Object> substitutions) {
+        Object yValue = yOperand.evaluate(substitutions);
         if (yValue == null ) {
             return null;
         }
-        Object xValue = xExpression.evaluate(values);
+        Object xValue = xOperand.evaluate(substitutions);
         if (xValue == null ) {
             return null;
         }
@@ -70,7 +70,7 @@ public class Atan2Expression implements Expression {
 
     @Override
     public String automaticName() {
-        return "ATAN2(" + yExpression.automaticName() + ", " + xExpression.automaticName() + ")";
+        return "ATAN2(" + yOperand.automaticName() + ", " + xOperand.automaticName() + ")";
     }
 
 }

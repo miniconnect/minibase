@@ -8,21 +8,21 @@ import hu.webarticum.miniconnect.lang.ImmutableMap;
 
 public class InitcapExpression implements Expression {
 
-    private final Expression subExpression;
+    private final Expression operand;
 
 
-    public InitcapExpression(Expression subExpression) {
-        this.subExpression = subExpression;
+    public InitcapExpression(Expression operand) {
+        this.operand = operand;
     }
 
 
-    public Expression subExpression() {
-        return subExpression;
+    public Expression operand() {
+        return operand;
     }
 
     @Override
     public ImmutableList<Parameter> parameters() {
-        return subExpression.parameters();
+        return operand.parameters();
     }
 
     @Override
@@ -31,33 +31,36 @@ public class InitcapExpression implements Expression {
     }
 
     @Override
-    public Class<?> type(ImmutableMap<Parameter, Class<?>> values) {
+    public Class<?> type(ImmutableMap<Parameter, Class<?>> typeSubstitutions) {
         return String.class;
     }
 
     @Override
     public boolean isNullable() {
-        return subExpression.isNullable();
+        return operand.isNullable();
     }
 
     @Override
-    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
-        return subExpression.isNullable(nullabilities);
+    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilitySubstitutions) {
+        return operand.isNullable(nullabilitySubstitutions);
     }
 
     @Override
-    public Object evaluate(ImmutableMap<Parameter, Object> values) {
-        Object value = subExpression.evaluate(values);
+    public Object evaluate(ImmutableMap<Parameter, Object> substitutions) {
+        Object value = operand.evaluate(substitutions);
         if (value == null) {
             return null;
         }
 
-        String input = StringUtil.stringify(value);
-        int length = input.length();
+        return operate(StringUtil.stringify(value));
+    }
+
+    private String operate(String text) {
+        int length = text.length();
         StringBuilder resultBuilder = new StringBuilder();
         boolean wasLetter = false;
         for (int i = 0; i < length; i++) {
-            char c = input.charAt(i);
+            char c = text.charAt(i);
             if (!Character.isLetterOrDigit(c)) {
                 resultBuilder.append(c);
                 wasLetter = false;
@@ -73,7 +76,7 @@ public class InitcapExpression implements Expression {
 
     @Override
     public String automaticName() {
-        return "INITCAP(" + subExpression.automaticName() + ")";
+        return "INITCAP(" + operand.automaticName() + ")";
     }
 
 }

@@ -30,8 +30,8 @@ public class VariableExpression implements Expression {
     }
 
     @Override
-    public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
-        Class<?> result = types.get(variableParameter);
+    public Class<?> type(ImmutableMap<Parameter, Class<?>> typeSubstitutions) {
+        Class<?> result = typeSubstitutions.get(variableParameter);
         return result != null ? result : Void.class;
     }
 
@@ -41,14 +41,14 @@ public class VariableExpression implements Expression {
     }
 
     @Override
-    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
-        Boolean result = nullabilities.get(variableParameter);
+    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilitySubstitutions) {
+        Boolean result = nullabilitySubstitutions.get(variableParameter);
         return result != null ? result : true;
     }
 
     @Override
-    public Object evaluate(ImmutableMap<Parameter, Object> values) {
-        return values.get(variableParameter);
+    public Object evaluate(ImmutableMap<Parameter, Object> substitutions) {
+        return substitutions.get(variableParameter);
     }
 
     @Override

@@ -14,46 +14,46 @@ import hu.webarticum.miniconnect.lang.ImmutableMap;
 
 public class OverlapsExpression implements Expression {
 
-    private final Expression start1Expression;
+    private final Expression start1Operand;
 
-    private final Expression end1Expression;
+    private final Expression end1Operand;
 
-    private final Expression start2Expression;
+    private final Expression start2Operand;
 
-    private final Expression end2Expression;
+    private final Expression end2Operand;
 
 
     public OverlapsExpression(
-            Expression start1Expression, Expression end1Expression, Expression start2Expression, Expression end2Expression) {
-        this.start1Expression = start1Expression;
-        this.end1Expression = end1Expression;
-        this.start2Expression = start2Expression;
-        this.end2Expression = end2Expression;
+            Expression start1Operand, Expression end1Operand, Expression start2Operand, Expression end2Operand) {
+        this.start1Operand = start1Operand;
+        this.end1Operand = end1Operand;
+        this.start2Operand = start2Operand;
+        this.end2Operand = end2Operand;
     }
 
 
-    public Expression start1Expression() {
-        return start1Expression;
+    public Expression start1Operand() {
+        return start1Operand;
     }
 
-    public Expression end1Expression() {
-        return end1Expression;
+    public Expression end1Operand() {
+        return end1Operand;
     }
 
-    public Expression start2Expression() {
-        return start2Expression;
+    public Expression start2Operand() {
+        return start2Operand;
     }
 
-    public Expression end2Expression() {
-        return end2Expression;
+    public Expression end2Operand() {
+        return end2Operand;
     }
 
     @Override
     public ImmutableList<Parameter> parameters() {
-        return end1Expression.parameters()
-                .concat(end1Expression.parameters())
-                .concat(start2Expression.parameters())
-                .concat(end2Expression.parameters());
+        return end1Operand.parameters()
+                .concat(end1Operand.parameters())
+                .concat(start2Operand.parameters())
+                .concat(end2Operand.parameters());
     }
 
     @Override
@@ -62,34 +62,34 @@ public class OverlapsExpression implements Expression {
     }
 
     @Override
-    public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
+    public Class<?> type(ImmutableMap<Parameter, Class<?>> typeSubstitutions) {
         return Boolean.class;
     }
 
     @Override
     public boolean isNullable() {
         return
-                start1Expression.isNullable() ||
-                end1Expression.isNullable() ||
-                start2Expression.isNullable() ||
-                end2Expression.isNullable();
+                start1Operand.isNullable() ||
+                end1Operand.isNullable() ||
+                start2Operand.isNullable() ||
+                end2Operand.isNullable();
     }
 
     @Override
-    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
+    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilitySubstitutions) {
         return
-                start1Expression.isNullable(nullabilities) ||
-                end1Expression.isNullable(nullabilities) ||
-                start2Expression.isNullable(nullabilities) ||
-                end2Expression.isNullable(nullabilities);
+                start1Operand.isNullable(nullabilitySubstitutions) ||
+                end1Operand.isNullable(nullabilitySubstitutions) ||
+                start2Operand.isNullable(nullabilitySubstitutions) ||
+                end2Operand.isNullable(nullabilitySubstitutions);
     }
 
     @Override
-    public Object evaluate(ImmutableMap<Parameter, Object> values) {
-        Object start1Value = start1Expression.evaluate(values);
-        Object end1Value = end1Expression.evaluate(values);
-        Object start2Value = start2Expression.evaluate(values);
-        Object end2Value = end2Expression.evaluate(values);
+    public Object evaluate(ImmutableMap<Parameter, Object> substitutions) {
+        Object start1Value = start1Operand.evaluate(substitutions);
+        Object end1Value = end1Operand.evaluate(substitutions);
+        Object start2Value = start2Operand.evaluate(substitutions);
+        Object end2Value = end2Operand.evaluate(substitutions);
         boolean eq1 = Objects.equals(start1Value, end1Value);
         boolean eq2 = Objects.equals(start2Value, end2Value);
         Temporal[] normalized1 = normalize(start1Value, end1Value);
@@ -192,9 +192,9 @@ public class OverlapsExpression implements Expression {
     @Override
     public String automaticName() {
         return
-                "(" + start1Expression.automaticName() + ", " + end1Expression.automaticName() +
+                "(" + start1Operand.automaticName() + ", " + end1Operand.automaticName() +
                 ") OVERLAPS (" +
-                start2Expression.automaticName() + ", " + end2Expression.automaticName() + ")";
+                start2Operand.automaticName() + ", " + end2Operand.automaticName() + ")";
     }
 
 }

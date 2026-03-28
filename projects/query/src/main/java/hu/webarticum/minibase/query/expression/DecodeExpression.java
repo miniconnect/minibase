@@ -30,28 +30,28 @@ public class DecodeExpression implements Expression {
     }
 
 
-    private final Expression inputExpression;
+    private final Expression inputOperand;
 
-    private final Expression encodingTypeExpression;
+    private final Expression encodingTypeOperand;
 
 
-    public DecodeExpression(Expression inputExpression, Expression encodingTypeExpression) {
-        this.inputExpression = inputExpression;
-        this.encodingTypeExpression = encodingTypeExpression;
+    public DecodeExpression(Expression inputOperand, Expression encodingTypeOperand) {
+        this.inputOperand = inputOperand;
+        this.encodingTypeOperand = encodingTypeOperand;
     }
 
 
-    public Expression inputExpression() {
-        return inputExpression;
+    public Expression inputOperand() {
+        return inputOperand;
     }
 
-    public Expression encodingTypeExpression() {
-        return encodingTypeExpression;
+    public Expression encodingTypeOperand() {
+        return encodingTypeOperand;
     }
 
     @Override
     public ImmutableList<Parameter> parameters() {
-        return inputExpression.parameters().concat(encodingTypeExpression.parameters());
+        return inputOperand.parameters().concat(encodingTypeOperand.parameters());
     }
 
     @Override
@@ -60,28 +60,28 @@ public class DecodeExpression implements Expression {
     }
 
     @Override
-    public Class<?> type(ImmutableMap<Parameter, Class<?>> values) {
+    public Class<?> type(ImmutableMap<Parameter, Class<?>> typeSubstitutions) {
         return ByteString.class;
     }
 
     @Override
     public boolean isNullable() {
-        return inputExpression.isNullable() || encodingTypeExpression().isNullable();
+        return inputOperand.isNullable() || encodingTypeOperand.isNullable();
     }
 
     @Override
-    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
-        return inputExpression.isNullable(nullabilities) || encodingTypeExpression().isNullable(nullabilities);
+    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilitySubstitutions) {
+        return inputOperand.isNullable(nullabilitySubstitutions) || encodingTypeOperand.isNullable(nullabilitySubstitutions);
     }
 
     @Override
-    public Object evaluate(ImmutableMap<Parameter, Object> values) {
-        Object inputValue = inputExpression.evaluate(values);
+    public Object evaluate(ImmutableMap<Parameter, Object> substitutions) {
+        Object inputValue = inputOperand.evaluate(substitutions);
         if (inputValue == null) {
             return null;
         }
 
-        Object encodingTypeValue = encodingTypeExpression.evaluate(values);
+        Object encodingTypeValue = encodingTypeOperand.evaluate(substitutions);
         if (encodingTypeValue == null) {
             return null;
         }
@@ -94,7 +94,7 @@ public class DecodeExpression implements Expression {
 
     @Override
     public String automaticName() {
-        return "DECODE(" + inputExpression.automaticName() + ", " + encodingTypeExpression().automaticName() + ")";
+        return "DECODE(" + inputOperand.automaticName() + ", " + encodingTypeOperand.automaticName() + ")";
     }
 
 }

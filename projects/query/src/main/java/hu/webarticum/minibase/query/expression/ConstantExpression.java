@@ -41,12 +41,12 @@ public class ConstantExpression implements Expression {
     }
 
     @Override
-    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
+    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilitySubstitutions) {
         return value == null;
     }
 
     @Override
-    public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
+    public Class<?> type(ImmutableMap<Parameter, Class<?>> typeSubstitutions) {
         if (value instanceof LargeInteger) {
             return LargeInteger.class;
         }
@@ -54,7 +54,7 @@ public class ConstantExpression implements Expression {
     }
 
     @Override
-    public Object evaluate(ImmutableMap<Parameter, Object> values) {
+    public Object evaluate(ImmutableMap<Parameter, Object> substitutions) {
         return value;
     }
 

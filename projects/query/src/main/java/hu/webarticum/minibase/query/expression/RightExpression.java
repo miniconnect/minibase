@@ -11,45 +11,45 @@ import hu.webarticum.miniconnect.lang.ImmutableMap;
 
 public class RightExpression implements Expression {
 
-    private final Expression inputExpression;
+    private final Expression contextOperand;
 
-    private final Expression lengthExpression;
+    private final Expression lengthOperand;
 
 
-    public RightExpression(Expression inputExpression, Expression lengthExpression) {
-        this.inputExpression = inputExpression;
-        this.lengthExpression = lengthExpression;
+    public RightExpression(Expression contextOperand, Expression lengthOperand) {
+        this.contextOperand = contextOperand;
+        this.lengthOperand = lengthOperand;
     }
 
 
-    public Expression inputExpression() {
-        return inputExpression;
+    public Expression contextOperand() {
+        return contextOperand;
     }
 
-    public Expression lengthExpression() {
-        return lengthExpression;
+    public Expression lengthOperand() {
+        return lengthOperand;
     }
 
     @Override
     public ImmutableList<Parameter> parameters() {
-        return inputExpression.parameters().concat(lengthExpression.parameters());
+        return contextOperand.parameters().concat(lengthOperand.parameters());
     }
 
     @Override
     public Optional<Class<?>> type() {
-        Class<?> inputType = inputExpression.type().orElse(null);
-        if (inputType == null || inputType == ByteString.class || inputType == BitString.class) {
-            return Optional.ofNullable(inputType);
+        Class<?> contextType = contextOperand.type().orElse(null);
+        if (contextType == null || contextType == ByteString.class || contextType == BitString.class) {
+            return Optional.ofNullable(contextType);
         } else {
             return Optional.of(String.class);
         }
     }
 
     @Override
-    public Class<?> type(ImmutableMap<Parameter, Class<?>> values) {
-        Class<?> inputType = inputExpression.type(values);
-        if (inputType == ByteString.class || inputType == BitString.class) {
-            return inputType;
+    public Class<?> type(ImmutableMap<Parameter, Class<?>> typeSubstitutions) {
+        Class<?> contextType = contextOperand.type(typeSubstitutions);
+        if (contextType == ByteString.class || contextType == BitString.class) {
+            return contextType;
         } else {
             return String.class;
         }
@@ -57,72 +57,72 @@ public class RightExpression implements Expression {
 
     @Override
     public boolean isNullable() {
-        return inputExpression.isNullable() || lengthExpression.isNullable();
+        return contextOperand.isNullable() || lengthOperand.isNullable();
     }
 
     @Override
-    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
-        return inputExpression.isNullable(nullabilities) || lengthExpression.isNullable(nullabilities);
+    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilitySubstitutions) {
+        return contextOperand.isNullable(nullabilitySubstitutions) || lengthOperand.isNullable(nullabilitySubstitutions);
     }
 
     @Override
-    public Object evaluate(ImmutableMap<Parameter, Object> values) {
-        Object inputValue = inputExpression.evaluate(values);
-        if (inputValue == null) {
+    public Object evaluate(ImmutableMap<Parameter, Object> substitutions) {
+        Object contextValue = contextOperand.evaluate(substitutions);
+        if (contextValue == null) {
             return null;
         }
 
-        Object lengthValue = lengthExpression.evaluate(values);
+        Object lengthValue = lengthOperand.evaluate(substitutions);
         if (lengthValue == null) {
             return null;
         }
         int length = NumberUtil.asInt(lengthValue);
 
-        if (inputValue instanceof ByteString) {
-            return operate((ByteString) inputValue, length);
-        } else if (inputValue instanceof BitString) {
-            return operate((BitString) inputValue, length);
+        if (contextValue instanceof ByteString) {
+            return operate((ByteString) contextValue, length);
+        } else if (contextValue instanceof BitString) {
+            return operate((BitString) contextValue, length);
         } else {
-            return operate(StringUtil.stringify(inputValue), length);
+            return operate(StringUtil.stringify(contextValue), length);
         }
     }
 
-    private String operate(String input, int length) {
-        int inputLength = input.length();
-        if (length >= inputLength) {
-            return input;
+    private String operate(String context, int length) {
+        int contextLength = context.length();
+        if (length >= contextLength) {
+            return context;
         }
         if (length < 0) {
-            length = inputLength + length;
+            length = contextLength + length;
         }
-        return length > 0 ? input.substring(inputLength - length) : "";
+        return length > 0 ? context.substring(contextLength - length) : "";
     }
 
-    private ByteString operate(ByteString input, int length) {
-        int inputLength = input.length();
-        if (length >= inputLength) {
-            return input;
+    private ByteString operate(ByteString context, int length) {
+        int contextLength = context.length();
+        if (length >= contextLength) {
+            return context;
         }
         if (length < 0) {
-            length = inputLength + length;
+            length = contextLength + length;
         }
-        return length > 0 ? input.substring(inputLength - length) : ByteString.empty();
+        return length > 0 ? context.substring(contextLength - length) : ByteString.empty();
     }
 
-    private BitString operate(BitString input, int length) {
-        int inputLength = input.length();
-        if (length >= inputLength) {
-            return input;
+    private BitString operate(BitString context, int length) {
+        int contextLength = context.length();
+        if (length >= contextLength) {
+            return context;
         }
         if (length < 0) {
-            length = inputLength + length;
+            length = contextLength + length;
         }
-        return length > 0 ? input.substring(inputLength - length) : BitString.empty();
+        return length > 0 ? context.substring(contextLength - length) : BitString.empty();
     }
 
     @Override
     public String automaticName() {
-        return "RIGHT(" + inputExpression.automaticName() + ", " + lengthExpression.automaticName() + ")";
+        return "RIGHT(" + contextOperand.automaticName() + ", " + lengthOperand.automaticName() + ")";
     }
 
 }

@@ -30,8 +30,8 @@ public class ColumnExpression implements Expression {
     }
 
     @Override
-    public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
-        return types.get(columnParameter);
+    public Class<?> type(ImmutableMap<Parameter, Class<?>> typeSubstitutions) {
+        return typeSubstitutions.get(columnParameter);
     }
 
     @Override
@@ -40,13 +40,13 @@ public class ColumnExpression implements Expression {
     }
 
     @Override
-    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
-        return nullabilities.get(columnParameter);
+    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilitySubstitutions) {
+        return nullabilitySubstitutions.get(columnParameter);
     }
 
     @Override
-    public Object evaluate(ImmutableMap<Parameter, Object> values) {
-        return values.get(columnParameter);
+    public Object evaluate(ImmutableMap<Parameter, Object> substitutions) {
+        return substitutions.get(columnParameter);
     }
 
     @Override

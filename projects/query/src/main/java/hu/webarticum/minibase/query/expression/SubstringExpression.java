@@ -11,57 +11,57 @@ import hu.webarticum.miniconnect.lang.ImmutableMap;
 
 public class SubstringExpression implements Expression {
 
-    private final Expression inputExpression;
+    private final Expression contextOperand;
 
-    private final Optional<Expression> fromExpression;
+    private final Optional<Expression> fromOperand;
 
-    private final Optional<Expression> forExpression;
+    private final Optional<Expression> forOperand;
 
 
     public SubstringExpression(
-            Expression inputExpression,
-            Optional<Expression> fromExpression,
-            Optional<Expression> forExpression) {
-        this.inputExpression = inputExpression;
-        this.fromExpression = fromExpression;
-        this.forExpression = forExpression;
+            Expression contextOperand,
+            Optional<Expression> fromOperand,
+            Optional<Expression> forOperand) {
+        this.contextOperand = contextOperand;
+        this.fromOperand = fromOperand;
+        this.forOperand = forOperand;
     }
 
 
-    public Expression inputExpression() {
-        return inputExpression;
+    public Expression contextOperand() {
+        return contextOperand;
     }
 
-    public Optional<Expression> fromExpression() {
-        return fromExpression;
+    public Optional<Expression> fromOperand() {
+        return fromOperand;
     }
 
-    public Optional<Expression> forExpression() {
-        return forExpression;
+    public Optional<Expression> forOperand() {
+        return forOperand;
     }
 
     @Override
     public ImmutableList<Parameter> parameters() {
-        return inputExpression.parameters()
-                .concat(fromExpression.map(Expression::parameters).orElseGet(ImmutableList::empty))
-                .concat(forExpression.map(Expression::parameters).orElseGet(ImmutableList::empty));
+        return contextOperand.parameters()
+                .concat(fromOperand.map(Expression::parameters).orElseGet(ImmutableList::empty))
+                .concat(forOperand.map(Expression::parameters).orElseGet(ImmutableList::empty));
     }
 
     @Override
     public Optional<Class<?>> type() {
-        Class<?> inputType = inputExpression.type().orElse(null);
-        if (inputType == null || inputType == ByteString.class || inputType == BitString.class) {
-            return Optional.ofNullable(inputType);
+        Class<?> contextType = contextOperand.type().orElse(null);
+        if (contextType == null || contextType == ByteString.class || contextType == BitString.class) {
+            return Optional.ofNullable(contextType);
         } else {
             return Optional.of(String.class);
         }
     }
 
     @Override
-    public Class<?> type(ImmutableMap<Parameter, Class<?>> values) {
-        Class<?> inputType = inputExpression.type(values);
-        if (inputType == ByteString.class || inputType == BitString.class) {
-            return inputType;
+    public Class<?> type(ImmutableMap<Parameter, Class<?>> typeSubstitutions) {
+        Class<?> contextType = contextOperand.type(typeSubstitutions);
+        if (contextType == ByteString.class || contextType == BitString.class) {
+            return contextType;
         } else {
             return String.class;
         }
@@ -69,28 +69,30 @@ public class SubstringExpression implements Expression {
 
     @Override
     public boolean isNullable() {
-        return inputExpression.isNullable() ||
-                fromExpression.map(Expression::isNullable).orElse(false) ||
-                forExpression.map(Expression::isNullable).orElse(false);
+        return
+                contextOperand.isNullable() ||
+                fromOperand.map(Expression::isNullable).orElse(false) ||
+                forOperand.map(Expression::isNullable).orElse(false);
     }
 
     @Override
-    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
-        return inputExpression.isNullable(nullabilities) ||
-                fromExpression.map(e -> e.isNullable(nullabilities)).orElse(false) ||
-                forExpression.map(e -> e.isNullable(nullabilities)).orElse(false);
+    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilitySubstitutions) {
+        return
+                contextOperand.isNullable(nullabilitySubstitutions) ||
+                fromOperand.map(e -> e.isNullable(nullabilitySubstitutions)).orElse(false) ||
+                forOperand.map(e -> e.isNullable(nullabilitySubstitutions)).orElse(false);
     }
 
     @Override
-    public Object evaluate(ImmutableMap<Parameter, Object> values) {
-        Object inputValue = inputExpression.evaluate(values);
-        if (inputValue == null) {
+    public Object evaluate(ImmutableMap<Parameter, Object> substitutions) {
+        Object contextValue = contextOperand.evaluate(substitutions);
+        if (contextValue == null) {
             return null;
         }
 
         int from;
-        if (fromExpression.isPresent()) {
-            Object fromValue = fromExpression.get().evaluate(values);
+        if (fromOperand.isPresent()) {
+            Object fromValue = fromOperand.get().evaluate(substitutions);
             if (fromValue == null) {
                 return null;
             }
@@ -100,44 +102,44 @@ public class SubstringExpression implements Expression {
         }
 
         Object forValue = null;
-        if (forExpression.isPresent()) {
-            forValue = forExpression.get().evaluate(values);
+        if (forOperand.isPresent()) {
+            forValue = forOperand.get().evaluate(substitutions);
             if (forValue == null) {
                 return null;
             }
         }
         Integer length = (Integer) ConvertUtil.convert(forValue, Integer.class);
 
-        if (inputValue instanceof ByteString) {
-            return operate((ByteString) inputValue, from, length);
-        } else if (inputValue instanceof BitString) {
-            return operate((BitString) inputValue, from, length);
+        if (contextValue instanceof ByteString) {
+            return operate((ByteString) contextValue, from, length);
+        } else if (contextValue instanceof BitString) {
+            return operate((BitString) contextValue, from, length);
         } else {
-            return operate(StringUtil.stringify(inputValue), from, length);
+            return operate(StringUtil.stringify(contextValue), from, length);
         }
     }
 
-    private String operate(String input, int from, Integer length) {
-        int[] slice = calculateSlice(input.length(), from, length);
-        return input.substring(slice[0], slice[1]);
+    private String operate(String context, int from, Integer length) {
+        int[] slice = calculateSlice(context.length(), from, length);
+        return context.substring(slice[0], slice[1]);
     }
 
-    private ByteString operate(ByteString input, int from, Integer length) {
-        int[] slice = calculateSlice(input.length(), from, length);
-        return input.substring(slice[0], slice[1]);
+    private ByteString operate(ByteString context, int from, Integer length) {
+        int[] slice = calculateSlice(context.length(), from, length);
+        return context.substring(slice[0], slice[1]);
     }
 
-    private BitString operate(BitString input, int from, Integer length) {
-        int[] slice = calculateSlice(input.length(), from, length);
-        return input.substring(slice[0], slice[1]);
+    private BitString operate(BitString context, int from, Integer length) {
+        int[] slice = calculateSlice(context.length(), from, length);
+        return context.substring(slice[0], slice[1]);
     }
 
-    private int[] calculateSlice(int inputLength, int from, Integer sliceLength) {
-        if (from >= inputLength) {
-            return new int[] { inputLength, inputLength };
+    private int[] calculateSlice(int contextLength, int from, Integer sliceLength) {
+        if (from >= contextLength) {
+            return new int[] { contextLength, contextLength };
         }
         if (sliceLength == null) {
-            return new int[] { Math.max(0, from), inputLength };
+            return new int[] { Math.max(0, from), contextLength };
         } else if (sliceLength < 0) {
             return new int[] { 0, 0 };
         }
@@ -145,15 +147,15 @@ public class SubstringExpression implements Expression {
         if (until < 0) {
             return new int[] { 0, 0 };
         } else {
-            return new int[] { Math.max(0, from), Math.min(inputLength, until) };
+            return new int[] { Math.max(0, from), Math.min(contextLength, until) };
         }
     }
 
     @Override
     public String automaticName() {
-        return "SUBSTRING(" + inputExpression.automaticName() +
-                fromExpression.map(e -> " FROM " + e.automaticName()).orElse("") +
-                forExpression.map(e -> " FOR " + e.automaticName()).orElse("") + ")";
+        return "SUBSTRING(" + contextOperand.automaticName() +
+                fromOperand.map(e -> " FROM " + e.automaticName()).orElse("") +
+                forOperand.map(e -> " FOR " + e.automaticName()).orElse("") + ")";
     }
 
 }

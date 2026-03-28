@@ -11,21 +11,21 @@ import hu.webarticum.miniconnect.lang.LargeInteger;
 
 public class BitLengthExpression implements Expression {
 
-    private final Expression subExpression;
+    private final Expression operand;
 
 
-    public BitLengthExpression(Expression subExpression) {
-        this.subExpression = subExpression;
+    public BitLengthExpression(Expression operand) {
+        this.operand = operand;
     }
 
 
-    public Expression subExpression() {
-        return subExpression;
+    public Expression operand() {
+        return operand;
     }
 
     @Override
     public ImmutableList<Parameter> parameters() {
-        return subExpression.parameters();
+        return operand.parameters();
     }
 
     @Override
@@ -34,23 +34,23 @@ public class BitLengthExpression implements Expression {
     }
 
     @Override
-    public Class<?> type(ImmutableMap<Parameter, Class<?>> values) {
+    public Class<?> type(ImmutableMap<Parameter, Class<?>> typeSubstitutions) {
         return LargeInteger.class;
     }
 
     @Override
     public boolean isNullable() {
-        return subExpression.isNullable();
+        return operand.isNullable();
     }
 
     @Override
-    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
-        return subExpression.isNullable(nullabilities);
+    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilitySubstitutions) {
+        return operand.isNullable(nullabilitySubstitutions);
     }
 
     @Override
-    public Object evaluate(ImmutableMap<Parameter, Object> values) {
-        Object value = subExpression.evaluate(values);
+    public Object evaluate(ImmutableMap<Parameter, Object> substitutions) {
+        Object value = operand.evaluate(substitutions);
         if (value == null) {
             return null;
         } else if (value instanceof BitString) {
@@ -64,7 +64,7 @@ public class BitLengthExpression implements Expression {
 
     @Override
     public String automaticName() {
-        return "BIT_LENGTH(" + subExpression.automaticName() + ")";
+        return "BIT_LENGTH(" + operand.automaticName() + ")";
     }
 
 }

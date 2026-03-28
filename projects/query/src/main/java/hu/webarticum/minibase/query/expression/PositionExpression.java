@@ -13,28 +13,28 @@ import hu.webarticum.miniconnect.lang.LargeInteger;
 
 public class PositionExpression implements Expression {
 
-    private final Expression subjectExpression;
+    private final Expression subjectOperand;
 
-    private final Expression contextExpression;
+    private final Expression contextOperand;
 
 
-    public PositionExpression(Expression subjectExpression, Expression contextExpression) {
-        this.subjectExpression = subjectExpression;
-        this.contextExpression = contextExpression;
+    public PositionExpression(Expression subjectOperand, Expression contextOperand) {
+        this.subjectOperand = subjectOperand;
+        this.contextOperand = contextOperand;
     }
 
 
-    public Expression subjectExpression() {
-        return subjectExpression;
+    public Expression subjectOperand() {
+        return subjectOperand;
     }
 
-    public Expression contextExpression() {
-        return contextExpression;
+    public Expression contextOperand() {
+        return contextOperand;
     }
 
     @Override
     public ImmutableList<Parameter> parameters() {
-        return subjectExpression.parameters().concat(contextExpression.parameters());
+        return subjectOperand.parameters().concat(contextOperand.parameters());
     }
 
     @Override
@@ -43,28 +43,28 @@ public class PositionExpression implements Expression {
     }
 
     @Override
-    public Class<?> type(ImmutableMap<Parameter, Class<?>> values) {
+    public Class<?> type(ImmutableMap<Parameter, Class<?>> typeSubstitutions) {
         return LargeInteger.class;
     }
 
     @Override
     public boolean isNullable() {
-        return subjectExpression.isNullable() || contextExpression.isNullable();
+        return subjectOperand.isNullable() || contextOperand.isNullable();
     }
 
     @Override
-    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
-        return subjectExpression.isNullable(nullabilities) || contextExpression.isNullable(nullabilities);
+    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilitySubstitutions) {
+        return subjectOperand.isNullable(nullabilitySubstitutions) || contextOperand.isNullable(nullabilitySubstitutions);
     }
 
     @Override
-    public Object evaluate(ImmutableMap<Parameter, Object> values) {
-        Object subjectValue = subjectExpression.evaluate(values);
+    public Object evaluate(ImmutableMap<Parameter, Object> substitutions) {
+        Object subjectValue = subjectOperand.evaluate(substitutions);
         if (subjectValue == null) {
             return null;
         }
 
-        Object contextValue = contextExpression.evaluate(values);
+        Object contextValue = contextOperand.evaluate(substitutions);
         if (contextValue == null) {
             return null;
         }
@@ -86,7 +86,7 @@ public class PositionExpression implements Expression {
 
     @Override
     public String automaticName() {
-        return "POSITION(" + subjectExpression.automaticName() + " IN " + contextExpression.automaticName() + ")";
+        return "POSITION(" + subjectOperand.automaticName() + " IN " + contextOperand.automaticName() + ")";
     }
 
 }

@@ -30,7 +30,7 @@ public class SpecialValueExpression implements Expression {
     }
 
     @Override
-    public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
+    public Class<?> type(ImmutableMap<Parameter, Class<?>> typeSubstitutions) {
         return specialValueParameter.type();
     }
 
@@ -40,13 +40,13 @@ public class SpecialValueExpression implements Expression {
     }
 
     @Override
-    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
-        return nullabilities.get(specialValueParameter);
+    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilitySubstitutions) {
+        return nullabilitySubstitutions.get(specialValueParameter);
     }
 
     @Override
-    public Object evaluate(ImmutableMap<Parameter, Object> values) {
-        return values.get(specialValueParameter);
+    public Object evaluate(ImmutableMap<Parameter, Object> substitutions) {
+        return substitutions.get(specialValueParameter);
     }
 
     @Override

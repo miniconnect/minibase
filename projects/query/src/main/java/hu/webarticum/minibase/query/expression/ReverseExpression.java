@@ -10,38 +10,38 @@ import hu.webarticum.miniconnect.lang.ImmutableMap;
 
 public class ReverseExpression implements Expression {
 
-    private final Expression subExpression;
+    private final Expression operand;
 
 
-    public ReverseExpression(Expression subExpression) {
-        this.subExpression = subExpression;
+    public ReverseExpression(Expression operand) {
+        this.operand = operand;
     }
 
 
-    public Expression subExpression() {
-        return subExpression;
+    public Expression operand() {
+        return operand;
     }
 
     @Override
     public ImmutableList<Parameter> parameters() {
-        return subExpression.parameters();
+        return operand.parameters();
     }
 
     @Override
     public Optional<Class<?>> type() {
-        Class<?> subType = subExpression.type().orElse(null);
-        if (subType == null || subType == ByteString.class || subType == BitString.class) {
-            return Optional.ofNullable(subType);
+        Class<?> operandType = operand.type().orElse(null);
+        if (operandType == null || operandType == ByteString.class || operandType == BitString.class) {
+            return Optional.ofNullable(operandType);
         } else {
             return Optional.of(String.class);
         }
     }
 
     @Override
-    public Class<?> type(ImmutableMap<Parameter, Class<?>> values) {
-        Class<?> subType = subExpression.type(values);
-        if (subType == ByteString.class || subType == BitString.class) {
-            return subType;
+    public Class<?> type(ImmutableMap<Parameter, Class<?>> typeSubstitutions) {
+        Class<?> operandType = operand.type(typeSubstitutions);
+        if (operandType == ByteString.class || operandType == BitString.class) {
+            return operandType;
         } else {
             return String.class;
         }
@@ -49,17 +49,17 @@ public class ReverseExpression implements Expression {
 
     @Override
     public boolean isNullable() {
-        return subExpression.isNullable();
+        return operand.isNullable();
     }
 
     @Override
-    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
-        return subExpression.isNullable(nullabilities);
+    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilitySubstitutions) {
+        return operand.isNullable(nullabilitySubstitutions);
     }
 
     @Override
-    public Object evaluate(ImmutableMap<Parameter, Object> values) {
-        Object value = subExpression.evaluate(values);
+    public Object evaluate(ImmutableMap<Parameter, Object> substitutions) {
+        Object value = operand.evaluate(substitutions);
         if (value == null) {
             return null;
         }
@@ -75,7 +75,7 @@ public class ReverseExpression implements Expression {
 
     @Override
     public String automaticName() {
-        return "REVERSE(" + subExpression.automaticName() + ")";
+        return "REVERSE(" + operand.automaticName() + ")";
     }
 
 }

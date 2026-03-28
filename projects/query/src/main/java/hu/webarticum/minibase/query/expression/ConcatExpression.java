@@ -17,23 +17,23 @@ import hu.webarticum.miniconnect.lang.ImmutableMap;
 
 public class ConcatExpression implements Expression {
 
-    private final ImmutableList<Expression> parameterExpressions;
+    private final ImmutableList<Expression> operands;
 
 
-    public ConcatExpression(ImmutableList<Expression> parameterExpressions) {
-        this.parameterExpressions = parameterExpressions;
+    public ConcatExpression(ImmutableList<Expression> operands) {
+        this.operands = operands;
     }
 
 
     public ImmutableList<Expression> parameterExpressions() {
-        return parameterExpressions;
+        return operands;
     }
 
     @Override
     public ImmutableList<Parameter> parameters() {
         Set<Parameter> subParameters = new LinkedHashSet<>();
-        for (Expression parameterExpression : parameterExpressions) {
-            subParameters.addAll(parameterExpression.parameters().asList());
+        for (Expression operand : operands) {
+            subParameters.addAll(operand.parameters().asList());
         }
         return ImmutableList.fromCollection(subParameters);
     }
@@ -56,8 +56,8 @@ public class ConcatExpression implements Expression {
         */
         Class<?> bestCandidate = null;
         boolean foundUknown = false;
-        for (Expression parameterExpression : parameterExpressions) {
-            Class<?> nextType = parameterExpression.type().orElse(null);
+        for (Expression operand : operands) {
+            Class<?> nextType = operand.type().orElse(null);
             if (nextType == null) {
                 foundUknown = true;
                 continue;
@@ -85,10 +85,10 @@ public class ConcatExpression implements Expression {
     }
 
     @Override
-    public Class<?> type(ImmutableMap<Parameter, Class<?>> values) {
+    public Class<?> type(ImmutableMap<Parameter, Class<?>> typeSubstitutions) {
         Class<?> bestCandidate = null;
-        for (Expression parameterExpression : parameterExpressions) {
-            Class<?> nextType = parameterExpression.type(values);
+        for (Expression operand : operands) {
+            Class<?> nextType = operand.type(typeSubstitutions);
             if (nextType == BitString.class) {
                 bestCandidate = BitString.class;
             } else if (nextType == ByteString.class) {
@@ -112,8 +112,8 @@ public class ConcatExpression implements Expression {
 
 	@Override
     public boolean isNullable() {
-        for (Expression parameterExpression : parameterExpressions.reverseOrder()) {
-            if (parameterExpression.isNullable()) {
+        for (Expression operand : operands.reverseOrder()) {
+            if (operand.isNullable()) {
                 return true;
             }
         }
@@ -121,9 +121,9 @@ public class ConcatExpression implements Expression {
     }
 
     @Override
-    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
-        for (Expression parameterExpression : parameterExpressions.reverseOrder()) {
-            if (parameterExpression.isNullable(nullabilities)) {
+    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilitySubstitutions) {
+        for (Expression operand : operands.reverseOrder()) {
+            if (operand.isNullable(nullabilitySubstitutions)) {
                 return true;
             }
         }
@@ -131,41 +131,41 @@ public class ConcatExpression implements Expression {
     }
 
     @Override
-    public Object evaluate(ImmutableMap<Parameter, Object> values) {
-        java.util.List<Object> parameterValues = new ArrayList<>(parameterExpressions.size());
-        for (Expression parameterExpression : parameterExpressions) {
-            Object value = parameterExpression.evaluate(values);
+    public Object evaluate(ImmutableMap<Parameter, Object> substitutions) {
+        java.util.List<Object> values = new ArrayList<>(operands.size());
+        for (Expression operand : operands) {
+            Object value = operand.evaluate(substitutions);
             if (value == null) {
                 return null;
             }
-            parameterValues.add(value);
+            values.add(value);
         }
-        Class<?> resultType = detectRuntimeType(parameterValues);
+        Class<?> resultType = detectRuntimeType(values);
         if (resultType == BitString.class) {
             BitString.Builder resultBuilder = BitString.builder();
-            for (Object value : parameterValues) {
+            for (Object value : values) {
                 resultBuilder.append(BitStringUtil.bitStringify(value));
             }
             return resultBuilder.build();
         } else if (resultType == ByteString.class) {
             ByteString.Builder resultBuilder = ByteString.builder();
-            for (Object value : parameterValues) {
+            for (Object value : values) {
                 resultBuilder.append(ByteStringUtil.byteStringify(value));
             }
             return resultBuilder.build();
         } else {
             StringBuilder resultBuilder = new StringBuilder();
-            for (Object value : parameterValues) {
+            for (Object value : values) {
                 resultBuilder.append(StringUtil.stringify(value));
             }
             return resultBuilder.toString();
         }
     }
 
-    private Class<?> detectRuntimeType(List<Object> parameterValues) {
+    private Class<?> detectRuntimeType(List<Object> values) {
         Class<?> bestCandidate = null;
-        for (Object parameterValue : parameterValues) {
-            Class<?> nextType = UnifyUtil.typeOf(parameterValue);
+        for (Object value : values) {
+            Class<?> nextType = UnifyUtil.typeOf(value);
             if (nextType == BitString.class) {
                 bestCandidate = BitString.class;
             } else if (nextType == ByteString.class) {
@@ -191,7 +191,7 @@ public class ConcatExpression implements Expression {
     public String automaticName() {
         StringBuilder resultBuilder = new StringBuilder("CONCAT(");
         boolean first = true;
-        for (Expression parameterExpression : parameterExpressions) {
+        for (Expression parameterExpression : operands) {
             if (first) {
                 first = false;
             } else {

@@ -11,45 +11,45 @@ import hu.webarticum.miniconnect.lang.ImmutableMap;
 
 public class RepeatExpression implements Expression {
 
-    private final Expression inputExpression;
+    private final Expression subjectOperand;
 
-    private final Expression countExpression;
+    private final Expression countOperand;
 
 
-    public RepeatExpression(Expression inputExpression, Expression countExpression) {
-        this.inputExpression = inputExpression;
-        this.countExpression = countExpression;
+    public RepeatExpression(Expression subjectOperand, Expression countOperand) {
+        this.subjectOperand = subjectOperand;
+        this.countOperand = countOperand;
     }
 
 
-    public Expression inputExpression() {
-        return inputExpression;
+    public Expression subjectOperand() {
+        return subjectOperand;
     }
 
-    public Expression countExpression() {
-        return countExpression;
+    public Expression countOperand() {
+        return countOperand;
     }
 
     @Override
     public ImmutableList<Parameter> parameters() {
-        return inputExpression.parameters().concat(countExpression.parameters());
+        return subjectOperand.parameters().concat(countOperand.parameters());
     }
 
     @Override
     public Optional<Class<?>> type() {
-        Class<?> inputType = inputExpression.type().orElse(null);
-        if (inputType == null || inputType == ByteString.class || inputType == BitString.class) {
-            return Optional.ofNullable(inputType);
+        Class<?> subjectType = subjectOperand.type().orElse(null);
+        if (subjectType == null || subjectType == ByteString.class || subjectType == BitString.class) {
+            return Optional.ofNullable(subjectType);
         } else {
             return Optional.of(String.class);
         }
     }
 
     @Override
-    public Class<?> type(ImmutableMap<Parameter, Class<?>> values) {
-        Class<?> inputType = inputExpression.type(values);
-        if (inputType == ByteString.class || inputType == BitString.class) {
-            return inputType;
+    public Class<?> type(ImmutableMap<Parameter, Class<?>> typeSubstitutions) {
+        Class<?> subjectType = subjectOperand.type(typeSubstitutions);
+        if (subjectType == ByteString.class || subjectType == BitString.class) {
+            return subjectType;
         } else {
             return String.class;
         }
@@ -57,75 +57,75 @@ public class RepeatExpression implements Expression {
 
     @Override
     public boolean isNullable() {
-        return inputExpression.isNullable() || countExpression.isNullable();
+        return subjectOperand.isNullable() || countOperand.isNullable();
     }
 
     @Override
-    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
-        return inputExpression.isNullable(nullabilities) || countExpression.isNullable(nullabilities);
+    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilitySubstitutions) {
+        return subjectOperand.isNullable(nullabilitySubstitutions) || countOperand.isNullable(nullabilitySubstitutions);
     }
 
     @Override
-    public Object evaluate(ImmutableMap<Parameter, Object> values) {
-        Object inputValue = inputExpression.evaluate(values);
-        if (inputValue == null) {
+    public Object evaluate(ImmutableMap<Parameter, Object> substitutions) {
+        Object subjectValue = subjectOperand.evaluate(substitutions);
+        if (subjectValue == null) {
             return null;
         }
 
-        Object countValue = countExpression.evaluate(values);
+        Object countValue = countOperand.evaluate(substitutions);
         if (countValue == null) {
             return null;
         }
 
         int count = NumberUtil.asInt(countValue);
-        if (inputValue instanceof ByteString) {
-            return operate((ByteString) inputValue, count);
-        } else if (inputValue instanceof BitString) {
-            return operate((BitString) inputValue, count);
+        if (subjectValue instanceof ByteString) {
+            return operate((ByteString) subjectValue, count);
+        } else if (subjectValue instanceof BitString) {
+            return operate((BitString) subjectValue, count);
         } else {
-            return operate(StringUtil.stringify(inputValue), count);
+            return operate(StringUtil.stringify(subjectValue), count);
         }
     }
 
-    private String operate(String input, int count) {
-        if (input.isEmpty()) {
+    private String operate(String subject, int count) {
+        if (subject.isEmpty()) {
             return "";
         }
 
         StringBuilder resultBuilder = new StringBuilder();
         for (int i = 0; i < count; i++) {
-            resultBuilder.append(input);
+            resultBuilder.append(subject);
         }
         return resultBuilder.toString();
     }
 
-    private ByteString operate(ByteString input, int count) {
-        if (input.isEmpty()) {
+    private ByteString operate(ByteString subject, int count) {
+        if (subject.isEmpty()) {
             return ByteString.empty();
         }
 
         ByteString.Builder resultBuilder = ByteString.builder();
         for (int i = 0; i < count; i++) {
-            resultBuilder.append(input);
+            resultBuilder.append(subject);
         }
         return resultBuilder.build();
     }
 
-    private BitString operate(BitString input, int count) {
-        if (input.isEmpty()) {
+    private BitString operate(BitString subject, int count) {
+        if (subject.isEmpty()) {
             return BitString.empty();
         }
 
         BitString.Builder resultBuilder = BitString.builder();
         for (int i = 0; i < count; i++) {
-            resultBuilder.append(input);
+            resultBuilder.append(subject);
         }
         return resultBuilder.build();
     }
 
     @Override
     public String automaticName() {
-        return "REPEAT(" + inputExpression.automaticName() + ", " + countExpression.automaticName() + ")";
+        return "REPEAT(" + subjectOperand.automaticName() + ", " + countOperand.automaticName() + ")";
     }
 
 }

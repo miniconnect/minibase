@@ -12,29 +12,29 @@ import hu.webarticum.miniconnect.lang.LargeInteger;
 
 public class BitwiseNotExpression implements Expression {
 
-    private final Expression subExpression;
+    private final Expression operand;
 
 
-    public BitwiseNotExpression(Expression subExpression) {
-        this.subExpression = subExpression;
+    public BitwiseNotExpression(Expression operand) {
+        this.operand = operand;
     }
 
 
-    public Expression subExpression() {
-        return subExpression;
+    public Expression operand() {
+        return operand;
     }
 
     @Override
     public ImmutableList<Parameter> parameters() {
-        return subExpression.parameters();
+        return operand.parameters();
     }
 
     @Override
     public Optional<Class<?>> type() {
-        Class<?> subType = subExpression.type().orElse(null);
-        if (subType == null) {
+        Class<?> operandType = operand.type().orElse(null);
+        if (operandType == null) {
             return Optional.empty();
-        } else if (subType == Void.class || Number.class.isAssignableFrom(subType)) {
+        } else if (operandType == Void.class || Number.class.isAssignableFrom(operandType)) {
             return Optional.of(LargeInteger.class);
         } else {
             return Optional.of(BitString.class);
@@ -42,10 +42,10 @@ public class BitwiseNotExpression implements Expression {
     }
 
     @Override
-    public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
-        Class<?> subType = subExpression.type(types);
-        if (subType == Void.class || Number.class.isAssignableFrom(subType)) {
-            return subType;
+    public Class<?> type(ImmutableMap<Parameter, Class<?>> typeSubstitutions) {
+        Class<?> operandType = operand.type(typeSubstitutions);
+        if (operandType == Void.class || Number.class.isAssignableFrom(operandType)) {
+            return operandType;
         } else {
             return BitString.class;
         }
@@ -53,26 +53,25 @@ public class BitwiseNotExpression implements Expression {
 
     @Override
     public boolean isNullable() {
-        return subExpression.isNullable();
+        return operand.isNullable();
     }
 
     @Override
-    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
-        return subExpression.isNullable(nullabilities);
+    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilitySubstitutions) {
+        return operand.isNullable(nullabilitySubstitutions);
     }
 
     @Override
-    public Object evaluate(ImmutableMap<Parameter, Object> values) {
-        Object subValue = subExpression.evaluate(values);
-        if (subValue == null) {
+    public Object evaluate(ImmutableMap<Parameter, Object> substitutions) {
+        Object value = operand.evaluate(substitutions);
+        if (value == null) {
             return null;
-        } else if (subValue instanceof Number) {
-            LargeInteger largeIntegerValue = (LargeInteger) ConvertUtil.convert(subValue, LargeInteger.class);
+        } else if (value instanceof Number) {
+            LargeInteger largeIntegerValue = (LargeInteger) ConvertUtil.convert(value, LargeInteger.class);
             return largeIntegerValue.not();
         }
 
-        BitString bitStringValue = bitStringify(subValue);
-        return bitStringValue.not();
+        return bitStringify(value).not();
     }
 
     private BitString bitStringify(Object value) {
@@ -82,7 +81,7 @@ public class BitwiseNotExpression implements Expression {
 
     @Override
     public String automaticName() {
-        return "~" + subExpression.automaticName();
+        return "~" + operand.automaticName();
     }
 
 }

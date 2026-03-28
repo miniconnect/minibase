@@ -51,12 +51,12 @@ public class ModExpression implements Expression {
     }
 
     @Override
-    public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
-        Class<?> rightType = rightOperand.type(types);
+    public Class<?> type(ImmutableMap<Parameter, Class<?>> typeSubstitutions) {
+        Class<?> rightType = rightOperand.type(typeSubstitutions);
         if (TemporalAmount.class.isAssignableFrom(rightType)) {
             return DateTimeDelta.class;
         }
-        return NumberUtil.commonNumericTypeOf(leftOperand.type(types), rightType);
+        return NumberUtil.commonNumericTypeOf(leftOperand.type(typeSubstitutions), rightType);
     }
 
     @Override
@@ -65,8 +65,11 @@ public class ModExpression implements Expression {
     }
 
     @Override
-    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
-        return leftOperand.isNullable(nullabilities) || rightOperand.isNullable(nullabilities) || canResultInNonPositive(rightOperand);
+    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilitySubstitutions) {
+        return
+                leftOperand.isNullable(nullabilitySubstitutions) ||
+                rightOperand.isNullable(nullabilitySubstitutions) ||
+                canResultInNonPositive(rightOperand);
     }
 
     private boolean canResultInNonPositive(Expression expression) {
@@ -78,13 +81,13 @@ public class ModExpression implements Expression {
     }
 
     @Override
-    public Object evaluate(ImmutableMap<Parameter, Object> values) {
-        Object rightValue = rightOperand.evaluate(values);
+    public Object evaluate(ImmutableMap<Parameter, Object> substitutions) {
+        Object rightValue = rightOperand.evaluate(substitutions);
         if (rightValue == null || NumberUtil.isZero(rightValue)) {
             // TODO: raise SQL warning
             return null;
         }
-        Object leftValue = leftOperand.evaluate(values);
+        Object leftValue = leftOperand.evaluate(substitutions);
         if (leftValue == null) {
             return null;
         }

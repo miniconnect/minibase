@@ -11,13 +11,13 @@ public interface Expression {
 
     public Optional<Class<?>> type();
 
-    public Class<?> type(ImmutableMap<Parameter, Class<?>> types);
+    public Class<?> type(ImmutableMap<Parameter, Class<?>> typeSubstitutions);
 
     public boolean isNullable();
 
-    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities);
+    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilitySubstitutions);
 
-    public Object evaluate(ImmutableMap<Parameter, Object> values);
+    public Object evaluate(ImmutableMap<Parameter, Object> substitutions);
 
     public String automaticName();
 

@@ -13,57 +13,57 @@ import hu.webarticum.miniconnect.lang.ImmutableMap;
 
 public class LeftPadExpression implements Expression {
 
-    private final Expression inputExpression;
+    private final Expression subjectOperand;
 
-    private final Expression lengthExpression;
+    private final Expression lengthOperand;
 
-    private final Optional<Expression> padStringExpression;
+    private final Optional<Expression> padStringOperand;
 
 
     public LeftPadExpression(
-            Expression inputExpression,
-            Expression lengthExpression,
-            Optional<Expression> padStringExpression) {
-        this.inputExpression = inputExpression;
-        this.lengthExpression = lengthExpression;
-        this.padStringExpression = padStringExpression;
+            Expression subjectOperand,
+            Expression lengthOperand,
+            Optional<Expression> padStringOperand) {
+        this.subjectOperand = subjectOperand;
+        this.lengthOperand = lengthOperand;
+        this.padStringOperand = padStringOperand;
     }
 
 
-    public Expression inputExpression() {
-        return inputExpression;
+    public Expression subjectOperand() {
+        return subjectOperand;
     }
 
-    public Expression lengthExpression() {
-        return lengthExpression;
+    public Expression lengthOperand() {
+        return lengthOperand;
     }
 
-    public Optional<Expression> padStringExpression() {
-        return padStringExpression;
+    public Optional<Expression> padStringOperand() {
+        return padStringOperand;
     }
 
     @Override
     public ImmutableList<Parameter> parameters() {
-        return inputExpression.parameters()
-                .concat(lengthExpression.parameters())
-                .concat(padStringExpression.map(Expression::parameters).orElseGet(ImmutableList::empty));
+        return subjectOperand.parameters()
+                .concat(lengthOperand.parameters())
+                .concat(padStringOperand.map(Expression::parameters).orElseGet(ImmutableList::empty));
     }
 
     @Override
     public Optional<Class<?>> type() {
-        Class<?> inputType = inputExpression.type().orElse(null);
-        if (inputType == null || inputType == ByteString.class || inputType == BitString.class) {
-            return Optional.ofNullable(inputType);
+        Class<?> subjectType = subjectOperand.type().orElse(null);
+        if (subjectType == null || subjectType == ByteString.class || subjectType == BitString.class) {
+            return Optional.ofNullable(subjectType);
         } else {
             return Optional.of(String.class);
         }
     }
 
     @Override
-    public Class<?> type(ImmutableMap<Parameter, Class<?>> values) {
-        Class<?> inputType = inputExpression.type(values);
-        if (inputType == ByteString.class || inputType == BitString.class) {
-            return inputType;
+    public Class<?> type(ImmutableMap<Parameter, Class<?>> typeSubstitutions) {
+        Class<?> subjectType = subjectOperand.type(typeSubstitutions);
+        if (subjectType == ByteString.class || subjectType == BitString.class) {
+            return subjectType;
         } else {
             return String.class;
         }
@@ -72,53 +72,53 @@ public class LeftPadExpression implements Expression {
     @Override
     public boolean isNullable() {
         return
-                inputExpression.isNullable() ||
-                lengthExpression.isNullable() ||
-                padStringExpression.map(Expression::isNullable).orElse(false);
+                subjectOperand.isNullable() ||
+                lengthOperand.isNullable() ||
+                padStringOperand.map(Expression::isNullable).orElse(false);
     }
 
     @Override
-    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
+    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilitySubstitutions) {
         return
-                inputExpression.isNullable(nullabilities) ||
-                lengthExpression.isNullable(nullabilities) ||
-                padStringExpression.map(e -> e.isNullable(nullabilities)).orElse(false);
+                subjectOperand.isNullable(nullabilitySubstitutions) ||
+                lengthOperand.isNullable(nullabilitySubstitutions) ||
+                padStringOperand.map(e -> e.isNullable(nullabilitySubstitutions)).orElse(false);
     }
 
     @Override
-    public Object evaluate(ImmutableMap<Parameter, Object> values) {
-        Object inputValue = inputExpression.evaluate(values);
-        if (inputValue == null) {
+    public Object evaluate(ImmutableMap<Parameter, Object> substitutions) {
+        Object subjectValue = subjectOperand.evaluate(substitutions);
+        if (subjectValue == null) {
             return null;
         }
 
-        Object lengthValue = lengthExpression.evaluate(values);
+        Object lengthValue = lengthOperand.evaluate(substitutions);
         if (lengthValue == null) {
             return null;
         }
 
         Object padValue = null;
-        if (padStringExpression.isPresent()) {
-            padValue = padStringExpression.get().evaluate(values);
+        if (padStringOperand.isPresent()) {
+            padValue = padStringOperand.get().evaluate(substitutions);
             if (padValue == null) {
                 return  null;
             }
         }
 
         int length = NumberUtil.asInt(lengthValue);
-        if (inputValue instanceof ByteString) {
-            return operate((ByteString) inputValue, length, ByteStringUtil.byteStringify(padValue));
-        } else if (inputValue instanceof BitString) {
-            return operate((BitString) inputValue, length, BitStringUtil.bitStringify(padValue));
+        if (subjectValue instanceof ByteString) {
+            return operate((ByteString) subjectValue, length, ByteStringUtil.byteStringify(padValue));
+        } else if (subjectValue instanceof BitString) {
+            return operate((BitString) subjectValue, length, BitStringUtil.bitStringify(padValue));
         } else {
-            return operate(StringUtil.stringify(inputValue), length, StringUtil.stringify(padValue));
+            return operate(StringUtil.stringify(subjectValue), length, StringUtil.stringify(padValue));
         }
     }
 
-    private String operate(String input, int length, String pad) {
+    private String operate(String subject, int length, String pad) {
         String effectivePad = pad != null ? pad : " ";
-        int inputLength = input.length();
-        int padLength = Math.max(0, length - inputLength);
+        int subjectLength = subject.length();
+        int padLength = Math.max(0, length - subjectLength);
         int padStringLength = effectivePad.length();
         int padRepeats = padLength / padStringLength;
         int padFraction = padLength % padStringLength;
@@ -129,14 +129,14 @@ public class LeftPadExpression implements Expression {
         if (padFraction > 0) {
             resultBuilder.append(effectivePad.substring(0, padFraction));
         }
-        resultBuilder.append(input);
+        resultBuilder.append(subject);
         return resultBuilder.toString();
     }
 
-    private ByteString operate(ByteString input, int length, ByteString pad) {
+    private ByteString operate(ByteString subject, int length, ByteString pad) {
         ByteString effectivePad = pad != null ? pad : ByteString.ofByte(0);
-        int inputLength = input.length();
-        int padLength = Math.max(0, length - inputLength);
+        int subjectLength = subject.length();
+        int padLength = Math.max(0, length - subjectLength);
         int padStringLength = effectivePad.length();
         int padRepeats = padLength / padStringLength;
         int padFraction = padLength % padStringLength;
@@ -147,14 +147,14 @@ public class LeftPadExpression implements Expression {
         if (padFraction > 0) {
             resultBuilder.append(effectivePad.substring(0, padFraction));
         }
-        resultBuilder.append(input);
+        resultBuilder.append(subject);
         return resultBuilder.build();
     }
 
-    private BitString operate(BitString input, int length, BitString pad) {
+    private BitString operate(BitString subject, int length, BitString pad) {
         BitString effectivePad = pad != null ? pad : BitString.of("0");
-        int inputLength = input.length();
-        int padLength = Math.max(0, length - inputLength);
+        int subjectLength = subject.length();
+        int padLength = Math.max(0, length - subjectLength);
         int padStringLength = effectivePad.length();
         int padRepeats = padLength / padStringLength;
         int padFraction = padLength % padStringLength;
@@ -165,13 +165,13 @@ public class LeftPadExpression implements Expression {
         if (padFraction > 0) {
             resultBuilder.append(effectivePad.substring(0, padFraction));
         }
-        resultBuilder.append(input);
+        resultBuilder.append(subject);
         return resultBuilder.build();
     }
 
     @Override
     public String automaticName() {
-        return "LPAD(" + inputExpression.automaticName() + ", " + lengthExpression.automaticName() + ")";
+        return "LPAD(" + subjectOperand.automaticName() + ", " + lengthOperand.automaticName() + ")";
     }
 
 }

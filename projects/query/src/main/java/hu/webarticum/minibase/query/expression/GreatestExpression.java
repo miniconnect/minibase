@@ -13,44 +13,44 @@ import hu.webarticum.miniconnect.lang.ImmutableMap;
 
 public class GreatestExpression implements Expression {
 
-    private final ImmutableList<Expression> parameterExpressions;
+    private final ImmutableList<Expression> operands;
 
 
-    public GreatestExpression(ImmutableList<Expression> parameterExpressions) {
-        this.parameterExpressions = parameterExpressions;
+    public GreatestExpression(ImmutableList<Expression> operands) {
+        this.operands = operands;
     }
 
 
-    public ImmutableList<Expression> parameterExpressions() {
-        return parameterExpressions;
+    public ImmutableList<Expression> operands() {
+        return operands;
     }
 
     @Override
     public ImmutableList<Parameter> parameters() {
         Set<Parameter> subParameters = new LinkedHashSet<>();
-        for (Expression parameterExpression : parameterExpressions) {
-            subParameters.addAll(parameterExpression.parameters().asList());
+        for (Expression operand : operands) {
+            subParameters.addAll(operand.parameters().asList());
         }
         return ImmutableList.fromCollection(subParameters);
     }
 
     @Override
     public Optional<Class<?>> type() {
-        ImmutableList<Class<?>> parameterTypes = parameterExpressions.map(e -> e.type().orElse(null));
-        return Optional.ofNullable(UnifyUtil.unifyTypes(parameterTypes));
+        ImmutableList<Class<?>> operandTypes = operands.map(e -> e.type().orElse(null));
+        return Optional.ofNullable(UnifyUtil.unifyTypes(operandTypes));
     }
 
     @Override
-    public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
-        ImmutableList<Class<?>> parameterTypes = parameterExpressions.map(e -> e.type(types));
-        Class<?> result = UnifyUtil.unifyTypes(parameterTypes);
+    public Class<?> type(ImmutableMap<Parameter, Class<?>> typeSubstitutions) {
+        ImmutableList<Class<?>> operandTypes = operands.map(e -> e.type(typeSubstitutions));
+        Class<?> result = UnifyUtil.unifyTypes(operandTypes);
         return result == null ? String.class : result;
     }
 
     @Override
     public boolean isNullable() {
-        for (Expression parameterExpression : parameterExpressions.reverseOrder()) {
-            if (!parameterExpression.isNullable()) {
+        for (Expression operand : operands.reverseOrder()) {
+            if (!operand.isNullable()) {
                 return false;
             }
         }
@@ -58,9 +58,9 @@ public class GreatestExpression implements Expression {
     }
 
     @Override
-    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
-        for (Expression parameterExpression : parameterExpressions.reverseOrder()) {
-            if (!parameterExpression.isNullable(nullabilities)) {
+    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilitySubstitutions) {
+        for (Expression operand : operands.reverseOrder()) {
+            if (!operand.isNullable(nullabilitySubstitutions)) {
                 return false;
             }
         }
@@ -68,14 +68,14 @@ public class GreatestExpression implements Expression {
     }
 
     @Override
-    public Object evaluate(ImmutableMap<Parameter, Object> values) {
-        ImmutableList<Object> rawValues = parameterExpressions.map(e -> e.evaluate(values)).filter(Objects::nonNull);
-        if (rawValues.isEmpty()) {
+    public Object evaluate(ImmutableMap<Parameter, Object> substitutions) {
+        ImmutableList<Object> values = operands.map(e -> e.evaluate(substitutions)).filter(Objects::nonNull);
+        if (values.isEmpty()) {
             return null;
         }
-        Class<?> defaultUnifiedType = UnifyUtil.unifyTypes(rawValues.map(v -> v.getClass()));
+        Class<?> defaultUnifiedType = UnifyUtil.unifyTypes(values.map(v -> v.getClass()));
         Class<?> unifiedType = (defaultUnifiedType != null) ? defaultUnifiedType : String.class;
-        ImmutableList<Object> convertedValues = rawValues.map(v -> ConvertUtil.convert(v, unifiedType));
+        ImmutableList<Object> convertedValues = values.map(v -> ConvertUtil.convert(v, unifiedType));
         int length = convertedValues.size();
         Object candidate = convertedValues.get(0);
         for (int i = 1; i < length; i++) {
@@ -101,7 +101,7 @@ public class GreatestExpression implements Expression {
     public String automaticName() {
         StringBuilder resultBuilder = new StringBuilder("GREATEST(");
         boolean first = true;
-        for (Expression parameterExpression : parameterExpressions) {
+        for (Expression parameterExpression : operands) {
             if (first) {
                 first = false;
             } else {

@@ -12,40 +12,40 @@ import hu.webarticum.miniconnect.lang.ImmutableMap;
 
 public class ReplaceExpression implements Expression {
 
-    private final Expression contextExpression;
+    private final Expression contextOperand;
 
-    private final Expression fromExpression;
+    private final Expression fromOperand;
 
-    private final Expression toExpression;
+    private final Expression toOperand;
 
 
-    public ReplaceExpression(Expression contextExpression, Expression fromExpression, Expression toExpression) {
-        this.contextExpression = contextExpression;
-        this.fromExpression = fromExpression;
-        this.toExpression = toExpression;
+    public ReplaceExpression(Expression contextOperand, Expression fromOperand, Expression toOperand) {
+        this.contextOperand = contextOperand;
+        this.fromOperand = fromOperand;
+        this.toOperand = toOperand;
     }
 
 
-    public Expression contextExpression() {
-        return contextExpression;
+    public Expression contextOperand() {
+        return contextOperand;
     }
 
-    public Expression fromExpression() {
-        return fromExpression;
+    public Expression fromOperand() {
+        return fromOperand;
     }
 
-    public Expression toExpression() {
-        return toExpression;
+    public Expression toOperand() {
+        return toOperand;
     }
 
     @Override
     public ImmutableList<Parameter> parameters() {
-        return contextExpression.parameters().concat(fromExpression.parameters()).concat(toExpression.parameters());
+        return contextOperand.parameters().concat(fromOperand.parameters()).concat(toOperand.parameters());
     }
 
     @Override
     public Optional<Class<?>> type() {
-        Class<?> contextType = contextExpression.type().orElse(null);
+        Class<?> contextType = contextOperand.type().orElse(null);
         if (contextType == null || contextType == ByteString.class || contextType == BitString.class) {
             return Optional.ofNullable(contextType);
         } else {
@@ -54,8 +54,8 @@ public class ReplaceExpression implements Expression {
     }
 
     @Override
-    public Class<?> type(ImmutableMap<Parameter, Class<?>> values) {
-        Class<?> contextType = contextExpression.type(values);
+    public Class<?> type(ImmutableMap<Parameter, Class<?>> typeSubstitutions) {
+        Class<?> contextType = contextOperand.type(typeSubstitutions);
         if (contextType == ByteString.class || contextType == BitString.class) {
             return contextType;
         } else {
@@ -65,30 +65,30 @@ public class ReplaceExpression implements Expression {
 
     @Override
     public boolean isNullable() {
-        return contextExpression.isNullable() || fromExpression.isNullable() || toExpression.isNullable();
+        return contextOperand.isNullable() || fromOperand.isNullable() || toOperand.isNullable();
     }
 
     @Override
-    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
+    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilitySubstitutions) {
         return
-                contextExpression.isNullable(nullabilities) ||
-                fromExpression.isNullable(nullabilities) ||
-                toExpression.isNullable(nullabilities);
+                contextOperand.isNullable(nullabilitySubstitutions) ||
+                fromOperand.isNullable(nullabilitySubstitutions) ||
+                toOperand.isNullable(nullabilitySubstitutions);
     }
 
     @Override
-    public Object evaluate(ImmutableMap<Parameter, Object> values) {
-        Object contextValue = contextExpression.evaluate(values);
+    public Object evaluate(ImmutableMap<Parameter, Object> substitutions) {
+        Object contextValue = contextOperand.evaluate(substitutions);
         if (contextValue == null) {
             return null;
         }
 
-        Object fromValue = fromExpression.evaluate(values);
+        Object fromValue = fromOperand.evaluate(substitutions);
         if (fromValue == null) {
             return null;
         }
 
-        Object toValue = toExpression.evaluate(values);
+        Object toValue = toOperand.evaluate(substitutions);
         if (toValue == null) {
             return null;
         }
@@ -186,9 +186,9 @@ public class ReplaceExpression implements Expression {
 
     @Override
     public String automaticName() {
-        return "REPLACE(" + contextExpression.automaticName() + ", " +
-                fromExpression.automaticName() + ", " +
-                toExpression.automaticName() + ")";
+        return "REPLACE(" + contextOperand.automaticName() + ", " +
+                fromOperand.automaticName() + ", " +
+                toOperand.automaticName() + ")";
     }
 
 }

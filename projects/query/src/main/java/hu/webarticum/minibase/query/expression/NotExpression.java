@@ -8,21 +8,21 @@ import hu.webarticum.miniconnect.lang.ImmutableMap;
 
 public class NotExpression implements Expression {
 
-    private final Expression subExpression;
+    private final Expression operand;
 
 
     public NotExpression(Expression subExpression) {
-        this.subExpression = subExpression;
+        this.operand = subExpression;
     }
 
 
     public Expression subExpression() {
-        return subExpression;
+        return operand;
     }
 
     @Override
     public ImmutableList<Parameter> parameters() {
-        return subExpression.parameters();
+        return operand.parameters();
     }
 
     @Override
@@ -31,24 +31,24 @@ public class NotExpression implements Expression {
     }
 
     @Override
-    public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
+    public Class<?> type(ImmutableMap<Parameter, Class<?>> typeSubstitutions) {
         return Boolean.class;
     }
 
     @Override
     public boolean isNullable() {
-        return subExpression.isNullable();
+        return operand.isNullable();
     }
 
     @Override
-    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
-        return subExpression.isNullable(nullabilities);
+    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilitySubstitutions) {
+        return operand.isNullable(nullabilitySubstitutions);
     }
 
     @Override
-    public Object evaluate(ImmutableMap<Parameter, Object> values) {
-        Object subValue = subExpression.evaluate(values);
-        Boolean subBoolean = BooleanUtil.boolify(subValue);
+    public Object evaluate(ImmutableMap<Parameter, Object> substitutions) {
+        Object value = operand.evaluate(substitutions);
+        Boolean subBoolean = BooleanUtil.boolify(value);
         if (subBoolean == null) {
             return null;
         } else {
@@ -58,7 +58,7 @@ public class NotExpression implements Expression {
 
     @Override
     public String automaticName() {
-        return "NOT " + subExpression.automaticName();
+        return "NOT " + operand.automaticName();
     }
 
 }

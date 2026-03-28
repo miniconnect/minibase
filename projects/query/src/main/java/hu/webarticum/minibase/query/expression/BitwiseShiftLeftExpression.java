@@ -12,36 +12,36 @@ import hu.webarticum.miniconnect.lang.LargeInteger;
 
 public class BitwiseShiftLeftExpression implements Expression {
 
-    private final Expression baseExpression;
+    private final Expression subjectOperand;
 
-    private final Expression shiftExpression;
+    private final Expression shiftOperand;
 
 
-    public BitwiseShiftLeftExpression(Expression baseExpression, Expression shiftExpression) {
-        this.baseExpression = baseExpression;
-        this.shiftExpression = shiftExpression;
+    public BitwiseShiftLeftExpression(Expression subjectOperand, Expression shiftOperand) {
+        this.subjectOperand = subjectOperand;
+        this.shiftOperand = shiftOperand;
     }
 
 
-    public Expression baseExpression() {
-        return baseExpression;
+    public Expression subjectOperand() {
+        return subjectOperand;
     }
 
-    public Expression rightOperand() {
-        return shiftExpression;
+    public Expression shiftOperand() {
+        return shiftOperand;
     }
 
     @Override
     public ImmutableList<Parameter> parameters() {
-        return baseExpression.parameters().concat(shiftExpression.parameters());
+        return subjectOperand.parameters().concat(shiftOperand.parameters());
     }
 
     @Override
     public Optional<Class<?>> type() {
-        Class<?> baseType = baseExpression.type().orElse(null);
-        if (baseType == null) {
+        Class<?> subjectType = subjectOperand.type().orElse(null);
+        if (subjectType == null) {
             return Optional.empty();
-        } else if (baseType == Void.class || Number.class.isAssignableFrom(baseType)) {
+        } else if (subjectType == Void.class || Number.class.isAssignableFrom(subjectType)) {
             return Optional.of(LargeInteger.class);
         } else {
             return Optional.of(BitString.class);
@@ -49,10 +49,10 @@ public class BitwiseShiftLeftExpression implements Expression {
     }
 
     @Override
-    public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
-        Class<?> baseType = baseExpression.type(types);
-        if (Number.class.isAssignableFrom(baseType)) {
-            return baseType;
+    public Class<?> type(ImmutableMap<Parameter, Class<?>> typeSubstitutions) {
+        Class<?> subjectType = subjectOperand.type(typeSubstitutions);
+        if (Number.class.isAssignableFrom(subjectType)) {
+            return subjectType;
         } else {
             return BitString.class;
         }
@@ -60,33 +60,33 @@ public class BitwiseShiftLeftExpression implements Expression {
 
     @Override
     public boolean isNullable() {
-        return baseExpression.isNullable() || shiftExpression.isNullable();
+        return subjectOperand.isNullable() || shiftOperand.isNullable();
     }
 
     @Override
-    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
-        return baseExpression.isNullable(nullabilities) || shiftExpression.isNullable(nullabilities);
+    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilitySubstitutions) {
+        return subjectOperand.isNullable(nullabilitySubstitutions) || shiftOperand.isNullable(nullabilitySubstitutions);
     }
 
     @Override
-    public Object evaluate(ImmutableMap<Parameter, Object> values) {
-        Object baseValue = baseExpression.evaluate(values);
-        if (baseValue == null) {
+    public Object evaluate(ImmutableMap<Parameter, Object> substitutions) {
+        Object subjectValue = subjectOperand.evaluate(substitutions);
+        if (subjectValue == null) {
             return null;
         }
-        Object shiftValue = shiftExpression.evaluate(values);
+        Object shiftValue = shiftOperand.evaluate(substitutions);
         if (shiftValue == null) {
             return null;
         }
         LargeInteger rawShift = (LargeInteger) ConvertUtil.convert(shiftValue, LargeInteger.class);
         boolean isShiftOut = rawShift.isNegative() || !rawShift.isFittingInInt();
         int shift = rawShift.intValue();
-        if (baseValue instanceof Number) {
-            LargeInteger largeIntegerValue = (LargeInteger) ConvertUtil.convert(baseValue, LargeInteger.class);
+        if (subjectValue instanceof Number) {
+            LargeInteger largeIntegerValue = (LargeInteger) ConvertUtil.convert(subjectValue, LargeInteger.class);
             return isShiftOut ? 0 : largeIntegerValue.shiftLeft(shift);
         }
 
-        BitString bitStringValue = bitStringify(baseValue);
+        BitString bitStringValue = bitStringify(subjectValue);
         return isShiftOut ? BitString.empty().resize(bitStringValue.length()) : bitStringValue.shiftLeft(shift);
     }
 
@@ -97,7 +97,7 @@ public class BitwiseShiftLeftExpression implements Expression {
 
     @Override
     public String automaticName() {
-        return baseExpression.automaticName() + " << " + shiftExpression.automaticName();
+        return subjectOperand.automaticName() + " << " + shiftOperand.automaticName();
     }
 
 }

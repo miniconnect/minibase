@@ -18,29 +18,29 @@ public class TrimExpression implements Expression {
     private static final TrimSpecification DEFAULT_TRIM_SPECIFICATION = TrimSpecification.BOTH;
 
 
-    private final Expression inputExpression;
+    private final Expression subjectOperand;
 
-    private final Optional<Expression> charsExpression;
+    private final Optional<Expression> charsOperand;
 
     private final Optional<TrimSpecification> trimSpecification;
 
 
     public TrimExpression(
-            Expression inputExpression,
-            Optional<Expression> charsExpression,
+            Expression subjectOperand,
+            Optional<Expression> charsOperand,
             Optional<TrimSpecification> trimSpecification) {
-        this.inputExpression = inputExpression;
-        this.charsExpression = charsExpression;
+        this.subjectOperand = subjectOperand;
+        this.charsOperand = charsOperand;
         this.trimSpecification = trimSpecification;
     }
 
 
-    public Expression inputExpression() {
-        return inputExpression;
+    public Expression subjectOperand() {
+        return subjectOperand;
     }
 
-    public Optional<Expression> charsExpression() {
-        return charsExpression;
+    public Optional<Expression> charsOperand() {
+        return charsOperand;
     }
 
     public Optional<TrimSpecification> trimSpecification() {
@@ -49,8 +49,8 @@ public class TrimExpression implements Expression {
 
     @Override
     public ImmutableList<Parameter> parameters() {
-        return inputExpression.parameters().concat(
-                charsExpression.map(Expression::parameters).orElseGet(ImmutableList::empty));
+        return subjectOperand.parameters().concat(
+                charsOperand.map(Expression::parameters).orElseGet(ImmutableList::empty));
     }
 
     @Override
@@ -59,56 +59,58 @@ public class TrimExpression implements Expression {
     }
 
     @Override
-    public Class<?> type(ImmutableMap<Parameter, Class<?>> values) {
+    public Class<?> type(ImmutableMap<Parameter, Class<?>> typeSubstitutions) {
         return String.class;
     }
 
     @Override
     public boolean isNullable() {
-        return inputExpression.isNullable() || charsExpression.map(Expression::isNullable).orElse(false);
+        return subjectOperand.isNullable() || charsOperand.map(Expression::isNullable).orElse(false);
     }
 
     @Override
-    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
-        return inputExpression.isNullable(nullabilities) || charsExpression.map(e -> e.isNullable(nullabilities)).orElse(false);
+    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilitySubstitutions) {
+        return
+                subjectOperand.isNullable(nullabilitySubstitutions) ||
+                charsOperand.map(e -> e.isNullable(nullabilitySubstitutions)).orElse(false);
     }
 
     @Override
-    public Object evaluate(ImmutableMap<Parameter, Object> values) {
-        Object inputValue = inputExpression.evaluate(values);
-        if (inputValue == null) {
+    public Object evaluate(ImmutableMap<Parameter, Object> substitutions) {
+        Object subjectValue = subjectOperand.evaluate(substitutions);
+        if (subjectValue == null) {
             return null;
         }
 
-        Object charsValue = charsExpression.orElseGet(() -> new ConstantExpression(DEFAULT_CHARS)).evaluate(values);
+        Object charsValue = charsOperand.orElseGet(() -> new ConstantExpression(DEFAULT_CHARS)).evaluate(substitutions);
         if (charsValue == null) {
             return null;
         }
 
-        TrimSpecification effectiveSpecification = trimSpecification.orElse(DEFAULT_TRIM_SPECIFICATION);
+        TrimSpecification effectiveTrimSpecification = trimSpecification.orElse(DEFAULT_TRIM_SPECIFICATION);
 
-        String inputString = StringUtil.stringify(inputValue);
+        String subjectString = StringUtil.stringify(subjectValue);
         String charsString = StringUtil.stringify(charsValue);
         int rightTrimPosition;
-        if (effectiveSpecification != TrimSpecification.LEADING) {
-            rightTrimPosition = getRightTrimPosition(inputString, charsString);
+        if (effectiveTrimSpecification != TrimSpecification.LEADING) {
+            rightTrimPosition = getRightTrimPosition(subjectString, charsString);
         } else {
-            rightTrimPosition = inputString.length();
+            rightTrimPosition = subjectString.length();
         }
         int leftTrimPosition;
-        if (effectiveSpecification != TrimSpecification.TRAILING && rightTrimPosition > 0) {
-            leftTrimPosition = getLeftTrimPosition(inputString, charsString);
+        if (effectiveTrimSpecification != TrimSpecification.TRAILING && rightTrimPosition > 0) {
+            leftTrimPosition = getLeftTrimPosition(subjectString, charsString);
         } else {
             leftTrimPosition = 0;
         }
-        return inputString.substring(leftTrimPosition, rightTrimPosition);
+        return subjectString.substring(leftTrimPosition, rightTrimPosition);
     }
 
-    private int getLeftTrimPosition(String inputString, String charsString) {
+    private int getLeftTrimPosition(String subjectString, String charsString) {
         int result = 0;
-        int length = inputString.length();
+        int length = subjectString.length();
         for (int i = 0; i < length; i++) {
-            char c = inputString.charAt(i);
+            char c = subjectString.charAt(i);
             if (charsString.indexOf(c) < 0) {
                 break;
             }
@@ -117,11 +119,11 @@ public class TrimExpression implements Expression {
         return result;
     }
 
-    private int getRightTrimPosition(String inputString, String charsString) {
-        int length = inputString.length();
+    private int getRightTrimPosition(String subjectString, String charsString) {
+        int length = subjectString.length();
         int result = length;
         for (int i = length - 1; i >= 0; i--) {
-            char c = inputString.charAt(i);
+            char c = subjectString.charAt(i);
             if (charsString.indexOf(c) < 0) {
                 break;
             }
@@ -134,9 +136,9 @@ public class TrimExpression implements Expression {
     public String automaticName() {
         return "TRIM(" +
                 trimSpecification.map(s -> s.name() + " ").orElse("") +
-                charsExpression.map(e -> e.automaticName() + " ").orElse("") +
-                (trimSpecification.isPresent() || charsExpression.isPresent() ? "FROM " : "") +
-                inputExpression.automaticName() + ")";
+                charsOperand.map(e -> e.automaticName() + " ").orElse("") +
+                (trimSpecification.isPresent() || charsOperand.isPresent() ? "FROM " : "") +
+                subjectOperand.automaticName() + ")";
     }
 
 }

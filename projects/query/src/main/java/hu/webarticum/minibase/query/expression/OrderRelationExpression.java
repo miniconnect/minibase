@@ -64,7 +64,7 @@ public class OrderRelationExpression implements Expression {
     }
 
     @Override
-    public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
+    public Class<?> type(ImmutableMap<Parameter, Class<?>> typeSubstitutions) {
         return Boolean.class;
     }
 
@@ -74,14 +74,14 @@ public class OrderRelationExpression implements Expression {
     }
 
     @Override
-    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
-        return leftOperand.isNullable(nullabilities) || rightOperand.isNullable(nullabilities);
+    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilitySubstitutions) {
+        return leftOperand.isNullable(nullabilitySubstitutions) || rightOperand.isNullable(nullabilitySubstitutions);
     }
 
     @Override
-    public Object evaluate(ImmutableMap<Parameter, Object> values) {
-        Object leftValue = leftOperand.evaluate(values);
-        Object rightValue = rightOperand.evaluate(values);
+    public Object evaluate(ImmutableMap<Parameter, Object> substitutions) {
+        Object leftValue = leftOperand.evaluate(substitutions);
+        Object rightValue = rightOperand.evaluate(substitutions);
         if (leftValue == null || rightValue == null) {
             return null;
         }

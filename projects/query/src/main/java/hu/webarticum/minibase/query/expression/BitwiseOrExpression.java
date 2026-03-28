@@ -54,12 +54,12 @@ public class BitwiseOrExpression implements Expression {
     }
 
     @Override
-    public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
-        Class<?> leftType = leftOperand.type(types);
+    public Class<?> type(ImmutableMap<Parameter, Class<?>> typeSubstitutions) {
+        Class<?> leftType = leftOperand.type(typeSubstitutions);
         if (leftType != Void.class && !Number.class.isAssignableFrom(leftType)) {
             return BitString.class;
         }
-        Class<?> rightType = rightOperand.type(types);
+        Class<?> rightType = rightOperand.type(typeSubstitutions);
         if (rightType != Void.class && !Number.class.isAssignableFrom(rightType)) {
             return BitString.class;
         }
@@ -72,17 +72,17 @@ public class BitwiseOrExpression implements Expression {
     }
 
     @Override
-    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
-        return leftOperand.isNullable(nullabilities) || rightOperand.isNullable(nullabilities);
+    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilitySubstitutions) {
+        return leftOperand.isNullable(nullabilitySubstitutions) || rightOperand.isNullable(nullabilitySubstitutions);
     }
 
     @Override
-    public Object evaluate(ImmutableMap<Parameter, Object> values) {
-        Object leftValue = leftOperand.evaluate(values);
+    public Object evaluate(ImmutableMap<Parameter, Object> substitutions) {
+        Object leftValue = leftOperand.evaluate(substitutions);
         if (leftValue == null) {
             return null;
         }
-        Object rightValue = rightOperand.evaluate(values);
+        Object rightValue = rightOperand.evaluate(substitutions);
         if (rightValue == null) {
             return null;
         }

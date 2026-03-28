@@ -11,43 +11,43 @@ import hu.webarticum.miniconnect.lang.LargeInteger;
 
 public class GcdExpression implements Expression {
 
-    private final Expression aExpression;
+    private final Expression aOperand;
 
-    private final Expression bExpression;
+    private final Expression bOperand;
 
 
-    public GcdExpression(Expression aExpression, Expression bExpression) {
-        this.aExpression = aExpression;
-        this.bExpression = bExpression;
+    public GcdExpression(Expression aOperand, Expression bOperand) {
+        this.aOperand = aOperand;
+        this.bOperand = bOperand;
     }
 
 
-    public Expression aExpression() {
-        return aExpression;
+    public Expression aOperand() {
+        return aOperand;
     }
 
-    public Expression bExpression() {
-        return bExpression;
+    public Expression bOperand() {
+        return bOperand;
     }
 
     @Override
     public ImmutableList<Parameter> parameters() {
-        return aExpression.parameters().concat(bExpression.parameters());
+        return aOperand.parameters().concat(bOperand.parameters());
     }
 
     @Override
     public Optional<Class<?>> type() {
-        Class<?> leftType = aExpression.type().orElse(null);
-        Class<?> rightType = bExpression.type().orElse(null);
-        Class<?> leftNumericType = leftType != null ? NumberUtil.numberifyType(leftType) : null;
-        Class<?> rightNumericType = rightType != null ? NumberUtil.numberifyType(rightType) : null;
+        Class<?> typeOfA = aOperand.type().orElse(null);
+        Class<?> typeOfB = bOperand.type().orElse(null);
+        Class<?> numericTypeOfA = typeOfA != null ? NumberUtil.numberifyType(typeOfA) : null;
+        Class<?> numericTypeOfB = typeOfB != null ? NumberUtil.numberifyType(typeOfB) : null;
         if (
-                leftNumericType == Double.class ||
-                leftNumericType == BigDecimal.class ||
-                rightNumericType == Double.class ||
-                rightNumericType == BigDecimal.class) {
+                numericTypeOfA == Double.class ||
+                numericTypeOfA == BigDecimal.class ||
+                numericTypeOfB == Double.class ||
+                numericTypeOfB == BigDecimal.class) {
             return Optional.of(BigDecimal.class);
-        } else if (leftNumericType == null || rightNumericType == null) {
+        } else if (numericTypeOfA == null || numericTypeOfB == null) {
             return Optional.empty();
         } else {
             return Optional.of(LargeInteger.class);
@@ -55,14 +55,14 @@ public class GcdExpression implements Expression {
     }
 
     @Override
-    public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
-        Class<?> leftNumericType = NumberUtil.numberifyType(aExpression.type(types));
-        Class<?> rightNumericType = NumberUtil.numberifyType(bExpression.type(types));
+    public Class<?> type(ImmutableMap<Parameter, Class<?>> typeSubstitutions) {
+        Class<?> numericTypeOfA = NumberUtil.numberifyType(aOperand.type(typeSubstitutions));
+        Class<?> numericTypeOfB = NumberUtil.numberifyType(bOperand.type(typeSubstitutions));
         if (
-                leftNumericType == Double.class ||
-                leftNumericType == BigDecimal.class ||
-                rightNumericType == Double.class ||
-                rightNumericType == BigDecimal.class) {
+                numericTypeOfA == Double.class ||
+                numericTypeOfA == BigDecimal.class ||
+                numericTypeOfB == Double.class ||
+                numericTypeOfB == BigDecimal.class) {
             return BigDecimal.class;
         } else {
             return LargeInteger.class;
@@ -71,21 +71,21 @@ public class GcdExpression implements Expression {
 
     @Override
     public boolean isNullable() {
-        return aExpression.isNullable() || bExpression.isNullable();
+        return aOperand.isNullable() || bOperand.isNullable();
     }
 
     @Override
-    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
-        return aExpression.isNullable(nullabilities) || bExpression.isNullable(nullabilities);
+    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilitySubstitutions) {
+        return aOperand.isNullable(nullabilitySubstitutions) || bOperand.isNullable(nullabilitySubstitutions);
     }
 
     @Override
-    public Object evaluate(ImmutableMap<Parameter, Object> values) {
-        Object aValue = aExpression().evaluate(values);
+    public Object evaluate(ImmutableMap<Parameter, Object> substitutions) {
+        Object aValue = aOperand.evaluate(substitutions);
         if (aValue == null) {
             return null;
         }
-        Object bValue = bExpression().evaluate(values);
+        Object bValue = bOperand.evaluate(substitutions);
         if (bValue == null) {
             return null;
         }
@@ -103,7 +103,7 @@ public class GcdExpression implements Expression {
 
     @Override
     public String automaticName() {
-        return "GCD(" + aExpression.automaticName() + ", " + bExpression.automaticName() + ")";
+        return "GCD(" + aOperand.automaticName() + ", " + bOperand.automaticName() + ")";
     }
 
 }
