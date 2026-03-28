@@ -79,30 +79,4 @@ public final class StringUtil {
         return resultBuilder.toString();
     }
 
-    public static String extractSlot(String context, String delimiter, int slot) {
-        if (slot < 0) {
-            return "";
-        }
-
-        int length = context.length();
-        int delimiterLength = delimiter.length();
-
-        if (delimiterLength == 0) {
-            return slot < length ? "" + context.charAt(slot) : "";
-        }
-
-        int currentSlot = 0;
-        int pos = 0;
-        while (true) {
-            int foundIndex = context.indexOf(delimiter, pos);
-            if (foundIndex == -1) {
-                return currentSlot == slot ? context.substring(pos, length) : "";
-            } else if (currentSlot == slot) {
-                return context.substring(pos, foundIndex);
-            }
-            pos = foundIndex + delimiterLength;
-            currentSlot++;
-        }
-    }
-
 }

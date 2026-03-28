@@ -2,8 +2,12 @@ package hu.webarticum.minibase.query.expression;
 
 import java.util.Optional;
 
+import hu.webarticum.minibase.query.util.BitStringUtil;
+import hu.webarticum.minibase.query.util.ByteStringUtil;
 import hu.webarticum.minibase.query.util.NumberUtil;
 import hu.webarticum.minibase.query.util.StringUtil;
+import hu.webarticum.miniconnect.lang.BitString;
+import hu.webarticum.miniconnect.lang.ByteString;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
 
@@ -42,12 +46,22 @@ public class SplitPartExpression implements Expression {
 
     @Override
     public Optional<Class<?>> type() {
-        return Optional.of(String.class);
+        Class<?> inputType = inputExpression.type().orElse(null);
+        if (inputType == null || inputType == ByteString.class || inputType == BitString.class) {
+            return Optional.ofNullable(inputType);
+        } else {
+            return Optional.of(String.class);
+        }
     }
 
     @Override
     public Class<?> type(ImmutableMap<Parameter, Class<?>> values) {
-        return String.class;
+        Class<?> inputType = inputExpression.type(values);
+        if (inputType == ByteString.class || inputType == BitString.class) {
+            return inputType;
+        } else {
+            return String.class;
+        }
     }
 
     @Override
@@ -80,11 +94,77 @@ public class SplitPartExpression implements Expression {
             return null;
         }
 
-        String inputString = StringUtil.stringify(inputValue);
-        String delimiterString = StringUtil.stringify(delimiterValue);
-        int slotZeroBased = NumberUtil.asInt(slotValue) - 1;
+        int slot = NumberUtil.asInt(slotValue);
+        if (inputValue instanceof ByteString) {
+            return operate((ByteString) inputValue, ByteStringUtil.byteStringify(delimiterValue), slot);
+        } else if (inputValue instanceof BitString) {
+            return operate((BitString) inputValue, BitStringUtil.bitStringify(delimiterValue), slot);
+        } else {
+            return operate(StringUtil.stringify(inputValue), StringUtil.stringify(delimiterValue), slot);
+        }
+    }
 
-        return StringUtil.extractSlot(inputString, delimiterString, slotZeroBased);
+    private String operate(String input, String delimiter, int slot) {
+        int length = input.length();
+        int delimiterLength = delimiter.length();
+        if (length == 0 || delimiterLength == 0 || slot <= 0) {
+            return "";
+        }
+
+        int currentSlot = 1;
+        int pos = 0;
+        while (true) {
+            int foundIndex = input.indexOf(delimiter, pos);
+            if (foundIndex == -1) {
+                return currentSlot == slot ? input.substring(pos, length) : "";
+            } else if (currentSlot == slot) {
+                return input.substring(pos, foundIndex);
+            }
+            pos = foundIndex + delimiterLength;
+            currentSlot++;
+        }
+    }
+
+    private ByteString operate(ByteString input, ByteString delimiter, int slot) {
+        int length = input.length();
+        int delimiterLength = delimiter.length();
+        if (length == 0 || delimiterLength == 0 || slot <= 0) {
+            return ByteString.empty();
+        }
+
+        int currentSlot = 1;
+        int pos = 0;
+        while (true) {
+            int foundIndex = input.indexOf(delimiter, pos);
+            if (foundIndex == -1) {
+                return currentSlot == slot ? input.substring(pos, length) : ByteString.empty();
+            } else if (currentSlot == slot) {
+                return input.substring(pos, foundIndex);
+            }
+            pos = foundIndex + delimiterLength;
+            currentSlot++;
+        }
+    }
+
+    private BitString operate(BitString input, BitString delimiter, int slot) {
+        int length = input.length();
+        int delimiterLength = delimiter.length();
+        if (length == 0 || delimiterLength == 0 || slot <= 0) {
+            return BitString.empty();
+        }
+
+        int currentSlot = 1;
+        int pos = 0;
+        while (true) {
+            int foundIndex = input.indexOf(delimiter, pos);
+            if (foundIndex == -1) {
+                return currentSlot == slot ? input.substring(pos, length) : BitString.empty();
+            } else if (currentSlot == slot) {
+                return input.substring(pos, foundIndex);
+            }
+            pos = foundIndex + delimiterLength;
+            currentSlot++;
+        }
     }
 
     @Override
