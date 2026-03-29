@@ -176,6 +176,7 @@ import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.OffsetPar
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.OrderByItemContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.OrderByPartContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.OrderByPositionContext;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.OverlapsExpressionContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.PositionExpressionContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.PostfixConditionContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.PrefixableExpressionContext;
@@ -620,7 +621,7 @@ public class AntlrSqlParser implements SqlParser {
         }
 
         if (expressionNode.isNullOperator != null) {
-            Expression subExpression = parseExpressionNode(expressionNode.subExpression);
+            Expression subExpression = parseExpressionNode(expressionNode.context);
             Expression isNullExpression = new IsNullExpression(subExpression);
             if (expressionNode.NOT() == null) {
                 return isNullExpression;
@@ -630,14 +631,14 @@ public class AntlrSqlParser implements SqlParser {
         }
 
         if (expressionNode.likeOperator != null) {
-            Expression givenExpression = parseExpressionNode(expressionNode.givenExpression);
-            Expression patternExpression = parseExpressionNode(expressionNode.patternExpression);
-            Expression escapeExpression =
-                    expressionNode.escapeExpression != null ?
-                    parseExpressionNode(expressionNode.escapeExpression) :
+            Expression contextOperand = parseExpressionNode(expressionNode.context);
+            Expression patternOperand = parseExpressionNode(expressionNode.pattern);
+            Expression escapeOperand =
+                    expressionNode.escape != null ?
+                    parseExpressionNode(expressionNode.escape) :
                     null;
             boolean caseInsensitive = expressionNode.ILIKE() != null;
-            Expression likeExpression = new LikeExpression(givenExpression, patternExpression, escapeExpression, caseInsensitive);
+            Expression likeExpression = new LikeExpression(contextOperand, patternOperand, escapeOperand, caseInsensitive);
             if (expressionNode.NOT() == null) {
                 return likeExpression;
             } else {
@@ -646,9 +647,9 @@ public class AntlrSqlParser implements SqlParser {
         }
 
         if (expressionNode.regexpOperator != null) {
-            Expression givenExpression = parseExpressionNode(expressionNode.givenExpression);
-            Expression patternExpression = parseExpressionNode(expressionNode.patternExpression);
-            Expression regexpExpression = new RegexpExpression(givenExpression, patternExpression);
+            Expression contextOperand = parseExpressionNode(expressionNode.context);
+            Expression patternOperand = parseExpressionNode(expressionNode.pattern);
+            Expression regexpExpression = new RegexpExpression(contextOperand, patternOperand);
             if (expressionNode.NOT() == null) {
                 return regexpExpression;
             } else {
@@ -657,9 +658,9 @@ public class AntlrSqlParser implements SqlParser {
         }
 
         if (expressionNode.IN() != null) {
-            Expression givenExpression = parseExpressionNode(expressionNode.givenExpression);
-            ImmutableList<Expression> listedExpressions = parseInValueListNode(expressionNode.inValueList());
-            Expression inExpression = new InExpression(givenExpression, listedExpressions);
+            Expression subjectOperand = parseExpressionNode(expressionNode.subject);
+            ImmutableList<Expression> contextListOperand = parseInValueListNode(expressionNode.inValueList());
+            Expression inExpression = new InExpression(subjectOperand, contextListOperand);
             if (expressionNode.NOT() == null) {
                 return inExpression;
             } else {
@@ -668,10 +669,10 @@ public class AntlrSqlParser implements SqlParser {
         }
 
         if (expressionNode.BETWEEN() != null) {
-            Expression givenExpression = parseExpressionNode(expressionNode.givenExpression);
-            Expression minExpression = parseExpressionNode(expressionNode.minExpression);
-            Expression maxExpression = parseExpressionNode(expressionNode.maxExpression);
-            Expression betweenExpression = new BetweenExpression(givenExpression, minExpression, maxExpression);
+            Expression subjectOperand = parseExpressionNode(expressionNode.subject);
+            Expression minOperand = parseExpressionNode(expressionNode.min);
+            Expression maxOperand = parseExpressionNode(expressionNode.max);
+            Expression betweenExpression = new BetweenExpression(subjectOperand, minOperand, maxOperand);
             if (expressionNode.NOT() == null) {
                 return betweenExpression;
             } else {
@@ -680,59 +681,59 @@ public class AntlrSqlParser implements SqlParser {
         }
 
         if (expressionNode.DOUBLE_COLON() != null) {
-            Expression subExpression = parseExpressionNode(expressionNode.subExpression);
+            Expression subExpression = parseExpressionNode(expressionNode.subject);
             TypeConstruct typeConstruct = parseTypeConstructNode(expressionNode.typeConstruct());
             return new CastExpression(subExpression, typeConstruct);
         }
 
-        Expression leftExpression = parseExpressionNode(expressionNode.leftExpression);
-        Expression rightExpression = parseExpressionNode(expressionNode.rightExpression);
+        Expression leftOperand = parseExpressionNode(expressionNode.left);
+        Expression rightOperand = parseExpressionNode(expressionNode.right);
 
         if (expressionNode.EQ() != null) {
-            return new EqualsExpression(leftExpression, rightExpression);
+            return new EqualsExpression(leftOperand, rightOperand);
         } else if (expressionNode.NEQ_ANG() != null || expressionNode.NEQ_BANG() != null) {
-            return new NotEqualsExpression(leftExpression, rightExpression);
+            return new NotEqualsExpression(leftOperand, rightOperand);
         } else if (expressionNode.LESS() != null) {
-            return new OrderRelationExpression(OrderRelationExpression.Operation.LESS, leftExpression, rightExpression);
+            return new OrderRelationExpression(OrderRelationExpression.Operation.LESS, leftOperand, rightOperand);
         } else if (expressionNode.LESS_EQ() != null) {
-            return new OrderRelationExpression(OrderRelationExpression.Operation.LESS_EQ, leftExpression, rightExpression);
+            return new OrderRelationExpression(OrderRelationExpression.Operation.LESS_EQ, leftOperand, rightOperand);
         } else if (expressionNode.GREATER() != null) {
-            return new OrderRelationExpression(OrderRelationExpression.Operation.GREATER, leftExpression, rightExpression);
+            return new OrderRelationExpression(OrderRelationExpression.Operation.GREATER, leftOperand, rightOperand);
         } else if (expressionNode.GREATER_EQ() != null) {
-            return new OrderRelationExpression(OrderRelationExpression.Operation.GREATER_EQ, leftExpression, rightExpression);
+            return new OrderRelationExpression(OrderRelationExpression.Operation.GREATER_EQ, leftOperand, rightOperand);
         } else if (expressionNode.ET() != null) {
-            return new BitwiseAndExpression(leftExpression, rightExpression);
+            return new BitwiseAndExpression(leftOperand, rightOperand);
         } else if (expressionNode.SHIFT_LEFT() != null) {
-            return new BitwiseShiftLeftExpression(leftExpression, rightExpression);
+            return new BitwiseShiftLeftExpression(leftOperand, rightOperand);
         } else if (expressionNode.SHIFT_RIGHT() != null) {
-            return new BitwiseShiftRightExpression(leftExpression, rightExpression);
+            return new BitwiseShiftRightExpression(leftOperand, rightOperand);
         } else if (expressionNode.PIPE() != null) {
-            return new BitwiseOrExpression(leftExpression, rightExpression);
+            return new BitwiseOrExpression(leftOperand, rightOperand);
         } else if (expressionNode.HASH() != null) {
-            return new BitwiseXorExpression(leftExpression, rightExpression);
+            return new BitwiseXorExpression(leftOperand, rightOperand);
         } else if (expressionNode.ASTERISK() != null) {
-            return new MultiplyExpression(leftExpression, rightExpression);
+            return new MultiplyExpression(leftOperand, rightOperand);
         } else if (expressionNode.MOD() != null) {
-            return new ModExpression(leftExpression, rightExpression);
+            return new ModExpression(leftOperand, rightOperand);
         } else if (expressionNode.PERCENT() != null) {
-            return new RemainderExpression(leftExpression, rightExpression);
+            return new RemainderExpression(leftOperand, rightOperand);
         } else if (expressionNode.DIV() != null) {
             // FIXME
-            return new DivideExpression(leftExpression, rightExpression);
+            return new DivideExpression(leftOperand, rightOperand);
         } else if (expressionNode.SLASH() != null) {
-            return new DivideExpression(leftExpression, rightExpression);
+            return new DivideExpression(leftOperand, rightOperand);
         } else if (expressionNode.PLUS() != null) {
-            return new AddExpression(leftExpression, rightExpression);
+            return new AddExpression(leftOperand, rightOperand);
         } else if (expressionNode.MINUS() != null) {
-            return new SubtractExpression(leftExpression, rightExpression);
+            return new SubtractExpression(leftOperand, rightOperand);
         } else if (expressionNode.AND() != null) {
-            return new AndExpression(leftExpression, rightExpression);
+            return new AndExpression(leftOperand, rightOperand);
         } else if (expressionNode.XOR() != null) {
-            return new XorExpression(leftExpression, rightExpression);
+            return new XorExpression(leftOperand, rightOperand);
         } else if (expressionNode.OR() != null) {
-            return new OrExpression(leftExpression, rightExpression);
+            return new OrExpression(leftOperand, rightOperand);
         } else if (expressionNode.DOUBLE_PIPE() != null) {
-            return new ConcatExpression(ImmutableList.of(leftExpression, rightExpression));
+            return new ConcatExpression(ImmutableList.of(leftOperand, rightOperand));
         } else {
             throw new IllegalArgumentException("Unknown operation type in: " + expressionNode.getText());
         }
@@ -789,12 +790,9 @@ public class AntlrSqlParser implements SqlParser {
             return parseUnaryArithmeticExpressionNode(unaryArithmeticExpressionNode);
         }
 
-        if (prefixableExpressionNode.OVERLAPS() != null) {
-            Expression start1Expression = parseExpressionNode(prefixableExpressionNode.start1Expression);
-            Expression end1Expression = parseExpressionNode(prefixableExpressionNode.end1Expression);
-            Expression start2Expression = parseExpressionNode(prefixableExpressionNode.start2Expression);
-            Expression end2Expression = parseExpressionNode(prefixableExpressionNode.end2Expression);
-            return new OverlapsExpression(start1Expression, end1Expression, start2Expression, end2Expression);
+        OverlapsExpressionContext overlapsExpressionNode = prefixableExpressionNode.overlapsExpression();
+        if (overlapsExpressionNode != null) {
+            return parseOverlapsExpressionNode(overlapsExpressionNode);
         }
 
         CaseExpressionContext caseExpressionNode = prefixableExpressionNode.caseExpression();
@@ -802,8 +800,8 @@ public class AntlrSqlParser implements SqlParser {
             return parseCaseExpressionNode(caseExpressionNode);
         }
 
-        if (prefixableExpressionNode.COUNT() != null) {
-            throw new UnsupportedOperationException("Aggregation currently not supported (COUNT)");
+        if (prefixableExpressionNode.countExpression() != null) {
+            throw new UnsupportedOperationException("Complex aggregation currently not supported (COUNT)");
         }
 
         throw new IllegalArgumentException("Unknown expression: " + prefixableExpressionNode.getText());
@@ -1072,11 +1070,11 @@ public class AntlrSqlParser implements SqlParser {
     }
 
     private Expression parseUnaryArithmeticExpressionNode(UnaryArithmeticExpressionContext unaryArithmeticExpressionNode) {
-        Expression subExpression = parsePrefixableExpressionNode(unaryArithmeticExpressionNode.prefixableExpression());
+        Expression operand = parsePrefixableExpressionNode(unaryArithmeticExpressionNode.prefixableExpression());
         if (unaryArithmeticExpressionNode.MINUS() != null) {
-            return new NegateExpression(subExpression);
+            return new NegateExpression(operand);
         } else {
-            return subExpression;
+            return operand;
         }
     }
 
@@ -1156,11 +1154,11 @@ public class AntlrSqlParser implements SqlParser {
     }
 
     private Expression parseTrimExpressionNode(TrimExpressionContext trimExpressionNode) {
-        Expression inputExpression = parseExpressionNode(trimExpressionNode.inputExpression);
-        Optional<Expression> charsExpression = Optional.ofNullable(trimExpressionNode.charsExpression).map(this::parseExpressionNode);
+        Expression subjectOperand = parseExpressionNode(trimExpressionNode.subject);
+        Optional<Expression> charsOperand = Optional.ofNullable(trimExpressionNode.chars).map(this::parseExpressionNode);
         Optional<TrimExpression.TrimSpecification> trimSpecification =
                 Optional.ofNullable(trimExpressionNode.trimSpecification()).map(this::parseTrimSpecificationNode);
-        return new TrimExpression(inputExpression, charsExpression, trimSpecification);
+        return new TrimExpression(subjectOperand, charsOperand, trimSpecification);
     }
 
     private TrimExpression.TrimSpecification parseTrimSpecificationNode(TrimSpecificationContext trimSpecificationNode) {
@@ -1168,22 +1166,22 @@ public class AntlrSqlParser implements SqlParser {
     }
 
     private Expression parseSubstringExpressionNode(SubstringExpressionContext substringExpressionNode) {
-        Expression inputExpression = parseExpressionNode(substringExpressionNode.inputExpression);
-        Optional<Expression> fromExpression = Optional.ofNullable(substringExpressionNode.fromExpression).map(this::parseExpressionNode);
-        Optional<Expression> forExpression = Optional.ofNullable(substringExpressionNode.forExpression).map(this::parseExpressionNode);
-        return new SubstringExpression(inputExpression, fromExpression, forExpression);
+        Expression contextOperand = parseExpressionNode(substringExpressionNode.context);
+        Optional<Expression> fromOperand = Optional.ofNullable(substringExpressionNode.from).map(this::parseExpressionNode);
+        Optional<Expression> forOperand = Optional.ofNullable(substringExpressionNode.for_).map(this::parseExpressionNode);
+        return new SubstringExpression(contextOperand, fromOperand, forOperand);
     }
 
     private Expression parsePositionExpressionNode(PositionExpressionContext positionExpressionNode) {
-        Expression subjectExpression = parseExpressionNode(positionExpressionNode.subjectExpression);
-        Expression contextExpression = parseExpressionNode(positionExpressionNode.contextExpression);
-        return new PositionExpression(subjectExpression, contextExpression);
+        Expression subjectOperand = parseExpressionNode(positionExpressionNode.subject);
+        Expression contextOperand = parseExpressionNode(positionExpressionNode.context);
+        return new PositionExpression(subjectOperand, contextOperand);
     }
 
     private Expression parseExtractExpressionNode(ExtractExpressionContext extractExpressionNode) {
-        Expression inputExpression = parseExpressionNode(extractExpressionNode.inputExpression);
+        Expression contextOperand = parseExpressionNode(extractExpressionNode.context);
         ExtractExpression.ExtractField extractField = parseExtractFieldNode(extractExpressionNode.extractFieldName());
-        return new ExtractExpression(inputExpression, extractField);
+        return new ExtractExpression(contextOperand, extractField);
     }
 
     private ExtractExpression.ExtractField parseExtractFieldNode(ExtractFieldNameContext extractFieldNameNode) {
@@ -1251,10 +1249,18 @@ public class AntlrSqlParser implements SqlParser {
         return new TypeConstruct(TypeConstruct.Symbol.INTERVAL, null, scale);
     }
 
+    private Expression parseOverlapsExpressionNode(OverlapsExpressionContext overlapsExpressionNode) {
+        Expression start1Operand = parseExpressionNode(overlapsExpressionNode.start1);
+        Expression end1Operand = parseExpressionNode(overlapsExpressionNode.end1);
+        Expression start2Operand = parseExpressionNode(overlapsExpressionNode.start2);
+        Expression end2Operand = parseExpressionNode(overlapsExpressionNode.end2);
+        return new OverlapsExpression(start1Operand, end1Operand, start2Operand, end2Operand);
+    }
+
     private Expression parseCaseExpressionNode(CaseExpressionContext caseExpressionNode) {
-        Expression givenExpression = null;
-        if (caseExpressionNode.givenExpression != null) {
-            givenExpression = parseExpressionNode(caseExpressionNode.givenExpression);
+        Expression subjectExpression = null;
+        if (caseExpressionNode.subject != null) {
+            subjectExpression = parseExpressionNode(caseExpressionNode.subject);
         }
         Expression elseExpression = null;
         ElsePartContext elsePartNode = caseExpressionNode.elsePart();
@@ -1265,12 +1271,12 @@ public class AntlrSqlParser implements SqlParser {
         ImmutableList<CaseExpression.WhenItem> whenItems =
                 ImmutableList.fromCollection(caseExpressionNode.whenPart()).map(this::parseCaseWhenItem);
 
-        return new CaseExpression(givenExpression, whenItems, elseExpression);
+        return new CaseExpression(subjectExpression, whenItems, elseExpression);
     }
 
     private CaseExpression.WhenItem parseCaseWhenItem(WhenPartContext whenPartNode) {
-        Expression conditionExpression = parseExpressionNode(whenPartNode.conditionExpression);
-        Expression resultExpression = parseExpressionNode(whenPartNode.resultExpression);
+        Expression conditionExpression = parseExpressionNode(whenPartNode.condition);
+        Expression resultExpression = parseExpressionNode(whenPartNode.result);
         return new CaseExpression.WhenItem(conditionExpression, resultExpression);
     }
 

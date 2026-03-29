@@ -4,19 +4,21 @@ grammar SqlQuery;
 package hu.webarticum.minibase.query.query.antlr.grammar;
 }
 
-sqlQuery: (
-    selectCountQuery |
-    selectQuery |
-    standaloneSelectQuery |
-    showSpecialQuery |
-    updateQuery |
-    insertQuery |
-    deleteQuery |
-    showSchemasQuery |
-    showTablesQuery |
-    useQuery |
-    setVariableQuery
-) EOF ;
+file: sqlQuery EOF;
+
+sqlQuery
+    : selectCountQuery
+    | selectQuery
+    | standaloneSelectQuery
+    | showSpecialQuery
+    | updateQuery
+    | insertQuery
+    | deleteQuery
+    | showSchemasQuery
+    | showTablesQuery
+    | useQuery
+    | setVariableQuery
+    ;
 
 selectCountQuery: (
     SELECT COUNT PAR_START ( wildcardSelectItem | scopeableFieldName ) PAR_END fieldAliasPart=aliasPart?
@@ -89,57 +91,64 @@ nullsLast: NULLS LAST;
 orderByPosition: TOKEN_INTEGER;
 aliasableExpression: expression aliasPart?;
 aliasPart: AS? alias=identifier;
-expression:
-    subExpression=expression DOUBLE_COLON typeConstruct |
-    leftExpression=expression binaryOperator=ET rightExpression=expression |
-    leftExpression=expression binaryOperator=SHIFT_LEFT rightExpression=expression |
-    leftExpression=expression binaryOperator=SHIFT_RIGHT rightExpression=expression |
-    leftExpression=expression binaryOperator=PIPE rightExpression=expression |
-    leftExpression=expression binaryOperator=HASH rightExpression=expression |
-    leftExpression=expression binaryOperator=( ASTERISK | MOD | PERCENT | DIV | SLASH ) rightExpression=expression |
-    leftExpression=expression binaryOperator=( PLUS | MINUS ) rightExpression=expression |
-    leftExpression=expression binaryOperator=AND rightExpression=expression |
-    leftExpression=expression binaryOperator=XOR rightExpression=expression |
-    leftExpression=expression binaryOperator=OR rightExpression=expression |
-    leftExpression=expression binaryOperator=( LESS | LESS_EQ | GREATER | GREATER_EQ ) rightExpression=expression |
-    leftExpression=expression binaryOperator=( EQ | NEQ_ANG | NEQ_BANG ) rightExpression=expression |
-    givenExpression=expression NOT? BETWEEN minExpression=expression AND maxExpression=expression |
-    leftExpression=expression binaryOperator=DOUBLE_PIPE rightExpression=expression |
-    givenExpression=expression NOT? IN inValueList |
-    subExpression=expression IS NOT? isNullOperator=( NULL | UNKNOWN ) |
-    givenExpression=expression NOT? likeOperator=( LIKE | ILIKE ) patternExpression=expression ( ESCAPE escapeExpression=expression )? |
-    givenExpression=expression NOT? regexpOperator=( REGEXP | RLIKE ) patternExpression=expression |
-    prefixableExpression ;
-prefixableExpression:
-    unaryArithmeticExpression |
-    bitwiseNotExpression |
-    notExpression |
-    PAR_START start1Expression=expression COMMA end1Expression=expression PAR_END
-        OVERLAPS PAR_START start2Expression=expression COMMA end2Expression=expression PAR_END |
-    caseExpression |
-    COUNT PAR_START DISTINCT? ASTERISK PAR_END |
-    COUNT PAR_START DISTINCT subExpression=expression PAR_END |
-    intervalExpression |
-    trimExpression |
-    substringExpression |
-    positionExpression |
-    extractExpression |
-    castExpression |
-    atomicExpression;
+
+expression
+    : subject=expression DOUBLE_COLON typeConstruct
+    | left=expression binaryOperator=ET right=expression
+    | left=expression binaryOperator=SHIFT_LEFT right=expression
+    | left=expression binaryOperator=SHIFT_RIGHT right=expression
+    | left=expression binaryOperator=PIPE right=expression
+    | left=expression binaryOperator=HASH right=expression
+    | left=expression binaryOperator=( ASTERISK | MOD | PERCENT | DIV | SLASH ) right=expression
+    | left=expression binaryOperator=( PLUS | MINUS ) right=expression
+    | left=expression binaryOperator=AND right=expression
+    | left=expression binaryOperator=XOR right=expression
+    | left=expression binaryOperator=OR right=expression
+    | left=expression binaryOperator=( LESS | LESS_EQ | GREATER | GREATER_EQ ) right=expression
+    | left=expression binaryOperator=( EQ | NEQ_ANG | NEQ_BANG ) right=expression
+    | subject=expression NOT? BETWEEN min=expression AND max=expression
+    | left=expression binaryOperator=DOUBLE_PIPE right=expression
+    | subject=expression NOT? IN inValueList
+    | context=expression IS NOT? isNullOperator=( NULL | UNKNOWN )
+    | context=expression NOT? likeOperator=( LIKE | ILIKE ) pattern=expression ( ESCAPE escape=expression )?
+    | context=expression NOT? regexpOperator=( REGEXP | RLIKE ) pattern=expression
+    | prefixableExpression
+    ;
+
+prefixableExpression
+    : unaryArithmeticExpression
+    | bitwiseNotExpression
+    | notExpression
+    | overlapsExpression
+    | caseExpression
+    | countExpression
+    | intervalExpression
+    | trimExpression
+    | substringExpression
+    | positionExpression
+    | extractExpression
+    | castExpression
+    | atomicExpression
+    ;
+
 bitwiseNotExpression: TILDE prefixableExpression;
 notExpression: NOT prefixableExpression;
+overlapsExpression: PAR_START start1=expression COMMA end1=expression PAR_END
+    OVERLAPS PAR_START start2=expression COMMA end2=expression PAR_END;
 unaryArithmeticExpression: ( PLUS | MINUS ) prefixableExpression;
 inValueList: PAR_START expression ( COMMA expression )* PAR_END;
-caseExpression: CASE (givenExpression=expression)? whenPart+ elsePart? END;
-whenPart: WHEN conditionExpression=expression THEN resultExpression=expression;
+countExpression: COUNT PAR_START DISTINCT? ASTERISK PAR_END |
+    COUNT PAR_START DISTINCT subExpression=expression PAR_END;
+caseExpression: CASE (subject=expression)? whenPart+ elsePart? END;
+whenPart: WHEN condition=expression THEN result=expression;
 elsePart: ELSE expression;
 intervalExpression: INTERVAL ( integerLiteral | decimalLiteral | stringLiteral ) intervalSpecifier?;
-trimExpression: TRIM PAR_START trimSpecification? charsExpression=expression? FROM inputExpression=expression PAR_END;
+trimExpression: TRIM PAR_START trimSpecification? chars=expression? FROM subject=expression PAR_END;
 trimSpecification: LEADING | TRAILING | BOTH;
-substringExpression: ( SUBSTRING | SUBSTR ) PAR_START inputExpression=expression
-    ( FROM fromExpression=expression ( FOR forExpression=expression )? | FOR forExpression=expression ) PAR_END;
-positionExpression: POSITION PAR_START subjectExpression=expression IN contextExpression=expression PAR_END;
-extractExpression: EXTRACT PAR_START extractFieldName FROM inputExpression=expression PAR_END;
+substringExpression: ( SUBSTRING | SUBSTR ) PAR_START context=expression
+    ( FROM from=expression ( FOR for=expression )? | FOR for=expression ) PAR_END;
+positionExpression: POSITION PAR_START subject=expression IN context=expression PAR_END;
+extractExpression: EXTRACT PAR_START extractFieldName FROM context=expression PAR_END;
 extractFieldName: YEAR | MONTH | DAY | HOUR | MINUTE | SECOND | TIMEZONE_HOUR | TIMEZONE_MINUTE;
 castExpression:
     CAST PAR_START expression AS typeConstruct PAR_END |

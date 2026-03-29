@@ -10,7 +10,7 @@ import hu.webarticum.miniconnect.lang.ImmutableMap;
 
 public class LikeExpression implements Expression {
 
-    private final Expression subjectOperand;
+    private final Expression contextOperand;
 
     private final Expression patternOperand;
 
@@ -22,8 +22,8 @@ public class LikeExpression implements Expression {
 
 
     public LikeExpression(
-            Expression subjectOperand, Expression patternOperand, Expression escapeOperand, boolean caseInsensitive) {
-        this.subjectOperand = subjectOperand;
+            Expression contextOperand, Expression patternOperand, Expression escapeOperand, boolean caseInsensitive) {
+        this.contextOperand = contextOperand;
         this.patternOperand = patternOperand;
         this.escapeOperand = escapeOperand;
         this.caseInsensitive = caseInsensitive;
@@ -78,8 +78,8 @@ public class LikeExpression implements Expression {
     }
 
 
-    public Expression subjectOperand() {
-        return subjectOperand;
+    public Expression contextOperand() {
+        return contextOperand;
     }
 
     public Expression patternOperand() {
@@ -96,7 +96,7 @@ public class LikeExpression implements Expression {
 
     @Override
     public ImmutableList<Parameter> parameters() {
-        ImmutableList<Parameter> parameters = subjectOperand.parameters().concat(patternOperand.parameters());
+        ImmutableList<Parameter> parameters = contextOperand.parameters().concat(patternOperand.parameters());
         if (escapeOperand == null) {
             return parameters;
         } else {
@@ -116,17 +116,17 @@ public class LikeExpression implements Expression {
 
     @Override
     public boolean isNullable() {
-        return subjectOperand.isNullable() || patternOperand.isNullable();
+        return contextOperand.isNullable() || patternOperand.isNullable();
     }
 
     @Override
     public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilitySubstitutions) {
-        return subjectOperand.isNullable(nullabilitySubstitutions) || patternOperand.isNullable(nullabilitySubstitutions);
+        return contextOperand.isNullable(nullabilitySubstitutions) || patternOperand.isNullable(nullabilitySubstitutions);
     }
 
     @Override
     public Object evaluate(ImmutableMap<Parameter, Object> substitutions) {
-        Object subjectValue = subjectOperand.evaluate(substitutions);
+        Object subjectValue = contextOperand.evaluate(substitutions);
         if (subjectValue == null) {
             return null;
         }
@@ -152,7 +152,7 @@ public class LikeExpression implements Expression {
     @Override
     public String automaticName() {
         String op = caseInsensitive ? "ILIKE" : "LIKE";
-        return subjectOperand.automaticName() + " " + op + " " + patternOperand.automaticName();
+        return contextOperand.automaticName() + " " + op + " " + patternOperand.automaticName();
     }
 
 }
