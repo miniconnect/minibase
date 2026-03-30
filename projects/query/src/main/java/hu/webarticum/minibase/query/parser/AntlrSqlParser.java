@@ -630,7 +630,7 @@ public class AntlrSqlParser implements SqlParser {
             }
         }
 
-        if (expressionNode.likeOperator != null) {
+        if (expressionNode.LIKE() != null || expressionNode.ILIKE() != null) {
             Expression contextOperand = parseExpressionNode(expressionNode.context);
             Expression patternOperand = parseExpressionNode(expressionNode.pattern);
             Expression escapeOperand =
@@ -646,7 +646,7 @@ public class AntlrSqlParser implements SqlParser {
             }
         }
 
-        if (expressionNode.regexpOperator != null) {
+        if (expressionNode.REGEXP() != null || expressionNode.RLIKE() != null) {
             Expression contextOperand = parseExpressionNode(expressionNode.context);
             Expression patternOperand = parseExpressionNode(expressionNode.pattern);
             Expression regexpExpression = new RegexpExpression(contextOperand, patternOperand);

@@ -94,24 +94,24 @@ aliasPart: AS? alias=identifier;
 
 expression
     : subject=expression DOUBLE_COLON typeConstruct
-    | left=expression binaryOperator=ET right=expression
-    | left=expression binaryOperator=SHIFT_LEFT right=expression
-    | left=expression binaryOperator=SHIFT_RIGHT right=expression
-    | left=expression binaryOperator=PIPE right=expression
-    | left=expression binaryOperator=HASH right=expression
-    | left=expression binaryOperator=( ASTERISK | MOD | PERCENT | DIV | SLASH ) right=expression
-    | left=expression binaryOperator=( PLUS | MINUS ) right=expression
-    | left=expression binaryOperator=AND right=expression
-    | left=expression binaryOperator=XOR right=expression
-    | left=expression binaryOperator=OR right=expression
-    | left=expression binaryOperator=( LESS | LESS_EQ | GREATER | GREATER_EQ ) right=expression
-    | left=expression binaryOperator=( EQ | NEQ_ANG | NEQ_BANG ) right=expression
+    | left=expression ET right=expression
+    | left=expression SHIFT_LEFT right=expression
+    | left=expression SHIFT_RIGHT right=expression
+    | left=expression PIPE right=expression
+    | left=expression HASH right=expression
+    | left=expression ( ASTERISK | MOD | PERCENT | DIV | SLASH ) right=expression
+    | left=expression ( PLUS | MINUS ) right=expression
+    | left=expression AND right=expression
+    | left=expression XOR right=expression
+    | left=expression OR right=expression
+    | left=expression ( LESS | LESS_EQ | GREATER | GREATER_EQ ) right=expression
+    | left=expression ( EQ | NEQ_ANG | NEQ_BANG ) right=expression
     | subject=expression NOT? BETWEEN min=expression AND max=expression
-    | left=expression binaryOperator=DOUBLE_PIPE right=expression
+    | left=expression DOUBLE_PIPE right=expression
     | subject=expression NOT? IN inValueList
     | context=expression IS NOT? isNullOperator=( NULL | UNKNOWN )
-    | context=expression NOT? likeOperator=( LIKE | ILIKE ) pattern=expression ( ESCAPE escape=expression )?
-    | context=expression NOT? regexpOperator=( REGEXP | RLIKE ) pattern=expression
+    | context=expression NOT? ( LIKE | ILIKE ) pattern=expression ( ESCAPE escape=expression )?
+    | context=expression NOT? ( REGEXP | RLIKE ) pattern=expression
     | prefixableExpression
     ;
 
@@ -158,40 +158,49 @@ typeConstruct: simpleTypeConstruct | intervalTypeConstruct;
 simpleTypeConstruct: typeName ( PAR_START ( size=sizeParameter ( COMMA scale=sizeParameter )? )? PAR_END )?;
 intervalTypeConstruct: INTERVAL intervalSpecifier;
 sizeParameter: TOKEN_INTEGER | stringLiteral;
-atomicExpression:
-    literal |
-    variable |
-    specialSelectable |
-    scopeableFieldName |
-    functionCall |
-    PAR_START paredExpression=expression PAR_END;
+
+atomicExpression
+    : literal
+    | variable
+    | specialSelectable
+    | scopeableFieldName
+    | functionCall
+    | PAR_START paredExpression=expression PAR_END
+    ;
+
 specialSelectable: specialSelectableName ( parentheses )?;
-specialSelectableName:
-    SYSTEM_USER |
-    SESSION_USER |
-    CURRENT_USER |
-    CURRENT_SCHEMA |
-    CURRENT_CATALOG |
-    CURRENT_DATE |
-    CURRENT_TIME |
-    CURRENT_TIMESTAMP |
-    READONLY |
-    AUTOCOMMIT |
-    IDENTITY |
-    LAST_INSERT_ID;
+
+specialSelectableName
+    : SYSTEM_USER
+    | SESSION_USER
+    | CURRENT_USER
+    | CURRENT_SCHEMA
+    | CURRENT_CATALOG
+    | CURRENT_DATE
+    | CURRENT_TIME
+    | CURRENT_TIMESTAMP
+    | READONLY
+    | AUTOCOMMIT
+    | IDENTITY
+    | LAST_INSERT_ID
+    ;
+
 functionCall: functionName PAR_START ( expression ( COMMA expression )* )? PAR_END;
 functionName: identifier | functionNameToken;
 functionNameToken: LEFT | RIGHT | TRIM | SUBSTRING | SUBSTR | REPLACE | typeName;
-typeName:
-    NULL | BOOL | BOOLEAN | BIT | INTEGER | BIGINT | DEC | DECIMAL | FLOAT |
-    NVARCHAR | CLOB | BINARY | VARBINARY | BLOB | DATE |
-    ( TIME | DATETIME | TIMESTAMP ) ( ( WITH | WITHOUT ) ( TIME ZONE | OFFSET | UTCOFFSET ) )? |
-    TIMETZ | DATETIMETZ | TIMESTAMPTZ |
-    INSTANT |
-    TIMEO | DATETIMEO | TIMESTAMPO |
-    UTCOFFSET | TIMEZONE |
-    INTERVAL |
-    TINYINT | SMALLINT | INT | NUMERIC | REAL | DOUBLE PRECISION? | CHAR | VARCHAR | NCHAR | TEXT;
+
+typeName
+    : NULL | BOOL | BOOLEAN | BIT | INTEGER | BIGINT | DEC | DECIMAL | FLOAT
+    | NVARCHAR | CLOB | BINARY | VARBINARY | BLOB | DATE
+    | ( TIME | DATETIME | TIMESTAMP ) ( ( WITH | WITHOUT ) ( TIME ZONE | OFFSET | UTCOFFSET ) )?
+    | TIMETZ | DATETIMETZ | TIMESTAMPTZ
+    | INSTANT
+    | TIMEO | DATETIMEO | TIMESTAMPO
+    | UTCOFFSET | TIMEZONE
+    | INTERVAL
+    | TINYINT | SMALLINT | INT | NUMERIC | REAL | DOUBLE PRECISION? | CHAR | VARCHAR | NCHAR | TEXT
+    ;
+
 intervalSpecifier: ( fromItem=intervalSpecifierItem TO )? toItem=intervalSpecifierItem;
 intervalSpecifierItem: intervalFieldName ( PAR_START integerLiteral PAR_END )?;
 intervalFieldName: YEAR | MONTH | DAY | HOUR | MINUTE | SECOND;
