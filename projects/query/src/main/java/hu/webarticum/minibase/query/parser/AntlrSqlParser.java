@@ -151,6 +151,7 @@ import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.ExtractEx
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.ExtractFieldNameContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.FieldListContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.FieldNameContext;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.FileContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.FunctionCallContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.FunctionNameContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.HexadecimalStringContinuationContext;
@@ -228,11 +229,15 @@ public class AntlrSqlParser implements SqlParser {
         SqlQueryParser parser = new SqlQueryParser(new CommonTokenStream(lexer));
         parser.removeErrorListeners();
         parser.addErrorListener(new ParseErrorListener());
-        SqlQueryContext rootNode = parser.sqlQuery();
+        FileContext rootNode = parser.file();
         return parseRootNode(rootNode);
     }
 
-    private Query parseRootNode(SqlQueryContext rootNode) {
+    private Query parseRootNode(FileContext rootNode) {
+        return parseSqlNode(rootNode.sqlQuery());
+    }
+
+    private Query parseSqlNode(SqlQueryContext rootNode) {
         SelectQueryContext selectQueryNode = rootNode.selectQuery();
         if (selectQueryNode != null) {
             return parseSelectNode(selectQueryNode);
