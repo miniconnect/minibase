@@ -605,6 +605,12 @@ These functions are keywords and not identifiers, so they must be written in bar
 Some expressions are similar to functions but have a special syntax for the parameters.
 Like system functions, their names are keywords.
 
+Some of the string functions work with the BIT and BINARY types as well,
+as input and output types (while any other input is interpreted as a normal string), namely:
+
+`CONCAT` `CONCAT_WS` `LEFT`, `LPAD`, `POSITION` `REPEAT`, `REPLACE`,
+`REVERSE`, `RIGHT`, `RPAD`, `RRPAD`, `SPLIT_PART`, `SUBSTRING`, `TRIM`
+
 ### The `INTERVAL` expression
 
 While `INTERVAL` is also a type name, it can also be used for introducing interval literals.
@@ -678,7 +684,7 @@ Unit parameters and the `TO` syntax is also supported in the same way
 
 ### The `TRIM` expression
 
-The expression `TRIM(x)` or `TRIM(FROM x)` removes all leading and trailing spaces from `x` (interpreted as a string).
+The expression `TRIM(x)` or `TRIM(FROM x)` removes all leading and trailing spaces from `x`.
 The expression `TRIM(c FROM x)` removes all leading and trailing occurences of the first character of `c`
 (if `c` is an empty string then it will return with `x` unchanged).
 
@@ -693,6 +699,9 @@ Some examples:
 | `TRIM('m' FROM '   lorem')` | `'   lore'` |
 
 If any specified parameter is null then null will be returned.
+
+The `BIT` and `BINARY` types are also supported, and behave accordingly.
+By default, they remove zero bits or bytes.
 
 ### The `SUBSTRING` expression
 
@@ -718,6 +727,8 @@ Some examples:
 
 If any specified parameter is null then null will be returned.
 
+The `BIT` and `BINARY` types are also supported, and behave accordingly.
+
 ### The `POSITION` expression
 
 The expression `POSITION(x IN a)` searches for the first occurence position of `x` in `a` (both interpreted as a string).
@@ -734,6 +745,8 @@ Some examples:
 | `POSITION('lorem' in 'ore')` | `0` |
 
 If any specified parameter is null then null will be returned.
+
+The `BIT` and `BINARY` types are also supported, and behave accordingly.
 
 ### The `EXTRACT` expression
 
