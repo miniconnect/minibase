@@ -65,7 +65,7 @@ public class TypeConstruct {
         NUMERIC(Symbol.DECIMAL), DEC(Symbol.DECIMAL),
         REAL(Symbol.FLOAT), DOUBLE_PRECISION(Symbol.FLOAT), DOUBLE(Symbol.FLOAT),
         CHAR(Symbol.NVARCHAR), VARCHAR(Symbol.NVARCHAR), NCHAR(Symbol.NVARCHAR), TEXT(Symbol.CLOB),
-        BINARY(Symbol.VARBINARY),
+        BINARY(Symbol.VARBINARY), BYTEA(Symbol.VARBINARY),
         TIMESTAMP(Symbol.DATETIME),
         TIME_WITHOUT_TIME_ZONE(Symbol.TIME),
         DATETIME_WITHOUT_TIME_ZONE(Symbol.DATETIME),
