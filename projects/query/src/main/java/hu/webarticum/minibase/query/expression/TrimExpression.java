@@ -2,7 +2,11 @@ package hu.webarticum.minibase.query.expression;
 
 import java.util.Optional;
 
+import hu.webarticum.minibase.query.util.BitStringUtil;
+import hu.webarticum.minibase.query.util.ByteStringUtil;
 import hu.webarticum.minibase.query.util.StringUtil;
+import hu.webarticum.miniconnect.lang.BitString;
+import hu.webarticum.miniconnect.lang.ByteString;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
 
@@ -13,9 +17,13 @@ public class TrimExpression implements Expression {
     }
 
 
-    private static final String DEFAULT_CHARS = " ";
-
     private static final TrimSpecification DEFAULT_TRIM_SPECIFICATION = TrimSpecification.BOTH;
+
+    private static final String DEFAULT_TRIM_CHARS = " ";
+
+    private static final ByteString DEFAULT_TRIM_BYTES = ByteString.of(new byte[] { 0 });
+
+    private static final BitString DEFAULT_TRIM_BITS = BitString.of(false);
 
 
     private final Expression subjectOperand;
@@ -55,12 +63,22 @@ public class TrimExpression implements Expression {
 
     @Override
     public Optional<Class<?>> type() {
-        return Optional.of(String.class);
+        Class<?> subjectType = subjectOperand.type().orElse(null);
+        if (subjectType == null || subjectType == ByteString.class || subjectType == BitString.class) {
+            return Optional.ofNullable(subjectType);
+        } else {
+            return Optional.of(String.class);
+        }
     }
 
     @Override
     public Class<?> type(ImmutableMap<Parameter, Class<?>> typeSubstitutions) {
-        return String.class;
+        Class<?> subjectType = subjectOperand.type(typeSubstitutions);
+        if (subjectType == ByteString.class || subjectType == BitString.class) {
+            return subjectType;
+        } else {
+            return String.class;
+        }
     }
 
     @Override
@@ -82,36 +100,48 @@ public class TrimExpression implements Expression {
             return null;
         }
 
-        Object charsValue = charsOperand.orElseGet(() -> new ConstantExpression(DEFAULT_CHARS)).evaluate(substitutions);
-        if (charsValue == null) {
-            return null;
+        Object charsValue = null;
+        if (charsOperand.isPresent()) {
+            charsValue = charsOperand.get().evaluate(substitutions);
+            if (charsValue == null) {
+                return null;
+            }
         }
 
         TrimSpecification effectiveTrimSpecification = trimSpecification.orElse(DEFAULT_TRIM_SPECIFICATION);
 
-        String subjectString = StringUtil.stringify(subjectValue);
-        String charsString = StringUtil.stringify(charsValue);
-        int rightTrimPosition;
-        if (effectiveTrimSpecification != TrimSpecification.LEADING) {
-            rightTrimPosition = getRightTrimPosition(subjectString, charsString);
+        if (subjectValue instanceof ByteString) {
+            return operate((ByteString) subjectValue, ByteStringUtil.byteStringify(charsValue), effectiveTrimSpecification);
+        } else if (subjectValue instanceof BitString) {
+            return operate((BitString) subjectValue, BitStringUtil.bitStringify(charsValue), effectiveTrimSpecification);
         } else {
-            rightTrimPosition = subjectString.length();
+            return operate(StringUtil.stringify(subjectValue), StringUtil.stringify(charsValue), effectiveTrimSpecification);
+        }
+    }
+
+    private String operate(String subject, String chars, TrimSpecification trimSpecification) {
+        String effectiveChars = chars != null ? chars : DEFAULT_TRIM_CHARS;
+        int rightTrimPosition;
+        if (trimSpecification != TrimSpecification.LEADING) {
+            rightTrimPosition = getRightTrimPosition(subject, effectiveChars);
+        } else {
+            rightTrimPosition = subject.length();
         }
         int leftTrimPosition;
-        if (effectiveTrimSpecification != TrimSpecification.TRAILING && rightTrimPosition > 0) {
-            leftTrimPosition = getLeftTrimPosition(subjectString, charsString);
+        if (trimSpecification != TrimSpecification.TRAILING && rightTrimPosition > 0) {
+            leftTrimPosition = getLeftTrimPosition(subject, effectiveChars);
         } else {
             leftTrimPosition = 0;
         }
-        return subjectString.substring(leftTrimPosition, rightTrimPosition);
+        return subject.substring(leftTrimPosition, rightTrimPosition);
     }
 
-    private int getLeftTrimPosition(String subjectString, String charsString) {
+    private int getLeftTrimPosition(String subject, String chars) {
         int result = 0;
-        int length = subjectString.length();
+        int length = subject.length();
         for (int i = 0; i < length; i++) {
-            char c = subjectString.charAt(i);
-            if (charsString.indexOf(c) < 0) {
+            char c = subject.charAt(i);
+            if (chars.indexOf(c) < 0) {
                 break;
             }
             result = i + 1;
@@ -119,12 +149,98 @@ public class TrimExpression implements Expression {
         return result;
     }
 
-    private int getRightTrimPosition(String subjectString, String charsString) {
-        int length = subjectString.length();
+    private int getRightTrimPosition(String subject, String chars) {
+        int length = subject.length();
         int result = length;
         for (int i = length - 1; i >= 0; i--) {
-            char c = subjectString.charAt(i);
-            if (charsString.indexOf(c) < 0) {
+            char c = subject.charAt(i);
+            if (chars.indexOf(c) < 0) {
+                break;
+            }
+            result = i;
+        }
+        return result;
+    }
+
+    private ByteString operate(ByteString subject, ByteString chars, TrimSpecification trimSpecification) {
+        ByteString effectiveChars = chars != null ? chars : DEFAULT_TRIM_BYTES;
+        int rightTrimPosition;
+        if (trimSpecification != TrimSpecification.LEADING) {
+            rightTrimPosition = getRightTrimPosition(subject, effectiveChars);
+        } else {
+            rightTrimPosition = subject.length();
+        }
+        int leftTrimPosition;
+        if (trimSpecification != TrimSpecification.TRAILING && rightTrimPosition > 0) {
+            leftTrimPosition = getLeftTrimPosition(subject, effectiveChars);
+        } else {
+            leftTrimPosition = 0;
+        }
+        return subject.substring(leftTrimPosition, rightTrimPosition);
+    }
+
+    private int getLeftTrimPosition(ByteString subject, ByteString chars) {
+        int result = 0;
+        int length = subject.length();
+        for (int i = 0; i < length; i++) {
+            byte b = subject.byteAt(i);
+            if (chars.indexOf(b) < 0) {
+                break;
+            }
+            result = i + 1;
+        }
+        return result;
+    }
+
+    private int getRightTrimPosition(ByteString subject, ByteString chars) {
+        int length = subject.length();
+        int result = length;
+        for (int i = length - 1; i >= 0; i--) {
+            byte b = subject.byteAt(i);
+            if (chars.indexOf(b) < 0) {
+                break;
+            }
+            result = i;
+        }
+        return result;
+    }
+
+    private BitString operate(BitString subject, BitString chars, TrimSpecification trimSpecification) {
+        BitString effectiveChars = chars != null ? chars : DEFAULT_TRIM_BITS;
+        int rightTrimPosition;
+        if (trimSpecification != TrimSpecification.LEADING) {
+            rightTrimPosition = getRightTrimPosition(subject, effectiveChars);
+        } else {
+            rightTrimPosition = subject.length();
+        }
+        int leftTrimPosition;
+        if (trimSpecification != TrimSpecification.TRAILING && rightTrimPosition > 0) {
+            leftTrimPosition = getLeftTrimPosition(subject, effectiveChars);
+        } else {
+            leftTrimPosition = 0;
+        }
+        return subject.substring(leftTrimPosition, rightTrimPosition);
+    }
+
+    private int getLeftTrimPosition(BitString subject, BitString chars) {
+        int result = 0;
+        int length = subject.length();
+        for (int i = 0; i < length; i++) {
+            boolean bit = subject.get(i);
+            if (chars.indexOf(bit) < 0) {
+                break;
+            }
+            result = i + 1;
+        }
+        return result;
+    }
+
+    private int getRightTrimPosition(BitString subject, BitString chars) {
+        int length = subject.length();
+        int result = length;
+        for (int i = length - 1; i >= 0; i--) {
+            boolean bit = subject.get(i);
+            if (chars.indexOf(bit) < 0) {
                 break;
             }
             result = i;
