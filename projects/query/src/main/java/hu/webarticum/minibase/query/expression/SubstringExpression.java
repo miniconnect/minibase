@@ -152,10 +152,8 @@ public class SubstringExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return "SUBSTRING(" + contextOperand.automaticName() +
-                fromOperand.map(e -> " FROM " + e.automaticName()).orElse("") +
-                forOperand.map(e -> " FOR " + e.automaticName()).orElse("") + ")";
+    public String automaticName(int columnIndex) {
+        return "expr_substr_col" + columnIndex;
     }
 
 }

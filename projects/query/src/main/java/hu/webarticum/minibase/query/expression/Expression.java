@@ -19,6 +19,6 @@ public interface Expression {
 
     public Object evaluate(ImmutableMap<Parameter, Object> substitutions);
 
-    public String automaticName();
+    public String automaticName(int columnIndex);
 
 }

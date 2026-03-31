@@ -92,8 +92,8 @@ public class AbsExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return "ABS(" + operand.automaticName() + ")";
+    public String automaticName(int columnIndex) {
+        return "abs_" + operand.automaticName(columnIndex);
     }
 
 }

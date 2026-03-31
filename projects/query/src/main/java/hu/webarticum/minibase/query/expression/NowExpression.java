@@ -43,8 +43,8 @@ public class NowExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return "NOW()";
+    public String automaticName(int columnIndex) {
+        return "now";
     }
 
 }

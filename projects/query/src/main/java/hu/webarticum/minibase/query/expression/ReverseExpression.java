@@ -74,8 +74,8 @@ public class ReverseExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return "REVERSE(" + operand.automaticName() + ")";
+    public String automaticName(int columnIndex) {
+        return "rev_" + operand.automaticName(columnIndex);
     }
 
 }

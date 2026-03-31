@@ -52,8 +52,8 @@ public class VariableExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return "@" + variableParameter.variableName();
+    public String automaticName(int columnIndex) {
+        return variableParameter.variableName();
     }
 
 }

@@ -166,8 +166,8 @@ public class ExtractExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return "EXTRACT(" + extractField.name() + " FROM " + contextOperand.automaticName() + ")";
+    public String automaticName(int columnIndex) {
+        return "expr_extract_col" + columnIndex;
     }
 
 }

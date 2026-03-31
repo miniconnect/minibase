@@ -121,8 +121,8 @@ public class LeftExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return "LEFT(" + contextOperand.automaticName() + ", " + lengthOperand.automaticName() + ")";
+    public String automaticName(int columnIndex) {
+        return "expr_left_col" + columnIndex;
     }
 
 }

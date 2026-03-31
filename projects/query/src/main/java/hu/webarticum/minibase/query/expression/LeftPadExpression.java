@@ -170,8 +170,8 @@ public class LeftPadExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return "LPAD(" + subjectOperand.automaticName() + ", " + lengthOperand.automaticName() + ")";
+    public String automaticName(int columnIndex) {
+        return "expr_pad_col" + columnIndex;
     }
 
 }

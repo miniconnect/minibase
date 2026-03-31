@@ -63,8 +63,8 @@ public class OctetLengthExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return "OCTET_LENGTH(" + operand.automaticName() + ")";
+    public String automaticName(int columnIndex) {
+        return "length_" + operand.automaticName(columnIndex);
     }
 
 }

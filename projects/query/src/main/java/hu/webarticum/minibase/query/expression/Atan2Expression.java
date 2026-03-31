@@ -69,8 +69,8 @@ public class Atan2Expression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return "ATAN2(" + yOperand.automaticName() + ", " + xOperand.automaticName() + ")";
+    public String automaticName(int columnIndex) {
+        return "expr_atan2_col" + columnIndex;
     }
 
 }

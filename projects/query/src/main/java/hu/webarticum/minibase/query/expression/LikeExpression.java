@@ -150,9 +150,8 @@ public class LikeExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        String op = caseInsensitive ? "ILIKE" : "LIKE";
-        return contextOperand.automaticName() + " " + op + " " + patternOperand.automaticName();
+    public String automaticName(int columnIndex) {
+        return "expr_like_col" + columnIndex;
     }
 
 }

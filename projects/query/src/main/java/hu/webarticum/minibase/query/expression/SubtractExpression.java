@@ -246,8 +246,8 @@ public class SubtractExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return leftOperand.automaticName() + " - " + rightOperand.automaticName();
+    public String automaticName(int columnIndex) {
+        return "expr_sub_col" + columnIndex;
     }
 
 }

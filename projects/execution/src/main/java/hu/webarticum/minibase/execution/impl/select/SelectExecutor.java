@@ -15,6 +15,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import hu.webarticum.minibase.common.error.PredefinedError;
 import hu.webarticum.minibase.execution.SharedThrowingQueryExecutor;
@@ -77,8 +78,8 @@ public class SelectExecutor implements SharedThrowingQueryExecutor {
         LinkedHashMap<String, TableEntry> reorderedTableEntries = applyOrderByToTableEntries(
                 tableEntries, uniqueOrderedAliases, normalizedOrderByEntries);
 
-        ImmutableList<MiniColumnHeader> columnHeaders = selectItemEntries.stream()
-                .map(e -> columnHeaderOf(e, reorderedTableEntries))
+        ImmutableList<MiniColumnHeader> columnHeaders = IntStream.range(0, selectItemEntries.size())
+                .mapToObj(i -> columnHeaderOf(selectItemEntries.get(i), i, reorderedTableEntries))
                 .collect(ImmutableList.createCollector());
 
         try {
@@ -698,13 +699,15 @@ public class SelectExecutor implements SharedThrowingQueryExecutor {
     }
 
     private ColumnParameter findMatchingColumnParameter(List<SelectItemEntry> selectItemEntries, String fieldName) {
-        for (SelectItemEntry selectItemEntry : selectItemEntries) {
+        int size = selectItemEntries.size();
+        for (int i = 0; i < size; i++) {
+            SelectItemEntry selectItemEntry = selectItemEntries.get(i);
             ColumnParameter columnParameter = columnParameterOf(selectItemEntry);
             if (columnParameter == null) {
                 continue;
             }
             ExpressionSelectItem expressionSelectItem = (ExpressionSelectItem) selectItemEntry.selectItem;
-            String fieldAlias = fieldAliasOf(expressionSelectItem);
+            String fieldAlias = fieldAliasOf(expressionSelectItem, i);
             if (fieldAlias.equals(fieldName)) {
                 return columnParameter;
             }
@@ -750,7 +753,8 @@ public class SelectExecutor implements SharedThrowingQueryExecutor {
         return JavaTranslator.of(clazz);
     }
 
-    private MiniColumnHeader columnHeaderOf(SelectItemEntry selectItemEntry, Map<String, TableEntry> tableEntries) {
+    private MiniColumnHeader columnHeaderOf(
+            SelectItemEntry selectItemEntry, int columnIndex, Map<String, TableEntry> tableEntries) {
         MiniValueDefinition valueDefinition = selectItemEntry.valueTranslator.definition();
         SelectItem selectItem = selectItemEntry.selectItem;
         if (!(selectItem instanceof ExpressionSelectItem)) {
@@ -758,7 +762,7 @@ public class SelectExecutor implements SharedThrowingQueryExecutor {
         }
         ExpressionSelectItem expressionSelectItem = (ExpressionSelectItem) selectItem;
         String tableAlias = tableAliasOf(expressionSelectItem);
-        String fieldAlias = fieldAliasOf(expressionSelectItem);
+        String fieldAlias = fieldAliasOf(expressionSelectItem, columnIndex);
         boolean isNullable =
                 selectItemEntry.columnDefinition.isNullable() ||
                 (tableAlias != null && isTransitivelyLeftJoined(tableAlias, tableEntries));
@@ -774,12 +778,12 @@ public class SelectExecutor implements SharedThrowingQueryExecutor {
         return ((ColumnExpression) expression).columnParameter().tableAlias();
     }
 
-    private String fieldAliasOf(ExpressionSelectItem expressionSelectItem) {
+    private String fieldAliasOf(ExpressionSelectItem expressionSelectItem, int columnIndex) {
         String explicitAlias = expressionSelectItem.alias();
         if (explicitAlias != null) {
             return explicitAlias;
         } else {
-            return expressionSelectItem.expression().automaticName();
+            return expressionSelectItem.expression().automaticName(columnIndex);
         }
     }
 

@@ -60,8 +60,8 @@ public class NotEqualsExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return leftOperand.automaticName() + " <> " + rightOperand.automaticName();
+    public String automaticName(int columnIndex) {
+        return "expr_neq_col" + columnIndex;
     }
 
 }

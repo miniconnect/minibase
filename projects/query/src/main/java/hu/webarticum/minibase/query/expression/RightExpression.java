@@ -121,8 +121,8 @@ public class RightExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return "RIGHT(" + contextOperand.automaticName() + ", " + lengthOperand.automaticName() + ")";
+    public String automaticName(int columnIndex) {
+        return "expr_right_col" + columnIndex;
     }
 
 }

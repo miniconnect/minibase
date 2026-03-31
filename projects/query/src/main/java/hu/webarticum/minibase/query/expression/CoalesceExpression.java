@@ -76,19 +76,12 @@ public class CoalesceExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        StringBuilder resultBuilder = new StringBuilder("COALESCE(");
-        boolean first = true;
-        for (Expression operand : operands) {
-            if (first) {
-                first = false;
-            } else {
-                resultBuilder.append(", ");
-            }
-            resultBuilder.append(operand.automaticName());
+    public String automaticName(int columnIndex) {
+        if (operands.size() == 1) {
+            return operands.get(0).automaticName(columnIndex);
+        } else {
+            return "expr_coalesce_col" + columnIndex;
         }
-        resultBuilder.append(")");
-        return resultBuilder.toString();
     }
 
 }

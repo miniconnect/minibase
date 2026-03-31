@@ -129,8 +129,8 @@ public class CaseExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return "WHEN expression";
+    public String automaticName(int columnIndex) {
+        return "expr_case_col" + columnIndex;
     }
 
 

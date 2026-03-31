@@ -43,8 +43,8 @@ public class RandomExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return "RANDOM()";
+    public String automaticName(int columnIndex) {
+        return "rand_" + columnIndex;
     }
 
 }

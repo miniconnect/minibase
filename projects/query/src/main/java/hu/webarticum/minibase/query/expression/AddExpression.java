@@ -314,8 +314,8 @@ public class AddExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return leftOperand.automaticName() + " + " + rightOperand.automaticName();
+    public String automaticName(int columnIndex) {
+        return "expr_add_col" + columnIndex;
     }
 
 }

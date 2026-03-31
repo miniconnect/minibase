@@ -42,8 +42,8 @@ public class PiExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return "PI()";
+    public String automaticName(int columnIndex) {
+        return "pi";
     }
 
 }

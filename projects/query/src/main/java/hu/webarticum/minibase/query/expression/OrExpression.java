@@ -74,8 +74,8 @@ public class OrExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return leftOperand.automaticName() + " OR " + rightOperand.automaticName();
+    public String automaticName(int columnIndex) {
+        return "expr_or_col" + columnIndex;
     }
 
 }

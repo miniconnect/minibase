@@ -168,8 +168,8 @@ public class SplitPartExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return "SPLIT_PART(" + contextOperand.automaticName() + ", " + slotOperand.automaticName() + ")";
+    public String automaticName(int columnIndex) {
+        return "expr_substr_col" + columnIndex;
     }
 
 }

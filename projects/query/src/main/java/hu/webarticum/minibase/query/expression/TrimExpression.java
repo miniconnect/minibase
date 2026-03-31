@@ -249,12 +249,8 @@ public class TrimExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return "TRIM(" +
-                trimSpecification.map(s -> s.name() + " ").orElse("") +
-                charsOperand.map(e -> e.automaticName() + " ").orElse("") +
-                (trimSpecification.isPresent() || charsOperand.isPresent() ? "FROM " : "") +
-                subjectOperand.automaticName() + ")";
+    public String automaticName(int columnIndex) {
+        return subjectOperand.automaticName(columnIndex);
     }
 
 }

@@ -52,8 +52,8 @@ public class UpperExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return "UPPER(" + operand.automaticName() + ")";
+    public String automaticName(int columnIndex) {
+        return operand.automaticName(columnIndex);
     }
 
 }

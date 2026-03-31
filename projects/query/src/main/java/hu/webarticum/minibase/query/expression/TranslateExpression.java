@@ -103,10 +103,8 @@ public class TranslateExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return "TRANSLATE(" + contextOperand.automaticName() + ", " +
-                fromCharsOperand.automaticName() + ", " +
-                toCharsOperand.automaticName() + ")";
+    public String automaticName(int columnIndex) {
+        return "expr_trans_col" + columnIndex;
     }
 
 }

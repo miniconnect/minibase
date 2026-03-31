@@ -93,8 +93,8 @@ public class DecodeExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return "DECODE(" + inputOperand.automaticName() + ", " + encodingTypeOperand.automaticName() + ")";
+    public String automaticName(int columnIndex) {
+        return "expr_decode_col" + columnIndex;
     }
 
 }

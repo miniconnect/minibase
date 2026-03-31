@@ -96,8 +96,8 @@ public class BitwiseShiftRightExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return subjectOperand.automaticName() + " >> " + shiftOperand.automaticName();
+    public String automaticName(int columnIndex) {
+        return "expr_shift_col" + columnIndex;
     }
 
 }

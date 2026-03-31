@@ -64,8 +64,8 @@ public class XorExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return leftOperand.automaticName() + " XOR " + rightOperand.automaticName();
+    public String automaticName(int columnIndex) {
+        return "expr_xor_col" + columnIndex;
     }
 
 }

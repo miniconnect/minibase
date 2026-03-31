@@ -75,8 +75,8 @@ public class InitcapExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return "INITCAP(" + operand.automaticName() + ")";
+    public String automaticName(int columnIndex) {
+        return operand.automaticName(columnIndex);
     }
 
 }

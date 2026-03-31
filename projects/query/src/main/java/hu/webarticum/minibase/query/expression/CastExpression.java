@@ -62,8 +62,8 @@ public class CastExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return "CAST(" + subjectOperand.automaticName() + " AS " + targetTypeConstruct.symbol().name() + ")";
+    public String automaticName(int columnIndex) {
+        return "expr_cast_col" + columnIndex;
     }
 
 }

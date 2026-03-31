@@ -94,8 +94,8 @@ public class EncodeExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return "ENCODE(" + inputOperand.automaticName() + ", " + encodingTypeOperand.automaticName() + ")";
+    public String automaticName(int columnIndex) {
+        return "expr_encode_col" + columnIndex;
     }
 
 }

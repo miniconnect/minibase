@@ -80,7 +80,7 @@ setVariableQuery: SET variable EQ extendedValue;
 wherePart: WHERE ( whereItem ( AND whereItem )* | PAR_START whereItem ( AND whereItem )* PAR_END );
 whereItem: scopeableFieldName postfixCondition | PAR_START whereItem PAR_END;
 postfixCondition: simpleRelation extendedValue | betweenRelation | isNull | isNotNull;
-simpleRelation: EQ | LESS | LESS_EQ | GREATER| GREATER_EQ;
+simpleRelation: EQ | LESS | LEQ | GREATER| GEQ;
 betweenRelation: BETWEEN firstValue=extendedValue AND secondValue=extendedValue;
 isNull: IS ( NULL | UNKNOWN );
 isNotNull: IS NOT ( NULL | UNKNOWN );
@@ -104,7 +104,7 @@ expression
     | left=expression AND right=expression
     | left=expression XOR right=expression
     | left=expression OR right=expression
-    | left=expression ( LESS | LESS_EQ | GREATER | GREATER_EQ ) right=expression
+    | left=expression ( LESS | LEQ | GREATER | GEQ ) right=expression
     | left=expression ( EQ | NEQ_ANG | NEQ_BANG ) right=expression
     | subject=expression NOT? BETWEEN min=expression AND max=expression
     | left=expression DOUBLE_PIPE right=expression
@@ -423,9 +423,9 @@ NEQ_ANG: '<>';
 NEQ_BANG: '!=';
 
 LESS: '<';
-LESS_EQ: '<=';
+LEQ: '<=';
 GREATER: '>';
-GREATER_EQ: '>=';
+GEQ: '>=';
 
 PAR_START: '(';
 PAR_END: ')';

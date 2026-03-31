@@ -95,8 +95,8 @@ public class RoundExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return roundMode.name() + "(" + operand.automaticName() + ")";
+    public String automaticName(int columnIndex) {
+        return roundMode.name().toLowerCase() + "_" + operand.automaticName(columnIndex);
     }
 
 }

@@ -61,8 +61,8 @@ public class OrdExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return "ORD(" + operand.automaticName() + ")";
+    public String automaticName(int columnIndex) {
+        return "ord_" + operand.automaticName(columnIndex);
     }
 
 }

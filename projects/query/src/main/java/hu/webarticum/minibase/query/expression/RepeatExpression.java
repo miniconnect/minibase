@@ -124,8 +124,8 @@ public class RepeatExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return "REPEAT(" + subjectOperand.automaticName() + ", " + countOperand.automaticName() + ")";
+    public String automaticName(int columnIndex) {
+        return "expr_repeat_col" + columnIndex;
     }
 
 }

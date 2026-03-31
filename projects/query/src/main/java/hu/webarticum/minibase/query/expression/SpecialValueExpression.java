@@ -50,8 +50,8 @@ public class SpecialValueExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return specialValueParameter.name();
+    public String automaticName(int columnIndex) {
+        return specialValueParameter.name().toLowerCase();
     }
 
 }

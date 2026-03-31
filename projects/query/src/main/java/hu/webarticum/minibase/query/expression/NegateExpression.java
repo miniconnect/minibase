@@ -81,8 +81,8 @@ public class NegateExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return "-" + operand.automaticName();
+    public String automaticName(int columnIndex) {
+        return "neg_" + operand.automaticName(columnIndex);
     }
 
 }

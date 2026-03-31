@@ -170,8 +170,8 @@ public class RightPadExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return "RPAD(" + subjectOperand.automaticName() + ", " + lengthOperand.automaticName() + ")";
+    public String automaticName(int columnIndex) {
+        return "expr_pad_col" + columnIndex;
     }
 
 }

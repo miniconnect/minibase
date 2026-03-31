@@ -212,11 +212,8 @@ public class RegexpReplaceExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return "REGEXP_REPLACE(" + contextOperand.automaticName() + ", " +
-                patternOperand.automaticName() + ", " +
-                toOperand.automaticName() +
-                (flagsOperand.map(e -> ", " + e.automaticName())).orElse("")  + ")";
+    public String automaticName(int columnIndex) {
+        return "expr_replace_col" + columnIndex;
     }
 
 }

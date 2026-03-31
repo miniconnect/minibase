@@ -59,8 +59,8 @@ public class ChrExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return "CHR(" + operand.automaticName() + ")";
+    public String automaticName(int columnIndex) {
+        return "chr_" + operand.automaticName(columnIndex);
     }
 
 }

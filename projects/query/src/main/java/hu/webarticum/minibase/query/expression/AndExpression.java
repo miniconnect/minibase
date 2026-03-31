@@ -74,8 +74,8 @@ public class AndExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return leftOperand.automaticName() + " AND " + rightOperand.automaticName();
+    public String automaticName(int columnIndex) {
+        return "expr_and_col" + columnIndex;
     }
 
 }

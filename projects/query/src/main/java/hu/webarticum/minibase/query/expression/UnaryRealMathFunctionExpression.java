@@ -92,8 +92,8 @@ public class UnaryRealMathFunctionExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return functionSymbol.name() + "(" + operand.automaticName() + ")";
+    public String automaticName(int columnIndex) {
+        return functionSymbol.name().toLowerCase() + "_" + operand.automaticName(columnIndex);
     }
 
 }

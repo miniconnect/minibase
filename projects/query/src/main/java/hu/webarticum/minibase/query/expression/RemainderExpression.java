@@ -119,8 +119,8 @@ public class RemainderExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return leftOperand.automaticName() + " % " + rightOperand.automaticName();
+    public String automaticName(int columnIndex) {
+        return "expr_rem_col" + columnIndex;
     }
 
 }

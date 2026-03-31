@@ -102,8 +102,8 @@ public class GcdExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return "GCD(" + aOperand.automaticName() + ", " + bOperand.automaticName() + ")";
+    public String automaticName(int columnIndex) {
+        return "expr_gcd_col" + columnIndex;
     }
 
 }

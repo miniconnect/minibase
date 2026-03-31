@@ -85,8 +85,8 @@ public class PositionExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return "POSITION(" + subjectOperand.automaticName() + " IN " + contextOperand.automaticName() + ")";
+    public String automaticName(int columnIndex) {
+        return "expr_position_col" + columnIndex;
     }
 
 }

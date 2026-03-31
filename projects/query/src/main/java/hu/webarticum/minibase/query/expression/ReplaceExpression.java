@@ -185,10 +185,8 @@ public class ReplaceExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return "REPLACE(" + contextOperand.automaticName() + ", " +
-                fromOperand.automaticName() + ", " +
-                toOperand.automaticName() + ")";
+    public String automaticName(int columnIndex) {
+        return "expr_replace_col" + columnIndex;
     }
 
 }

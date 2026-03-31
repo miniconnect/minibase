@@ -100,21 +100,8 @@ public class InExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        StringBuilder resultBuilder = new StringBuilder();
-        resultBuilder.append(subjectOperand.automaticName());
-        resultBuilder.append(" IN (");
-        boolean first = true;
-        for (Expression itemExpression : contextListOperand) {
-            if (first) {
-                first = false;
-            } else {
-                resultBuilder.append(", ");
-            }
-            resultBuilder.append(itemExpression.automaticName());
-        }
-        resultBuilder.append(")");
-        return resultBuilder.toString();
+    public String automaticName(int columnIndex) {
+        return "expr_in_col" + columnIndex;
     }
 
 }

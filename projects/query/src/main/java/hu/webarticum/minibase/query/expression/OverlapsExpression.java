@@ -190,11 +190,8 @@ public class OverlapsExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return
-                "(" + start1Operand.automaticName() + ", " + end1Operand.automaticName() +
-                ") OVERLAPS (" +
-                start2Operand.automaticName() + ", " + end2Operand.automaticName() + ")";
+    public String automaticName(int columnIndex) {
+        return "expr_overlaps_col" + columnIndex;
     }
 
 }

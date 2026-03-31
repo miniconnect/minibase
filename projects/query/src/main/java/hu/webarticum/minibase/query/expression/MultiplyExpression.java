@@ -130,8 +130,8 @@ public class MultiplyExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return leftOperand.automaticName() + " * " + rightOperand.automaticName();
+    public String automaticName(int columnIndex) {
+        return "expr_mul_col" + columnIndex;
     }
 
 }

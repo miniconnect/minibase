@@ -56,8 +56,8 @@ public class LowerExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return "LOWER(" + operand.automaticName() + ")";
+    public String automaticName(int columnIndex) {
+        return operand.automaticName(columnIndex);
     }
 
 }

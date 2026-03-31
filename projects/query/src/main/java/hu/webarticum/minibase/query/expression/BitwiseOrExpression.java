@@ -110,8 +110,8 @@ public class BitwiseOrExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return leftOperand.automaticName() + " | " + rightOperand.automaticName();
+    public String automaticName(int columnIndex) {
+        return "expr_or_col" + columnIndex;
     }
 
 }

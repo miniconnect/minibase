@@ -125,8 +125,8 @@ public class DivideExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return leftOperand.automaticName() + " / " + rightOperand.automaticName();
+    public String automaticName(int columnIndex) {
+        return "expr_div_col" + columnIndex;
     }
 
 }

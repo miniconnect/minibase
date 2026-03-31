@@ -69,8 +69,8 @@ public class LogExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-    return "LOG(" + baseOperand.automaticName() + ", " + subjectOperand.automaticName() + ")";
+    public String automaticName(int columnIndex) {
+        return "expr_log_col" + columnIndex;
     }
 
 }

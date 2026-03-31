@@ -51,8 +51,8 @@ public class IsNullExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return operand.automaticName() + " IS NULL";
+    public String automaticName(int columnIndex) {
+        return "null_" + operand.automaticName(columnIndex);
     }
 
 }

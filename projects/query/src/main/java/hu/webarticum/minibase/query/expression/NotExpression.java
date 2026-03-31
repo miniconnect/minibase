@@ -57,8 +57,8 @@ public class NotExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return "NOT " + operand.automaticName();
+    public String automaticName(int columnIndex) {
+        return "not_" + operand.automaticName(columnIndex);
     }
 
 }

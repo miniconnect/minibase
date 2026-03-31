@@ -188,19 +188,12 @@ public class ConcatExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        StringBuilder resultBuilder = new StringBuilder("CONCAT(");
-        boolean first = true;
-        for (Expression parameterExpression : operands) {
-            if (first) {
-                first = false;
-            } else {
-                resultBuilder.append(", ");
-            }
-            resultBuilder.append(parameterExpression.automaticName());
+    public String automaticName(int columnIndex) {
+        if (operands.size() == 1) {
+            return operands.get(0).automaticName(columnIndex);
+        } else {
+            return "expr_concat_col" + columnIndex;
         }
-        resultBuilder.append(")");
-        return resultBuilder.toString();
     }
 
 }

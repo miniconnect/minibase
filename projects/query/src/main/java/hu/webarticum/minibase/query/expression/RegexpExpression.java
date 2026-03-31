@@ -100,8 +100,8 @@ public class RegexpExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return contextOperand.automaticName() + " REGEXP " + patternOperand.automaticName();
+    public String automaticName(int columnIndex) {
+        return "expr_regexp_col" + columnIndex;
     }
 
 }

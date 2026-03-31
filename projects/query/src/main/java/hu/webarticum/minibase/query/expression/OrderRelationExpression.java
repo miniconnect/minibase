@@ -1,6 +1,7 @@
 package hu.webarticum.minibase.query.expression;
 
 import java.util.Optional;
+import java.util.function.IntPredicate;
 
 import hu.webarticum.minibase.query.util.ConvertUtil;
 import hu.webarticum.minibase.query.util.StringUtil;
@@ -12,16 +13,20 @@ public class OrderRelationExpression implements Expression {
 
     public enum Operation {
 
-        LESS("<"), LESS_EQ("<="), GREATER(">"), GREATER_EQ(">=");
+        LESS(cmp -> cmp < 0),
+        LEQ(cmp -> cmp <= 0),
+        GREATER(cmp -> cmp > 0),
+        GEQ(cmp -> cmp >= 0),
+        ;
 
-        private final String operator;
+        private final IntPredicate cmpPredicate;
 
-        private Operation(String operator) {
-            this.operator = operator;
+        private Operation(IntPredicate cmpPredicate) {
+            this.cmpPredicate = cmpPredicate;
         }
 
-        public String operator() {
-            return operator;
+        public boolean testCmp(int cmp) {
+            return cmpPredicate.test(cmp);
         }
 
     }
@@ -110,22 +115,12 @@ public class OrderRelationExpression implements Expression {
     private boolean compare(Object value1, Object value2) {
         @SuppressWarnings("unchecked")
         int cmp = ((Comparable<Object>) value1).compareTo(value2);
-        switch (operation) {
-            case LESS:
-                return cmp < 0;
-            case LESS_EQ:
-                return cmp <= 0;
-            case GREATER:
-                return cmp > 0;
-            case GREATER_EQ:
-            default:
-                return cmp >= 0;
-        }
+        return operation.testCmp(cmp);
     }
 
     @Override
-    public String automaticName() {
-        return leftOperand.automaticName() + " " + operation.operator() + " " + rightOperand.automaticName();
+    public String automaticName(int columnIndex) {
+        return "expr_" + operation.name().toLowerCase() + "_" + columnIndex;
     }
 
 }

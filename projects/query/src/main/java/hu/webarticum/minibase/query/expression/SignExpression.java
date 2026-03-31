@@ -66,8 +66,8 @@ public class SignExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return "SIGN(" + operand.automaticName() + ")";
+    public String automaticName(int columnIndex) {
+        return "sign_" + operand.automaticName(columnIndex);
     }
 
 }

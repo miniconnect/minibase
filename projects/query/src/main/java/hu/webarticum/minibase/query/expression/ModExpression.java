@@ -137,8 +137,8 @@ public class ModExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return leftOperand.automaticName() + " MOD " + rightOperand.automaticName();
+    public String automaticName(int columnIndex) {
+        return "expr_mod_col" + columnIndex;
     }
 
 }

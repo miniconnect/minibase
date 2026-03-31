@@ -68,8 +68,8 @@ public class Sha256Expression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return "SHA256(" + operand.automaticName() + ")";
+    public String automaticName(int columnIndex) {
+        return "sha256_" + operand.automaticName(columnIndex);
     }
 
 }

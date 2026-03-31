@@ -64,16 +64,16 @@ public class BetweenExpression implements Expression {
     @Override
     public Object evaluate(ImmutableMap<Parameter, Object> substitutions) {
         Expression subExpression1 = new OrderRelationExpression(
-                OrderRelationExpression.Operation.LESS_EQ, minOperand, subjectOperand);
+                OrderRelationExpression.Operation.LEQ, minOperand, subjectOperand);
         Expression subExpression2 = new OrderRelationExpression(
-                OrderRelationExpression.Operation.LESS_EQ, subjectOperand, maxOperand);
+                OrderRelationExpression.Operation.LEQ, subjectOperand, maxOperand);
         Expression andExpression = new AndExpression(subExpression1, subExpression2);
         return andExpression.evaluate(substitutions);
     }
 
     @Override
-    public String automaticName() {
-        return subjectOperand.automaticName() + " BETWEEN " + minOperand.automaticName() + " AND " + maxOperand.automaticName();
+    public String automaticName(int columnIndex) {
+        return "expr_between_col" + columnIndex;
     }
 
 }

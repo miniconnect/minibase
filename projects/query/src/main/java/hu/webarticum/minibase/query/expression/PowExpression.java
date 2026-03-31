@@ -69,8 +69,8 @@ public class PowExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return "POW(" + baseOperand.automaticName() + ", " + exponentOperand.automaticName() + ")";
+    public String automaticName(int columnIndex) {
+        return "expr_pow_col" + columnIndex;
     }
 
 }

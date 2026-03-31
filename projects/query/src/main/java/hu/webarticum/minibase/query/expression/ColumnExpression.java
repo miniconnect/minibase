@@ -50,7 +50,7 @@ public class ColumnExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
+    public String automaticName(int columnIndex) {
         return columnParameter.columnName();
     }
 

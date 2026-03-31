@@ -128,15 +128,8 @@ public class ConcatWithSeparatorExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        StringBuilder resultBuilder = new StringBuilder("CONCAT_WS(");
-        resultBuilder.append(separatorOperand.automaticName());
-        for (Expression itemOperand : itemOperands) {
-            resultBuilder.append(", ");
-            resultBuilder.append(itemOperand.automaticName());
-        }
-        resultBuilder.append(")");
-        return resultBuilder.toString();
+    public String automaticName(int columnIndex) {
+        return "expr_concat_col" + columnIndex;
     }
 
 }

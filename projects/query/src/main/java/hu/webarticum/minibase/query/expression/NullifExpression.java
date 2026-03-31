@@ -62,8 +62,8 @@ public class NullifExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return "NULLIF(" + subjectOperand.automaticName() + ", " + checkOperand.automaticName() + ")";
+    public String automaticName(int columnIndex) {
+        return subjectOperand.automaticName(columnIndex);
     }
 
 }

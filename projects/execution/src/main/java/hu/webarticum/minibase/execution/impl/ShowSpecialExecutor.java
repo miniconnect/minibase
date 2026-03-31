@@ -24,7 +24,7 @@ public class ShowSpecialExecutor implements SharedThrowingQueryExecutor {
 
         String alias = showSpecialQuery.alias();
         if (alias == null) {
-            alias = expression.automaticName();
+            alias = expression.automaticName(0);
         }
 
         Object value = TableQueryUtil.getSpecialValue(parameter, state);

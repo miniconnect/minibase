@@ -60,8 +60,8 @@ public class CharLengthExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return "CHAR_LENGTH(" + operand.automaticName() + ")";
+    public String automaticName(int columnIndex) {
+        return "length_" + operand.automaticName(columnIndex);
     }
 
 }

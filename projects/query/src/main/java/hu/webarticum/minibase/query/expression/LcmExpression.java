@@ -105,8 +105,8 @@ public class LcmExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return "LCM(" + aOperand.automaticName() + ", " + bOperand.automaticName() + ")";
+    public String automaticName(int columnIndex) {
+        return "expr_lcm_col" + columnIndex;
     }
 
 }

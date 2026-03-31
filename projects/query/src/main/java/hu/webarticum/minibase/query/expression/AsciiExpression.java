@@ -62,8 +62,8 @@ public class AsciiExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return "ASCII(" + operand.automaticName() + ")";
+    public String automaticName(int columnIndex) {
+        return "ascii_" + operand.automaticName(columnIndex);
     }
 
 }

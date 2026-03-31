@@ -700,12 +700,12 @@ public class AntlrSqlParser implements SqlParser {
             return new NotEqualsExpression(leftOperand, rightOperand);
         } else if (expressionNode.LESS() != null) {
             return new OrderRelationExpression(OrderRelationExpression.Operation.LESS, leftOperand, rightOperand);
-        } else if (expressionNode.LESS_EQ() != null) {
-            return new OrderRelationExpression(OrderRelationExpression.Operation.LESS_EQ, leftOperand, rightOperand);
+        } else if (expressionNode.LEQ() != null) {
+            return new OrderRelationExpression(OrderRelationExpression.Operation.LEQ, leftOperand, rightOperand);
         } else if (expressionNode.GREATER() != null) {
             return new OrderRelationExpression(OrderRelationExpression.Operation.GREATER, leftOperand, rightOperand);
-        } else if (expressionNode.GREATER_EQ() != null) {
-            return new OrderRelationExpression(OrderRelationExpression.Operation.GREATER_EQ, leftOperand, rightOperand);
+        } else if (expressionNode.GEQ() != null) {
+            return new OrderRelationExpression(OrderRelationExpression.Operation.GEQ, leftOperand, rightOperand);
         } else if (expressionNode.ET() != null) {
             return new BitwiseAndExpression(leftOperand, rightOperand);
         } else if (expressionNode.SHIFT_LEFT() != null) {
@@ -1552,11 +1552,11 @@ public class AntlrSqlParser implements SqlParser {
     private Object buildHalfRangeCondition(SimpleRelationContext simpleRelationNode, Object value) {
         if (simpleRelationNode.LESS() != null) {
             return new RangeCondition(null, false, value, false);
-        } else if (simpleRelationNode.LESS_EQ() != null) {
+        } else if (simpleRelationNode.LEQ() != null) {
             return new RangeCondition(null, false, value, true);
         } else if (simpleRelationNode.GREATER() != null) {
             return new RangeCondition(value, false, null, false);
-        } else if (simpleRelationNode.GREATER_EQ() != null) {
+        } else if (simpleRelationNode.GEQ() != null) {
             return new RangeCondition(value, true, null, false);
         } else {
             throw new IllegalArgumentException("Invalid range condition: " + simpleRelationNode.getText());

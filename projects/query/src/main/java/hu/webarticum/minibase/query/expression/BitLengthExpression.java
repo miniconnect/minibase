@@ -63,8 +63,8 @@ public class BitLengthExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return "BIT_LENGTH(" + operand.automaticName() + ")";
+    public String automaticName(int columnIndex) {
+        return "length_" + operand.automaticName(columnIndex);
     }
 
 }
