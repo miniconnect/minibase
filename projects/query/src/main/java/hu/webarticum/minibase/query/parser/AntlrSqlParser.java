@@ -685,7 +685,7 @@ public class AntlrSqlParser implements SqlParser {
             }
         }
 
-        if (expressionNode.DOUBLE_COLON() != null) {
+        if (expressionNode.S_DOUBLE_COLON() != null) {
             Expression subExpression = parseExpressionNode(expressionNode.subject);
             TypeConstruct typeConstruct = parseTypeConstructNode(expressionNode.typeConstruct());
             return new CastExpression(subExpression, typeConstruct);
@@ -694,42 +694,42 @@ public class AntlrSqlParser implements SqlParser {
         Expression leftOperand = parseExpressionNode(expressionNode.left);
         Expression rightOperand = parseExpressionNode(expressionNode.right);
 
-        if (expressionNode.EQ() != null) {
+        if (expressionNode.S_EQ() != null) {
             return new EqualsExpression(leftOperand, rightOperand);
-        } else if (expressionNode.NEQ_ANG() != null || expressionNode.NEQ_BANG() != null) {
+        } else if (expressionNode.S_NEQ_ANG() != null || expressionNode.S_NEQ_BANG() != null) {
             return new NotEqualsExpression(leftOperand, rightOperand);
-        } else if (expressionNode.LESS() != null) {
+        } else if (expressionNode.S_LESS() != null) {
             return new OrderRelationExpression(OrderRelationExpression.Operation.LESS, leftOperand, rightOperand);
-        } else if (expressionNode.LEQ() != null) {
+        } else if (expressionNode.S_LEQ() != null) {
             return new OrderRelationExpression(OrderRelationExpression.Operation.LEQ, leftOperand, rightOperand);
-        } else if (expressionNode.GREATER() != null) {
+        } else if (expressionNode.S_GREATER() != null) {
             return new OrderRelationExpression(OrderRelationExpression.Operation.GREATER, leftOperand, rightOperand);
-        } else if (expressionNode.GEQ() != null) {
+        } else if (expressionNode.S_GEQ() != null) {
             return new OrderRelationExpression(OrderRelationExpression.Operation.GEQ, leftOperand, rightOperand);
-        } else if (expressionNode.ET() != null) {
+        } else if (expressionNode.S_ET() != null) {
             return new BitwiseAndExpression(leftOperand, rightOperand);
-        } else if (expressionNode.SHIFT_LEFT() != null) {
+        } else if (expressionNode.S_SHIFT_LEFT() != null) {
             return new BitwiseShiftLeftExpression(leftOperand, rightOperand);
-        } else if (expressionNode.SHIFT_RIGHT() != null) {
+        } else if (expressionNode.S_SHIFT_RIGHT() != null) {
             return new BitwiseShiftRightExpression(leftOperand, rightOperand);
-        } else if (expressionNode.PIPE() != null) {
+        } else if (expressionNode.S_PIPE() != null) {
             return new BitwiseOrExpression(leftOperand, rightOperand);
-        } else if (expressionNode.HASH() != null) {
+        } else if (expressionNode.S_HASH() != null) {
             return new BitwiseXorExpression(leftOperand, rightOperand);
-        } else if (expressionNode.ASTERISK() != null) {
+        } else if (expressionNode.S_ASTERISK() != null) {
             return new MultiplyExpression(leftOperand, rightOperand);
         } else if (expressionNode.MOD() != null) {
             return new ModExpression(leftOperand, rightOperand);
-        } else if (expressionNode.PERCENT() != null) {
+        } else if (expressionNode.S_PERCENT() != null) {
             return new RemainderExpression(leftOperand, rightOperand);
         } else if (expressionNode.DIV() != null) {
             // FIXME
             return new DivideExpression(leftOperand, rightOperand);
-        } else if (expressionNode.SLASH() != null) {
+        } else if (expressionNode.S_SLASH() != null) {
             return new DivideExpression(leftOperand, rightOperand);
-        } else if (expressionNode.PLUS() != null) {
+        } else if (expressionNode.S_PLUS() != null) {
             return new AddExpression(leftOperand, rightOperand);
-        } else if (expressionNode.MINUS() != null) {
+        } else if (expressionNode.S_MINUS() != null) {
             return new SubtractExpression(leftOperand, rightOperand);
         } else if (expressionNode.AND() != null) {
             return new AndExpression(leftOperand, rightOperand);
@@ -737,7 +737,7 @@ public class AntlrSqlParser implements SqlParser {
             return new XorExpression(leftOperand, rightOperand);
         } else if (expressionNode.OR() != null) {
             return new OrExpression(leftOperand, rightOperand);
-        } else if (expressionNode.DOUBLE_PIPE() != null) {
+        } else if (expressionNode.S_DOUBLE_PIPE() != null) {
             return new ConcatExpression(ImmutableList.of(leftOperand, rightOperand));
         } else {
             throw new IllegalArgumentException("Unknown operation type in: " + expressionNode.getText());
@@ -1076,7 +1076,7 @@ public class AntlrSqlParser implements SqlParser {
 
     private Expression parseUnaryArithmeticExpressionNode(UnaryArithmeticExpressionContext unaryArithmeticExpressionNode) {
         Expression operand = parsePrefixableExpressionNode(unaryArithmeticExpressionNode.prefixableExpression());
-        if (unaryArithmeticExpressionNode.MINUS() != null) {
+        if (unaryArithmeticExpressionNode.S_MINUS() != null) {
             return new NegateExpression(operand);
         } else {
             return operand;
@@ -1236,7 +1236,7 @@ public class AntlrSqlParser implements SqlParser {
     }
 
     private Integer parseSizeParameterNode(SizeParameterContext sizeParameterNode) {
-        TerminalNode integerToken = sizeParameterNode.TOKEN_INTEGER();
+        TerminalNode integerToken = sizeParameterNode.D_INTEGER();
         if (integerToken != null) {
             return parseIntegerNode(integerToken).intValueExact();
         }
@@ -1419,7 +1419,7 @@ public class AntlrSqlParser implements SqlParser {
 
         OrderByPositionContext orderByPositionNode = orderByItemNode.orderByPosition();
         if (orderByPositionNode != null) {
-            LargeInteger largeOrderByPosition = parseIntegerNode(orderByPositionNode.TOKEN_INTEGER());
+            LargeInteger largeOrderByPosition = parseIntegerNode(orderByPositionNode.D_INTEGER());
             Integer orderByPosition = largeOrderByPosition != null ? largeOrderByPosition.intValueExact() : null;
             return new OrderByItem(null, null, orderByPosition, ascOrder, nullsOrderMode);
         }
@@ -1468,7 +1468,7 @@ public class AntlrSqlParser implements SqlParser {
     }
 
     private Object parseLimitParameterNode(LimitParameterContext limitParameterNode) {
-        TerminalNode integerToken = limitParameterNode.TOKEN_INTEGER();
+        TerminalNode integerToken = limitParameterNode.D_INTEGER();
         if (integerToken != null) {
             return parseIntegerNode(integerToken);
         }
@@ -1505,17 +1505,17 @@ public class AntlrSqlParser implements SqlParser {
     }
 
     private String parseIdentifierNode(IdentifierContext identifierNode) {
-        TerminalNode simpleNameNode = identifierNode.TOKEN_SIMPLENAME();
+        TerminalNode simpleNameNode = identifierNode.D_SIMPLENAME();
         if (simpleNameNode != null) {
             return simpleNameNode.getText().toLowerCase();
         }
 
-        TerminalNode quotedNameNode = identifierNode.TOKEN_QUOTEDNAME();
+        TerminalNode quotedNameNode = identifierNode.D_QUOTEDNAME();
         if (quotedNameNode != null) {
             return unquote(quotedNameNode.getText(), '"');
         }
 
-        TerminalNode backtickedNameNode = identifierNode.TOKEN_BACKTICKEDNAME();
+        TerminalNode backtickedNameNode = identifierNode.D_BACKTICKEDNAME();
         if (backtickedNameNode != null) {
             return unquote(backtickedNameNode.getText(), '`');
         }
@@ -1528,7 +1528,7 @@ public class AntlrSqlParser implements SqlParser {
         if (simpleRelationNode != null) {
             ExtendedValueContext extendedValueNode = postfixConditionNode.extendedValue();
             Object value = parseExtendedValueNode(extendedValueNode);
-            if (simpleRelationNode.EQ() != null) {
+            if (simpleRelationNode.S_EQ() != null) {
                 return value;
             } else {
                 return buildHalfRangeCondition(simpleRelationNode, value);
@@ -1550,13 +1550,13 @@ public class AntlrSqlParser implements SqlParser {
     }
 
     private Object buildHalfRangeCondition(SimpleRelationContext simpleRelationNode, Object value) {
-        if (simpleRelationNode.LESS() != null) {
+        if (simpleRelationNode.S_LESS() != null) {
             return new RangeCondition(null, false, value, false);
-        } else if (simpleRelationNode.LEQ() != null) {
+        } else if (simpleRelationNode.S_LEQ() != null) {
             return new RangeCondition(null, false, value, true);
-        } else if (simpleRelationNode.GREATER() != null) {
+        } else if (simpleRelationNode.S_GREATER() != null) {
             return new RangeCondition(value, false, null, false);
-        } else if (simpleRelationNode.GEQ() != null) {
+        } else if (simpleRelationNode.S_GEQ() != null) {
             return new RangeCondition(value, true, null, false);
         } else {
             throw new IllegalArgumentException("Invalid range condition: " + simpleRelationNode.getText());
@@ -1618,14 +1618,14 @@ public class AntlrSqlParser implements SqlParser {
     }
 
     private LargeInteger parseIntegerLiteralNode(IntegerLiteralContext integerLiteralNode) {
-        boolean negate = integerLiteralNode.MINUS() != null;
-        LargeInteger largeIntegerValue = parseIntegerNode(integerLiteralNode.TOKEN_INTEGER());
+        boolean negate = integerLiteralNode.S_MINUS() != null;
+        LargeInteger largeIntegerValue = parseIntegerNode(integerLiteralNode.D_INTEGER());
         return negate ? largeIntegerValue.negate() : largeIntegerValue;
     }
 
     private BigDecimal parseDecimalLiteralNode(DecimalLiteralContext decimalLiteralNode) {
-        boolean negate = decimalLiteralNode.MINUS() != null;
-        BigDecimal bigDecimalValue = parseDecimalNode(decimalLiteralNode.TOKEN_DECIMAL());
+        boolean negate = decimalLiteralNode.S_MINUS() != null;
+        BigDecimal bigDecimalValue = parseDecimalNode(decimalLiteralNode.D_DECIMAL());
         return negate ? bigDecimalValue.negate() : bigDecimalValue;
     }
 
@@ -1681,7 +1681,7 @@ public class AntlrSqlParser implements SqlParser {
 
     private String parseEscapeStringTokenListNode(EscapeStringTokenListContext escapeStringTokenListNode) {
         StringBuilder resultBuilder = new StringBuilder();
-        resultBuilder.append(parseEscapeStringNode(escapeStringTokenListNode.TOKEN_ESTRING()));
+        resultBuilder.append(parseEscapeStringNode(escapeStringTokenListNode.D_ESTRING()));
         for (EscapeStringContinuationContext escapeStringContinuationNode : escapeStringTokenListNode.escapeStringContinuation()) {
             resultBuilder.append(parseEscapeContinuationNode(escapeStringContinuationNode));
         }
@@ -1830,7 +1830,7 @@ public class AntlrSqlParser implements SqlParser {
 
     public static BitString parseBinaryStringTokenListNode(BinaryStringTokenListContext binaryStringTokenListNode) {
         StringBuilder bitStringBuilder = new StringBuilder();
-        bitStringBuilder.append(parseBinaryStringNode(binaryStringTokenListNode.TOKEN_BSTRING()));
+        bitStringBuilder.append(parseBinaryStringNode(binaryStringTokenListNode.D_BSTRING()));
         for (BinaryStringContinuationContext binaryStringContinuationNode : binaryStringTokenListNode.binaryStringContinuation()) {
             bitStringBuilder.append(parseBinaryStringContinuationNode(binaryStringContinuationNode));
         }
@@ -1849,7 +1849,7 @@ public class AntlrSqlParser implements SqlParser {
 
     public static BitString parseHexadecimalStringTokenListNode(HexadecimalStringTokenListContext hexadecimalStringTokenListNode) {
         StringBuilder hexadecimalStringBuilder = new StringBuilder();
-        hexadecimalStringBuilder.append(parseHexadecimalStringTokenNode(hexadecimalStringTokenListNode.TOKEN_XSTRING()));
+        hexadecimalStringBuilder.append(parseHexadecimalStringTokenNode(hexadecimalStringTokenListNode.D_XSTRING()));
         for (
                 HexadecimalStringContinuationContext hexadecimalStringContinuationNode :
                 hexadecimalStringTokenListNode.hexadecimalStringContinuation()) {
