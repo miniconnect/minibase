@@ -21,30 +21,28 @@ Some of the supported features are these:
 
 ## Limitations
 
-Here is some of the major limitations:
+Here are some of the major limitations:
 
-- limited `WHERE` filters (currently, only simple column filters supported, connected with `AND` operators)
-- limited `JOIN` (currently, only `INNER JOIN` and `LEFT JOIN` are supported, single foreign column only)
+- limited `WHERE` filters (currently, only simple column filters are supported, connected with `AND` operators)
+- limited `JOIN` (currently, only `INNER JOIN` and `LEFT JOIN` are supported with a single foreign column only)
 - very limited aggregation: limited `COUNT`, no `GROUP BY` and `HAVING` clauses, no window functions
 - no set operations on result sets (currently, only a very limited use of `UNION` is implemented)
 - no subqueries
-- limited support for binary data (not `BIT` type, no collations and explicit charsets)
+- limited support for collations and charsets
 - no advanced transaction management (currently, autocommit is forced, but concurrency is handled efficiently)
 
 The following additions are expected in the next major versions:
 
 | Feature | MiniBase version |
 | ------- | ---------------: |
-| `BIT` type | `0.6.0` |
-| Collations and charsets | `0.6.0` |
-| Arbitrary WHERE | `0.7.0` |
-| Arbitrary JOIN condition | `0.7.0` |
-| Subqueries | `0.7.0` |
-| CROSS join | `0.7.0` |
-| More aggregation functions | `0.8.0` |
-| GROUP BY and HAVING | `0.8.0` |
-| Window functions | `0.8.0` |
-| Set operations (e.g. UNION) | `0.8.0` |
+| Arbitrary WHERE | `0.8.0` |
+| Arbitrary JOIN condition | `0.8.0` |
+| Subqueries | `0.8.0` |
+| CROSS join | `0.8.0` |
+| More aggregation functions | `0.9.0` |
+| GROUP BY and HAVING | `0.9.0` |
+| Window functions | `0.9.0` |
+| Set operations (e.g. UNION) | `0.9.0` |
 
 ## Keywords
 
@@ -269,9 +267,9 @@ Some of the above types has aliases:
 | `TIMEZONE` | `UTCOFFSET` |
 
 The `INTERVAL` type is a little bit special.
-Traditionally, it has no size and scale parameters,
+Traditionally, it has no overall size and scale parameters,
 but a start field (with optional size) and an end field (with optional scale).
-These are internally normalized to size and scale as metadata.
+These are internally normalized to overall size and scale as metadata.
 
 `INTERVAL` is mapped to a unified interval implementation mixing `java.time.Period` and `java.time.Duration`.
 It can handle any mix of fields,
