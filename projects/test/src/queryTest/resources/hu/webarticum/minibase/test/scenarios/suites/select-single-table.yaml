@@ -8,7 +8,7 @@ cases:
     description: Select single record by id
     query: "SELECT * FROM books WHERE id = 14"
     expectedResult:
-      - [ 14, "Brothers Karamazov, The", "Dostoyevsky, Fyodor", 1880 ]
+      - [ 14, "Brothers Karamazov, The", "Dostoyevsky, Fyodor Mikhailovich", 1880 ]
     columns:
       - { name: id, type: hu.webarticum.miniconnect.lang.LargeInteger }
       - { name: title, type: java.lang.String }
@@ -31,8 +31,8 @@ cases:
     query: "SELECT id, author, title FROM books ORDER BY title LIMIT 5"
     expectedResult:
       - [ 17, "Remarque, Erich Maria", "All Quiet on the Western Front" ]
-      - [ 13, "Tolstoy, Leo", "Anna Karenina" ]
-      - [ 14, "Dostoyevsky, Fyodor", "Brothers Karamazov, The" ]
+      - [ 13, "Tolstoy, Lev Nikolayevich", "Anna Karenina" ]
+      - [ 14, "Dostoyevsky, Fyodor Mikhailovich", "Brothers Karamazov, The" ]
       - [ 21, "Salinger, Jerome David", "Catcher in the Rye, The" ]
       - [ 24, "Pasternak, Boris Leonidovich", "Doctor Zhivago" ]
     columns:
@@ -45,7 +45,7 @@ cases:
     query: "SELECT author FROM books ORDER BY author OFFSET 4 LIMIT 5"
     expectedResult:
       - [ "Dickens, Charles" ]
-      - [ "Dostoyevsky, Fyodor" ]
+      - [ "Dostoyevsky, Fyodor Mikhailovich" ]
       - [ "Flaubert, Gustave" ]
       - [ "Garcia Márquez, Gabriel" ]
       - [ "Golding, William" ]
@@ -63,11 +63,11 @@ cases:
       WHERE id BETWEEN 11 AND 15
       ORDER BY title DESC
     expectedResult:
-      - [ "#11", "Tolstoy, Leo: WAR AND PEACE", "published in 1869" ]
+      - [ "#11", "Tolstoy, Lev Nikolayevich: WAR AND PEACE", "published in 1869" ]
       - [ "#15", "Joyce, James: ULYSSES", "published in 1922" ]
       - [ "#12", "Verne, Jules: TWENTY THOUSAND LEAGUES UNDER THE SEAS", "published in 1870" ]
-      - [ "#14", "Dostoyevsky, Fyodor: BROTHERS KARAMAZOV, THE", "published in 1880" ]
-      - [ "#13", "Tolstoy, Leo: ANNA KARENINA", "published in 1877" ]
+      - [ "#14", "Dostoyevsky, Fyodor Mikhailovich: BROTHERS KARAMAZOV, THE", "published in 1880" ]
+      - [ "#13", "Tolstoy, Lev Nikolayevich: ANNA KARENINA", "published in 1877" ]
     columns:
       - { name: ID, type: java.lang.String }
       - { name: caption, type: java.lang.String }
@@ -83,7 +83,7 @@ cases:
 
   - name: count-filter
     description: Select count of records by filter
-    query: "SELECT COUNT(*) FROM books WHERE pub_year>1870 AND author='Tolstoy, Leo'"
+    query: "SELECT COUNT(*) FROM books WHERE pub_year>1870 AND author='Tolstoy, Lev Nikolayevich'"
     expectedResult:
       - [ 1 ]
     columns:

@@ -23,11 +23,11 @@ cases:
   - name: update
     description: Test results of insertion
     initQueries:
-      - "UPDATE books SET title='Idiot, The', author='Dostoyevsky, Fyodor' WHERE id=11"
+      - "UPDATE books SET title='Idiot, The', author='Dostoyevsky, Fyodor Mikhailovich' WHERE id=11"
     query: "SELECT * FROM books WHERE id >= 10 ORDER BY id LIMIT 3"
     expectedResult:
       - [ 10, "Misérables, Les", "Hugo, Victor", 1862 ]
-      - [ 11, "Idiot, The", "Dostoyevsky, Fyodor", 1869 ]
+      - [ 11, "Idiot, The", "Dostoyevsky, Fyodor Mikhailovich", 1869 ]
       - [ 12, "Twenty Thousand Leagues Under the Seas", "Verne, Jules", 1870 ]
     columns:
       - { name: id, type: hu.webarticum.miniconnect.lang.LargeInteger }
@@ -53,7 +53,7 @@ cases:
   - name: mixed
     description: Mixed CRUD operations
     initQueries:
-      - "UPDATE books SET title='Idiot, The', author='Dostoyevsky, Fyodor' WHERE id=11"
+      - "UPDATE books SET title='Idiot, The', author='Dostoyevsky, Fyodor Mikhailovich' WHERE id=11"
       - "UPDATE books SET title='Black Narcissus', author='Godden, Rumer' WHERE id=19"
       - "INSERT INTO books (title, author, pub_year) VALUES('Journey by Moonlight', 'Szerb Antal', 1937)"
       - "INSERT INTO books (title, author, pub_year) VALUES('Man Without Qualities, The', 'Musil, Robert', 1943)"
@@ -64,10 +64,10 @@ cases:
       - "INSERT INTO books (title, author, pub_year) VALUES('Satantango', 'Krasznahorkai László', 1985)"
     query: "SELECT * FROM books ORDER BY id"
     expectedResult:
-      - [ 11, "Idiot, The", "Dostoyevsky, Fyodor", 1869 ]
+      - [ 11, "Idiot, The", "Dostoyevsky, Fyodor Mikhailovich", 1869 ]
       - [ 12, "Twenty Thousand Leagues Under the Seas", "Verne, Jules", 1870 ]
-      - [ 13, "Anna Karenina", "Tolstoy, Leo", 1877 ]
-      - [ 14, "Brothers Karamazov, The", "Dostoyevsky, Fyodor", 1880 ]
+      - [ 13, "Anna Karenina", "Tolstoy, Lev Nikolayevich", 1877 ]
+      - [ 14, "Brothers Karamazov, The", "Dostoyevsky, Fyodor Mikhailovich", 1880 ]
       - [ 15, "Ulysses", "Joyce, James", 1922 ]
       - [ 16, "Trial, The", "Kafka, Franz", 1925 ]
       - [ 17, "All Quiet on the Western Front", "Remarque, Erich Maria", 1929 ]
