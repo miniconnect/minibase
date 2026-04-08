@@ -33,6 +33,17 @@ cases:
       - { name: "70", type: java.lang.Void, nullable: true }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
 
+  - name: special-values
+    description: Select constants in several ways
+    query: "SELECT SYSTEM_USER, SYSTEM_USER(), READONLY, READONLY()"
+    expectedResult:
+      - [ "", "", false, false ]
+    columns:
+      - { name: system_user, type: java.lang.String, nullable: false }
+      - { name: system_user, type: java.lang.String, nullable: false }
+      - { name: readonly, type: java.lang.Boolean, nullable: false }
+      - { name: readonly, type: java.lang.Boolean, nullable: false }
+
   - name: simple-math
     description: Simple mathematical operations
     query: "SELECT 1 + 1, 0.7 + 0.3, 8 / 2, 5 / 2, 5.0 / 2, 3 * -7, 2 - 4, -1 - -12"
@@ -48,7 +59,7 @@ cases:
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
 
-  - name: casting-basic
+  - name: explicit-casting
     description: Obvious casts between basic types
     query: "SELECT 7::NUMERIC, CAST('12' AS INT), 32::CHAR, '4.3'::NUMERIC::INT::CHAR, null::INT, 5::DECIMAL(3, 2)"
     expectedResult:
@@ -60,6 +71,17 @@ cases:
       - { type: java.lang.String, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
       - { type: java.math.BigDecimal, nullable: false }
+
+  - name: implicit-casting
+    description: Implicit casts during operations
+    query: "SELECT 2 || ' options', '2' + '4', 10 | b'0100', 3 * b'100'"
+    expectedResult:
+      - [ "2 options", "6", "1110", 12 ]
+    columns:
+      - { type: java.lang.String, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
 
   - name: null-handling-1
     description: Simple tests checking null behaviour
@@ -107,4 +129,61 @@ cases:
       - { type: java.lang.Boolean, nullable: true }
       - { type: java.lang.Boolean, nullable: true }
       - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+
+  - name: large-numbers
+    description: Operations with large numbers
+    query: |
+      SELECT
+        4670173433400012763701872674647127363834607164763848087167087236473468082734374283,
+        -57740729413657264870685372492731948017724008742841964652891062680437,
+        583810623649823773 * 723708823,
+        724901809184438749857908374723478713642834 * 10274674608172548495,
+        231233 - 364706817263816381623480712676821346061276461274399011,
+        759234808734858887071724766846703746389592743758423490.07138123959607,
+        43107346817264909009987437781818127346732183746028384321168000 - 0.03,
+        999999999999999999999999999999999999999999999999999999999 * 0.3
+    expectedResult:
+      - [ "4670173433400012763701872674647127363834607164763848087167087236473468082734374283",
+          "-57740729413657264870685372492731948017724008742841964652891062680437",
+          "422508899296509926915249179",
+          "7448130212245694728093866869469539314400961974162678974234830",
+          "-364706817263816381623480712676821346061276461274167778",
+          "759234808734858887071724766846703746389592743758423490.07138123959607",
+          "43107346817264909009987437781818127346732183746028384321167999.97",
+          "299999999999999999999999999999999999999999999999999999999.7" ]
+    columns:
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+
+  - name: boolify
+    description: Test conversion to boolean (important in conditions)
+    query: |
+      SELECT
+        FALSE::BOOL, 0::BOOL, 0.0::BOOL, b'000'::BOOL, ''::BOOL, '0'::BOOL, 'FaLSe'::BOOL,
+        TRUE::BOOL, 1::BOOL, 0.5::BOOL, b'010'::BOOL, '1'::BOOL, '-1'::BOOL, 'TRue'::BOOL,
+        NULL::BOOL
+    expectedResult:
+      - [ false, false, false, false, false, false, false, true, true, true, true, true, true, true, null ]
+    columns:
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
       - { type: java.lang.Boolean, nullable: true }

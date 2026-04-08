@@ -1,0 +1,5 @@
+description: Complex table select queries
+datasetResource: ../datasets/multiple-tables.yaml
+initQueries:
+  - USE library
+cases: [] # TODO
