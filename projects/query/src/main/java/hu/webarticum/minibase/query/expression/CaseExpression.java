@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import hu.webarticum.minibase.query.util.BooleanUtil;
+import hu.webarticum.minibase.query.util.ConvertUtil;
 import hu.webarticum.minibase.query.util.UnifyUtil;
 import hu.webarticum.minibase.query.util.ValueUtil;
 import hu.webarticum.miniconnect.lang.ImmutableList;
@@ -21,7 +22,7 @@ public class CaseExpression implements Expression {
 
     public CaseExpression(Expression givenExpression, ImmutableList<WhenItem> whenItems, Expression elseExpression) {
         if (whenItems.isEmpty()) {
-            throw new IllegalArgumentException("At least one when branch is required");
+            throw new IllegalArgumentException("At least one WHEN branch is required");
         }
 
         this.subjectExpression = givenExpression;
@@ -108,6 +109,8 @@ public class CaseExpression implements Expression {
         boolean hasGiven = subjectExpression != null;
         Object givenValue = hasGiven ? subjectExpression.evaluate(substitutions) : null;
 
+        Class<?> targetType = type(substitutions.mapValues(UnifyUtil::typeOf));
+
         for (WhenItem whenItem : whenItems) {
             Object conditionValue = whenItem.conditionExpression.evaluate(substitutions);
             Boolean equality;
@@ -117,7 +120,7 @@ public class CaseExpression implements Expression {
                 equality = BooleanUtil.boolify(conditionValue);
             }
             if (Boolean.TRUE.equals(equality)) {
-                return whenItem.resultExpression.evaluate(substitutions);
+                return ConvertUtil.convert(whenItem.resultExpression.evaluate(substitutions), targetType);
             }
         }
 
@@ -125,7 +128,7 @@ public class CaseExpression implements Expression {
             return null;
         }
 
-        return elseExpression.evaluate(substitutions);
+        return ConvertUtil.convert(elseExpression.evaluate(substitutions), targetType);
     }
 
     @Override
