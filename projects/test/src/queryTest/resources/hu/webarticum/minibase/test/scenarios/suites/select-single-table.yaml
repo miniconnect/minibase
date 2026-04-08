@@ -88,3 +88,38 @@ cases:
       - [ 1 ]
     columns:
       - { type: hu.webarticum.miniconnect.lang.LargeInteger }
+
+  - name: offset-only
+    description: Select query with only an OFFSET clause
+    query: "SELECT * FROM books OFFSET 23"
+    expectedResult:
+      - [ 24, "Doctor Zhivago", "Pasternak, Boris Leonidovich", 1957 ]
+      - [ 25, "One Hundred Years of Solitude", "Garcia Márquez, Gabriel", 1967 ]
+    columns:
+      - { name: id, type: hu.webarticum.miniconnect.lang.LargeInteger }
+      - { name: title, type: java.lang.String }
+      - { name: author, type: java.lang.String }
+      - { name: pub_year, type: hu.webarticum.miniconnect.lang.LargeInteger }
+
+  - name: complex-select
+    description: More complex query demonstrating several features
+    initQueries:
+      - "SET @yr = 1967"
+    query:
+      SELECT
+        CONCAT_WS(' ', 'lorem', null, 'ipsum', 'dolor') sit,
+        CASE WHEN NULLIF(2 + 2, 2 * 2) IS NULL THEN '99' ELSE id END ESAC,
+        title,
+        NULLIF(pub_year, @yr) `pY`
+      FROM books
+      WHERE id>20
+      ORDER BY author ASC
+      OFFSET 1 LIMIT 2
+    expectedResult:
+      - [ "lorem ipsum dolor", 99, "One Hundred Years of Solitude", null ]
+      - [ "lorem ipsum dolor", 99, "Lord of the Flies", 1954 ]
+    columns:
+      - { name: sit, type: java.lang.String, nullable: false }
+      - { name: esac, type: java.math.BigDecimal, nullable: false }
+      - { name: title, type: java.lang.String, nullable: false }
+      - { name: pY, type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
