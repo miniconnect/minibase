@@ -93,7 +93,7 @@ public class SelectExecutor implements SharedThrowingQueryExecutor {
 
         // FIXME: naive implementation of offset (for now, mostly for compatibility)
         boolean hasOffset = offset != null && offset.isPositive();
-        if (hasOffset) {
+        if (hasOffset && limit != null) {
             limit = offset.add(limit);
         }
 
