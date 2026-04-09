@@ -38,7 +38,7 @@ public class UnorderedDataMatcher implements DataMatcher {
                 }
             }
             if (!found) {
-                throw new MatchFailedException("row not found: " + record.rowMap().values());
+                throw new MatchFailedException("row not found: " + record.values());
             }
         }
         if (!remainingExpectedRows.isEmpty()) {
