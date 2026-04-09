@@ -1,0 +1,143 @@
+schemas:
+  - name: library
+    tables:
+
+      - name: authors
+        columns:
+          - name: id
+            type: hu.webarticum.miniconnect.lang.LargeInteger
+            unique: true
+            autoIncremented: true
+          - name: firstname
+            type: java.lang.String
+          - name: lastname
+            type: java.lang.String
+          - name: birth_year
+            type: hu.webarticum.miniconnect.lang.LargeInteger
+        indexes:
+          - [ id ]
+          - [ lastname, firstname ]
+          - [ birth_year ]
+        data:
+          - [ 1, "Margaret", "Mitchell", 1900 ]
+          - [ 2, "John", "Steinbeck", 1902 ]
+          - [ 3, "Jonathan", "Swift", 1667 ]
+          - [ 4, "Charles", "Dickens", 1812 ]
+          - [ 5, "William", "Golding", 1911 ]
+          - [ 6, "Emily", "Brontë", 1818 ]
+          - [ 7, "Gabriel", "Garcia Márquez", 1927 ]
+          - [ 8, "Jules", "Verne", 1828 ]
+          - [ 9, "Miguel de", "Cervantes", 1547 ]
+          - [ 10, "Franz", "Kafka", 1883 ]
+          - [ 11, "Mary", "Shelley", 1797 ]
+          - [ 12, "Boris Leonidovich", "Pasternak", 1890 ]
+          - [ 13, "Herman", "Melville", 1819 ]
+          - [ 14, "Harriet Beecher", "Stowe", 1811 ]
+          - [ 15, "Ray", "Bradbury", 1920 ]
+          - [ 16, "Gustave", "Flaubert", 1821 ]
+          - [ 17, "Honoré de", "Balzac", 1799 ]
+          - [ 18, "Victor", "Hugo", 1802 ]
+          - [ 19, "Erich Maria", "Remarque", 1898 ]
+          - [ 20, "Lev Nikolayevich", "Tolstoy", 1828 ]
+          - [ 21, "James", "Joyce", 1882 ]
+          - [ 22, "George", "Orwell", 1903 ]
+          - [ 23, "Jerome David", "Salinger", 1919 ]
+          - [ 24, "Fyodor Mikhailovich", "Dostoyevsky", 1821 ]
+
+      - name: books
+        columns:
+          - name: id
+            type: hu.webarticum.miniconnect.lang.LargeInteger
+            unique: true
+            autoIncremented: true
+          - name: title
+            type: java.lang.String
+          - name: author_id
+            type: hu.webarticum.miniconnect.lang.LargeInteger
+          - name: pub_year
+            type: hu.webarticum.miniconnect.lang.LargeInteger
+        indexes:
+          - [ id ]
+        data:
+          - [ 1, "Don Quixote", 9, 1605 ]
+          - [ 2, "Gulliver's Travels", 3, 1726 ]
+          - [ 3, "Frankenstein", 11, 1818 ]
+          - [ 4, "Père Goriot", 17, 1835 ]
+          - [ 5, "Oliver Twist", 4, 1838 ]
+          - [ 6, "Wuthering Heights", 6, 1847 ]
+          - [ 7, "Moby Dick", 13, 1851 ]
+          - [ 8, "Uncle Tom's Cabin", 14, 1852 ]
+          - [ 9, "Madame Bovary", 16, 1857 ]
+          - [ 10, "Misérables, Les", 18, 1862 ]
+          - [ 11, "War and Peace", 20, 1869 ]
+          - [ 12, "Twenty Thousand Leagues Under the Seas", 8, 1870 ]
+          - [ 13, "Anna Karenina", 20, 1877 ]
+          - [ 14, "Brothers Karamazov, The", 24, 1880 ]
+          - [ 15, "Ulysses", 21, 1922 ]
+          - [ 16, "Trial, The", 10, 1925 ]
+          - [ 17, "All Quiet on the Western Front", 19, 1929 ]
+          - [ 18, "Gone with the Wind", 1, 1936 ]
+          - [ 19, "Grapes of Wrath, The", 2, 1939 ]
+          - [ 20, "Nineteen Eighty-Four", 22, 1949 ]
+          - [ 21, "Catcher in the Rye, The", 23, 1951 ]
+          - [ 22, "Fahrenheit 451", 15, 1953 ]
+          - [ 23, "Lord of the Flies", 5, 1954 ]
+          - [ 24, "Doctor Zhivago", 12, 1957 ]
+          - [ 25, "One Hundred Years of Solitude", 7, 1967 ]
+
+      - name: members
+        columns:
+          - name: id
+            type: hu.webarticum.miniconnect.lang.LargeInteger
+            unique: true
+            autoIncremented: true
+          - name: firstname
+            type: java.lang.String
+          - name: lastname
+            type: java.lang.String
+        indexes:
+          - [ id ]
+          - [ lastname, firstname ]
+        data:
+          - [ 1, "Angela", "Graham" ]
+          - [ 2, "Gary", "Watson" ]
+          - [ 3, "Doris", "Shaw" ]
+          - [ 4, "Darren", "Cooper" ]
+          - [ 5, "Joyce", "Ross" ]
+          - [ 6, "Andrew", "Sullivan" ]
+          - [ 7, "Diane", "Hall" ]
+
+      - name: loans
+        columns:
+          - name: id
+            type: hu.webarticum.miniconnect.lang.LargeInteger
+            unique: true
+            autoIncremented: true
+          - name: member_id
+            type: hu.webarticum.miniconnect.lang.LargeInteger
+          - name: book_id
+            type: hu.webarticum.miniconnect.lang.LargeInteger
+          - name: start_ts
+            type: java.time.OffsetDateTime
+          - name: due_date
+            type: java.time.LocalDate
+        indexes:
+          - [ member_id ]
+          - [ book_id ]
+          - [ end_date ]
+        data:
+          - [ 1, 2, 12, "2026-01-02T13:30:20+01:00", "2026-01-16" ]
+          - [ 2, 2, 21, "2026-01-07T09:14:35+01:00", "2026-01-21" ]
+          - [ 3, 1, 2, "2026-01-16T11:45:32+01:00", "2026-01-30" ]
+          - [ 4, 3, 5, "2026-01-23T13:36:27+01:00", "2026-02-06" ]
+          - [ 5, 4, 9, "2026-01-27T15:42:01+01:00", "2026-02-10" ]
+          - [ 6, 1, 15, "2026-02-03T14:00:57+01:00", "2026-02-17" ]
+          - [ 7, 2, 14, "2026-02-10T13:20:53+01:00", "2026-02-24" ]
+          - [ 8, 4, 7, "2026-02-18T12:35:21+01:00", "2026-03-04" ]
+          - [ 9, 3, 3, "2026-02-27T10:23:15+01:00", "2026-03-13" ]
+          - [ 10, 5, 4, "2026-03-09T11:18:12+01:00", "2026-03-23" ]
+          - [ 11, 2, 14, "2026-03-12T09:20:13+01:00", "2026-03-26" ]
+          - [ 12, 1, 8, "2026-03-12T11:12:54+01:00", "2026-03-26" ]
+          - [ 13, 3, 5, "2026-03-16T13:26:47+01:00", "2026-03-30" ]
+          - [ 14, 3, 17, "2026-03-20T10:48:51+01:00", "2026-04-03" ]
+          - [ 15, 5, 19, "2026-03-23T09:57:14+01:00", "2026-04-06" ]

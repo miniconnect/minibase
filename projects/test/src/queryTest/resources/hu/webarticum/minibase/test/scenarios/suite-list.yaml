@@ -4,3 +4,4 @@ suites:
   - suites/select-standalone-complex.yaml
   - suites/crud-simple.yaml
   - suites/select-single-table.yaml
+  - suites/select-multiple-tables.yaml

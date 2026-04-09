@@ -2,4 +2,25 @@ description: Complex table select queries
 datasetResource: ../datasets/multiple-tables.yaml
 initQueries:
   - USE library
-cases: [] # TODO
+cases:
+
+  - name: simple-join
+    description: Select single record by id
+    query: |
+      SELECT a.lastname author, b.title
+      FROM books b
+      LEFT JOIN authors a ON b.author_id=a.id
+      WHERE b.pub_year<1850
+    expectedResult:
+          - [ "Cervantes", "Don Quixote" ]
+          - [ "Swift", "Gulliver's Travels" ]
+          - [ "Shelley", "Frankenstein" ]
+          - [ "Balzac", "Père Goriot" ]
+          - [ "Dickens", "Oliver Twist" ]
+          - [ "Brontë", "Wuthering Heights" ]
+    ordered: false
+    columns:
+      - { name: author, type: java.lang.String }
+      - { name: title, type: java.lang.String }
+
+# TODO
