@@ -95,13 +95,11 @@ public class TableQueryUtil {
         Object convertedValue = newRawValue;
         Class<?> clazz = columnDefinition.clazz();
         if (convertedValue instanceof VariableValue) {
-            String variableName = ((VariableValue) convertedValue).name();
-            convertedValue = state.getUserVariable(variableName);
-            convertedValue = TableQueryUtil.convert(convertedValue, clazz);
+            convertedValue = TableQueryUtil.convert(ResultUtil.resolveValue(convertedValue, state), clazz);
         } else if (convertedValue instanceof RangeCondition) {
             RangeCondition rangeCondition = (RangeCondition) convertedValue;
-            Object convertedFrom = TableQueryUtil.convert(rangeCondition.from(), clazz);
-            Object convertedTo = TableQueryUtil.convert(rangeCondition.to(), clazz);
+            Object convertedFrom = TableQueryUtil.convert(ResultUtil.resolveValue(rangeCondition.from(), state), clazz);
+            Object convertedTo = TableQueryUtil.convert(ResultUtil.resolveValue(rangeCondition.to(), state), clazz);
             convertedValue = new RangeCondition(
                     convertedFrom, rangeCondition.fromInclusive(), convertedTo, rangeCondition.toInclusive());
         } else if (!(convertedValue instanceof SpecialCondition)) {

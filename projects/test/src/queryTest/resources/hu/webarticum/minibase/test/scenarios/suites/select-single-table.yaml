@@ -101,6 +101,23 @@ cases:
       - { name: author, type: java.lang.String }
       - { name: pub_year, type: hu.webarticum.miniconnect.lang.LargeInteger }
 
+  - name: filter-by-variable
+    description: More complex query demonstrating several features
+    initQueries:
+      - "SET @yr = 1950"
+    query:
+      SELECT title, pub_year FROM books WHERE pub_year > @yr
+    expectedResult:
+      - [ "Catcher in the Rye, The", 1951 ]
+      - [ "Fahrenheit 451", 1953 ]
+      - [ "Lord of the Flies", 1954 ]
+      - [ "Doctor Zhivago", 1957 ]
+      - [ "One Hundred Years of Solitude", 1967 ]
+    ordered: false
+    columns:
+      - { name: title, type: java.lang.String, nullable: false }
+      - { name: pub_year, type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+
   - name: complex-select
     description: More complex query demonstrating several features
     initQueries:
