@@ -4,23 +4,79 @@ initQueries:
   - USE library
 cases:
 
-  - name: simple-join
-    description: Select single record by id
+  - name: simple-left-join
+    description: Left join test
     query: |
       SELECT a.lastname author, b.title
       FROM books b
-      LEFT JOIN authors a ON b.author_id=a.id
+        LEFT JOIN authors a ON b.author_id=a.id
       WHERE b.pub_year<1850
     expectedResult:
-          - [ "Cervantes", "Don Quixote" ]
-          - [ "Swift", "Gulliver's Travels" ]
-          - [ "Shelley", "Frankenstein" ]
-          - [ "Balzac", "Père Goriot" ]
-          - [ "Dickens", "Oliver Twist" ]
-          - [ "Brontë", "Wuthering Heights" ]
+      - [ "Cervantes", "Don Quixote" ]
+      - [ "Swift", "Gulliver's Travels" ]
+      - [ "Shelley", "Frankenstein" ]
+      - [ "Balzac", "Père Goriot" ]
+      - [ "Dickens", "Oliver Twist" ]
+      - [ "Brontë", "Wuthering Heights" ]
     ordered: false
     columns:
       - { name: author, type: java.lang.String }
       - { name: title, type: java.lang.String }
 
-# TODO
+  - name: left-join-missing
+    description: Left join test with missing foreign rows
+    query: |
+      SELECT
+        a.lastname AS author,
+        b.title,
+        CONCAT(m.firstname, ' ', m.lastname) AS member,
+        l.due_date
+      FROM books b
+        LEFT JOIN loans l ON l.book_id=b.id
+        LEFT JOIN authors a ON a.id=b.author_id
+        LEFT JOIN members m ON m.id=l.member_id
+      WHERE b.pub_year>1800
+      ORDER BY b.id ASC, l.due_date DESC
+      OFFSET 1
+      LIMIT 7
+    expectedResult:
+      - [ "Balzac", "Père Goriot", "Joyce Ross", "2026-03-23" ]
+      - [ "Dickens", "Oliver Twist", "Doris Shaw", "2026-03-30" ]
+      - [ "Dickens", "Oliver Twist", "Doris Shaw",  "2026-02-06" ]
+      - [ "Brontë", "Wuthering Heights", null, null ]
+      - [ "Melville",  "Moby Dick", "Darren Cooper", "2026-03-04" ]
+      - [ "Stowe", "Uncle Tom's Cabin", "Angela Graham", "2026-03-26" ]
+      - [ "Flaubert", "Madame Bovary", "Darren Cooper", "2026-02-10" ]
+    columns:
+      - { name: author, type: java.lang.String }
+      - { name: title, type: java.lang.String }
+      - { name: member, type: java.lang.String }
+      - { name: due_date, type: java.time.LocalDate }
+
+  - name: inner-missing
+    description: Inner join test
+    query: |
+      SELECT
+        a.lastname AS author,
+        b.title,
+        CONCAT(m.firstname, ' ', m.lastname) AS member,
+        l.due_date
+      FROM books b
+        INNER JOIN loans l ON l.book_id=b.id
+        LEFT JOIN authors a ON a.id=b.author_id
+        LEFT JOIN members m ON m.id=l.member_id
+      WHERE b.pub_year>1800
+      ORDER BY b.id ASC, l.due_date DESC
+      OFFSET 1
+      LIMIT 5
+    expectedResult:
+      - [ "Balzac", "Père Goriot", "Joyce Ross", "2026-03-23" ]
+      - [ "Dickens", "Oliver Twist", "Doris Shaw", "2026-03-30" ]
+      - [ "Dickens", "Oliver Twist", "Doris Shaw",  "2026-02-06" ]
+      - [ "Melville",  "Moby Dick", "Darren Cooper", "2026-03-04" ]
+      - [ "Stowe", "Uncle Tom's Cabin", "Angela Graham", "2026-03-26" ]
+    columns:
+      - { name: author, type: java.lang.String }
+      - { name: title, type: java.lang.String }
+      - { name: member, type: java.lang.String }
+      - { name: due_date, type: java.time.LocalDate }
