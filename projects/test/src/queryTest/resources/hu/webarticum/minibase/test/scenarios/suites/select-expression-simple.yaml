@@ -468,6 +468,40 @@ cases:
       - { type: java.lang.Void, nullable: true }
       - { type: java.lang.Void, nullable: true }
 
+  - name: convert-from
+    description: ConvertFrom expression
+    query: |
+      SELECT
+        CONVERT_FROM(BINARY(x''), 'UTF-8'), CONVERT_FROM(BINARY(x'FB72E16C6C6F6DE173'), 'ISO-8859-2'),
+        CONVERT_FROM(BINARY(x'C581C59172C3A96D20C4B0CF80C5A1C5B1D0BC'), 'UTF-8'),
+        CONVERT_FROM(BINARY(x'4C4F52454D'), NULL), CONVERT_FROM(NULL, 'ISO-8859-1'), CONVERT_FROM(NULL, NULL)
+    expectedResult:
+      - [ "", "űrállomás", "Łőrém İπšűм", null, null, null ]
+    columns:
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: true }
+      - { type: java.lang.String, nullable: true }
+      - { type: java.lang.String, nullable: true }
+
+  - name: convert-to
+    description: ConvertFrom expression
+    query: |
+      SELECT
+        HEX(CONVERT_TO('', 'UTF-8')), HEX(CONVERT_TO('fűtőgép', 'ISO-8859-2')),
+        HEX(CONVERT_TO('Đølőřéм', 'UTF-8')),
+        CONVERT_TO('ipsum', NULL), CONVERT_TO(NULL, 'ISO-8859-1'), CONVERT_TO(NULL, NULL)
+    expectedResult:
+      - [ "", "66FB74F567E970", "C490C3B86CC591C599C3A9D0BC", null, null, null ]
+    columns:
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.ByteString, nullable: true }
+
   - name: decode
     description: Decode expression
     query: |

@@ -38,6 +38,8 @@ import hu.webarticum.minibase.query.expression.ColumnExpression;
 import hu.webarticum.minibase.query.expression.ConcatExpression;
 import hu.webarticum.minibase.query.expression.ConcatWithSeparatorExpression;
 import hu.webarticum.minibase.query.expression.ConstantExpression;
+import hu.webarticum.minibase.query.expression.ConvertFromExpression;
+import hu.webarticum.minibase.query.expression.ConvertToExpression;
 import hu.webarticum.minibase.query.expression.DecodeExpression;
 import hu.webarticum.minibase.query.expression.DivideExpression;
 import hu.webarticum.minibase.query.expression.EncodeExpression;
@@ -894,6 +896,12 @@ public class AntlrSqlParser implements SqlParser {
                 } else if (functionNameUpper.equals("CHR")) {
                     checkFunctionParameterCount(functionNameUpper, parameters, 1);
                     return new ChrExpression(parameters.get(0));
+                } else if (functionNameUpper.equals("CONVERT_FROM")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 2);
+                    return new ConvertFromExpression(parameters.get(0), parameters.get(1));
+                } else if (functionNameUpper.equals("CONVERT_TO")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 2);
+                    return new ConvertToExpression(parameters.get(0), parameters.get(1));
                 }
           		break;
             case 'D':
