@@ -857,157 +857,210 @@ public class AntlrSqlParser implements SqlParser {
         ImmutableList<Expression> parameters = functionCallNode.expression().stream()
                 .map(this::parseExpressionNode)
                 .collect(ImmutableList.createCollector());
-        if (functionNameUpper.equals("COALESCE")) {
-            return new CoalesceExpression(parameters);
-        } else if (functionNameUpper.equals("CONCAT")) {
-            return new ConcatExpression(parameters);
-        } else if (functionNameUpper.equals("CONCAT_WS")) {
-            checkFunctionMinParameterCount(functionNameUpper, parameters, 1);
-            return new ConcatWithSeparatorExpression(parameters.get(0), parameters.section(1, parameters.size()));
-        } else if (functionNameUpper.equals("NULLIF")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 2);
-            return new NullifExpression(parameters.get(0), parameters.get(1));
-        } else if (functionNameUpper.equals("PI")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 0);
-            return new PiExpression();
-        } else if (functionNameUpper.equals("SIGN")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 1);
-            return new SignExpression(parameters.get(0));
-        } else if (functionNameUpper.equals("ABS")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 1);
-            return new AbsExpression(parameters.get(0));
-        } else if (functionNameUpper.equals("POW") || functionNameUpper.equals("POWER")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 2);
-            return new PowExpression(parameters.get(0), parameters.get(1));
-        } else if (functionNameUpper.equals("LOG")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 2);
-            return new LogExpression(parameters.get(0), parameters.get(1));
-        } else if (functionNameUpper.equals("ATAN2")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 2);
-            return new Atan2Expression(parameters.get(0), parameters.get(1));
-        } else if (functionNameUpper.equals("FLOOR")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 1);
-            return new RoundExpression(parameters.get(0), RoundExpression.RoundMode.FLOOR);
-        } else if (functionNameUpper.equals("ROUND")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 1);
-            return new RoundExpression(parameters.get(0), RoundExpression.RoundMode.ROUND);
-        } else if (functionNameUpper.equals("CEIL") || functionNameUpper.equals("CEILING")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 1);
-            return new RoundExpression(parameters.get(0), RoundExpression.RoundMode.CEIL);
-        } else if (functionNameUpper.equals("GCD")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 2);
-            return new GcdExpression(parameters.get(0), parameters.get(1));
-        } else if (functionNameUpper.equals("LCM")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 2);
-            return new LcmExpression(parameters.get(0), parameters.get(1));
-        } else if (functionNameUpper.equals("BIT_LENGTH")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 1);
-            return new BitLengthExpression(parameters.get(0));
-        } else if (functionNameUpper.equals("OCTET_LENGTH")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 1);
-            return new OctetLengthExpression(parameters.get(0));
-        } else if (functionNameUpper.equals("CHAR_LENGTH") || functionNameUpper.equals("CHARACTER_LENGTH")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 1);
-            return new CharLengthExpression(parameters.get(0));
-        } else if (functionNameUpper.equals("ASCII")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 1);
-            return new AsciiExpression(parameters.get(0));
-        } else if (functionNameUpper.equals("ORD")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 1);
-            return new OrdExpression(parameters.get(0));
-        } else if (functionNameUpper.equals("CHR")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 1);
-            return new ChrExpression(parameters.get(0));
-        } else if (functionNameUpper.equals("LOWER")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 1);
-            return new LowerExpression(parameters.get(0));
-        } else if (functionNameUpper.equals("UPPER")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 1);
-            return new UpperExpression(parameters.get(0));
-        } else if (functionNameUpper.equals("INITCAP")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 1);
-            return new InitcapExpression(parameters.get(0));
-        } else if (functionNameUpper.equals("REVERSE")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 1);
-            return new ReverseExpression(parameters.get(0));
-        } else if (functionNameUpper.equals("LEFT")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 2);
-            return new LeftExpression(parameters.get(0), parameters.get(1));
-        } else if (functionNameUpper.equals("RIGHT")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 2);
-            return new RightExpression(parameters.get(0), parameters.get(1));
-        } else if (functionNameUpper.equals("TRIM")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 1);
-            return new TrimExpression(parameters.get(0), Optional.empty(), Optional.empty());
-        } else if (functionNameUpper.equals("LPAD")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 2, 3);
-            Optional<Expression> padStringExpression = parameters.size() > 2 ? Optional.of(parameters.get(2)) : Optional.empty();
-            return new LeftPadExpression(parameters.get(0), parameters.get(1), padStringExpression);
-        } else if (functionNameUpper.equals("RPAD")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 2, 3);
-            Optional<Expression> padStringExpression = parameters.size() > 2 ? Optional.of(parameters.get(2)) : Optional.empty();
-            return new RightPadExpression(parameters.get(0), parameters.get(1), padStringExpression);
-        } else if (functionNameUpper.equals("RRPAD")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 2, 3);
-            Optional<Expression> padStringExpression = parameters.size() > 2 ? Optional.of(parameters.get(2)) : Optional.empty();
-            return new RightRightPadExpression(parameters.get(0), parameters.get(1), padStringExpression);
-        } else if (functionNameUpper.equals("SUBSTR") || functionNameUpper.equals("SUBSTRING")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 2, 3);
-            Optional<Expression> forExpression = parameters.size() > 2 ? Optional.of(parameters.get(2)) : Optional.empty();
-            return new SubstringExpression(parameters.get(0), Optional.of(parameters.get(1)), forExpression);
-        } else if (functionNameUpper.equals("POSITION")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 2);
-            return new PositionExpression(parameters.get(0), parameters.get(1));
-        } else if (functionNameUpper.equals("TRANSLATE")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 3);
-            return new TranslateExpression(parameters.get(0), parameters.get(1), parameters.get(2));
-        } else if (functionNameUpper.equals("REPLACE")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 3);
-            return new ReplaceExpression(parameters.get(0), parameters.get(1), parameters.get(2));
-        } else if (functionNameUpper.equals("REGEXP_REPLACE")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 3, 4);
-            Optional<Expression> flagsExpression = parameters.size() > 3 ? Optional.of(parameters.get(3)) : Optional.empty();
-            return new RegexpReplaceExpression(parameters.get(0), parameters.get(1), parameters.get(2), flagsExpression);
-        } else if (functionNameUpper.equals("REPEAT")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 2);
-            return new RepeatExpression(parameters.get(0), parameters.get(1));
-        } else if (functionNameUpper.equals("SPLIT_PART")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 3);
-            return new SplitPartExpression(parameters.get(0), parameters.get(1), parameters.get(2));
-        } else if (functionNameUpper.equals("LENGTH")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 1);
-            return new LengthExpression(parameters.get(0));
-        } else if (functionNameUpper.equals("LEAST")) {
-            return new LeastExpression(parameters);
-        } else if (functionNameUpper.equals("GREATEST")) {
-            return new GreatestExpression(parameters);
-        } else if (functionNameUpper.equals("RAND") || functionNameUpper.equals("RANDOM")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 0);
-            return new RandomExpression();
-        } else if (functionNameUpper.equals("SHA256")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 1);
-            return new Sha256Expression(parameters.get(0));
-        } else if (functionNameUpper.equals("HEX")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 1);
-            return new EncodeExpression(parameters.get(0), new ConstantExpression("HEX"));
-        } else if (functionNameUpper.equals("UNHEX")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 1);
-            return new DecodeExpression(parameters.get(0), new ConstantExpression("HEX"));
-        } else if (functionNameUpper.equals("TO_BASE64")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 1);
-            return new EncodeExpression(parameters.get(0), new ConstantExpression("BASE64"));
-        } else if (functionNameUpper.equals("FROM_BASE64")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 1);
-            return new DecodeExpression(parameters.get(0), new ConstantExpression("BASE64"));
-        } else if (functionNameUpper.equals("ENCODE")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 2);
-            return new EncodeExpression(parameters.get(0), parameters.get(1));
-        } else if (functionNameUpper.equals("DECODE")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 2);
-            return new DecodeExpression(parameters.get(0), parameters.get(1));
-        } else if (functionNameUpper.equals("NOW")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 0);
-            return new NowExpression();
+        char firstUpperChar = functionNameUpper.isEmpty() ? '\0' : functionNameUpper.charAt(0);
+        switch (firstUpperChar) {
+           	case 'A':
+                if (functionNameUpper.equals("ABS")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 1);
+                    return new AbsExpression(parameters.get(0));
+                } else if (functionNameUpper.equals("ATAN2")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 2);
+                    return new Atan2Expression(parameters.get(0), parameters.get(1));
+                } else if (functionNameUpper.equals("ASCII")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 1);
+                    return new AsciiExpression(parameters.get(0));
+                }
+          		break;
+           	case 'B':
+                if (functionNameUpper.equals("BIT_LENGTH")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 1);
+                    return new BitLengthExpression(parameters.get(0));
+                }
+          		break;
+           	case 'C':
+                if (functionNameUpper.equals("COALESCE")) {
+                    return new CoalesceExpression(parameters);
+                } else if (functionNameUpper.equals("CONCAT")) {
+                    return new ConcatExpression(parameters);
+                } else if (functionNameUpper.equals("CONCAT_WS")) {
+                    checkFunctionMinParameterCount(functionNameUpper, parameters, 1);
+                    return new ConcatWithSeparatorExpression(parameters.get(0), parameters.section(1, parameters.size()));
+                } else if (functionNameUpper.equals("CEIL") || functionNameUpper.equals("CEILING")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 1);
+                    return new RoundExpression(parameters.get(0), RoundExpression.RoundMode.CEIL);
+                } else if (functionNameUpper.equals("CHAR_LENGTH") || functionNameUpper.equals("CHARACTER_LENGTH")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 1);
+                    return new CharLengthExpression(parameters.get(0));
+                } else if (functionNameUpper.equals("CHR")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 1);
+                    return new ChrExpression(parameters.get(0));
+                }
+          		break;
+            case 'D':
+                if (functionNameUpper.equals("DECODE")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 2);
+                    return new DecodeExpression(parameters.get(0), parameters.get(1));
+                }
+                break;
+            case 'E':
+                if (functionNameUpper.equals("ENCODE")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 2);
+                    return new EncodeExpression(parameters.get(0), parameters.get(1));
+                }
+                break;
+            case 'F':
+                if (functionNameUpper.equals("FLOOR")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 1);
+                    return new RoundExpression(parameters.get(0), RoundExpression.RoundMode.FLOOR);
+                } else if (functionNameUpper.equals("FROM_BASE64")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 1);
+                    return new DecodeExpression(parameters.get(0), new ConstantExpression("BASE64"));
+                }
+                break;
+            case 'G':
+                if (functionNameUpper.equals("GCD")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 2);
+                    return new GcdExpression(parameters.get(0), parameters.get(1));
+                } else if (functionNameUpper.equals("GREATEST")) {
+                    return new GreatestExpression(parameters);
+                }
+                break;
+            case 'H':
+                if (functionNameUpper.equals("HEX")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 1);
+                    return new EncodeExpression(parameters.get(0), new ConstantExpression("HEX"));
+                }
+                break;
+            case 'I':
+                if (functionNameUpper.equals("INITCAP")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 1);
+                    return new InitcapExpression(parameters.get(0));
+                }
+                break;
+            case 'L':
+                if (functionNameUpper.equals("LCM")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 2);
+                    return new LcmExpression(parameters.get(0), parameters.get(1));
+                } else if (functionNameUpper.equals("LOWER")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 1);
+                    return new LowerExpression(parameters.get(0));
+                } else if (functionNameUpper.equals("LEFT")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 2);
+                    return new LeftExpression(parameters.get(0), parameters.get(1));
+                } else if (functionNameUpper.equals("LENGTH")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 1);
+                    return new LengthExpression(parameters.get(0));
+                } else if (functionNameUpper.equals("LEAST")) {
+                    return new LeastExpression(parameters);
+                } else if (functionNameUpper.equals("LOG")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 2);
+                    return new LogExpression(parameters.get(0), parameters.get(1));
+                } else if (functionNameUpper.equals("LPAD")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 2, 3);
+                    Optional<Expression> padStringExpression = parameters.size() > 2 ? Optional.of(parameters.get(2)) : Optional.empty();
+                    return new LeftPadExpression(parameters.get(0), parameters.get(1), padStringExpression);
+                }
+                break;
+            case 'N':
+                if (functionNameUpper.equals("NULLIF")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 2);
+                    return new NullifExpression(parameters.get(0), parameters.get(1));
+                } else if (functionNameUpper.equals("NOW")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 0);
+                    return new NowExpression();
+                }
+                break;
+            case 'O':
+                if (functionNameUpper.equals("OCTET_LENGTH")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 1);
+                    return new OctetLengthExpression(parameters.get(0));
+                } else if (functionNameUpper.equals("ORD")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 1);
+                    return new OrdExpression(parameters.get(0));
+                }
+                break;
+            case 'P':
+                if (functionNameUpper.equals("PI")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 0);
+                    return new PiExpression();
+                } else if (functionNameUpper.equals("POW") || functionNameUpper.equals("POWER")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 2);
+                    return new PowExpression(parameters.get(0), parameters.get(1));
+                } else if (functionNameUpper.equals("POSITION")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 2);
+                    return new PositionExpression(parameters.get(0), parameters.get(1));
+                }
+                break;
+            case 'R':
+                if (functionNameUpper.equals("RAND") || functionNameUpper.equals("RANDOM")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 0);
+                    return new RandomExpression();
+                } else if (functionNameUpper.equals("ROUND")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 1);
+                    return new RoundExpression(parameters.get(0), RoundExpression.RoundMode.ROUND);
+                } else if (functionNameUpper.equals("REVERSE")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 1);
+                    return new ReverseExpression(parameters.get(0));
+                } else if (functionNameUpper.equals("RIGHT")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 2);
+                    return new RightExpression(parameters.get(0), parameters.get(1));
+                } else if (functionNameUpper.equals("RPAD")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 2, 3);
+                    Optional<Expression> padStringExpression = parameters.size() > 2 ? Optional.of(parameters.get(2)) : Optional.empty();
+                    return new RightPadExpression(parameters.get(0), parameters.get(1), padStringExpression);
+                } else if (functionNameUpper.equals("RRPAD")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 2, 3);
+                    Optional<Expression> padStringExpression = parameters.size() > 2 ? Optional.of(parameters.get(2)) : Optional.empty();
+                    return new RightRightPadExpression(parameters.get(0), parameters.get(1), padStringExpression);
+                } else if (functionNameUpper.equals("REPLACE")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 3);
+                    return new ReplaceExpression(parameters.get(0), parameters.get(1), parameters.get(2));
+                } else if (functionNameUpper.equals("REGEXP_REPLACE")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 3, 4);
+                    Optional<Expression> flagsExpression = parameters.size() > 3 ? Optional.of(parameters.get(3)) : Optional.empty();
+                    return new RegexpReplaceExpression(parameters.get(0), parameters.get(1), parameters.get(2), flagsExpression);
+                } else if (functionNameUpper.equals("REPEAT")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 2);
+                    return new RepeatExpression(parameters.get(0), parameters.get(1));
+                }
+                break;
+            case 'S':
+                if (functionNameUpper.equals("SIGN")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 1);
+                    return new SignExpression(parameters.get(0));
+                } else if (functionNameUpper.equals("SUBSTR") || functionNameUpper.equals("SUBSTRING")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 2, 3);
+                    Optional<Expression> forExpression = parameters.size() > 2 ? Optional.of(parameters.get(2)) : Optional.empty();
+                    return new SubstringExpression(parameters.get(0), Optional.of(parameters.get(1)), forExpression);
+                } else if (functionNameUpper.equals("SPLIT_PART")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 3);
+                    return new SplitPartExpression(parameters.get(0), parameters.get(1), parameters.get(2));
+                } else if (functionNameUpper.equals("SHA256")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 1);
+                    return new Sha256Expression(parameters.get(0));
+                }
+                break;
+            case 'T':
+                if (functionNameUpper.equals("TRANSLATE")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 3);
+                    return new TranslateExpression(parameters.get(0), parameters.get(1), parameters.get(2));
+                } else if (functionNameUpper.equals("TO_BASE64")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 1);
+                    return new EncodeExpression(parameters.get(0), new ConstantExpression("BASE64"));
+                } else if (functionNameUpper.equals("TRIM")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 1);
+                    return new TrimExpression(parameters.get(0), Optional.empty(), Optional.empty());
+                }
+                break;
+            case 'U':
+                if (functionNameUpper.equals("UPPER")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 1);
+                    return new UpperExpression(parameters.get(0));
+                } else if (functionNameUpper.equals("UNHEX")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 1);
+                    return new DecodeExpression(parameters.get(0), new ConstantExpression("HEX"));
+                }
+                break;
         }
 
         UnaryRealMathFunctionExpression.FunctionSymbol mathSymbolAlias =
