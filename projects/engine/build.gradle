@@ -4,6 +4,10 @@ plugins {
 
 description = "Database session management"
 
+tasks.withType(JavaCompile).configureEach {
+    options.release = 8
+}
+
 dependencies {
     api project(':execution')
     api project(':query')

@@ -15,6 +15,10 @@ sourceSets {
     }
 }
 
+tasks.withType(JavaCompile).configureEach {
+    options.release = 8
+}
+
 dependencies {
     implementation project(':engine')
     implementation project(':storage')
