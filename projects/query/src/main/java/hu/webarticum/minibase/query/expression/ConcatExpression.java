@@ -64,7 +64,7 @@ public class ConcatExpression implements Expression {
             } if (nextType == BitString.class) {
                 bestCandidate = BitString.class;
             } else if (nextType == ByteString.class) {
-                if (nextType != BitString.class) {
+                if (bestCandidate != BitString.class) {
                     bestCandidate = ByteString.class;
                 }
             } else if (nextType == Void.class) {
@@ -92,7 +92,7 @@ public class ConcatExpression implements Expression {
             if (nextType == BitString.class) {
                 bestCandidate = BitString.class;
             } else if (nextType == ByteString.class) {
-                if (nextType != BitString.class) {
+                if (bestCandidate != BitString.class) {
                     bestCandidate = ByteString.class;
                 }
             } else if (nextType == Void.class) {
@@ -169,7 +169,7 @@ public class ConcatExpression implements Expression {
             if (nextType == BitString.class) {
                 bestCandidate = BitString.class;
             } else if (nextType == ByteString.class) {
-                if (nextType != BitString.class) {
+                if (bestCandidate != BitString.class) {
                     bestCandidate = ByteString.class;
                 }
             } else if (nextType == Void.class) {
