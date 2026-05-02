@@ -39,13 +39,12 @@ public class RemainderExpression implements Expression {
 
     @Override
     public Optional<Class<?>> type() {
-        Class<?> rightType = rightOperand.type().orElse(null);
-        if (TemporalAmount.class.isAssignableFrom(rightType)) {
-            return Optional.of(DateTimeDelta.class);
-        }
         Class<?> leftType = leftOperand.type().orElse(null);
+        Class<?> rightType = rightOperand.type().orElse(null);
         if (leftType == null || rightType == null) {
             return Optional.empty();
+        } else if (TemporalAmount.class.isAssignableFrom(rightType)) {
+            return Optional.of(DateTimeDelta.class);
         }
         return Optional.of(NumberUtil.commonNumericTypeOf(leftType, rightType));
     }

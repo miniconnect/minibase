@@ -45,10 +45,10 @@ public class DivideExpression implements Expression {
     public Optional<Class<?>> type() {
         Class<?> leftType = leftOperand.type().orElse(null);
         Class<?> rightType = rightOperand.type().orElse(null);
-        if (TemporalAmount.class.isAssignableFrom(leftType)) {
-            return Optional.of(DateTimeDelta.class);
-        } else if (leftType == null || rightType == null) {
+        if (leftType == null || rightType == null) {
             return Optional.empty();
+        } else if (TemporalAmount.class.isAssignableFrom(leftType)) {
+            return Optional.of(DateTimeDelta.class);
         }
         return Optional.of(NumberUtil.commonNumericTypeOf(leftType, rightType));
     }
