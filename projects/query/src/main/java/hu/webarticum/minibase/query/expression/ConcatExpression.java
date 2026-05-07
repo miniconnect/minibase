@@ -110,7 +110,7 @@ public class ConcatExpression implements Expression {
         }
     }
 
-	@Override
+    @Override
     public boolean isNullable() {
         for (Expression operand : operands.reverseOrder()) {
             if (operand.isNullable()) {

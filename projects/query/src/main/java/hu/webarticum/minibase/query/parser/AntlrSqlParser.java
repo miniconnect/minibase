@@ -861,7 +861,7 @@ public class AntlrSqlParser implements SqlParser {
                 .collect(ImmutableList.createCollector());
         char firstUpperChar = functionNameUpper.isEmpty() ? '\0' : functionNameUpper.charAt(0);
         switch (firstUpperChar) {
-           	case 'A':
+            case 'A':
                 if (functionNameUpper.equals("ABS")) {
                     checkFunctionParameterCount(functionNameUpper, parameters, 1);
                     return new AbsExpression(parameters.get(0));
@@ -872,14 +872,14 @@ public class AntlrSqlParser implements SqlParser {
                     checkFunctionParameterCount(functionNameUpper, parameters, 1);
                     return new AsciiExpression(parameters.get(0));
                 }
-          		break;
-           	case 'B':
+                break;
+            case 'B':
                 if (functionNameUpper.equals("BIT_LENGTH")) {
                     checkFunctionParameterCount(functionNameUpper, parameters, 1);
                     return new BitLengthExpression(parameters.get(0));
                 }
-          		break;
-           	case 'C':
+                break;
+            case 'C':
                 if (functionNameUpper.equals("COALESCE")) {
                     return new CoalesceExpression(parameters);
                 } else if (functionNameUpper.equals("CONCAT")) {
@@ -903,7 +903,7 @@ public class AntlrSqlParser implements SqlParser {
                     checkFunctionParameterCount(functionNameUpper, parameters, 2);
                     return new ConvertToExpression(parameters.get(0), parameters.get(1));
                 }
-          		break;
+                break;
             case 'D':
                 if (functionNameUpper.equals("DECODE")) {
                     checkFunctionParameterCount(functionNameUpper, parameters, 2);

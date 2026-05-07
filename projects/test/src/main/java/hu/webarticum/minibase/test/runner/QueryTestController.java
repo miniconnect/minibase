@@ -70,10 +70,10 @@ public class QueryTestController {
 
     public void runSuites(QueryTestCaseCallback callback) {
         try {
-			runSuitesInternal(callback);
-		} catch (IOException e) {
-		    throw new UncheckedIOException("Unexpected " + e.getClass().getSimpleName(), e);
-		}
+            runSuitesInternal(callback);
+        } catch (IOException e) {
+            throw new UncheckedIOException("Unexpected " + e.getClass().getSimpleName(), e);
+        }
     }
 
     private void runSuitesInternal(QueryTestCaseCallback callback) throws IOException {
