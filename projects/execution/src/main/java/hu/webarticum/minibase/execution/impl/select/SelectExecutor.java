@@ -22,6 +22,7 @@ import hu.webarticum.minibase.execution.SharedThrowingQueryExecutor;
 import hu.webarticum.minibase.execution.util.TableQueryUtil;
 import hu.webarticum.minibase.query.expression.ColumnExpression;
 import hu.webarticum.minibase.query.expression.ColumnParameter;
+import hu.webarticum.minibase.query.expression.ConstantExpression;
 import hu.webarticum.minibase.query.expression.Expression;
 import hu.webarticum.minibase.query.expression.Parameter;
 import hu.webarticum.minibase.query.expression.SpecialValueParameter;
@@ -100,7 +101,7 @@ public class SelectExecutor implements SharedThrowingQueryExecutor {
         List<Map<String, LargeInteger>> joinedRowIndices = collectRows(
                 reorderedTableEntries, normalizedOrderByEntries, limit, state);
 
-       // FIXME: naive implementation of offset (for now, mostly for compatibility)
+        // FIXME: naive implementation of offset (for now, mostly for compatibility)
         if (hasOffset) {
             boolean willBeEmpty = true;
             int offsetInt = 0;
@@ -826,10 +827,21 @@ public class SelectExecutor implements SharedThrowingQueryExecutor {
         }
 
         Expression expression = ((ExpressionSelectItem) selectItem).expression();
-        ImmutableList<Parameter> parameters = expression.parameters();
-        ImmutableMap<Parameter, Object> parameterValues = parameters.assign(
-                p -> selectExpressionParameter(joinedRow, tableEntries, state, p));
-        Object value = expression.evaluate(parameterValues);
+
+        // FIXME: fast-path (quick dirty optimization)
+        Object value;
+        if (expression instanceof ColumnExpression) {
+            ColumnParameter columnParameter = ((ColumnExpression) expression).columnParameter();
+            value = selectExpressionColumnParameter(joinedRow, tableEntries, columnParameter);
+        } else if (expression instanceof ConstantExpression) {
+            value = ((ConstantExpression) expression).value();
+        } else {
+            ImmutableList<Parameter> parameters = expression.parameters();
+            ImmutableMap<Parameter, Object> parameterValues = parameters.assign(
+                    p -> selectExpressionParameter(joinedRow, tableEntries, state, p));
+            value = expression.evaluate(parameterValues);
+        }
+
         return selectItemEntry.valueTranslator.encodeFully(value);
     }
 
@@ -959,6 +971,12 @@ public class SelectExecutor implements SharedThrowingQueryExecutor {
             }
         }
 
+        // XXX: quick fix: relax over-restricted collect-stop logic
+        boolean canStopAfterLimit = prelimitable || remainingOrderByEntries.isEmpty();
+        if (canStopAfterLimit && limit != null && result.size() >= intLimit) {
+            return;
+        }
+
         boolean found = false;
         if (previousAlias == null || !baseIsNull) {
             int previousSize = result.size();
@@ -992,7 +1010,7 @@ public class SelectExecutor implements SharedThrowingQueryExecutor {
                             state);
                 }
                 if (
-                        prelimitable &&
+                        canStopAfterLimit &&
                         limit != null &&
                         previousSize + subResult.size() >= intLimit) {
                     break;
@@ -1012,7 +1030,7 @@ public class SelectExecutor implements SharedThrowingQueryExecutor {
                 subResult.sort(rowIndexComparator);
             }
 
-            if ((previousAlias == null || prelimitable) && limit != null && subResult.size() > intLimit) {
+            if ((previousAlias == null || canStopAfterLimit) && limit != null && subResult.size() > intLimit) {
                 subResult = subResult.subList(0, intLimit);
             }
 

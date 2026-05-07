@@ -60,6 +60,8 @@ public class DiffTable extends AbstractTableDecorator {
 
     private final SimpleSequence sequence;
 
+    private volatile boolean hasChanges = false;
+
 
     public DiffTable(Table baseTable) {
         super(baseTable);
@@ -87,7 +89,15 @@ public class DiffTable extends AbstractTableDecorator {
     }
 
     @Override
-    public synchronized Row row(LargeInteger rowIndex) {
+    public Row row(LargeInteger rowIndex) {
+        if (!hasChanges) {
+            return baseTable.row(rowIndex);
+        }
+
+        return rowInternal(rowIndex);
+    }
+
+    public synchronized Row rowInternal(LargeInteger rowIndex) {
         LargeInteger baseTableSize = baseTable.size();
         LargeInteger adjustedRowIndex = adjustByDeletions(LargeInteger.ZERO, rowIndex);
 
@@ -119,6 +129,10 @@ public class DiffTable extends AbstractTableDecorator {
         insertedRows.addAll(patch.insertedRows());
         applyUpdates(patch.updates());
         applyDeletions(patch.deletions());
+
+        if  (!insertedRows.isEmpty() || !updates.isEmpty() || !deletions.isEmpty()) {
+            hasChanges = true;
+        }
     }
 
     private void checkUniqueInPatch(TablePatch patch) {
@@ -440,7 +454,7 @@ public class DiffTable extends AbstractTableDecorator {
         @Override
         public TableIndex get(String name) {
             TableIndex baseIndex = baseStore.get(name);
-            if (insertedRows.isEmpty() && updates.isEmpty() && deletions.isEmpty()) {
+            if (!hasChanges) {
                 return baseIndex;
             } else {
                 return new DiffTableIndex(baseIndex);
@@ -542,15 +556,13 @@ public class DiffTable extends AbstractTableDecorator {
                 InclusionMode toInclusionMode,
                 ImmutableList<NullsMode> nullsModes,
                 ImmutableList<SortMode> sortModes) {
-            boolean sort = !sortModes.isEmpty() && sortModes.get(0).isSorted();
-
             TableSelection baseSelection = baseIndex.findMulti(
                     from, fromInclusionMode, to, toInclusionMode, nullsModes, sortModes);
             MultiComparator multiComparator = ComparatorUtil.createMultiComparator(
                     baseTable, baseIndex.columnNames(), sortModes);
             Predicate<ImmutableList<Object>> predicate = new SelectionPredicate(
                     from, fromInclusionMode, to, toInclusionMode, nullsModes, multiComparator);
-            if (sort) {
+            if (!sortModes.isEmpty() && sortModes.get(0).isSorted()) {
                 return new SortedDiffTableSelection(
                         baseSelection,
                         predicate,
