@@ -10,6 +10,7 @@ public interface QueryTestCaseCallback {
     public void accept(
             String resourcePath,
             String caseName,
+            boolean withDiff,
             TableMatcher tableMatcher,
             ResultTable givenTable,
             Iterable<ImmutableList<Object>> expectedResult);

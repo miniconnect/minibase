@@ -40,8 +40,8 @@ public class QueryTestMain implements Callable<Integer> {
         AtomicInteger successCounter = new AtomicInteger(0);
         QueryTestController
                 .ofResource(testSuiteListResourcePath)
-                .runSuites((path, name, matcher, table, result) -> {
-                    boolean success = acceptCase(path, name, matcher, table, result);
+                .runSuites((path, name, withDiff, matcher, table, result) -> {
+                    boolean success = acceptCase(path, name, withDiff, matcher, table, result);
                     totalCounter.incrementAndGet();
                     if (success) {
                         successCounter.incrementAndGet();
@@ -61,6 +61,7 @@ public class QueryTestMain implements Callable<Integer> {
     private boolean acceptCase(
             String resourcePath,
             String caseName,
+            boolean withDiff,
             TableMatcher tableMatcher,
             ResultTable givenTable,
             Iterable<ImmutableList<Object>> expectedResult) {
@@ -72,6 +73,7 @@ public class QueryTestMain implements Callable<Integer> {
                 System.err.println("FAILED query test");
                 System.err.println("    resource:  " + resourcePath);
                 System.err.println("    case:      " + caseName);
+                System.err.println("    diff:      " + (withDiff ? "wrapped" : "in-place"));
                 System.err.println("    message:   " + e.getMessage());
             }
             return false;

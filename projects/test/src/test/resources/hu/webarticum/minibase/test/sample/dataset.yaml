@@ -13,7 +13,6 @@ schemas:
         data:
           - [ 1, "xyz"]
       - name: tbl_2
-        addDiffLayer: true
         columns:
           - name: id
             type: hu.webarticum.miniconnect.lang.LargeInteger

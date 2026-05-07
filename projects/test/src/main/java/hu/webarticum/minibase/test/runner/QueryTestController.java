@@ -19,6 +19,7 @@ import hu.webarticum.minibase.query.parser.AntlrSqlParser;
 import hu.webarticum.minibase.storage.api.Schema;
 import hu.webarticum.minibase.storage.api.StorageAccess;
 import hu.webarticum.minibase.storage.api.Table;
+import hu.webarticum.minibase.storage.impl.diff.DiffTable;
 import hu.webarticum.minibase.storage.impl.simple.SimpleResourceManager;
 import hu.webarticum.minibase.storage.impl.simple.SimpleSchema;
 import hu.webarticum.minibase.storage.impl.simple.SimpleStorageAccess;
@@ -99,18 +100,35 @@ public class QueryTestController {
             ) throws IOException {
         String caseName = testCase.name();
         TableMatcher tableMatcher = buildTableMatcher(testCase);
-        ResultTable givenTable = runCase(suiteResourcePath, suiteDescription, testCase);
         ImmutableList<ImmutableList<Object>> expectedResult = loadExpectedResult(testCase);
-        callback.accept(suiteResourcePath, caseName, tableMatcher, givenTable, expectedResult);
+        handleCaseVariant(
+                suiteResourcePath, suiteDescription, testCase, callback, caseName, tableMatcher, expectedResult, false);
+        handleCaseVariant(
+                suiteResourcePath, suiteDescription, testCase, callback, caseName, tableMatcher, expectedResult, true);
+    }
+
+    private void handleCaseVariant(
+            String suiteResourcePath,
+            QueryTestSuiteDescription suiteDescription,
+            QueryTestCaseDescription testCase,
+            QueryTestCaseCallback callback,
+            String caseName,
+            TableMatcher tableMatcher,
+            ImmutableList<ImmutableList<Object>> expectedResult,
+            boolean withDiff
+            ) throws IOException {
+        ResultTable givenTable = runCase(suiteResourcePath, suiteDescription, testCase, withDiff);
+        callback.accept(suiteResourcePath, caseName, withDiff, tableMatcher, givenTable, expectedResult);
     }
 
     private ResultTable runCase(
             String suiteResourcePath,
             QueryTestSuiteDescription suiteDescription,
-            QueryTestCaseDescription testCase) throws IOException {
+            QueryTestCaseDescription testCase,
+            boolean withDiff) throws IOException {
         String datasetResourcePath = subpath(dirname(suiteResourcePath), suiteDescription.datasetResource());
         DatasetDescription dataset = loadYaml(datasetResourcePath, DatasetDescription.class);
-        try (MiniSession session = loadSession(dataset)) {
+        try (MiniSession session = loadSession(dataset, withDiff)) {
             for (String query : suiteDescription.initQueries()) {
                 session.execute(query).requireSuccess();
             }
@@ -188,30 +206,35 @@ public class QueryTestController {
         return ImmutableList.fromCollection(resultBuilder);
     }
 
-    private MiniSession loadSession(DatasetDescription dataset) throws IOException {
-        StorageAccess storageAccess = buildStorageAccess(dataset);
+    private MiniSession loadSession(DatasetDescription dataset, boolean withDiff) throws IOException {
+        StorageAccess storageAccess = buildStorageAccess(dataset, withDiff);
         Engine engine = new SimpleEngine(new AntlrSqlParser(), new IntegratedQueryExecutor(), storageAccess);
         return new FrameworkSessionManager(engine).openSession();
     }
 
-    private StorageAccess buildStorageAccess(DatasetDescription dataset) throws IOException {
+    private StorageAccess buildStorageAccess(DatasetDescription dataset, boolean withDiff) throws IOException {
         SimpleStorageAccess storageAccess = new SimpleStorageAccess();
         SimpleResourceManager<Schema> schemas = storageAccess.schemas();
         for (DatasetSchemaDescription schemaDescription : dataset.schemas()) {
-            Schema schema = buildSchema(schemaDescription);
+            Schema schema = buildSchema(schemaDescription, withDiff);
             schemas.register(schema);
         }
         return storageAccess;
     }
 
-    private Schema buildSchema(DatasetSchemaDescription schemaDescription) {
+    private Schema buildSchema(DatasetSchemaDescription schemaDescription, boolean withDiff) {
         SimpleSchema schema = new SimpleSchema(schemaDescription.name());
         SimpleResourceManager<Table> tables = schema.tables();
         for (DatasetTableDescription tableDescription : schemaDescription.tables()) {
-            Table table = tableRenderer.renderTable(tableDescription);
+            Table table = buildTable(tableDescription, withDiff);
             tables.register(table);
         }
         return schema;
+    }
+
+    private Table buildTable(DatasetTableDescription tableDescription, boolean withDiff) {
+        Table baseTable = tableRenderer.renderTable(tableDescription);
+        return withDiff ? new DiffTable(baseTable) : baseTable;
     }
 
     private <T> T loadYaml(String resourcePath, Class<T> type) throws IOException {

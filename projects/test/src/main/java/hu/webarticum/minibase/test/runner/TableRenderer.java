@@ -5,7 +5,6 @@ import java.util.Optional;
 
 import hu.webarticum.minibase.storage.api.ColumnDefinition;
 import hu.webarticum.minibase.storage.api.Table;
-import hu.webarticum.minibase.storage.impl.diff.DiffTable;
 import hu.webarticum.minibase.storage.impl.simple.SimpleColumnDefinition;
 import hu.webarticum.minibase.storage.impl.simple.SimpleTable;
 import hu.webarticum.minibase.test.model.dataset.DatasetColumnDescription;
@@ -19,14 +18,6 @@ public class TableRenderer {
     private final Converter converter = new DefaultConverter();
 
     public Table renderTable(DatasetTableDescription tableDescription) {
-        Table table = renderBaseTable(tableDescription);
-        if (tableDescription.addDiffLayer()) {
-            table = new DiffTable(table);
-        }
-        return table;
-    }
-
-    private Table renderBaseTable(DatasetTableDescription tableDescription) {
         SimpleTable.SimpleTableBuilder builder = SimpleTable.builder();
         builder.name(tableDescription.name());
         ImmutableList<DatasetColumnDescription> columns = tableDescription.columns();
