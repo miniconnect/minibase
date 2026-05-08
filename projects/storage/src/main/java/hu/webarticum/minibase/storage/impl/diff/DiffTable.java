@@ -30,6 +30,9 @@ import hu.webarticum.minibase.storage.api.Row;
 import hu.webarticum.minibase.storage.api.Sequence;
 import hu.webarticum.minibase.storage.api.Table;
 import hu.webarticum.minibase.storage.api.TableIndex;
+import hu.webarticum.minibase.storage.api.TableIndex.InclusionMode;
+import hu.webarticum.minibase.storage.api.TableIndex.NullsMode;
+import hu.webarticum.minibase.storage.api.TableIndex.SortMode;
 import hu.webarticum.minibase.storage.api.TablePatch;
 import hu.webarticum.minibase.storage.api.TableSelection;
 import hu.webarticum.minibase.storage.impl.simple.MultiComparator;
@@ -61,6 +64,8 @@ public class DiffTable extends AbstractTableDecorator {
     private final SimpleSequence sequence;
 
     private volatile boolean hasChanges = false;
+
+    private volatile long changeVersion = 0L;
 
 
     public DiffTable(Table baseTable) {
@@ -97,7 +102,7 @@ public class DiffTable extends AbstractTableDecorator {
         return rowInternal(rowIndex);
     }
 
-    public synchronized Row rowInternal(LargeInteger rowIndex) {
+    private synchronized Row rowInternal(LargeInteger rowIndex) {
         LargeInteger baseTableSize = baseTable.size();
         LargeInteger adjustedRowIndex = adjustByDeletions(LargeInteger.ZERO, rowIndex);
 
@@ -122,7 +127,14 @@ public class DiffTable extends AbstractTableDecorator {
     }
 
     @Override
-    public void applyPatch(TablePatch patch) {
+    public synchronized void applyPatch(TablePatch patch) {
+        if (
+                patch.insertedRows().isEmpty() &&
+                patch.updates().isEmpty() &&
+                patch.deletions().isEmpty()) {
+            return;
+        }
+
         TablePatchUtil.checkIndividualValues(this, patch);
         checkUniqueInPatch(patch);
 
@@ -130,9 +142,8 @@ public class DiffTable extends AbstractTableDecorator {
         applyUpdates(patch.updates());
         applyDeletions(patch.deletions());
 
-        if  (!insertedRows.isEmpty() || !updates.isEmpty() || !deletions.isEmpty()) {
-            hasChanges = true;
-        }
+        changeVersion++;
+        hasChanges = !insertedRows.isEmpty() || !updates.isEmpty() || !deletions.isEmpty();
     }
 
     private void checkUniqueInPatch(TablePatch patch) {
@@ -313,28 +324,7 @@ public class DiffTable extends AbstractTableDecorator {
     }
 
     private LargeInteger adjustByDeletions(LargeInteger start, LargeInteger count) {
-        LargeInteger targetPosition;
-
-        LargeInteger position = start;
-        LargeInteger remaining = count;
-        do {
-            targetPosition = position.add(remaining);
-            Set<LargeInteger> foundItems = deletions.subSet(position, targetPosition);
-            remaining = LargeInteger.of(foundItems.size());
-            position = targetPosition;
-        } while (!remaining.equals(LargeInteger.ZERO));
-
-        while (deletions.contains(targetPosition)) {
-            targetPosition = targetPosition.add(LargeInteger.ONE);
-        }
-
-        return targetPosition;
-    }
-
-    private LargeInteger deadjustByDeletions(LargeInteger baseRowIndex) {
-        Collection<LargeInteger> subDeletions = deletions.subSet(LargeInteger.ZERO, baseRowIndex);
-        LargeInteger deletionCount = LargeInteger.of(subDeletions.size());
-        return baseRowIndex.subtract(deletionCount);
+        return DiffTableUtil.adjustByDeletions(deletions, start, count);
     }
 
     @Override
@@ -450,6 +440,9 @@ public class DiffTable extends AbstractTableDecorator {
 
     private class DiffTableIndexStore extends AbstractNamedResourceStoreDecorator<TableIndex> {
 
+        private final Map<String, TableIndex> cache = Collections.synchronizedMap(new HashMap<>());
+
+
         private DiffTableIndexStore() {
             super(baseTable.indexes());
         }
@@ -458,11 +451,7 @@ public class DiffTable extends AbstractTableDecorator {
         @Override
         public TableIndex get(String name) {
             TableIndex baseIndex = baseStore.get(name);
-            if (!hasChanges) {
-                return baseIndex;
-            } else {
-                return new DiffTableIndex(baseIndex);
-            }
+            return baseIndex != null ? cache.computeIfAbsent(name, k -> new DiffTableIndex(baseIndex)) : null;
         }
 
     }
@@ -472,28 +461,40 @@ public class DiffTable extends AbstractTableDecorator {
 
         private final TableIndex baseIndex;
 
-        private final Set<LargeInteger> updatedRowIndexes;
+        private final ImmutableList<Integer> columnIndexes;
 
-        private final ArrayList<DiffTableIndexEntry> indexEntries;
+        private long cachedChangeVersion = -1L;
+
+        private DiffTableIndexState cachedState = null;
 
 
-        public DiffTableIndex(TableIndex baseIndex) {
+        private DiffTableIndex(TableIndex baseIndex) {
             this.baseIndex = baseIndex;
-
             ImmutableList<String> tableColumnNames = baseTable.columns().names();
-            ImmutableList<Integer> columnIndexes =
-                    baseIndex.columnNames().map(tableColumnNames::indexOf);
+            this.columnIndexes = baseIndex.columnNames().map(tableColumnNames::indexOf);
+        }
 
+        private DiffTableIndexState currentState() {
+            long currentChangeVersion = changeVersion;
+            if (cachedState == null || cachedChangeVersion != currentChangeVersion) {
+                cachedState = createState();
+                cachedChangeVersion = currentChangeVersion;
+            }
+            return cachedState;
+        }
+
+        private DiffTableIndexState createState() {
             int fullUpdateCount = updates.size() + insertedRows.size();
-            this.updatedRowIndexes = new HashSet<>(fullUpdateCount);
-            this.indexEntries = new ArrayList<>(fullUpdateCount);
+            NavigableSet<LargeInteger> stateDeletions = new TreeSet<>(deletions);
+            Set<LargeInteger> stateUpdatedRowIndexes = new HashSet<>(fullUpdateCount);
+            ArrayList<DiffTableIndexEntry> stateIndexEntries = new ArrayList<>(fullUpdateCount);
 
             LargeInteger position = LargeInteger.ZERO;
             LargeInteger fullDeletionCount = LargeInteger.ZERO;
             for (Map.Entry<LargeInteger, ImmutableMap<Integer, Object>> entry : updates.entrySet()) {
                 LargeInteger baseRowIndex = entry.getKey();
 
-                Collection<LargeInteger> subDeletions = deletions.subSet(position, baseRowIndex);
+                Collection<LargeInteger> subDeletions = stateDeletions.subSet(position, baseRowIndex);
                 LargeInteger subDeletionCount = LargeInteger.of(subDeletions.size());
                 fullDeletionCount = fullDeletionCount.add(subDeletionCount);
                 LargeInteger rowIndex = baseRowIndex.subtract(fullDeletionCount);
@@ -508,17 +509,17 @@ public class DiffTable extends AbstractTableDecorator {
                 }
 
                 if (updated) {
-                    this.updatedRowIndexes.add(rowIndex);
+                    stateUpdatedRowIndexes.add(rowIndex);
                     Row baseRow = baseTable.row(baseRowIndex);
                     Row updatedRow = new UpdatedRow(baseRow, rowUpdates);
                     ImmutableList<Object> updatedData = columnIndexes.map(updatedRow::get);
                     DiffTableIndexEntry indexEntry = new DiffTableIndexEntry(rowIndex, updatedData);
-                    this.indexEntries.add(indexEntry);
+                    stateIndexEntries.add(indexEntry);
                 }
 
                 position = baseRowIndex.add(LargeInteger.ONE);
             }
-            Collection<LargeInteger> tailDeletions = deletions.tailSet(position);
+            Collection<LargeInteger> tailDeletions = stateDeletions.tailSet(position);
             LargeInteger tailDeletionCount = LargeInteger.of(tailDeletions.size());
             fullDeletionCount = fullDeletionCount.add(tailDeletionCount);
             LargeInteger innerSize = baseTable.size().subtract(fullDeletionCount);
@@ -529,11 +530,12 @@ public class DiffTable extends AbstractTableDecorator {
                 ImmutableList<Object> insertedData = columnIndexes.map(insertedRow::get);
                 LargeInteger rowIndex = LargeInteger.of(i).add(innerSize);
                 DiffTableIndexEntry indexEntry = new DiffTableIndexEntry(rowIndex, insertedData);
-                this.updatedRowIndexes.add(rowIndex);
-                this.indexEntries.add(indexEntry);
+                stateUpdatedRowIndexes.add(rowIndex);
+                stateIndexEntries.add(indexEntry);
             }
 
-            this.indexEntries.trimToSize();
+            stateIndexEntries.trimToSize();
+            return new DiffTableIndexState(stateDeletions, stateUpdatedRowIndexes, stateIndexEntries);
         }
 
 
@@ -562,12 +564,26 @@ public class DiffTable extends AbstractTableDecorator {
                 ImmutableList<SortMode> sortModes) {
             TableSelection baseSelection = baseIndex.findMulti(
                     from, fromInclusionMode, to, toInclusionMode, nullsModes, sortModes);
+            if (!hasChanges) {
+                return baseSelection;
+            }
+
+            DiffTableIndexState state;
+            synchronized (DiffTable.this) {
+                if (!hasChanges) {
+                    return baseSelection;
+                }
+                state = currentState();
+            }
+
             MultiComparator multiComparator = ComparatorUtil.createMultiComparator(
                     baseTable, baseIndex.columnNames(), sortModes);
             Predicate<ImmutableList<Object>> predicate = new SelectionPredicate(
                     from, fromInclusionMode, to, toInclusionMode, nullsModes, multiComparator);
             if (!sortModes.isEmpty() && sortModes.get(0).isSorted()) {
                 return new SortedDiffTableSelection(
+                        state,
+                        baseIndex,
                         baseSelection,
                         predicate,
                         multiComparator,
@@ -578,173 +594,198 @@ public class DiffTable extends AbstractTableDecorator {
                         nullsModes,
                         sortModes);
             } else {
-                return new UnsortedDiffTableSelection(baseSelection, predicate);
+                return new UnsortedDiffTableSelection(state, baseSelection, predicate);
             }
         }
 
-
-        private abstract class AbstractDiffTableSelection implements TableSelection {
-
-            protected final TableSelection baseSelection;
-
-            protected final Set<LargeInteger> filteredUpdatedRowIndexes;
-
-            protected final ArrayList<DiffTableIndexEntry> filteredIndexEntries;
+    }
 
 
-            protected AbstractDiffTableSelection(
-                    TableSelection baseSelection,
-                    Predicate<ImmutableList<Object>> predicate) {
-                this.baseSelection = baseSelection;
-                this.filteredUpdatedRowIndexes = new HashSet<>();
-                this.filteredIndexEntries = new ArrayList<>(indexEntries.size());
-                for (DiffTableIndexEntry indexEntry : indexEntries) {
-                    if (predicate.test(indexEntry.values)) {
-                        this.filteredUpdatedRowIndexes.add(indexEntry.rowIndex);
-                        this.filteredIndexEntries.add(indexEntry);
-                    }
-                }
-                this.filteredIndexEntries.trimToSize();
-            }
+    private static abstract class AbstractDiffTableSelection implements TableSelection {
+
+        protected final DiffTableIndexState state;
+
+        protected final TableSelection baseSelection;
+
+        protected final Set<LargeInteger> filteredUpdatedRowIndexes;
+
+        protected final ArrayList<DiffTableIndexEntry> filteredIndexEntries;
 
 
-            @Override
-            public boolean containsRow(LargeInteger rowIndex) {
-                if (updatedRowIndexes.contains(rowIndex)) {
-                    return filteredUpdatedRowIndexes.contains(rowIndex);
-                } else {
-                    LargeInteger adjustedRowIndex = adjustByDeletions(LargeInteger.ZERO, rowIndex);
-                    return baseSelection.containsRow(adjustedRowIndex);
+        protected AbstractDiffTableSelection(
+                DiffTableIndexState state,
+                TableSelection baseSelection,
+                Predicate<ImmutableList<Object>> predicate) {
+            this.state = state;
+            this.baseSelection = baseSelection;
+            this.filteredUpdatedRowIndexes = new HashSet<>();
+            this.filteredIndexEntries = new ArrayList<>(state.indexEntries.size());
+            for (DiffTableIndexEntry indexEntry : state.indexEntries) {
+                if (predicate.test(indexEntry.values)) {
+                    this.filteredUpdatedRowIndexes.add(indexEntry.rowIndex);
+                    this.filteredIndexEntries.add(indexEntry);
                 }
             }
-
-            protected Iterator<LargeInteger> wrapIterator(Iterator<LargeInteger> baseIterator) {
-                return new FilteringIterator<>(
-                        new IteratorAdapter<>(
-                                new FilteringIterator<>(
-                                        baseIterator,
-                                        v -> !deletions.contains(v)),
-                                DiffTable.this::deadjustByDeletions),
-                        v -> !updatedRowIndexes.contains(v));
-            }
-
+            this.filteredIndexEntries.trimToSize();
         }
 
 
-        private class SortedDiffTableSelection extends AbstractDiffTableSelection {
-
-            private final ImmutableList<?> from;
-
-            private final InclusionMode fromInclusionMode;
-
-            private final ImmutableList<?> to;
-
-            private final InclusionMode toInclusionMode;
-
-            private final ImmutableList<NullsMode> nullsModes;
-
-            private final ImmutableList<SortMode> sortModes;
-
-
-            public SortedDiffTableSelection( // NOSONAR currently these many parameters are OK
-                    TableSelection baseSelection,
-                    Predicate<ImmutableList<Object>> predicate,
-                    MultiComparator multiComparator,
-                    ImmutableList<?> from,
-                    InclusionMode fromInclusionMode,
-                    ImmutableList<?> to,
-                    InclusionMode toInclusionMode,
-                    ImmutableList<NullsMode> nullsModes,
-                    ImmutableList<SortMode> sortModes) {
-                super(baseSelection, predicate);
-                this.filteredIndexEntries.sort(
-                        (e1, e2) -> multiComparator.compare(e1.values, e2.values));
-
-                this.from = from;
-                this.fromInclusionMode = fromInclusionMode;
-                this.to = to;
-                this.toInclusionMode = toInclusionMode;
-                this.nullsModes = nullsModes;
-                this.sortModes = sortModes;
+        @Override
+        public boolean containsRow(LargeInteger rowIndex) {
+            if (state.updatedRowIndexes.contains(rowIndex)) {
+                return filteredUpdatedRowIndexes.contains(rowIndex);
+            } else {
+                LargeInteger adjustedRowIndex = DiffTableUtil.adjustByDeletions(
+                        state.deletions, LargeInteger.ZERO, rowIndex);
+                return baseSelection.containsRow(adjustedRowIndex);
             }
+        }
+
+        protected Iterator<LargeInteger> wrapIterator(Iterator<LargeInteger> baseIterator) {
+            return new FilteringIterator<>(
+                    new IteratorAdapter<>(
+                            new FilteringIterator<>(
+                                    baseIterator,
+                                    v -> !state.deletions.contains(v)),
+                            v -> DiffTableUtil.deadjustByDeletions(state.deletions, v)),
+                    v -> !state.updatedRowIndexes.contains(v));
+        }
+
+    }
 
 
-            @Override
-            public Iterator<LargeInteger> iterator() {
-                if (filteredIndexEntries.isEmpty()) {
-                    return wrapIterator(baseSelection.iterator());
-                }
+    private static class SortedDiffTableSelection extends AbstractDiffTableSelection {
 
-                List<Iterator<LargeInteger>> iterators = new LinkedList<>();
+        private final TableIndex baseIndex;
 
-                DiffTableIndexEntry firstEntry = filteredIndexEntries.get(0);
+        private final ImmutableList<?> from;
 
-                TableSelection leadingBaseSelection = baseIndex.findMulti(
-                        from,
-                        fromInclusionMode,
-                        firstEntry.values,
-                        InclusionMode.INCLUDE,
-                        nullsModes,
-                        sortModes);
-                iterators.add(wrapIterator(leadingBaseSelection.iterator()));
+        private final InclusionMode fromInclusionMode;
 
-                iterators.add(createMiddleIterator());
+        private final ImmutableList<?> to;
 
-                DiffTableIndexEntry lastEntry = filteredIndexEntries.get(
-                        filteredIndexEntries.size() - 1);
-                iterators.add(Collections.singleton(lastEntry.rowIndex).iterator());
+        private final InclusionMode toInclusionMode;
 
-                TableSelection trailingBaseSelection = baseIndex.findMulti(
-                        lastEntry.values,
-                        InclusionMode.EXCLUDE,
-                        to,
-                        toInclusionMode,
-                        nullsModes,
-                        sortModes);
-                iterators.add(wrapIterator(trailingBaseSelection.iterator()));
+        private final ImmutableList<NullsMode> nullsModes;
 
-                return ChainedIterator.allOf(iterators);
-            }
+        private final ImmutableList<SortMode> sortModes;
 
-            private Iterator<LargeInteger> createMiddleIterator() {
-                int entryCount = filteredIndexEntries.size();
-                return ChainedIterator.over(new IteratorAdapter<>(
-                        IntStream.range(0, entryCount - 1).iterator(),
-                        i -> {
-                            DiffTableIndexEntry beforeEntry = filteredIndexEntries.get(i);
-                            DiffTableIndexEntry afterEntry = filteredIndexEntries.get(i + 1);
-                            TableSelection betweenBaseSelection = baseIndex.findMulti(
-                                    beforeEntry.values,
-                                    InclusionMode.EXCLUDE,
-                                    afterEntry.values,
-                                    InclusionMode.INCLUDE,
-                                    nullsModes,
-                                    sortModes);
-                            return ChainedIterator.of(
-                                    Collections.singleton(beforeEntry.rowIndex).iterator(),
-                                    wrapIterator(betweenBaseSelection.iterator()));
-                        }));
-            }
 
+        public SortedDiffTableSelection( // NOSONAR currently these many parameters are OK
+                DiffTableIndexState state,
+                TableIndex baseIndex,
+                TableSelection baseSelection,
+                Predicate<ImmutableList<Object>> predicate,
+                MultiComparator multiComparator,
+                ImmutableList<?> from,
+                InclusionMode fromInclusionMode,
+                ImmutableList<?> to,
+                InclusionMode toInclusionMode,
+                ImmutableList<NullsMode> nullsModes,
+                ImmutableList<SortMode> sortModes) {
+            super(state, baseSelection, predicate);
+            this.filteredIndexEntries.sort(
+                    (e1, e2) -> multiComparator.compare(e1.values, e2.values));
+
+            this.baseIndex = baseIndex;
+            this.from = from;
+            this.fromInclusionMode = fromInclusionMode;
+            this.to = to;
+            this.toInclusionMode = toInclusionMode;
+            this.nullsModes = nullsModes;
+            this.sortModes = sortModes;
         }
 
 
-        private class UnsortedDiffTableSelection extends AbstractDiffTableSelection {
-
-            public UnsortedDiffTableSelection(
-                    TableSelection baseSelection,
-                    Predicate<ImmutableList<Object>> predicate) {
-                super(baseSelection, predicate);
+        @Override
+        public Iterator<LargeInteger> iterator() {
+            if (filteredIndexEntries.isEmpty()) {
+                return wrapIterator(baseSelection.iterator());
             }
 
+            List<Iterator<LargeInteger>> iterators = new LinkedList<>();
+            DiffTableIndexEntry firstEntry = filteredIndexEntries.get(0);
+            TableSelection leadingBaseSelection = baseIndex.findMulti(
+                    from,
+                    fromInclusionMode,
+                    firstEntry.values,
+                    InclusionMode.INCLUDE,
+                    nullsModes,
+                    sortModes);
+            iterators.add(wrapIterator(leadingBaseSelection.iterator()));
+            iterators.add(createMiddleIterator());
+            DiffTableIndexEntry lastEntry = filteredIndexEntries.get(filteredIndexEntries.size() - 1);
+            iterators.add(Collections.singleton(lastEntry.rowIndex).iterator());
+            TableSelection trailingBaseSelection = baseIndex.findMulti(
+                    lastEntry.values,
+                    InclusionMode.EXCLUDE,
+                    to,
+                    toInclusionMode,
+                    nullsModes,
+                    sortModes);
+            iterators.add(wrapIterator(trailingBaseSelection.iterator()));
+            return ChainedIterator.allOf(iterators);
+        }
 
-            @Override
-            public Iterator<LargeInteger> iterator() {
-                return ChainedIterator.of(
-                        wrapIterator(baseSelection.iterator()),
-                        new IteratorAdapter<>(filteredIndexEntries.iterator(), e -> e.rowIndex));
-            }
+        private Iterator<LargeInteger> createMiddleIterator() {
+            int entryCount = filteredIndexEntries.size();
+            return ChainedIterator.over(new IteratorAdapter<>(
+                    IntStream.range(0, entryCount - 1).iterator(),
+                    i -> {
+                        DiffTableIndexEntry beforeEntry = filteredIndexEntries.get(i);
+                        DiffTableIndexEntry afterEntry = filteredIndexEntries.get(i + 1);
+                        TableSelection betweenBaseSelection = baseIndex.findMulti(
+                                beforeEntry.values,
+                                InclusionMode.EXCLUDE,
+                                afterEntry.values,
+                                InclusionMode.INCLUDE,
+                                nullsModes,
+                                sortModes);
+                        return ChainedIterator.of(
+                                Collections.singleton(beforeEntry.rowIndex).iterator(),
+                                wrapIterator(betweenBaseSelection.iterator()));
+                    }));
+        }
 
+    }
+
+
+    private static class UnsortedDiffTableSelection extends AbstractDiffTableSelection {
+
+        public UnsortedDiffTableSelection(
+                DiffTableIndexState state,
+                TableSelection baseSelection,
+                Predicate<ImmutableList<Object>> predicate) {
+            super(state, baseSelection, predicate);
+        }
+
+
+        @Override
+        public Iterator<LargeInteger> iterator() {
+            return ChainedIterator.of(
+                    wrapIterator(baseSelection.iterator()),
+                    new IteratorAdapter<>(filteredIndexEntries.iterator(), e -> e.rowIndex));
+        }
+
+    }
+
+
+    private static class DiffTableIndexState {
+
+        private final NavigableSet<LargeInteger> deletions;
+
+        private final Set<LargeInteger> updatedRowIndexes;
+
+        private final ArrayList<DiffTableIndexEntry> indexEntries;
+
+
+        private DiffTableIndexState(
+                NavigableSet<LargeInteger> deletions,
+                Set<LargeInteger> updatedRowIndexes,
+                ArrayList<DiffTableIndexEntry> indexEntries) {
+            this.deletions = deletions;
+            this.updatedRowIndexes = updatedRowIndexes;
+            this.indexEntries = indexEntries;
         }
 
     }
