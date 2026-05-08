@@ -413,6 +413,10 @@ public class DiffTable extends AbstractTableDecorator {
         @Override
         public Column get(String name) {
             Column baseColumn = baseStore.get(name);
+            if (!hasChanges) {
+                return baseColumn;
+            }
+
             Optional<ImmutableList<Object>> possibleValuesHolder = baseColumn.possibleValues();
             if (!possibleValuesHolder.isPresent()) {
                 return baseColumn;
