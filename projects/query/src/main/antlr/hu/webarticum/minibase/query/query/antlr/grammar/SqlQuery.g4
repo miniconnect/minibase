@@ -4,30 +4,32 @@ grammar SqlQuery;
 package hu.webarticum.minibase.query.query.antlr.grammar;
 }
 
-sqlQuery: (
-    selectCountQuery |
-    selectQuery |
-    standaloneSelectQuery |
-    showSpecialQuery |
-    updateQuery |
-    insertQuery |
-    deleteQuery |
-    showSchemasQuery |
-    showTablesQuery |
-    useQuery |
-    setVariableQuery
-) EOF ;
+file: sqlQuery EOF;
+
+sqlQuery
+    : selectCountQuery
+    | selectQuery
+    | standaloneSelectQuery
+    | showSpecialQuery
+    | updateQuery
+    | insertQuery
+    | deleteQuery
+    | showSchemasQuery
+    | showTablesQuery
+    | useQuery
+    | setVariableQuery
+    ;
 
 selectCountQuery: (
-    SELECT COUNT PAR_START ( wildcardSelectItem | scopeableFieldName ) PAR_END fieldAliasPart=aliasPart?
-    FROM ( schemaName DOT )? tableName tableAliasPart=aliasPart?
+    SELECT COUNT S_PAR_START ( wildcardSelectItem | scopeableFieldName ) S_PAR_END fieldAliasPart=aliasPart?
+    FROM ( schemaName S_DOT )? tableName tableAliasPart=aliasPart?
     wherePart?
     limitPart?
 );
 
 selectQuery: (
     SELECT selectPart
-    FROM ( schemaName DOT )? tableName tableAliasPart=aliasPart?
+    FROM ( schemaName S_DOT )? tableName tableAliasPart=aliasPart?
     joinPart*
     wherePart?
     orderByPart?
@@ -36,36 +38,36 @@ selectQuery: (
 
 joinPart: (
 	( innerJoin | leftJoin )
-	( targetSchemaName=schemaName DOT )? targetTableName=tableName tableAliasPart=aliasPart?
-	ON scope1=tableName DOT field1=fieldName EQ scope2=tableName DOT field2=fieldName
+	( targetSchemaName=schemaName S_DOT )? targetTableName=tableName tableAliasPart=aliasPart?
+	ON scope1=tableName S_DOT field1=fieldName S_EQ scope2=tableName S_DOT field2=fieldName
 );
 innerJoin: INNER? JOIN;
 leftJoin: LEFT OUTER? JOIN;
 
-selectPart: selectItem ( COMMA selectItem )*;
+selectPart: selectItem ( S_COMMA selectItem )*;
 selectItem: aliasableExpression | wildcardSelectItem;
-wildcardSelectItem: ( tableName DOT )? ASTERISK;
+wildcardSelectItem: ( tableName S_DOT )? S_ASTERISK;
 offsetLimitPart: offsetPart limitPart?  | limitPart offsetPart? | commaLimitPart;
 offsetPart: OFFSET limitParameter ( ROW | ROWS )?;
 limitPart: ( LIMIT | FETCH ( FIRST | NEXT ) ) limitParameter ( ( ROW | ROWS ) ONLY? )?;
-commaLimitPart: LIMIT offsetValue=limitParameter COMMA limitValue=limitParameter;
-limitParameter: TOKEN_INTEGER | stringLiteral | variable;
+commaLimitPart: LIMIT offsetValue=limitParameter S_COMMA limitValue=limitParameter;
+limitParameter: D_INTEGER | stringLiteral | variable;
 
 standaloneSelectQuery: standaloneSelectRow ( UNION standaloneSelectRow )*;
-standaloneSelectRow: SELECT aliasableExpression ( COMMA aliasableExpression )* ( FROM UNIT )?;
+standaloneSelectRow: SELECT aliasableExpression ( S_COMMA aliasableExpression )* ( FROM UNIT )?;
 
 showSpecialQuery: ( SHOW | CALL ) specialSelectable aliasPart?;
 
-updateQuery: UPDATE ( schemaName DOT )? tableName updatePart wherePart?;
-updatePart: SET updateItem ( COMMA updateItem )*;
-updateItem: fieldName EQ extendedValue;
+updateQuery: UPDATE ( schemaName S_DOT )? tableName updatePart wherePart?;
+updatePart: SET updateItem ( S_COMMA updateItem )*;
+updateItem: fieldName S_EQ extendedValue;
 
-insertQuery: ( INSERT | REPLACE ) INTO ( schemaName DOT )? tableName fieldList? VALUES insertValueList;
-fieldList: PAR_START fieldName ( COMMA fieldName )* PAR_END;
-insertValueList: PAR_START insertValue ( COMMA insertValue )* PAR_END;
+insertQuery: ( INSERT | REPLACE ) INTO ( schemaName S_DOT )? tableName fieldList? VALUES insertValueList;
+fieldList: S_PAR_START fieldName ( S_COMMA fieldName )* S_PAR_END;
+insertValueList: S_PAR_START insertValue ( S_COMMA insertValue )* S_PAR_END;
 insertValue: extendedValue | DEFAULT;
 
-deleteQuery: DELETE FROM ( schemaName DOT )? tableName wherePart?;
+deleteQuery: DELETE FROM ( schemaName S_DOT )? tableName wherePart?;
 
 showSchemasQuery: SHOW ( SCHEMAS | DATABASES ) likePart?;
 
@@ -73,129 +75,159 @@ showTablesQuery: SHOW TABLES ( FROM schemaName )? likePart?;
 
 useQuery: USE schemaName;
 
-setVariableQuery: SET variable EQ extendedValue;
+setVariableQuery: SET variable S_EQ extendedValue;
 
-wherePart: WHERE ( whereItem ( AND whereItem )* | PAR_START whereItem ( AND whereItem )* PAR_END );
-whereItem: scopeableFieldName postfixCondition | PAR_START whereItem PAR_END;
+wherePart: WHERE ( whereItem ( AND whereItem )* | S_PAR_START whereItem ( AND whereItem )* S_PAR_END );
+whereItem: scopeableFieldName postfixCondition | S_PAR_START whereItem S_PAR_END;
 postfixCondition: simpleRelation extendedValue | betweenRelation | isNull | isNotNull;
-simpleRelation: EQ | LESS | LESS_EQ | GREATER| GREATER_EQ;
+simpleRelation: S_EQ | S_LESS | S_LEQ | S_GREATER| S_GEQ;
 betweenRelation: BETWEEN firstValue=extendedValue AND secondValue=extendedValue;
 isNull: IS ( NULL | UNKNOWN );
 isNotNull: IS NOT ( NULL | UNKNOWN );
-orderByPart: ORDER BY orderByItem ( COMMA orderByItem )*;
+orderByPart: ORDER BY orderByItem ( S_COMMA orderByItem )*;
 orderByItem: ( scopeableFieldName | orderByPosition ) ( ASC | DESC )? ( nullsFirst | nullsLast )?;
 nullsFirst: NULLS FIRST;
 nullsLast: NULLS LAST;
-orderByPosition: TOKEN_INTEGER;
+orderByPosition: D_INTEGER;
 aliasableExpression: expression aliasPart?;
 aliasPart: AS? alias=identifier;
-expression:
-    subExpression=expression DOUBLE_COLON typeConstruct |
-    leftExpression=expression binaryOperator=( ASTERISK | MOD | PERCENT | DIV | SLASH ) rightExpression=expression |
-    leftExpression=expression binaryOperator=( PLUS | MINUS ) rightExpression=expression |
-    leftExpression=expression binaryOperator=AND rightExpression=expression |
-    leftExpression=expression binaryOperator=XOR rightExpression=expression |
-    leftExpression=expression binaryOperator=OR rightExpression=expression |
-    leftExpression=expression binaryOperator=( LESS | LESS_EQ | GREATER | GREATER_EQ ) rightExpression=expression |
-    leftExpression=expression binaryOperator=( EQ | NEQ_ANG | NEQ_BANG ) rightExpression=expression |
-    givenExpression=expression NOT? BETWEEN minExpression=expression AND maxExpression=expression |
-    leftExpression=expression binaryOperator=DOUBLE_PIPE rightExpression=expression |
-    givenExpression=expression NOT? IN inValueList |
-    subExpression=expression IS NOT? isNullOperator=( NULL | UNKNOWN ) |
-    givenExpression=expression NOT? likeOperator=( LIKE | ILIKE ) patternExpression=expression ( ESCAPE escapeExpression=expression )? |
-    givenExpression=expression NOT? regexpOperator=( REGEXP | RLIKE ) patternExpression=expression |
-    prefixableExpression ;
-prefixableExpression:
-    unaryArithmeticExpression |
-    notExpression |
-    PAR_START start1Expression=expression COMMA end1Expression=expression PAR_END
-        OVERLAPS PAR_START start2Expression=expression COMMA end2Expression=expression PAR_END |
-    caseExpression |
-    COUNT PAR_START DISTINCT? ASTERISK PAR_END |
-    COUNT PAR_START DISTINCT subExpression=expression PAR_END |
-    intervalExpression |
-    trimExpression |
-    substringExpression |
-    positionExpression |
-    extractExpression |
-    castExpression |
-    atomicExpression;
+
+expression
+    : subject=expression S_DOUBLE_COLON typeConstruct
+    | left=expression S_ET right=expression
+    | left=expression S_SHIFT_LEFT right=expression
+    | left=expression S_SHIFT_RIGHT right=expression
+    | left=expression S_PIPE right=expression
+    | left=expression S_HASH right=expression
+    | left=expression ( S_ASTERISK | MOD | S_PERCENT | DIV | S_SLASH ) right=expression
+    | left=expression ( S_PLUS | S_MINUS ) right=expression
+    | left=expression AND right=expression
+    | left=expression XOR right=expression
+    | left=expression OR right=expression
+    | left=expression ( S_LESS | S_LEQ | S_GREATER | S_GEQ ) right=expression
+    | left=expression ( S_EQ | S_NEQ_ANG | S_NEQ_BANG ) right=expression
+    | subject=expression NOT? BETWEEN min=expression AND max=expression
+    | left=expression S_DOUBLE_PIPE right=expression
+    | subject=expression NOT? IN inValueList
+    | context=expression IS NOT? isNullOperator=( NULL | UNKNOWN )
+    | context=expression NOT? ( LIKE | ILIKE ) pattern=expression ( ESCAPE escape=expression )?
+    | context=expression NOT? ( REGEXP | RLIKE ) pattern=expression
+    | prefixableExpression
+    ;
+
+prefixableExpression
+    : unaryArithmeticExpression
+    | bitwiseNotExpression
+    | notExpression
+    | overlapsExpression
+    | caseExpression
+    | countExpression
+    | intervalExpression
+    | trimExpression
+    | substringExpression
+    | positionExpression
+    | extractExpression
+    | castExpression
+    | atomicExpression
+    ;
+
+bitwiseNotExpression: S_TILDE prefixableExpression;
 notExpression: NOT prefixableExpression;
-unaryArithmeticExpression: ( PLUS | MINUS ) prefixableExpression;
-inValueList: PAR_START expression ( COMMA expression )* PAR_END;
-caseExpression: CASE (givenExpression=expression)? whenPart+ elsePart? END;
-whenPart: WHEN conditionExpression=expression THEN resultExpression=expression;
+overlapsExpression: S_PAR_START start1=expression S_COMMA end1=expression S_PAR_END
+    OVERLAPS S_PAR_START start2=expression S_COMMA end2=expression S_PAR_END;
+unaryArithmeticExpression: ( S_PLUS | S_MINUS ) prefixableExpression;
+inValueList: S_PAR_START expression ( S_COMMA expression )* S_PAR_END;
+countExpression: COUNT S_PAR_START DISTINCT? S_ASTERISK S_PAR_END |
+    COUNT S_PAR_START DISTINCT subExpression=expression S_PAR_END;
+caseExpression: CASE (subject=expression)? whenPart+ elsePart? END;
+whenPart: WHEN condition=expression THEN result=expression;
 elsePart: ELSE expression;
 intervalExpression: INTERVAL ( integerLiteral | decimalLiteral | stringLiteral ) intervalSpecifier?;
-trimExpression: TRIM PAR_START trimSpecification? charsExpression=expression? FROM inputExpression=expression PAR_END;
+trimExpression: TRIM S_PAR_START trimSpecification? chars=expression? FROM subject=expression S_PAR_END;
 trimSpecification: LEADING | TRAILING | BOTH;
-substringExpression: ( SUBSTRING | SUBSTR ) PAR_START inputExpression=expression
-    ( FROM fromExpression=expression ( FOR forExpression=expression )? | FOR forExpression=expression ) PAR_END;
-positionExpression: POSITION PAR_START subjectExpression=expression IN contextExpression=expression PAR_END;
-extractExpression: EXTRACT PAR_START extractFieldName FROM inputExpression=expression PAR_END;
+substringExpression: ( SUBSTRING | SUBSTR ) S_PAR_START context=expression
+    ( FROM from=expression ( FOR for=expression )? | FOR for=expression ) S_PAR_END;
+positionExpression: POSITION S_PAR_START subject=expression IN context=expression S_PAR_END;
+extractExpression: EXTRACT S_PAR_START extractFieldName FROM context=expression S_PAR_END;
 extractFieldName: YEAR | MONTH | DAY | HOUR | MINUTE | SECOND | TIMEZONE_HOUR | TIMEZONE_MINUTE;
 castExpression:
-    CAST PAR_START expression AS typeConstruct PAR_END |
-    CONVERT PAR_START expression COMMA typeConstruct PAR_END |
-    CONVERT PAR_START typeConstruct COMMA expression PAR_END;
+    CAST S_PAR_START expression AS typeConstruct S_PAR_END |
+    CONVERT S_PAR_START expression S_COMMA typeConstruct S_PAR_END |
+    CONVERT S_PAR_START typeConstruct S_COMMA expression S_PAR_END;
 typeConstruct: simpleTypeConstruct | intervalTypeConstruct;
-simpleTypeConstruct: typeName ( PAR_START ( size=sizeParameter ( COMMA scale=sizeParameter )? )? PAR_END )?;
+simpleTypeConstruct: typeName ( S_PAR_START ( size=sizeParameter ( S_COMMA scale=sizeParameter )? )? S_PAR_END )?;
 intervalTypeConstruct: INTERVAL intervalSpecifier;
-sizeParameter: TOKEN_INTEGER | stringLiteral;
-atomicExpression:
-    literal |
-    variable |
-    specialSelectable |
-    scopeableFieldName |
-    functionCall |
-    PAR_START paredExpression=expression PAR_END;
+sizeParameter: D_INTEGER | stringLiteral;
+
+atomicExpression
+    : literal
+    | variable
+    | specialSelectable
+    | scopeableFieldName
+    | functionCall
+    | S_PAR_START paredExpression=expression S_PAR_END
+    ;
+
 specialSelectable: specialSelectableName ( parentheses )?;
-specialSelectableName:
-    SYSTEM_USER |
-    SESSION_USER |
-    CURRENT_USER |
-    CURRENT_SCHEMA |
-    CURRENT_CATALOG |
-    CURRENT_DATE |
-    CURRENT_TIME |
-    CURRENT_TIMESTAMP |
-    READONLY |
-    AUTOCOMMIT |
-    IDENTITY |
-    LAST_INSERT_ID;
-functionCall: functionName PAR_START ( expression ( COMMA expression )* )? PAR_END;
+
+specialSelectableName
+    : SYSTEM_USER
+    | SESSION_USER
+    | CURRENT_USER
+    | CURRENT_SCHEMA
+    | CURRENT_CATALOG
+    | CURRENT_DATE
+    | CURRENT_TIME
+    | CURRENT_TIMESTAMP
+    | READONLY
+    | AUTOCOMMIT
+    | IDENTITY
+    | LAST_INSERT_ID
+    ;
+
+functionCall: functionName S_PAR_START ( expression ( S_COMMA expression )* )? S_PAR_END;
 functionName: identifier | functionNameToken;
 functionNameToken: LEFT | RIGHT | TRIM | SUBSTRING | SUBSTR | REPLACE | typeName;
-typeName:
-    NULL | BOOL | BOOLEAN | INTEGER | BIGINT | DEC | DECIMAL | FLOAT |
-    NVARCHAR | CLOB | BINARY | VARBINARY | BLOB | DATE |
-    ( TIME | DATETIME | TIMESTAMP ) ( ( WITH | WITHOUT ) ( TIME ZONE | OFFSET | UTCOFFSET ) )? |
-    TIMETZ | DATETIMETZ | TIMESTAMPTZ |
-    INSTANT |
-    TIMEO | DATETIMEO | TIMESTAMPO |
-    UTCOFFSET | TIMEZONE |
-    INTERVAL |
-    TINYINT | SMALLINT | INT | NUMERIC | REAL | DOUBLE PRECISION? | CHAR | VARCHAR | NCHAR | TEXT;
+
+typeName
+    : NULL | BOOL | BOOLEAN | BIT | INTEGER | BIGINT | DEC | DECIMAL | FLOAT
+    | NVARCHAR | CLOB | BINARY | VARBINARY | BYTEA | BLOB | DATE
+    | ( TIME | DATETIME | TIMESTAMP ) ( ( WITH | WITHOUT ) ( TIME ZONE | OFFSET | UTCOFFSET ) )?
+    | TIMETZ | DATETIMETZ | TIMESTAMPTZ
+    | INSTANT
+    | TIMEO | DATETIMEO | TIMESTAMPO
+    | UTCOFFSET | TIMEZONE
+    | INTERVAL
+    | TINYINT | SMALLINT | INT | NUMERIC | REAL | DOUBLE PRECISION? | CHAR | VARCHAR | NCHAR | TEXT
+    ;
+
 intervalSpecifier: ( fromItem=intervalSpecifierItem TO )? toItem=intervalSpecifierItem;
-intervalSpecifierItem: intervalFieldName ( PAR_START integerLiteral PAR_END )?;
+intervalSpecifierItem: intervalFieldName ( S_PAR_START integerLiteral S_PAR_END )?;
 intervalFieldName: YEAR | MONTH | DAY | HOUR | MINUTE | SECOND;
-scopeableFieldName: ( tableName DOT )? fieldName;
+scopeableFieldName: ( tableName S_DOT )? fieldName;
 extendedValue: literal | variable;
-variable: AT identifier;
+variable: S_AT identifier;
 fieldName: identifier;
 tableName: identifier;
-identifier: TOKEN_SIMPLENAME | TOKEN_QUOTEDNAME | TOKEN_BACKTICKEDNAME;
-literal: NULL | stringLiteral | integerLiteral | decimalLiteral | booleanLiteral;
-integerLiteral: ( MINUS | PLUS )? TOKEN_INTEGER;
-decimalLiteral: ( MINUS | PLUS )? TOKEN_DECIMAL;
+identifier: D_SIMPLENAME | D_QUOTEDNAME | D_BACKTICKEDNAME;
+literal: NULL | stringLiteral | bitStringLiteral | integerLiteral | decimalLiteral | booleanLiteral;
+integerLiteral: ( S_MINUS | S_PLUS )? D_INTEGER;
+decimalLiteral: ( S_MINUS | S_PLUS )? D_DECIMAL;
+bitStringLiteral: binaryStringTokenList | hexadecimalStringTokenList;
+binaryStringTokenList: D_BSTRING binaryStringContinuation*;
+binaryStringContinuation: D_BSTRING_CONTINUATION | D_BSTRING;
+hexadecimalStringTokenList: D_XSTRING hexadecimalStringContinuation*;
+hexadecimalStringContinuation: D_BSTRING_CONTINUATION | D_XSTRING_CONTINUATION | D_XSTRING;
 booleanLiteral: TRUE | FALSE;
 likePart: LIKE stringLiteral;
 stringLiteral: stringTokenList | escapeStringTokenList;
-stringTokenList: TOKEN_STRING+;
-escapeStringTokenList: TOKEN_ESTRING escapeStringContinuation*;
-escapeStringContinuation: TOKEN_STRING | TOKEN_ESTRING_CONTINUATION;
+stringTokenList: stringToken+;
+stringToken: safeStringToken | D_STRING;
+escapeStringTokenList: D_ESTRING escapeStringContinuation*;
+escapeStringContinuation: safeStringToken | D_ESTRING;
+safeStringToken: D_BSTRING_CONTINUATION | D_XSTRING_CONTINUATION | D_SIMPLE_STRING;
 schemaName: identifier;
-parentheses: PAR_START PAR_END;
+parentheses: S_PAR_START S_PAR_END;
 
 SELECT: S E L E C T;
 INSERT: I N S E R T;
@@ -222,6 +254,7 @@ EXTRACT: E X T R A C T;
 
 BOOL: B O O L;
 BOOLEAN: B O O L E A N;
+BIT: B I T;
 INTEGER: I N T E G E R;
 BIGINT: B I G I N T;
 DEC: D E C;
@@ -231,6 +264,7 @@ NVARCHAR: N V A R C H A R;
 CLOB: C L O B;
 BINARY: B I N A R Y;
 VARBINARY: V A R B I N A R Y;
+BYTEA: B Y T E A;
 BLOB: B L O B;
 DATE: D A T E;
 TIME: T I M E;
@@ -252,8 +286,8 @@ HOUR: H O U R;
 DAY: D A Y;
 MONTH: M O N T H;
 YEAR: Y E A R;
-TIMEZONE_HOUR: T I M E Z O N E UNDERSCORE H O U R;
-TIMEZONE_MINUTE: T I M E Z O N E UNDERSCORE M I N U T E;
+TIMEZONE_HOUR: T I M E Z O N E '_' H O U R;
+TIMEZONE_MINUTE: T I M E Z O N E '_' M I N U T E;
 WITH: W I T H;
 WITHOUT: W I T H O U T;
 ZONE: Z O N E;
@@ -269,18 +303,18 @@ VARCHAR: V A R C H A R;
 NCHAR: N C H A R;
 TEXT: T E X T;
 
-SYSTEM_USER: S Y S T E M UNDERSCORE U S E R;
-SESSION_USER: S E S S I O N UNDERSCORE U S E R;
-CURRENT_USER: C U R R E N T UNDERSCORE U S E R;
-CURRENT_SCHEMA: C U R R E N T UNDERSCORE S C H E M A;
-CURRENT_CATALOG: C U R R E N T UNDERSCORE C A T A L O G;
-CURRENT_DATE: C U R R E N T UNDERSCORE D A T E;
-CURRENT_TIME: C U R R E N T UNDERSCORE T I M E;
-CURRENT_TIMESTAMP: C U R R E N T UNDERSCORE T I M E S T A M P;
+SYSTEM_USER: S Y S T E M '_' U S E R;
+SESSION_USER: S E S S I O N '_' U S E R;
+CURRENT_USER: C U R R E N T '_' U S E R;
+CURRENT_SCHEMA: C U R R E N T '_' S C H E M A;
+CURRENT_CATALOG: C U R R E N T '_' C A T A L O G;
+CURRENT_DATE: C U R R E N T '_' D A T E;
+CURRENT_TIME: C U R R E N T '_' T I M E;
+CURRENT_TIMESTAMP: C U R R E N T '_' T I M E S T A M P;
 READONLY: R E A D O N L Y;
 AUTOCOMMIT: A U T O C O M M I T;
 IDENTITY: I D E N T I T Y;
-LAST_INSERT_ID: L A S T UNDERSCORE I N S E R T UNDERSCORE I D;
+LAST_INSERT_ID: L A S T '_' I N S E R T '_' I D;
 
 AS: A S;
 COUNT: C O U N T;
@@ -346,47 +380,57 @@ FALSE: F A L S E;
 
 TO: T O;
 
-TOKEN_SIMPLENAME: [\p{L}_] [\p{N}\p{L}_]* ;
-TOKEN_QUOTEDNAME: '"' ( '""' | ~["] )* '"';
-TOKEN_BACKTICKEDNAME: '`' ( '``' | ~[`] )* '`';
+D_SIMPLENAME: [\p{L}_] [\p{N}\p{L}_]* ;
+D_QUOTEDNAME: '"' ( '""' | ~["] )* '"';
+D_BACKTICKEDNAME: '`' ( '``' | ~[`] )* '`';
 
-TOKEN_STRING: '\'' ( '\'\'' | ~['] )* '\'';
-TOKEN_ESTRING: E FRAGMENT_ESTRING;
-TOKEN_ESTRING_CONTINUATION: FRAGMENT_ESTRING;
-fragment FRAGMENT_ESTRING: '\'' ( '\\' . | '\'\'' | ~[\\'] )* '\'';
-TOKEN_DECIMAL: ( [0-9]+ '.' [0-9]* | '.' [0-9]+ ) FRAGMENT_EXPONENT? | [0-9]+ FRAGMENT_EXPONENT;
-fragment FRAGMENT_EXPONENT: E [-+]? [0-9]+;
-TOKEN_INTEGER: [0-9]+;
+D_BSTRING: B F_BSTRING;
+D_BSTRING_CONTINUATION: F_BSTRING;
+fragment F_BSTRING: '\'' [01]* '\'';
+D_XSTRING: X F_XSTRING;
+D_XSTRING_CONTINUATION: F_XSTRING;
+fragment F_XSTRING: '\'' [0-9A-Fa-f]* '\'';
+D_SIMPLE_STRING: '\'' ~[']* '\'';
+D_STRING: '\'' ( '\'\'' | ~['] )* '\'';
+D_ESTRING: E '\'' ( '\\' . | '\'\'' | ~[\\'] )* '\'';
+D_DECIMAL: ( [0-9]+ '.' [0-9]* | '.' [0-9]+ ) F_EXPONENT? | [0-9]+ F_EXPONENT;
+fragment F_EXPONENT: E [-+]? [0-9]+;
+D_INTEGER: [0-9]+;
 
-DOT: '.';
-COMMA: ',';
-AT: '@';
+S_DOT: '.';
+S_COMMA: ',';
+S_AT: '@';
 
-DOUBLE_PIPE: '||';
-DOUBLE_COLON: '::';
+S_DOUBLE_PIPE: '||';
+S_DOUBLE_COLON: '::';
 
-ASTERISK: '*';
-PERCENT: '%';
-SLASH: '/';
+S_ET: '&';
+S_PIPE: '|';
+S_SHIFT_LEFT: '<<';
+S_SHIFT_RIGHT: '>>';
+S_TILDE: '~';
+S_HASH: '#';
 
-PLUS: '+';
-MINUS: '-';
+S_ASTERISK: '*';
+S_PERCENT: '%';
+S_SLASH: '/';
 
-EQ: '=';
-NEQ_ANG: '<>';
-NEQ_BANG: '!=';
+S_PLUS: '+';
+S_MINUS: '-';
 
-LESS: '<';
-LESS_EQ: '<=';
-GREATER: '>';
-GREATER_EQ: '>=';
+S_EQ: '=';
+S_NEQ_ANG: '<>';
+S_NEQ_BANG: '!=';
 
-PAR_START: '(';
-PAR_END: ')';
+S_LESS: '<';
+S_LEQ: '<=';
+S_GREATER: '>';
+S_GEQ: '>=';
 
-WHITESPACE: [ \n\t\r]+ -> channel(HIDDEN);
+S_PAR_START: '(';
+S_PAR_END: ')';
 
-fragment UNDERSCORE: [_];
+H_WHITESPACE: [ \n\t\r]+ -> channel(HIDDEN);
 
 fragment A: [Aa];
 fragment B: [Bb];

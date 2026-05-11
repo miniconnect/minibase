@@ -13,7 +13,6 @@ import hu.webarticum.minibase.storage.api.ColumnDefinition;
 import hu.webarticum.minibase.storage.api.NamedResourceStore;
 import hu.webarticum.minibase.storage.api.Table;
 import hu.webarticum.minibase.storage.api.TableIndex;
-import hu.webarticum.minibase.storage.impl.diff.DiffTable;
 import hu.webarticum.minibase.storage.impl.simple.SimpleTable;
 import hu.webarticum.minibase.test.model.dataset.DatasetColumnDescription;
 import hu.webarticum.minibase.test.model.dataset.DatasetTableDescription;
@@ -28,7 +27,6 @@ class TableRendererTest {
     void testSimple() {
         DatasetTableDescription tableDescription = new DatasetTableDescription(
                 "some_table",
-                false,
                 ImmutableList.of(
                         new DatasetColumnDescription("id", LargeInteger.class, false, true, true, null, null),
                         new DatasetColumnDescription("label", String.class, true, true, false, null, null)),
@@ -79,18 +77,17 @@ class TableRendererTest {
     }
 
     @Test
-    void testWithDiffLayer() {
+    void testSingleColumn() {
         DatasetTableDescription tableDescription = new DatasetTableDescription(
-                "diff_table",
-                true,
+                "single_column_table",
                 ImmutableList.of(
                         new DatasetColumnDescription("id", LargeInteger.class, false, true, true, null, null)),
                 ImmutableList.of(ImmutableList.of("id")),
                 ImmutableList.of(
                         ImmutableList.of(LargeInteger.ONE)));
         Table table = tableRenderer.renderTable(tableDescription);
-        assertThat(table).isInstanceOf(DiffTable.class);
-        assertThat(table.name()).isEqualTo("diff_table");
+        assertThat(table).isInstanceOf(SimpleTable.class);
+        assertThat(table.name()).isEqualTo("single_column_table");
 
         NamedResourceStore<Column> columns = table.columns();
         assertThat(columns.names()).containsExactly("id");

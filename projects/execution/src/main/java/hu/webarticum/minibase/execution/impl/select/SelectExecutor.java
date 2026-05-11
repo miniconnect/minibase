@@ -15,12 +15,14 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import hu.webarticum.minibase.common.error.PredefinedError;
 import hu.webarticum.minibase.execution.SharedThrowingQueryExecutor;
 import hu.webarticum.minibase.execution.util.TableQueryUtil;
 import hu.webarticum.minibase.query.expression.ColumnExpression;
 import hu.webarticum.minibase.query.expression.ColumnParameter;
+import hu.webarticum.minibase.query.expression.ConstantExpression;
 import hu.webarticum.minibase.query.expression.Expression;
 import hu.webarticum.minibase.query.expression.Parameter;
 import hu.webarticum.minibase.query.expression.SpecialValueParameter;
@@ -77,8 +79,8 @@ public class SelectExecutor implements SharedThrowingQueryExecutor {
         LinkedHashMap<String, TableEntry> reorderedTableEntries = applyOrderByToTableEntries(
                 tableEntries, uniqueOrderedAliases, normalizedOrderByEntries);
 
-        ImmutableList<MiniColumnHeader> columnHeaders = selectItemEntries.stream()
-                .map(e -> columnHeaderOf(e, reorderedTableEntries))
+        ImmutableList<MiniColumnHeader> columnHeaders = IntStream.range(0, selectItemEntries.size())
+                .mapToObj(i -> columnHeaderOf(selectItemEntries.get(i), i, reorderedTableEntries))
                 .collect(ImmutableList.createCollector());
 
         try {
@@ -92,14 +94,14 @@ public class SelectExecutor implements SharedThrowingQueryExecutor {
 
         // FIXME: naive implementation of offset (for now, mostly for compatibility)
         boolean hasOffset = offset != null && offset.isPositive();
-        if (hasOffset) {
+        if (hasOffset && limit != null) {
             limit = offset.add(limit);
         }
 
         List<Map<String, LargeInteger>> joinedRowIndices = collectRows(
                 reorderedTableEntries, normalizedOrderByEntries, limit, state);
 
-       // FIXME: naive implementation of offset (for now, mostly for compatibility)
+        // FIXME: naive implementation of offset (for now, mostly for compatibility)
         if (hasOffset) {
             boolean willBeEmpty = true;
             int offsetInt = 0;
@@ -698,13 +700,15 @@ public class SelectExecutor implements SharedThrowingQueryExecutor {
     }
 
     private ColumnParameter findMatchingColumnParameter(List<SelectItemEntry> selectItemEntries, String fieldName) {
-        for (SelectItemEntry selectItemEntry : selectItemEntries) {
+        int size = selectItemEntries.size();
+        for (int i = 0; i < size; i++) {
+            SelectItemEntry selectItemEntry = selectItemEntries.get(i);
             ColumnParameter columnParameter = columnParameterOf(selectItemEntry);
             if (columnParameter == null) {
                 continue;
             }
             ExpressionSelectItem expressionSelectItem = (ExpressionSelectItem) selectItemEntry.selectItem;
-            String fieldAlias = fieldAliasOf(expressionSelectItem);
+            String fieldAlias = fieldAliasOf(expressionSelectItem, i);
             if (fieldAlias.equals(fieldName)) {
                 return columnParameter;
             }
@@ -750,7 +754,8 @@ public class SelectExecutor implements SharedThrowingQueryExecutor {
         return JavaTranslator.of(clazz);
     }
 
-    private MiniColumnHeader columnHeaderOf(SelectItemEntry selectItemEntry, Map<String, TableEntry> tableEntries) {
+    private MiniColumnHeader columnHeaderOf(
+            SelectItemEntry selectItemEntry, int columnIndex, Map<String, TableEntry> tableEntries) {
         MiniValueDefinition valueDefinition = selectItemEntry.valueTranslator.definition();
         SelectItem selectItem = selectItemEntry.selectItem;
         if (!(selectItem instanceof ExpressionSelectItem)) {
@@ -758,7 +763,7 @@ public class SelectExecutor implements SharedThrowingQueryExecutor {
         }
         ExpressionSelectItem expressionSelectItem = (ExpressionSelectItem) selectItem;
         String tableAlias = tableAliasOf(expressionSelectItem);
-        String fieldAlias = fieldAliasOf(expressionSelectItem);
+        String fieldAlias = fieldAliasOf(expressionSelectItem, columnIndex);
         boolean isNullable =
                 selectItemEntry.columnDefinition.isNullable() ||
                 (tableAlias != null && isTransitivelyLeftJoined(tableAlias, tableEntries));
@@ -774,12 +779,12 @@ public class SelectExecutor implements SharedThrowingQueryExecutor {
         return ((ColumnExpression) expression).columnParameter().tableAlias();
     }
 
-    private String fieldAliasOf(ExpressionSelectItem expressionSelectItem) {
+    private String fieldAliasOf(ExpressionSelectItem expressionSelectItem, int columnIndex) {
         String explicitAlias = expressionSelectItem.alias();
         if (explicitAlias != null) {
             return explicitAlias;
         } else {
-            return expressionSelectItem.expression().automaticName();
+            return expressionSelectItem.expression().automaticName(columnIndex);
         }
     }
 
@@ -822,10 +827,21 @@ public class SelectExecutor implements SharedThrowingQueryExecutor {
         }
 
         Expression expression = ((ExpressionSelectItem) selectItem).expression();
-        ImmutableList<Parameter> parameters = expression.parameters();
-        ImmutableMap<Parameter, Object> parameterValues = parameters.assign(
-                p -> selectExpressionParameter(joinedRow, tableEntries, state, p));
-        Object value = expression.evaluate(parameterValues);
+
+        // FIXME: fast-path (quick dirty optimization)
+        Object value;
+        if (expression instanceof ColumnExpression) {
+            ColumnParameter columnParameter = ((ColumnExpression) expression).columnParameter();
+            value = selectExpressionColumnParameter(joinedRow, tableEntries, columnParameter);
+        } else if (expression instanceof ConstantExpression) {
+            value = ((ConstantExpression) expression).value();
+        } else {
+            ImmutableList<Parameter> parameters = expression.parameters();
+            ImmutableMap<Parameter, Object> parameterValues = parameters.assign(
+                    p -> selectExpressionParameter(joinedRow, tableEntries, state, p));
+            value = expression.evaluate(parameterValues);
+        }
+
         return selectItemEntry.valueTranslator.encodeFully(value);
     }
 
@@ -955,6 +971,12 @@ public class SelectExecutor implements SharedThrowingQueryExecutor {
             }
         }
 
+        // XXX: quick fix: relax over-restricted collect-stop logic
+        boolean canStopAfterLimit = prelimitable || remainingOrderByEntries.isEmpty();
+        if (canStopAfterLimit && limit != null && result.size() >= intLimit) {
+            return;
+        }
+
         boolean found = false;
         if (previousAlias == null || !baseIsNull) {
             int previousSize = result.size();
@@ -988,7 +1010,7 @@ public class SelectExecutor implements SharedThrowingQueryExecutor {
                             state);
                 }
                 if (
-                        prelimitable &&
+                        canStopAfterLimit &&
                         limit != null &&
                         previousSize + subResult.size() >= intLimit) {
                     break;
@@ -1008,7 +1030,7 @@ public class SelectExecutor implements SharedThrowingQueryExecutor {
                 subResult.sort(rowIndexComparator);
             }
 
-            if ((previousAlias == null || prelimitable) && limit != null && subResult.size() > intLimit) {
+            if ((previousAlias == null || canStopAfterLimit) && limit != null && subResult.size() > intLimit) {
                 subResult = subResult.subList(0, intLimit);
             }
 

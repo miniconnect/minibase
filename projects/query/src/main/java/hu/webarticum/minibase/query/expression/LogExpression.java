@@ -8,28 +8,28 @@ import hu.webarticum.miniconnect.lang.ImmutableMap;
 
 public class LogExpression implements Expression {
 
-    private final Expression baseExpression;
+    private final Expression baseOperand;
 
-    private final Expression givenExpression;
+    private final Expression subjectOperand;
 
 
-    public LogExpression(Expression baseExpression, Expression givenExpression) {
-        this.baseExpression = baseExpression;
-        this.givenExpression = givenExpression;
+    public LogExpression(Expression baseOperand, Expression subjectOperand) {
+        this.baseOperand = baseOperand;
+        this.subjectOperand = subjectOperand;
     }
 
 
-    public Expression givenExpression() {
-        return givenExpression;
+    public Expression baseOperand() {
+        return baseOperand;
     }
 
-    public Expression baseExpression() {
-        return baseExpression;
+    public Expression subjectOperand() {
+        return subjectOperand;
     }
 
     @Override
     public ImmutableList<Parameter> parameters() {
-        return givenExpression.parameters().concat(baseExpression.parameters());
+        return subjectOperand.parameters().concat(baseOperand.parameters());
     }
 
     @Override
@@ -38,39 +38,39 @@ public class LogExpression implements Expression {
     }
 
     @Override
-    public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
+    public Class<?> type(ImmutableMap<Parameter, Class<?>> typeSubstitutions) {
         return Double.class;
     }
 
     @Override
     public boolean isNullable() {
-        return baseExpression.isNullable() || givenExpression.isNullable();
+        return baseOperand.isNullable() || subjectOperand.isNullable();
     }
 
     @Override
-    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
-        return baseExpression.isNullable(nullabilities) || givenExpression.isNullable(nullabilities);
+    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilitySubstitutions) {
+        return baseOperand.isNullable(nullabilitySubstitutions) || subjectOperand.isNullable(nullabilitySubstitutions);
     }
 
     @Override
-    public Object evaluate(ImmutableMap<Parameter, Object> values) {
-        Object baseValue = baseExpression.evaluate(values);
+    public Object evaluate(ImmutableMap<Parameter, Object> substitutions) {
+        Object baseValue = baseOperand.evaluate(substitutions);
         if (baseValue == null) {
             return null;
         }
-        Object givenValue = givenExpression.evaluate(values);
-        if (givenValue == null) {
+        Object subjectValue = subjectOperand.evaluate(substitutions);
+        if (subjectValue == null) {
             return null;
         }
 
         double base = (Double) ConvertUtil.convert(baseValue, Double.class);
-        double given = (Double) ConvertUtil.convert(givenValue, Double.class);
-        return Math.log(given) / Math.log(base);
+        double subject = (Double) ConvertUtil.convert(subjectValue, Double.class);
+        return Math.log(subject) / Math.log(base);
     }
 
     @Override
-    public String automaticName() {
-    return "LOG(" + baseExpression.automaticName() + ", " + givenExpression.automaticName() + ")";
+    public String automaticName(int columnIndex) {
+        return "expr_log_col" + columnIndex;
     }
 
 }

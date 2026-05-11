@@ -104,14 +104,14 @@ public class SubtractExpression implements Expression {
     }
 
     @Override
-    public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
-        Class<?> leftType = leftOperand.type(types);
-        Class<?> rightType = rightOperand.type(types);
+    public Class<?> type(ImmutableMap<Parameter, Class<?>> typeSubstitutions) {
+        Class<?> leftType = leftOperand.type(typeSubstitutions);
+        Class<?> rightType = rightOperand.type(typeSubstitutions);
         if (Temporal.class.isAssignableFrom(leftType)) {
             if (rightType != null && Temporal.class.isAssignableFrom(rightType)) {
                 return DateTimeDelta.class;
             } else {
-                return typeForTemporalWithDelta(leftType, rightOperand, types);
+                return typeForTemporalWithDelta(leftType, rightOperand, typeSubstitutions);
             }
         } else if (TemporalAmount.class.isAssignableFrom(leftType)) {
             return DateTimeDelta.class;
@@ -179,14 +179,14 @@ public class SubtractExpression implements Expression {
     }
 
     @Override
-    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
-        return leftOperand.isNullable(nullabilities) || rightOperand.isNullable(nullabilities);
+    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilitySubstitutions) {
+        return leftOperand.isNullable(nullabilitySubstitutions) || rightOperand.isNullable(nullabilitySubstitutions);
     }
 
     @Override
-    public Object evaluate(ImmutableMap<Parameter, Object> values) {
-        Object leftValue = leftOperand.evaluate(values);
-        Object rightValue = rightOperand.evaluate(values);
+    public Object evaluate(ImmutableMap<Parameter, Object> substitutions) {
+        Object leftValue = leftOperand.evaluate(substitutions);
+        Object rightValue = rightOperand.evaluate(substitutions);
         if (leftValue == null || rightValue == null) {
             return null;
         } else if (leftValue instanceof Temporal) {
@@ -246,8 +246,8 @@ public class SubtractExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return leftOperand.automaticName() + " - " + rightOperand.automaticName();
+    public String automaticName(int columnIndex) {
+        return "expr_sub_col" + columnIndex;
     }
 
 }

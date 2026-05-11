@@ -1,5 +1,6 @@
 package hu.webarticum.minibase.query.expression;
 
+import java.util.Objects;
 import java.util.Optional;
 
 import hu.webarticum.minibase.query.util.ValueUtil;
@@ -8,38 +9,38 @@ import hu.webarticum.miniconnect.lang.ImmutableMap;
 
 public class NullifExpression implements Expression {
 
-    private final Expression firstExpression;
+    private final Expression subjectOperand;
 
-    private final Expression secondExpression;
+    private final Expression checkOperand;
 
 
-    public NullifExpression(Expression firstExpression, Expression secondExpression) {
-        this.firstExpression = firstExpression;
-        this.secondExpression = secondExpression;
+    public NullifExpression(Expression subjectOperand, Expression checkOperand) {
+        this.subjectOperand = subjectOperand;
+        this.checkOperand = checkOperand;
     }
 
 
-    public Expression firstExpression() {
-        return firstExpression;
+    public Expression subjectOperand() {
+        return subjectOperand;
     }
 
     public Expression secondExpression() {
-        return secondExpression;
+        return checkOperand;
     }
 
     @Override
     public ImmutableList<Parameter> parameters() {
-        return firstExpression.parameters().concat(secondExpression.parameters());
+        return subjectOperand.parameters().concat(checkOperand.parameters());
     }
 
     @Override
     public Optional<Class<?>> type() {
-        return firstExpression.type();
+        return subjectOperand.type();
     }
 
     @Override
-    public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
-        return firstExpression.type(types);
+    public Class<?> type(ImmutableMap<Parameter, Class<?>> typeSubstitutions) {
+        return subjectOperand.type(typeSubstitutions);
     }
 
     @Override
@@ -48,21 +49,21 @@ public class NullifExpression implements Expression {
     }
 
     @Override
-    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
+    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilitySubstitutions) {
         return true;
     }
 
     @Override
-    public Object evaluate(ImmutableMap<Parameter, Object> values) {
-        Object value1 = firstExpression.evaluate(values);
-        Object value2 = secondExpression.evaluate(values);
-        boolean areEqual = ValueUtil.evalEquality(value1, value2);
-        return areEqual ? null : value1;
+    public Object evaluate(ImmutableMap<Parameter, Object> substitutions) {
+        Object subjectValue = subjectOperand.evaluate(substitutions);
+        Object checkValue = checkOperand.evaluate(substitutions);
+        Boolean areEqual = ValueUtil.evalEquality(subjectValue, checkValue);
+        return Objects.equals(areEqual, true) ? null : subjectValue;
     }
 
     @Override
-    public String automaticName() {
-        return "NULLIF(" + firstExpression.automaticName() + ", " + secondExpression.automaticName() + ")";
+    public String automaticName(int columnIndex) {
+        return subjectOperand.automaticName(columnIndex);
     }
 
 }

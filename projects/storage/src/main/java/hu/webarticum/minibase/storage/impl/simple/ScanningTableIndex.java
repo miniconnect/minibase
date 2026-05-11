@@ -66,7 +66,12 @@ public class ScanningTableIndex implements TableIndex {
 
     @Override
     public boolean isUnique() {
-        return table.columns().get(name).definition().isUnique();
+        for (String columnName : columnNames) {
+            if (table.columns().get(columnName).definition().isUnique()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override

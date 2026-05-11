@@ -35,7 +35,6 @@ class DatasetDescriptionTest extends AbstractResourceBasedTest {
 
     void testTable1(DatasetTableDescription table) {
         assertThat(table.name()).isEqualTo("tbl_1");
-        assertThat(table.addDiffLayer()).isFalse();
         ImmutableList<DatasetColumnDescription> columns = table.columns();
         assertThat(columns).hasSize(2);
         DatasetColumnDescription idColumn = columns.get(0);
@@ -60,7 +59,6 @@ class DatasetDescriptionTest extends AbstractResourceBasedTest {
 
     void testTable2(DatasetTableDescription table) {
         assertThat(table.name()).isEqualTo("tbl_2");
-        assertThat(table.addDiffLayer()).isTrue();
         ImmutableList<DatasetColumnDescription> columns = table.columns();
         assertThat(columns).hasSize(4);
         DatasetColumnDescription idColumn = columns.get(0);

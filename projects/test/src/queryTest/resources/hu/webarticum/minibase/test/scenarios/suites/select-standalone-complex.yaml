@@ -1,0 +1,80 @@
+description: Complex standalone select queries
+datasetResource: ../datasets/empty.yaml
+cases:
+
+  - name: cast-chain
+    description: Chain of cast operations
+    query: 
+      SELECT
+        753465::INT(3)::INT(7)::CHAR(2)::VARCHAR::BINARY::BIT::CHAR(10),
+        TRUE::INT::NULL::CHAR(2)::BOOL,
+        '25lorem'::INT::BIT::CHAR::INT,
+        22222.9999999999999::INT(3)::DECIMAL(6, 2),
+        0.00000000000000001::BOOL::BIT(2)::CHAR::INT::DECIMAL(4, 1)
+    expectedResult:
+      - [ "0011100100", null, 11001, "999.00", "10.0" ]
+    columns:
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+
+  - name: smaller-compund-expressions
+    description: Smaller compound expressions
+    query: 
+      SELECT
+        (POW(2, 3) + 4)::CHAR, b'1' + 7 / 3, 11111 * 11111 * 11111 - 1 * 11111 * 11111 - 1,
+        -2 + NULLIF(2, 3) * 10, 2 * 3 || 6 / 4 + 1, b'1101' || b'1101'::INT
+    expectedResult:
+      - [ "12.0", 3, 1371577506309, 18, "62", "110113" ]
+    columns:
+      - { type: java.lang.String, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+
+  - name: larger-compund-expressions
+    description: Larger compound expressions
+    query: 
+      SELECT
+        CASE (5 <= 5.0)::BIT
+          WHEN -1 THEN CASE WHEN 1 = '1' THEN 'A' ELSE 'a' END
+          WHEN 1 THEN CASE WHEN 1 = '1' THEN 'B' ELSE 'b' END
+          WHEN b'1' THEN 'C'
+          ELSE 'D' END,
+        '2026-01-01 12:30'::DATETIME
+          + (INTERVAL 10 MINUTE + INTERVAL -1 HOUR)
+          + INTERVAL 3 SECOND
+          + UTCOFFSET('+02:00'),
+        (SUBSTRING('lorem12ipsum', 6, 2)::INT / 3)::BIT(7) || RRPAD('x', 4, 'yz') || TRUE
+    expectedResult:
+      - [ "B", "2026-01-01T11:40:03+02:00", "0000100xzyztrue" ]
+    columns:
+      - { type: java.lang.String, nullable: false }
+      - { type: java.time.OffsetDateTime, nullable: false }
+      - { type: java.lang.String, nullable: false }
+
+  - name: huge-compund-expression
+    description: A single huge expression
+    query: 
+      SELECT
+        UPPER(
+          CASE WHEN NULLIF('54', 54) IS NULL THEN 'L' ELSE 'K' END ||
+          FALSE::BIT(1) ||
+          CHR(POW(9, 2) + TRUE) ||
+          NULLIF('e', 'E')
+        ) ||
+        CHR(b'01001100' + TRUE) ||
+        LPAD('', 1) ||
+        ROUND(SIN(PI() / 2))::INT ||
+        TRANSLATE((INTERVAL 1 SECOND)::CHAR, '1T', '') ||
+        b'0101010101001101'::BYTEA::CHAR ||
+        RPAD('', 1) ||
+        HEX(b'11010' || b'00000010000' || b'00010010')
+    expectedResult:
+      - [ "L0REM 1PSUM D01012" ]
+    columns:
+      - { type: java.lang.String, nullable: true }

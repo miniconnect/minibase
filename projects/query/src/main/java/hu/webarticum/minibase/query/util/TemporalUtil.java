@@ -59,7 +59,7 @@ public final class TemporalUtil {
         int lastDashPos = dateString.lastIndexOf('-');
         int lastPlusPos = dateString.lastIndexOf('+');
         if (lastDashPos < 0 && lastPlusPos < 0) {
-            return LocalTime.parse(dateString);
+            return LocalTime.parse(dateString.charAt(1) != ':' ? dateString : "0" + dateString);
         }
         if (dateString.lastIndexOf('/') >= 0) {
             return ZonedDateTime.parse(normalizeDateTimeString(dateString));
@@ -71,7 +71,7 @@ public final class TemporalUtil {
             return LocalDateTime.parse(normalizeDateTimeString(dateString));
         }
         if (lastDashPos < 0 || dateString.indexOf('-') > firstColonPos) {
-            return OffsetTime.parse(dateString);
+            return OffsetTime.parse(dateString.charAt(1) != ':' ? dateString : "0" + dateString);
         } else {
             return OffsetDateTime.parse(normalizeDateTimeString(dateString));
         }

@@ -107,19 +107,19 @@ public class ExtractExpression implements Expression {
     }
 
 
-    private final Expression inputExpression;
+    private final Expression contextOperand;
 
     private final ExtractField extractField;
 
 
-    public ExtractExpression(Expression inputExpression, ExtractField extractField) {
-        this.inputExpression = inputExpression;
+    public ExtractExpression(Expression contextOperand, ExtractField extractField) {
+        this.contextOperand = contextOperand;
         this.extractField = extractField;
     }
 
 
-    public Expression inputExpression() {
-        return inputExpression;
+    public Expression contextOperand() {
+        return contextOperand;
     }
 
     public ExtractField extractField() {
@@ -128,7 +128,7 @@ public class ExtractExpression implements Expression {
 
     @Override
     public ImmutableList<Parameter> parameters() {
-        return inputExpression.parameters();
+        return contextOperand.parameters();
     }
 
     @Override
@@ -137,37 +137,37 @@ public class ExtractExpression implements Expression {
     }
 
     @Override
-    public Class<?> type(ImmutableMap<Parameter, Class<?>> values) {
+    public Class<?> type(ImmutableMap<Parameter, Class<?>> typeSubstitutions) {
         return extractField == ExtractField.SECOND ? BigDecimal.class : LargeInteger.class;
     }
 
     @Override
     public boolean isNullable() {
-        return inputExpression.isNullable();
+        return contextOperand.isNullable();
     }
 
     @Override
-    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
-        return inputExpression.isNullable(nullabilities);
+    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilitySubstitutions) {
+        return contextOperand.isNullable(nullabilitySubstitutions);
     }
 
     @Override
-    public Object evaluate(ImmutableMap<Parameter, Object> values) {
-        Object inputValue = inputExpression.evaluate(values);
-        if (inputValue == null) {
+    public Object evaluate(ImmutableMap<Parameter, Object> substitutions) {
+        Object contextValue = contextOperand.evaluate(substitutions);
+        if (contextValue == null) {
             return null;
         }
 
-        if (inputValue instanceof TemporalAmount) {
-            return extractField.extractFrom((TemporalAmount) inputValue);
+        if (contextValue instanceof TemporalAmount) {
+            return extractField.extractFrom((TemporalAmount) contextValue);
         } else {
-            return extractField.extractFrom(TemporalUtil.temporalify(inputValue));
+            return extractField.extractFrom(TemporalUtil.temporalify(contextValue));
         }
     }
 
     @Override
-    public String automaticName() {
-        return "EXTRACT(" + extractField.name() + " FROM " + inputExpression.automaticName() + ")";
+    public String automaticName(int columnIndex) {
+        return "expr_extract_col" + columnIndex;
     }
 
 }

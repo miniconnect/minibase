@@ -1,6 +1,39 @@
 # Changelog
 
 
+## Version 0.6.0
+
+Released on *2026-05-11*
+
+### Fixed:
+
+- Fixed null handling in several expressions
+- Made leading zero optional when parsing temporal strings
+- Fixed error when OFFSET is specified but LIMIT is not
+- Fixed time point handling in OVERLAP expressions
+- Fixed bug with range filtering involving a variable
+
+### Added:
+
+- Expanded the range of supported expressions and overrides
+- Added support for the `BIT`/`BIT(n)` type
+- Introduced a better logic for automatic column names
+
+### Improved:
+
+- Improved implicit conversions and unifications
+- Improved expression evaluation performance
+- Improved `DiffTable`
+- Improved string literal continuation handling
+
+### Development:
+
+- Upgraded to gradle 9.5.0 and improved build
+- Added CONTRIBUTING.md and CODE_OF_CONDUCT.md
+- Restructured the SQL grammar file
+- Improved query tests
+
+
 ## Version 0.5.0
 
 Released on *2026-03-03*
@@ -46,6 +79,10 @@ Released on *2025-09-29*
 ### Improved:
 
 - Improved table alias handling in query grammar
+
+### Removed:
+
+- Removed the overly confusing hat operator
 
 ### Development:
 

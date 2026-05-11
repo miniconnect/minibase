@@ -11,13 +11,52 @@ import hu.webarticum.miniconnect.lang.ImmutableMap;
 
 public class Sha256Expression implements Expression {
 
-    private final Expression inputExpression;
-
-    private MessageDigest messageDigest = createMessageDigest();
+    private final Expression operand;
 
 
-    public Sha256Expression(Expression inputExpression) {
-        this.inputExpression = inputExpression;
+    public Sha256Expression(Expression operand) {
+        this.operand = operand;
+    }
+
+
+    public Expression operand() {
+        return operand;
+    }
+
+    @Override
+    public ImmutableList<Parameter> parameters() {
+        return operand.parameters();
+    }
+
+    @Override
+    public Optional<Class<?>> type() {
+        return Optional.of(ByteString.class);
+    }
+
+    @Override
+    public Class<?> type(ImmutableMap<Parameter, Class<?>> typeSubstitutions) {
+        return ByteString.class;
+    }
+
+    @Override
+    public boolean isNullable() {
+        return operand.isNullable();
+    }
+
+    @Override
+    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilitySubstitutions) {
+        return operand.isNullable(nullabilitySubstitutions);
+    }
+
+    @Override
+    public Object evaluate(ImmutableMap<Parameter, Object> substitutions) {
+        Object value = operand.evaluate(substitutions);
+        if (value == null) {
+            return null;
+        }
+
+        ByteString byteStringValue = ByteStringUtil.byteStringify(value);
+        return ByteString.wrap(createMessageDigest().digest(byteStringValue.extract()));
     }
 
     private MessageDigest createMessageDigest() {
@@ -28,50 +67,9 @@ public class Sha256Expression implements Expression {
         }
     }
 
-
-    public Expression inputExpression() {
-        return inputExpression;
-    }
-
     @Override
-    public ImmutableList<Parameter> parameters() {
-        return inputExpression.parameters();
-    }
-
-    @Override
-    public Optional<Class<?>> type() {
-        return Optional.of(ByteString.class);
-    }
-
-    @Override
-    public Class<?> type(ImmutableMap<Parameter, Class<?>> values) {
-        return ByteString.class;
-    }
-
-    @Override
-    public boolean isNullable() {
-        return inputExpression.isNullable();
-    }
-
-    @Override
-    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
-        return inputExpression.isNullable(nullabilities);
-    }
-
-    @Override
-    public Object evaluate(ImmutableMap<Parameter, Object> values) {
-        Object value = inputExpression.evaluate(values);
-        if (value == null) {
-            return null;
-        }
-
-        ByteString byteStringValue = ByteStringUtil.byteStringify(value);
-        return ByteString.wrap(messageDigest.digest(byteStringValue.extract()));
-    }
-
-    @Override
-    public String automaticName() {
-        return "SHA256(" + inputExpression.automaticName() + ")";
+    public String automaticName(int columnIndex) {
+        return "sha256_" + operand.automaticName(columnIndex);
     }
 
 }

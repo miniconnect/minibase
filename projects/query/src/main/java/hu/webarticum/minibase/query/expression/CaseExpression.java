@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import hu.webarticum.minibase.query.util.BooleanUtil;
+import hu.webarticum.minibase.query.util.ConvertUtil;
 import hu.webarticum.minibase.query.util.UnifyUtil;
 import hu.webarticum.minibase.query.util.ValueUtil;
 import hu.webarticum.miniconnect.lang.ImmutableList;
@@ -12,7 +13,7 @@ import hu.webarticum.miniconnect.lang.ImmutableMap;
 
 public class CaseExpression implements Expression {
 
-    private final Expression givenExpression;
+    private final Expression subjectExpression;
 
     private final ImmutableList<WhenItem> whenItems;
 
@@ -21,17 +22,17 @@ public class CaseExpression implements Expression {
 
     public CaseExpression(Expression givenExpression, ImmutableList<WhenItem> whenItems, Expression elseExpression) {
         if (whenItems.isEmpty()) {
-            throw new IllegalArgumentException("At least one when branch is required");
+            throw new IllegalArgumentException("At least one WHEN branch is required");
         }
 
-        this.givenExpression = givenExpression;
+        this.subjectExpression = givenExpression;
         this.whenItems = whenItems;
         this.elseExpression = elseExpression;
     }
 
 
     public Expression givenExpression() {
-        return givenExpression;
+        return subjectExpression;
     }
 
     public ImmutableList<WhenItem> whenItems() {
@@ -45,8 +46,8 @@ public class CaseExpression implements Expression {
     @Override
     public ImmutableList<Parameter> parameters() {
         Set<Parameter> subParameters = new LinkedHashSet<>();
-        if (givenExpression != null) {
-            subParameters.addAll(givenExpression.parameters().asList());
+        if (subjectExpression != null) {
+            subParameters.addAll(subjectExpression.parameters().asList());
         }
         for (WhenItem whenItem : whenItems) {
             subParameters.addAll(whenItem.conditionExpression.parameters().asList());
@@ -68,10 +69,10 @@ public class CaseExpression implements Expression {
     }
 
     @Override
-    public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
-        ImmutableList<Class<?>> branchTypes = whenItems.map(w -> w.resultExpression.type(types));
+    public Class<?> type(ImmutableMap<Parameter, Class<?>> typeSubstitutions) {
+        ImmutableList<Class<?>> branchTypes = whenItems.map(w -> w.resultExpression.type(typeSubstitutions));
         if (elseExpression != null) {
-            branchTypes = branchTypes.append(elseExpression.type(types));
+            branchTypes = branchTypes.append(elseExpression.type(typeSubstitutions));
         }
         Class<?> result = UnifyUtil.unifyTypes(branchTypes);
         return result == null ? String.class : result;
@@ -91,12 +92,12 @@ public class CaseExpression implements Expression {
     }
 
     @Override
-    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
-        if (elseExpression == null || elseExpression.isNullable(nullabilities)) {
+    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilitySubstitutions) {
+        if (elseExpression == null || elseExpression.isNullable(nullabilitySubstitutions)) {
             return true;
         }
         for (WhenItem whenItem : whenItems) {
-            if (whenItem.resultExpression.isNullable(nullabilities)) {
+            if (whenItem.resultExpression.isNullable(nullabilitySubstitutions)) {
                 return true;
             }
         }
@@ -104,12 +105,14 @@ public class CaseExpression implements Expression {
     }
 
     @Override
-    public Object evaluate(ImmutableMap<Parameter, Object> values) {
-        boolean hasGiven = givenExpression != null;
-        Object givenValue = hasGiven ? givenExpression.evaluate(values) : null;
+    public Object evaluate(ImmutableMap<Parameter, Object> substitutions) {
+        boolean hasGiven = subjectExpression != null;
+        Object givenValue = hasGiven ? subjectExpression.evaluate(substitutions) : null;
+
+        Class<?> targetType = type(substitutions.mapValues(UnifyUtil::typeOf));
 
         for (WhenItem whenItem : whenItems) {
-            Object conditionValue = whenItem.conditionExpression.evaluate(values);
+            Object conditionValue = whenItem.conditionExpression.evaluate(substitutions);
             Boolean equality;
             if (hasGiven) {
                 equality = ValueUtil.evalEquality(givenValue, conditionValue);
@@ -117,7 +120,7 @@ public class CaseExpression implements Expression {
                 equality = BooleanUtil.boolify(conditionValue);
             }
             if (Boolean.TRUE.equals(equality)) {
-                return whenItem.resultExpression.evaluate(values);
+                return ConvertUtil.convert(whenItem.resultExpression.evaluate(substitutions), targetType);
             }
         }
 
@@ -125,12 +128,12 @@ public class CaseExpression implements Expression {
             return null;
         }
 
-        return elseExpression.evaluate(values);
+        return ConvertUtil.convert(elseExpression.evaluate(substitutions), targetType);
     }
 
     @Override
-    public String automaticName() {
-        return "WHEN expression";
+    public String automaticName(int columnIndex) {
+        return "expr_case_col" + columnIndex;
     }
 
 

@@ -4,88 +4,125 @@ import java.util.Optional;
 
 import hu.webarticum.minibase.query.util.NumberUtil;
 import hu.webarticum.minibase.query.util.StringUtil;
+import hu.webarticum.miniconnect.lang.BitString;
+import hu.webarticum.miniconnect.lang.ByteString;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
 
 public class RightExpression implements Expression {
 
-    private final Expression inputExpression;
+    private final Expression contextOperand;
 
-    private final Expression lengthExpression;
+    private final Expression lengthOperand;
 
 
-    public RightExpression(Expression inputExpression, Expression lengthExpression) {
-        this.inputExpression = inputExpression;
-        this.lengthExpression = lengthExpression;
+    public RightExpression(Expression contextOperand, Expression lengthOperand) {
+        this.contextOperand = contextOperand;
+        this.lengthOperand = lengthOperand;
     }
 
 
-    public Expression inputExpression() {
-        return inputExpression;
+    public Expression contextOperand() {
+        return contextOperand;
     }
 
-    public Expression lengthExpression() {
-        return lengthExpression;
+    public Expression lengthOperand() {
+        return lengthOperand;
     }
 
     @Override
     public ImmutableList<Parameter> parameters() {
-        return inputExpression.parameters().concat(lengthExpression.parameters());
+        return contextOperand.parameters().concat(lengthOperand.parameters());
     }
 
     @Override
     public Optional<Class<?>> type() {
-        return Optional.of(String.class);
+        Class<?> contextType = contextOperand.type().orElse(null);
+        if (contextType == null || contextType == ByteString.class || contextType == BitString.class) {
+            return Optional.ofNullable(contextType);
+        } else {
+            return Optional.of(String.class);
+        }
     }
 
     @Override
-    public Class<?> type(ImmutableMap<Parameter, Class<?>> values) {
-        return String.class;
+    public Class<?> type(ImmutableMap<Parameter, Class<?>> typeSubstitutions) {
+        Class<?> contextType = contextOperand.type(typeSubstitutions);
+        if (contextType == ByteString.class || contextType == BitString.class) {
+            return contextType;
+        } else {
+            return String.class;
+        }
     }
 
     @Override
     public boolean isNullable() {
-        return inputExpression.isNullable() || lengthExpression.isNullable();
+        return contextOperand.isNullable() || lengthOperand.isNullable();
     }
 
     @Override
-    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
-        return inputExpression.isNullable(nullabilities) || lengthExpression.isNullable(nullabilities);
+    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilitySubstitutions) {
+        return contextOperand.isNullable(nullabilitySubstitutions) || lengthOperand.isNullable(nullabilitySubstitutions);
     }
 
     @Override
-    public Object evaluate(ImmutableMap<Parameter, Object> values) {
-        Object inputValue = inputExpression.evaluate(values);
-        if (inputValue == null) {
+    public Object evaluate(ImmutableMap<Parameter, Object> substitutions) {
+        Object contextValue = contextOperand.evaluate(substitutions);
+        if (contextValue == null) {
             return null;
         }
 
-        Object lengthValue = lengthExpression.evaluate(values);
+        Object lengthValue = lengthOperand.evaluate(substitutions);
         if (lengthValue == null) {
             return null;
         }
-
-        String inputString = StringUtil.stringify(inputValue);
-        int inputLength = inputString.length();
         int length = NumberUtil.asInt(lengthValue);
 
-        if (length >= inputLength) {
-            return inputString;
+        if (contextValue instanceof ByteString) {
+            return operate((ByteString) contextValue, length);
+        } else if (contextValue instanceof BitString) {
+            return operate((BitString) contextValue, length);
+        } else {
+            return operate(StringUtil.stringify(contextValue), length);
         }
+    }
 
+    private String operate(String context, int length) {
+        int contextLength = context.length();
+        if (length >= contextLength) {
+            return context;
+        }
         if (length < 0) {
-            length = inputLength + length;
+            length = contextLength + length;
         }
-        if (length <= 0) {
-            return "";
-        }
+        return length > 0 ? context.substring(contextLength - length) : "";
+    }
 
-        return inputString.substring(inputLength - length);
+    private ByteString operate(ByteString context, int length) {
+        int contextLength = context.length();
+        if (length >= contextLength) {
+            return context;
+        }
+        if (length < 0) {
+            length = contextLength + length;
+        }
+        return length > 0 ? context.substring(contextLength - length) : ByteString.empty();
+    }
+
+    private BitString operate(BitString context, int length) {
+        int contextLength = context.length();
+        if (length >= contextLength) {
+            return context;
+        }
+        if (length < 0) {
+            length = contextLength + length;
+        }
+        return length > 0 ? context.substring(contextLength - length) : BitString.empty();
     }
 
     @Override
-    public String automaticName() {
-        return "RIGHT(" + inputExpression.automaticName() + ", " + lengthExpression.automaticName() + ")";
+    public String automaticName(int columnIndex) {
+        return "expr_right_col" + columnIndex;
     }
 
 }

@@ -13,13 +13,13 @@ public class RegexpReplaceExpression implements Expression {
     private static final char GLOBAL_FLAG_CHAR = 'g';
 
 
-    private final Expression contextExpression;
+    private final Expression contextOperand;
 
-    private final Expression patternExpression;
+    private final Expression patternOperand;
 
-    private final Expression toExpression;
+    private final Expression toOperand;
 
-    private final Optional<Expression> flagsExpression;
+    private final Optional<Expression> flagsOperand;
 
     private final Pattern precompiledPattern;
 
@@ -27,15 +27,15 @@ public class RegexpReplaceExpression implements Expression {
 
 
     public RegexpReplaceExpression(
-            Expression contextExpression,
-            Expression patternExpression,
-            Expression toExpression,
-            Optional<Expression> flagsExpression) {
-        this.contextExpression = contextExpression;
-        this.patternExpression = patternExpression;
-        this.toExpression = toExpression;
-        this.flagsExpression = flagsExpression;
-        Object[] precompiledParts = precompilePatternIfPossible(patternExpression, flagsExpression);
+            Expression contextOperand,
+            Expression patternOperand,
+            Expression toOperand,
+            Optional<Expression> flagsOperand) {
+        this.contextOperand = contextOperand;
+        this.patternOperand = patternOperand;
+        this.toOperand = toOperand;
+        this.flagsOperand = flagsOperand;
+        Object[] precompiledParts = precompilePatternIfPossible(patternOperand, flagsOperand);
         this.precompiledPattern = (Pattern) precompiledParts[0];
         this.precompiledGlobal = (Boolean) precompiledParts[1];
     }
@@ -105,28 +105,28 @@ public class RegexpReplaceExpression implements Expression {
     }
 
 
-    public Expression contextExpression() {
-        return contextExpression;
+    public Expression contextOperand() {
+        return contextOperand;
     }
 
-    public Expression patternExpression() {
-        return patternExpression;
+    public Expression patternOperand() {
+        return patternOperand;
     }
 
-    public Expression toExpression() {
-        return toExpression;
+    public Expression toOperand() {
+        return toOperand;
     }
 
-    public Optional<Expression> flagsExpression() {
-        return flagsExpression;
+    public Optional<Expression> flagsOperand() {
+        return flagsOperand;
     }
 
     @Override
     public ImmutableList<Parameter> parameters() {
-        return contextExpression.parameters()
-                .concat(patternExpression.parameters())
-                .concat(toExpression.parameters())
-                .concat(flagsExpression.map(e -> e.parameters()).orElseGet(ImmutableList::empty));
+        return contextOperand.parameters()
+                .concat(patternOperand.parameters())
+                .concat(toOperand.parameters())
+                .concat(flagsOperand.map(e -> e.parameters()).orElseGet(ImmutableList::empty));
     }
 
     @Override
@@ -135,36 +135,36 @@ public class RegexpReplaceExpression implements Expression {
     }
 
     @Override
-    public Class<?> type(ImmutableMap<Parameter, Class<?>> values) {
+    public Class<?> type(ImmutableMap<Parameter, Class<?>> typeSubstitutions) {
         return String.class;
     }
 
     @Override
     public boolean isNullable() {
         return
-                contextExpression.isNullable() ||
-                patternExpression.isNullable() ||
-                toExpression.isNullable() ||
-                flagsExpression.map(Expression::isNullable).orElse(false);
+                contextOperand.isNullable() ||
+                patternOperand.isNullable() ||
+                toOperand.isNullable() ||
+                flagsOperand.map(Expression::isNullable).orElse(false);
     }
 
     @Override
-    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
+    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilitySubstitutions) {
         return
-                contextExpression.isNullable(nullabilities) ||
-                patternExpression.isNullable(nullabilities) ||
-                toExpression.isNullable(nullabilities) ||
-                flagsExpression.map(e -> e.isNullable(nullabilities)).orElse(false);
+                contextOperand.isNullable(nullabilitySubstitutions) ||
+                patternOperand.isNullable(nullabilitySubstitutions) ||
+                toOperand.isNullable(nullabilitySubstitutions) ||
+                flagsOperand.map(e -> e.isNullable(nullabilitySubstitutions)).orElse(false);
     }
 
     @Override
-    public Object evaluate(ImmutableMap<Parameter, Object> values) {
-        Object contextValue = contextExpression.evaluate(values);
+    public Object evaluate(ImmutableMap<Parameter, Object> substitutions) {
+        Object contextValue = contextOperand.evaluate(substitutions);
         if (contextValue == null) {
             return null;
         }
 
-        Object toValue = toExpression.evaluate(values);
+        Object toValue = toOperand.evaluate(substitutions);
         if (toValue == null) {
             return null;
         }
@@ -176,14 +176,14 @@ public class RegexpReplaceExpression implements Expression {
             isGlobal = precompiledGlobal;
         } else {
             String flagsString = "";
-            if (flagsExpression.isPresent()) {
-                Object flagsValue = flagsExpression.get().evaluate(values);
+            if (flagsOperand.isPresent()) {
+                Object flagsValue = flagsOperand.get().evaluate(substitutions);
                 if (flagsValue == null) {
                     return null;
                 }
                 flagsString = StringUtil.stringify(flagsValue);
             }
-            Object patternValue = patternExpression.evaluate(values);
+            Object patternValue = patternOperand.evaluate(substitutions);
             if (patternValue == null) {
                 return null;
             }
@@ -212,11 +212,8 @@ public class RegexpReplaceExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return "REGEXP_REPLACE(" + contextExpression.automaticName() + ", " +
-                patternExpression.automaticName() + ", " +
-                toExpression.automaticName() +
-                (flagsExpression().map(e -> ", " + e.automaticName())).orElse("")  + ")";
+    public String automaticName(int columnIndex) {
+        return "expr_replace_col" + columnIndex;
     }
 
 }

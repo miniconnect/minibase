@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 
 import hu.webarticum.minibase.storage.api.ColumnDefinition;
 import hu.webarticum.minibase.storage.api.Table;
+import hu.webarticum.minibase.storage.api.TableIndex;
 import hu.webarticum.minibase.storage.api.TablePatch;
 import hu.webarticum.minibase.storage.impl.AbstractWritableTableTest;
 import hu.webarticum.miniconnect.lang.ImmutableList;
@@ -38,6 +39,30 @@ class DiffTableTest extends AbstractWritableTableTest {
         diffTable.applyPatch(patch2);
 
         assertThat(contentOf(baseTable)).isEqualTo(defaultContent());
+    }
+
+    @Test
+    void testIndex() {
+        Table diffTable = createSubjectTable();
+        TableIndex index = diffTable.indexes().get("idx_label");
+        assertThat(index.find("bbbb")).containsExactly(LargeInteger.ONE);
+
+        diffTable.applyPatch(TablePatch.builder()
+                .insert(ImmutableList.of(LargeInteger.of(11), "zzzz", 2))
+                .update(LargeInteger.ONE, ImmutableMap.of(1, "xxxx"))
+                .delete(LargeInteger.ZERO)
+                .build());
+        assertThat(index.find("bbbb")).isEmpty();
+        assertThat(index.find("xxxx")).containsExactly(LargeInteger.ZERO);
+        assertThat(index.find("zzzz")).containsExactly(LargeInteger.of(9));
+
+        diffTable.applyPatch(TablePatch.builder()
+                .update(LargeInteger.ZERO, ImmutableMap.of(1, "yyyy"))
+                .delete(LargeInteger.of(9))
+                .build());
+        assertThat(index.find("xxxx")).isEmpty();
+        assertThat(index.find("yyyy")).containsExactly(LargeInteger.ZERO);
+        assertThat(index.find("zzzz")).isEmpty();
     }
 
     @Override

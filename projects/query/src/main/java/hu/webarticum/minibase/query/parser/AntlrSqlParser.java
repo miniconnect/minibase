@@ -23,6 +23,12 @@ import hu.webarticum.minibase.query.expression.AsciiExpression;
 import hu.webarticum.minibase.query.expression.Atan2Expression;
 import hu.webarticum.minibase.query.expression.BetweenExpression;
 import hu.webarticum.minibase.query.expression.BitLengthExpression;
+import hu.webarticum.minibase.query.expression.BitwiseAndExpression;
+import hu.webarticum.minibase.query.expression.BitwiseNotExpression;
+import hu.webarticum.minibase.query.expression.BitwiseOrExpression;
+import hu.webarticum.minibase.query.expression.BitwiseShiftLeftExpression;
+import hu.webarticum.minibase.query.expression.BitwiseShiftRightExpression;
+import hu.webarticum.minibase.query.expression.BitwiseXorExpression;
 import hu.webarticum.minibase.query.expression.CaseExpression;
 import hu.webarticum.minibase.query.expression.CastExpression;
 import hu.webarticum.minibase.query.expression.CharLengthExpression;
@@ -32,6 +38,8 @@ import hu.webarticum.minibase.query.expression.ColumnExpression;
 import hu.webarticum.minibase.query.expression.ConcatExpression;
 import hu.webarticum.minibase.query.expression.ConcatWithSeparatorExpression;
 import hu.webarticum.minibase.query.expression.ConstantExpression;
+import hu.webarticum.minibase.query.expression.ConvertFromExpression;
+import hu.webarticum.minibase.query.expression.ConvertToExpression;
 import hu.webarticum.minibase.query.expression.DecodeExpression;
 import hu.webarticum.minibase.query.expression.DivideExpression;
 import hu.webarticum.minibase.query.expression.EncodeExpression;
@@ -116,6 +124,7 @@ import hu.webarticum.minibase.query.query.SelectQuery.SelectItem;
 import hu.webarticum.minibase.query.query.SelectQuery.ExpressionSelectItem;
 import hu.webarticum.minibase.query.query.SelectQuery.WildcardSelectItem;
 import hu.webarticum.minibase.query.query.SelectQuery.WhereItem;
+import hu.webarticum.miniconnect.lang.BitString;
 import hu.webarticum.miniconnect.lang.DateTimeDelta;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.LargeInteger;
@@ -125,6 +134,10 @@ import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.AliasPart
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.AliasableExpressionContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.AtomicExpressionContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.BetweenRelationContext;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.BinaryStringContinuationContext;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.BinaryStringTokenListContext;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.BitStringLiteralContext;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.BitwiseNotExpressionContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.BooleanLiteralContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.CaseExpressionContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.CastExpressionContext;
@@ -140,8 +153,11 @@ import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.ExtractEx
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.ExtractFieldNameContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.FieldListContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.FieldNameContext;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.FileContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.FunctionCallContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.FunctionNameContext;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.HexadecimalStringContinuationContext;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.HexadecimalStringTokenListContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.IdentifierContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.InsertQueryContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.InsertValueContext;
@@ -163,6 +179,7 @@ import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.OffsetPar
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.OrderByItemContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.OrderByPartContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.OrderByPositionContext;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.OverlapsExpressionContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.PositionExpressionContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.PostfixConditionContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.PrefixableExpressionContext;
@@ -184,6 +201,7 @@ import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.SqlQueryC
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.StandaloneSelectQueryContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.StandaloneSelectRowContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.StringLiteralContext;
+import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.StringTokenContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.StringTokenListContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.SubstringExpressionContext;
 import hu.webarticum.minibase.query.query.antlr.grammar.SqlQueryParser.TableNameContext;
@@ -213,11 +231,15 @@ public class AntlrSqlParser implements SqlParser {
         SqlQueryParser parser = new SqlQueryParser(new CommonTokenStream(lexer));
         parser.removeErrorListeners();
         parser.addErrorListener(new ParseErrorListener());
-        SqlQueryContext rootNode = parser.sqlQuery();
+        FileContext rootNode = parser.file();
         return parseRootNode(rootNode);
     }
 
-    private Query parseRootNode(SqlQueryContext rootNode) {
+    private Query parseRootNode(FileContext rootNode) {
+        return parseSqlNode(rootNode.sqlQuery());
+    }
+
+    private Query parseSqlNode(SqlQueryContext rootNode) {
         SelectQueryContext selectQueryNode = rootNode.selectQuery();
         if (selectQueryNode != null) {
             return parseSelectNode(selectQueryNode);
@@ -606,7 +628,7 @@ public class AntlrSqlParser implements SqlParser {
         }
 
         if (expressionNode.isNullOperator != null) {
-            Expression subExpression = parseExpressionNode(expressionNode.subExpression);
+            Expression subExpression = parseExpressionNode(expressionNode.context);
             Expression isNullExpression = new IsNullExpression(subExpression);
             if (expressionNode.NOT() == null) {
                 return isNullExpression;
@@ -615,15 +637,15 @@ public class AntlrSqlParser implements SqlParser {
             }
         }
 
-        if (expressionNode.likeOperator != null) {
-            Expression givenExpression = parseExpressionNode(expressionNode.givenExpression);
-            Expression patternExpression = parseExpressionNode(expressionNode.patternExpression);
-            Expression escapeExpression =
-                    expressionNode.escapeExpression != null ?
-                    parseExpressionNode(expressionNode.escapeExpression) :
+        if (expressionNode.LIKE() != null || expressionNode.ILIKE() != null) {
+            Expression contextOperand = parseExpressionNode(expressionNode.context);
+            Expression patternOperand = parseExpressionNode(expressionNode.pattern);
+            Expression escapeOperand =
+                    expressionNode.escape != null ?
+                    parseExpressionNode(expressionNode.escape) :
                     null;
             boolean caseInsensitive = expressionNode.ILIKE() != null;
-            Expression likeExpression = new LikeExpression(givenExpression, patternExpression, escapeExpression, caseInsensitive);
+            Expression likeExpression = new LikeExpression(contextOperand, patternOperand, escapeOperand, caseInsensitive);
             if (expressionNode.NOT() == null) {
                 return likeExpression;
             } else {
@@ -631,10 +653,10 @@ public class AntlrSqlParser implements SqlParser {
             }
         }
 
-        if (expressionNode.regexpOperator != null) {
-            Expression givenExpression = parseExpressionNode(expressionNode.givenExpression);
-            Expression patternExpression = parseExpressionNode(expressionNode.patternExpression);
-            Expression regexpExpression = new RegexpExpression(givenExpression, patternExpression);
+        if (expressionNode.REGEXP() != null || expressionNode.RLIKE() != null) {
+            Expression contextOperand = parseExpressionNode(expressionNode.context);
+            Expression patternOperand = parseExpressionNode(expressionNode.pattern);
+            Expression regexpExpression = new RegexpExpression(contextOperand, patternOperand);
             if (expressionNode.NOT() == null) {
                 return regexpExpression;
             } else {
@@ -643,9 +665,9 @@ public class AntlrSqlParser implements SqlParser {
         }
 
         if (expressionNode.IN() != null) {
-            Expression givenExpression = parseExpressionNode(expressionNode.givenExpression);
-            ImmutableList<Expression> listedExpressions = parseInValueListNode(expressionNode.inValueList());
-            Expression inExpression = new InExpression(givenExpression, listedExpressions);
+            Expression subjectOperand = parseExpressionNode(expressionNode.subject);
+            ImmutableList<Expression> contextListOperand = parseInValueListNode(expressionNode.inValueList());
+            Expression inExpression = new InExpression(subjectOperand, contextListOperand);
             if (expressionNode.NOT() == null) {
                 return inExpression;
             } else {
@@ -654,10 +676,10 @@ public class AntlrSqlParser implements SqlParser {
         }
 
         if (expressionNode.BETWEEN() != null) {
-            Expression givenExpression = parseExpressionNode(expressionNode.givenExpression);
-            Expression minExpression = parseExpressionNode(expressionNode.minExpression);
-            Expression maxExpression = parseExpressionNode(expressionNode.maxExpression);
-            Expression betweenExpression = new BetweenExpression(givenExpression, minExpression, maxExpression);
+            Expression subjectOperand = parseExpressionNode(expressionNode.subject);
+            Expression minOperand = parseExpressionNode(expressionNode.min);
+            Expression maxOperand = parseExpressionNode(expressionNode.max);
+            Expression betweenExpression = new BetweenExpression(subjectOperand, minOperand, maxOperand);
             if (expressionNode.NOT() == null) {
                 return betweenExpression;
             } else {
@@ -665,49 +687,62 @@ public class AntlrSqlParser implements SqlParser {
             }
         }
 
-        if (expressionNode.DOUBLE_COLON() != null) {
-            Expression subExpression = parseExpressionNode(expressionNode.subExpression);
+        if (expressionNode.S_DOUBLE_COLON() != null) {
+            Expression subExpression = parseExpressionNode(expressionNode.subject);
             TypeConstruct typeConstruct = parseTypeConstructNode(expressionNode.typeConstruct());
             return new CastExpression(subExpression, typeConstruct);
         }
 
-        Object operation = extractOperation(expressionNode);
-        if (operation == null) {
-            throw new IllegalArgumentException("Unknown operation type in: " + expressionNode.getText());
-        }
+        Expression leftOperand = parseExpressionNode(expressionNode.left);
+        Expression rightOperand = parseExpressionNode(expressionNode.right);
 
-        Expression leftExpression = parseExpressionNode(expressionNode.leftExpression);
-        Expression rightExpression = parseExpressionNode(expressionNode.rightExpression);
-
-        if (operation == EqualsExpression.class) {
-            return new EqualsExpression(leftExpression, rightExpression);
-        } else if (operation == NotEqualsExpression.class) {
-            return new NotEqualsExpression(leftExpression, rightExpression);
-        } else if (operation instanceof OrderRelationExpression.Operation) {
-            OrderRelationExpression.Operation relationOperation = (OrderRelationExpression.Operation) operation;
-            return new OrderRelationExpression(relationOperation, leftExpression, rightExpression);
-        } else if (operation == MultiplyExpression.class) {
-            return new MultiplyExpression(leftExpression, rightExpression);
-        } else if (operation == ModExpression.class) {
-            return new ModExpression(leftExpression, rightExpression);
-        } else if (operation == RemainderExpression.class) {
-            return new RemainderExpression(leftExpression, rightExpression);
-        } else if (operation == DivideExpression.class) {
-            return new DivideExpression(leftExpression, rightExpression);
-        } else if (operation == AddExpression.class) {
-            return new AddExpression(leftExpression, rightExpression);
-        } else if (operation == SubtractExpression.class) {
-            return new SubtractExpression(leftExpression, rightExpression);
-        } else if (operation == AndExpression.class) {
-            return new AndExpression(leftExpression, rightExpression);
-        } else if (operation == XorExpression.class) {
-            return new XorExpression(leftExpression, rightExpression);
-        } else if (operation == OrExpression.class) {
-            return new OrExpression(leftExpression, rightExpression);
-        } else if (operation == ConcatExpression.class) {
-            return new ConcatExpression(ImmutableList.of(leftExpression, rightExpression));
+        if (expressionNode.S_EQ() != null) {
+            return new EqualsExpression(leftOperand, rightOperand);
+        } else if (expressionNode.S_NEQ_ANG() != null || expressionNode.S_NEQ_BANG() != null) {
+            return new NotEqualsExpression(leftOperand, rightOperand);
+        } else if (expressionNode.S_LESS() != null) {
+            return new OrderRelationExpression(OrderRelationExpression.Operation.LESS, leftOperand, rightOperand);
+        } else if (expressionNode.S_LEQ() != null) {
+            return new OrderRelationExpression(OrderRelationExpression.Operation.LEQ, leftOperand, rightOperand);
+        } else if (expressionNode.S_GREATER() != null) {
+            return new OrderRelationExpression(OrderRelationExpression.Operation.GREATER, leftOperand, rightOperand);
+        } else if (expressionNode.S_GEQ() != null) {
+            return new OrderRelationExpression(OrderRelationExpression.Operation.GEQ, leftOperand, rightOperand);
+        } else if (expressionNode.S_ET() != null) {
+            return new BitwiseAndExpression(leftOperand, rightOperand);
+        } else if (expressionNode.S_SHIFT_LEFT() != null) {
+            return new BitwiseShiftLeftExpression(leftOperand, rightOperand);
+        } else if (expressionNode.S_SHIFT_RIGHT() != null) {
+            return new BitwiseShiftRightExpression(leftOperand, rightOperand);
+        } else if (expressionNode.S_PIPE() != null) {
+            return new BitwiseOrExpression(leftOperand, rightOperand);
+        } else if (expressionNode.S_HASH() != null) {
+            return new BitwiseXorExpression(leftOperand, rightOperand);
+        } else if (expressionNode.S_ASTERISK() != null) {
+            return new MultiplyExpression(leftOperand, rightOperand);
+        } else if (expressionNode.MOD() != null) {
+            return new ModExpression(leftOperand, rightOperand);
+        } else if (expressionNode.S_PERCENT() != null) {
+            return new RemainderExpression(leftOperand, rightOperand);
+        } else if (expressionNode.DIV() != null) {
+            // FIXME
+            return new DivideExpression(leftOperand, rightOperand);
+        } else if (expressionNode.S_SLASH() != null) {
+            return new DivideExpression(leftOperand, rightOperand);
+        } else if (expressionNode.S_PLUS() != null) {
+            return new AddExpression(leftOperand, rightOperand);
+        } else if (expressionNode.S_MINUS() != null) {
+            return new SubtractExpression(leftOperand, rightOperand);
+        } else if (expressionNode.AND() != null) {
+            return new AndExpression(leftOperand, rightOperand);
+        } else if (expressionNode.XOR() != null) {
+            return new XorExpression(leftOperand, rightOperand);
+        } else if (expressionNode.OR() != null) {
+            return new OrExpression(leftOperand, rightOperand);
+        } else if (expressionNode.S_DOUBLE_PIPE() != null) {
+            return new ConcatExpression(ImmutableList.of(leftOperand, rightOperand));
         } else {
-            throw new IllegalArgumentException("Unknown operation: " + operation);
+            throw new IllegalArgumentException("Unknown operation type in: " + expressionNode.getText());
         }
     }
 
@@ -747,6 +782,11 @@ public class AntlrSqlParser implements SqlParser {
             return parseCastExpressionNode(castExpressionNode);
         }
 
+        BitwiseNotExpressionContext bitwiseNotExpression = prefixableExpressionNode.bitwiseNotExpression();
+        if (bitwiseNotExpression != null) {
+            return parseBitwiseNotExpressionNode(bitwiseNotExpression);
+        }
+
         NotExpressionContext notExpressionNode = prefixableExpressionNode.notExpression();
         if (notExpressionNode != null) {
             return parseNotExpressionNode(notExpressionNode);
@@ -757,12 +797,9 @@ public class AntlrSqlParser implements SqlParser {
             return parseUnaryArithmeticExpressionNode(unaryArithmeticExpressionNode);
         }
 
-        if (prefixableExpressionNode.OVERLAPS() != null) {
-            Expression start1Expression = parseExpressionNode(prefixableExpressionNode.start1Expression);
-            Expression end1Expression = parseExpressionNode(prefixableExpressionNode.end1Expression);
-            Expression start2Expression = parseExpressionNode(prefixableExpressionNode.start2Expression);
-            Expression end2Expression = parseExpressionNode(prefixableExpressionNode.end2Expression);
-            return new OverlapsExpression(start1Expression, end1Expression, start2Expression, end2Expression);
+        OverlapsExpressionContext overlapsExpressionNode = prefixableExpressionNode.overlapsExpression();
+        if (overlapsExpressionNode != null) {
+            return parseOverlapsExpressionNode(overlapsExpressionNode);
         }
 
         CaseExpressionContext caseExpressionNode = prefixableExpressionNode.caseExpression();
@@ -770,52 +807,11 @@ public class AntlrSqlParser implements SqlParser {
             return parseCaseExpressionNode(caseExpressionNode);
         }
 
-        if (prefixableExpressionNode.COUNT() != null) {
-            throw new UnsupportedOperationException("Aggregation currently not supported (COUNT)");
+        if (prefixableExpressionNode.countExpression() != null) {
+            throw new UnsupportedOperationException("Complex aggregation currently not supported (COUNT)");
         }
 
         throw new IllegalArgumentException("Unknown expression: " + prefixableExpressionNode.getText());
-    }
-
-    private Object extractOperation(ExpressionContext expressionNode) {
-        if (expressionNode.EQ() != null) {
-            return EqualsExpression.class;
-        } else if (expressionNode.NEQ_ANG() != null || expressionNode.NEQ_BANG() != null) {
-            return NotEqualsExpression.class;
-        } else if (expressionNode.LESS() != null) {
-            return OrderRelationExpression.Operation.LESS;
-        } else if (expressionNode.LESS_EQ() != null) {
-            return OrderRelationExpression.Operation.LESS_EQ;
-        } else if (expressionNode.GREATER() != null) {
-            return OrderRelationExpression.Operation.GREATER;
-        } else if (expressionNode.GREATER_EQ() != null) {
-            return OrderRelationExpression.Operation.GREATER_EQ;
-        } else if (expressionNode.ASTERISK() != null) {
-            return MultiplyExpression.class;
-        } else if (expressionNode.MOD() != null) {
-            return ModExpression.class;
-        } else if (expressionNode.PERCENT() != null) {
-            return RemainderExpression.class;
-        } else if (expressionNode.DIV() != null) {
-            // FIXME
-            return DivideExpression.class;
-        } else if (expressionNode.SLASH() != null) {
-            return DivideExpression.class;
-        } else if (expressionNode.PLUS() != null) {
-            return AddExpression.class;
-        } else if (expressionNode.MINUS() != null) {
-            return SubtractExpression.class;
-        } else if (expressionNode.AND() != null) {
-            return AndExpression.class;
-        } else if (expressionNode.XOR() != null) {
-            return XorExpression.class;
-        } else if (expressionNode.OR() != null) {
-            return OrExpression.class;
-        } else if (expressionNode.DOUBLE_PIPE() != null) {
-            return ConcatExpression.class;
-        } else {
-            return null;
-        }
     }
 
     private Expression parseAtomicExpressionNode(AtomicExpressionContext atomicExpressionNode) {
@@ -863,157 +859,216 @@ public class AntlrSqlParser implements SqlParser {
         ImmutableList<Expression> parameters = functionCallNode.expression().stream()
                 .map(this::parseExpressionNode)
                 .collect(ImmutableList.createCollector());
-        if (functionNameUpper.equals("COALESCE")) {
-            return new CoalesceExpression(parameters);
-        } else if (functionNameUpper.equals("CONCAT")) {
-            return new ConcatExpression(parameters);
-        } else if (functionNameUpper.equals("CONCAT_WS")) {
-            checkFunctionMinParameterCount(functionNameUpper, parameters, 1);
-            return new ConcatWithSeparatorExpression(parameters.get(0), parameters.section(1, parameters.size()));
-        } else if (functionNameUpper.equals("NULLIF")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 2);
-            return new NullifExpression(parameters.get(0), parameters.get(1));
-        } else if (functionNameUpper.equals("PI")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 0);
-            return new PiExpression();
-        } else if (functionNameUpper.equals("SIGN")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 1);
-            return new SignExpression(parameters.get(0));
-        } else if (functionNameUpper.equals("ABS")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 1);
-            return new AbsExpression(parameters.get(0));
-        } else if (functionNameUpper.equals("POW") || functionNameUpper.equals("POWER")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 2);
-            return new PowExpression(parameters.get(0), parameters.get(1));
-        } else if (functionNameUpper.equals("LOG")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 2);
-            return new LogExpression(parameters.get(0), parameters.get(1));
-        } else if (functionNameUpper.equals("ATAN2")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 2);
-            return new Atan2Expression(parameters.get(0), parameters.get(1));
-        } else if (functionNameUpper.equals("FLOOR")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 1);
-            return new RoundExpression(parameters.get(0), RoundExpression.RoundMode.FLOOR);
-        } else if (functionNameUpper.equals("ROUND")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 1);
-            return new RoundExpression(parameters.get(0), RoundExpression.RoundMode.ROUND);
-        } else if (functionNameUpper.equals("CEIL") || functionNameUpper.equals("CEILING")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 1);
-            return new RoundExpression(parameters.get(0), RoundExpression.RoundMode.CEIL);
-        } else if (functionNameUpper.equals("GCD")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 2);
-            return new GcdExpression(parameters.get(0), parameters.get(1));
-        } else if (functionNameUpper.equals("LCM")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 2);
-            return new LcmExpression(parameters.get(0), parameters.get(1));
-        } else if (functionNameUpper.equals("BIT_LENGTH")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 1);
-            return new BitLengthExpression(parameters.get(0));
-        } else if (functionNameUpper.equals("OCTET_LENGTH")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 1);
-            return new OctetLengthExpression(parameters.get(0));
-        } else if (functionNameUpper.equals("CHAR_LENGTH") || functionNameUpper.equals("CHARACTER_LENGTH")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 1);
-            return new CharLengthExpression(parameters.get(0));
-        } else if (functionNameUpper.equals("ASCII")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 1);
-            return new AsciiExpression(parameters.get(0));
-        } else if (functionNameUpper.equals("ORD")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 1);
-            return new OrdExpression(parameters.get(0));
-        } else if (functionNameUpper.equals("CHR")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 1);
-            return new ChrExpression(parameters.get(0));
-        } else if (functionNameUpper.equals("LOWER")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 1);
-            return new LowerExpression(parameters.get(0));
-        } else if (functionNameUpper.equals("UPPER")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 1);
-            return new UpperExpression(parameters.get(0));
-        } else if (functionNameUpper.equals("INITCAP")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 1);
-            return new InitcapExpression(parameters.get(0));
-        } else if (functionNameUpper.equals("REVERSE")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 1);
-            return new ReverseExpression(parameters.get(0));
-        } else if (functionNameUpper.equals("LEFT")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 2);
-            return new LeftExpression(parameters.get(0), parameters.get(1));
-        } else if (functionNameUpper.equals("RIGHT")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 2);
-            return new RightExpression(parameters.get(0), parameters.get(1));
-        } else if (functionNameUpper.equals("TRIM")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 1);
-            return new TrimExpression(parameters.get(0), Optional.empty(), Optional.empty());
-        } else if (functionNameUpper.equals("LPAD")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 2, 3);
-            Optional<Expression> padStringExpression = parameters.size() > 2 ? Optional.of(parameters.get(2)) : Optional.empty();
-            return new LeftPadExpression(parameters.get(0), parameters.get(1), padStringExpression);
-        } else if (functionNameUpper.equals("RPAD")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 2, 3);
-            Optional<Expression> padStringExpression = parameters.size() > 2 ? Optional.of(parameters.get(2)) : Optional.empty();
-            return new RightPadExpression(parameters.get(0), parameters.get(1), padStringExpression);
-        } else if (functionNameUpper.equals("RRPAD")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 2, 3);
-            Optional<Expression> padStringExpression = parameters.size() > 2 ? Optional.of(parameters.get(2)) : Optional.empty();
-            return new RightRightPadExpression(parameters.get(0), parameters.get(1), padStringExpression);
-        } else if (functionNameUpper.equals("SUBSTR") || functionNameUpper.equals("SUBSTRING")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 2, 3);
-            Optional<Expression> forExpression = parameters.size() > 2 ? Optional.of(parameters.get(2)) : Optional.empty();
-            return new SubstringExpression(parameters.get(0), Optional.of(parameters.get(1)), forExpression);
-        } else if (functionNameUpper.equals("POSITION")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 2);
-            return new PositionExpression(parameters.get(0), parameters.get(1));
-        } else if (functionNameUpper.equals("TRANSLATE")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 3);
-            return new TranslateExpression(parameters.get(0), parameters.get(1), parameters.get(2));
-        } else if (functionNameUpper.equals("REPLACE")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 3);
-            return new ReplaceExpression(parameters.get(0), parameters.get(1), parameters.get(2));
-        } else if (functionNameUpper.equals("REGEXP_REPLACE")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 3, 4);
-            Optional<Expression> flagsExpression = parameters.size() > 3 ? Optional.of(parameters.get(3)) : Optional.empty();
-            return new RegexpReplaceExpression(parameters.get(0), parameters.get(1), parameters.get(2), flagsExpression);
-        } else if (functionNameUpper.equals("REPEAT")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 2);
-            return new RepeatExpression(parameters.get(0), parameters.get(1));
-        } else if (functionNameUpper.equals("SPLIT_PART")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 3);
-            return new SplitPartExpression(parameters.get(0), parameters.get(1), parameters.get(2));
-        } else if (functionNameUpper.equals("LENGTH")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 1);
-            return new LengthExpression(parameters.get(0));
-        } else if (functionNameUpper.equals("LEAST")) {
-            return new LeastExpression(parameters);
-        } else if (functionNameUpper.equals("GREATEST")) {
-            return new GreatestExpression(parameters);
-        } else if (functionNameUpper.equals("RAND") || functionNameUpper.equals("RANDOM")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 0);
-            return new RandomExpression();
-        } else if (functionNameUpper.equals("SHA256")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 1);
-            return new Sha256Expression(parameters.get(0));
-        } else if (functionNameUpper.equals("HEX")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 1);
-            return new EncodeExpression(parameters.get(0), new ConstantExpression("HEX"));
-        } else if (functionNameUpper.equals("UNHEX")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 1);
-            return new DecodeExpression(parameters.get(0), new ConstantExpression("HEX"));
-        } else if (functionNameUpper.equals("TO_BASE64")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 1);
-            return new EncodeExpression(parameters.get(0), new ConstantExpression("BASE64"));
-        } else if (functionNameUpper.equals("FROM_BASE64")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 1);
-            return new DecodeExpression(parameters.get(0), new ConstantExpression("BASE64"));
-        } else if (functionNameUpper.equals("ENCODE")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 2);
-            return new EncodeExpression(parameters.get(0), parameters.get(1));
-        } else if (functionNameUpper.equals("DECODE")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 2);
-            return new DecodeExpression(parameters.get(0), parameters.get(1));
-        } else if (functionNameUpper.equals("NOW")) {
-            checkFunctionParameterCount(functionNameUpper, parameters, 0);
-            return new NowExpression();
+        char firstUpperChar = functionNameUpper.isEmpty() ? '\0' : functionNameUpper.charAt(0);
+        switch (firstUpperChar) {
+            case 'A':
+                if (functionNameUpper.equals("ABS")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 1);
+                    return new AbsExpression(parameters.get(0));
+                } else if (functionNameUpper.equals("ATAN2")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 2);
+                    return new Atan2Expression(parameters.get(0), parameters.get(1));
+                } else if (functionNameUpper.equals("ASCII")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 1);
+                    return new AsciiExpression(parameters.get(0));
+                }
+                break;
+            case 'B':
+                if (functionNameUpper.equals("BIT_LENGTH")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 1);
+                    return new BitLengthExpression(parameters.get(0));
+                }
+                break;
+            case 'C':
+                if (functionNameUpper.equals("COALESCE")) {
+                    return new CoalesceExpression(parameters);
+                } else if (functionNameUpper.equals("CONCAT")) {
+                    return new ConcatExpression(parameters);
+                } else if (functionNameUpper.equals("CONCAT_WS")) {
+                    checkFunctionMinParameterCount(functionNameUpper, parameters, 1);
+                    return new ConcatWithSeparatorExpression(parameters.get(0), parameters.section(1, parameters.size()));
+                } else if (functionNameUpper.equals("CEIL") || functionNameUpper.equals("CEILING")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 1);
+                    return new RoundExpression(parameters.get(0), RoundExpression.RoundMode.CEIL);
+                } else if (functionNameUpper.equals("CHAR_LENGTH") || functionNameUpper.equals("CHARACTER_LENGTH")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 1);
+                    return new CharLengthExpression(parameters.get(0));
+                } else if (functionNameUpper.equals("CHR")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 1);
+                    return new ChrExpression(parameters.get(0));
+                } else if (functionNameUpper.equals("CONVERT_FROM")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 2);
+                    return new ConvertFromExpression(parameters.get(0), parameters.get(1));
+                } else if (functionNameUpper.equals("CONVERT_TO")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 2);
+                    return new ConvertToExpression(parameters.get(0), parameters.get(1));
+                }
+                break;
+            case 'D':
+                if (functionNameUpper.equals("DECODE")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 2);
+                    return new DecodeExpression(parameters.get(0), parameters.get(1));
+                }
+                break;
+            case 'E':
+                if (functionNameUpper.equals("ENCODE")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 2);
+                    return new EncodeExpression(parameters.get(0), parameters.get(1));
+                }
+                break;
+            case 'F':
+                if (functionNameUpper.equals("FLOOR")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 1);
+                    return new RoundExpression(parameters.get(0), RoundExpression.RoundMode.FLOOR);
+                } else if (functionNameUpper.equals("FROM_BASE64")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 1);
+                    return new DecodeExpression(parameters.get(0), new ConstantExpression("BASE64"));
+                }
+                break;
+            case 'G':
+                if (functionNameUpper.equals("GCD")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 2);
+                    return new GcdExpression(parameters.get(0), parameters.get(1));
+                } else if (functionNameUpper.equals("GREATEST")) {
+                    return new GreatestExpression(parameters);
+                }
+                break;
+            case 'H':
+                if (functionNameUpper.equals("HEX")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 1);
+                    return new EncodeExpression(parameters.get(0), new ConstantExpression("HEX"));
+                }
+                break;
+            case 'I':
+                if (functionNameUpper.equals("INITCAP")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 1);
+                    return new InitcapExpression(parameters.get(0));
+                }
+                break;
+            case 'L':
+                if (functionNameUpper.equals("LCM")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 2);
+                    return new LcmExpression(parameters.get(0), parameters.get(1));
+                } else if (functionNameUpper.equals("LOWER")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 1);
+                    return new LowerExpression(parameters.get(0));
+                } else if (functionNameUpper.equals("LEFT")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 2);
+                    return new LeftExpression(parameters.get(0), parameters.get(1));
+                } else if (functionNameUpper.equals("LENGTH")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 1);
+                    return new LengthExpression(parameters.get(0));
+                } else if (functionNameUpper.equals("LEAST")) {
+                    return new LeastExpression(parameters);
+                } else if (functionNameUpper.equals("LOG")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 2);
+                    return new LogExpression(parameters.get(0), parameters.get(1));
+                } else if (functionNameUpper.equals("LPAD")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 2, 3);
+                    Optional<Expression> padStringExpression = parameters.size() > 2 ? Optional.of(parameters.get(2)) : Optional.empty();
+                    return new LeftPadExpression(parameters.get(0), parameters.get(1), padStringExpression);
+                }
+                break;
+            case 'N':
+                if (functionNameUpper.equals("NULLIF")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 2);
+                    return new NullifExpression(parameters.get(0), parameters.get(1));
+                } else if (functionNameUpper.equals("NOW")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 0);
+                    return new NowExpression();
+                }
+                break;
+            case 'O':
+                if (functionNameUpper.equals("OCTET_LENGTH")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 1);
+                    return new OctetLengthExpression(parameters.get(0));
+                } else if (functionNameUpper.equals("ORD")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 1);
+                    return new OrdExpression(parameters.get(0));
+                }
+                break;
+            case 'P':
+                if (functionNameUpper.equals("PI")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 0);
+                    return new PiExpression();
+                } else if (functionNameUpper.equals("POW") || functionNameUpper.equals("POWER")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 2);
+                    return new PowExpression(parameters.get(0), parameters.get(1));
+                } else if (functionNameUpper.equals("POSITION")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 2);
+                    return new PositionExpression(parameters.get(0), parameters.get(1));
+                }
+                break;
+            case 'R':
+                if (functionNameUpper.equals("RAND") || functionNameUpper.equals("RANDOM")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 0);
+                    return new RandomExpression();
+                } else if (functionNameUpper.equals("ROUND")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 1);
+                    return new RoundExpression(parameters.get(0), RoundExpression.RoundMode.ROUND);
+                } else if (functionNameUpper.equals("REVERSE")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 1);
+                    return new ReverseExpression(parameters.get(0));
+                } else if (functionNameUpper.equals("RIGHT")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 2);
+                    return new RightExpression(parameters.get(0), parameters.get(1));
+                } else if (functionNameUpper.equals("RPAD")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 2, 3);
+                    Optional<Expression> padStringExpression = parameters.size() > 2 ? Optional.of(parameters.get(2)) : Optional.empty();
+                    return new RightPadExpression(parameters.get(0), parameters.get(1), padStringExpression);
+                } else if (functionNameUpper.equals("RRPAD")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 2, 3);
+                    Optional<Expression> padStringExpression = parameters.size() > 2 ? Optional.of(parameters.get(2)) : Optional.empty();
+                    return new RightRightPadExpression(parameters.get(0), parameters.get(1), padStringExpression);
+                } else if (functionNameUpper.equals("REPLACE")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 3);
+                    return new ReplaceExpression(parameters.get(0), parameters.get(1), parameters.get(2));
+                } else if (functionNameUpper.equals("REGEXP_REPLACE")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 3, 4);
+                    Optional<Expression> flagsExpression = parameters.size() > 3 ? Optional.of(parameters.get(3)) : Optional.empty();
+                    return new RegexpReplaceExpression(parameters.get(0), parameters.get(1), parameters.get(2), flagsExpression);
+                } else if (functionNameUpper.equals("REPEAT")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 2);
+                    return new RepeatExpression(parameters.get(0), parameters.get(1));
+                }
+                break;
+            case 'S':
+                if (functionNameUpper.equals("SIGN")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 1);
+                    return new SignExpression(parameters.get(0));
+                } else if (functionNameUpper.equals("SUBSTR") || functionNameUpper.equals("SUBSTRING")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 2, 3);
+                    Optional<Expression> forExpression = parameters.size() > 2 ? Optional.of(parameters.get(2)) : Optional.empty();
+                    return new SubstringExpression(parameters.get(0), Optional.of(parameters.get(1)), forExpression);
+                } else if (functionNameUpper.equals("SPLIT_PART")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 3);
+                    return new SplitPartExpression(parameters.get(0), parameters.get(1), parameters.get(2));
+                } else if (functionNameUpper.equals("SHA256")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 1);
+                    return new Sha256Expression(parameters.get(0));
+                }
+                break;
+            case 'T':
+                if (functionNameUpper.equals("TRANSLATE")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 3);
+                    return new TranslateExpression(parameters.get(0), parameters.get(1), parameters.get(2));
+                } else if (functionNameUpper.equals("TO_BASE64")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 1);
+                    return new EncodeExpression(parameters.get(0), new ConstantExpression("BASE64"));
+                } else if (functionNameUpper.equals("TRIM")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 1);
+                    return new TrimExpression(parameters.get(0), Optional.empty(), Optional.empty());
+                }
+                break;
+            case 'U':
+                if (functionNameUpper.equals("UPPER")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 1);
+                    return new UpperExpression(parameters.get(0));
+                } else if (functionNameUpper.equals("UNHEX")) {
+                    checkFunctionParameterCount(functionNameUpper, parameters, 1);
+                    return new DecodeExpression(parameters.get(0), new ConstantExpression("HEX"));
+                }
+                break;
         }
 
         UnaryRealMathFunctionExpression.FunctionSymbol mathSymbolAlias =
@@ -1072,16 +1127,20 @@ public class AntlrSqlParser implements SqlParser {
         }
     }
 
+    private Expression parseBitwiseNotExpressionNode(BitwiseNotExpressionContext bitwiseNotExpression) {
+        return new BitwiseNotExpression(parsePrefixableExpressionNode(bitwiseNotExpression.prefixableExpression()));
+    }
+
     private Expression parseNotExpressionNode(NotExpressionContext notExpressionNode) {
         return new NotExpression(parsePrefixableExpressionNode(notExpressionNode.prefixableExpression()));
     }
 
     private Expression parseUnaryArithmeticExpressionNode(UnaryArithmeticExpressionContext unaryArithmeticExpressionNode) {
-        Expression subExpression = parsePrefixableExpressionNode(unaryArithmeticExpressionNode.prefixableExpression());
-        if (unaryArithmeticExpressionNode.MINUS() != null) {
-            return new NegateExpression(subExpression);
+        Expression operand = parsePrefixableExpressionNode(unaryArithmeticExpressionNode.prefixableExpression());
+        if (unaryArithmeticExpressionNode.S_MINUS() != null) {
+            return new NegateExpression(operand);
         } else {
-            return subExpression;
+            return operand;
         }
     }
 
@@ -1161,11 +1220,11 @@ public class AntlrSqlParser implements SqlParser {
     }
 
     private Expression parseTrimExpressionNode(TrimExpressionContext trimExpressionNode) {
-        Expression inputExpression = parseExpressionNode(trimExpressionNode.inputExpression);
-        Optional<Expression> charsExpression = Optional.ofNullable(trimExpressionNode.charsExpression).map(this::parseExpressionNode);
+        Expression subjectOperand = parseExpressionNode(trimExpressionNode.subject);
+        Optional<Expression> charsOperand = Optional.ofNullable(trimExpressionNode.chars).map(this::parseExpressionNode);
         Optional<TrimExpression.TrimSpecification> trimSpecification =
                 Optional.ofNullable(trimExpressionNode.trimSpecification()).map(this::parseTrimSpecificationNode);
-        return new TrimExpression(inputExpression, charsExpression, trimSpecification);
+        return new TrimExpression(subjectOperand, charsOperand, trimSpecification);
     }
 
     private TrimExpression.TrimSpecification parseTrimSpecificationNode(TrimSpecificationContext trimSpecificationNode) {
@@ -1173,22 +1232,22 @@ public class AntlrSqlParser implements SqlParser {
     }
 
     private Expression parseSubstringExpressionNode(SubstringExpressionContext substringExpressionNode) {
-        Expression inputExpression = parseExpressionNode(substringExpressionNode.inputExpression);
-        Optional<Expression> fromExpression = Optional.ofNullable(substringExpressionNode.fromExpression).map(this::parseExpressionNode);
-        Optional<Expression> forExpression = Optional.ofNullable(substringExpressionNode.forExpression).map(this::parseExpressionNode);
-        return new SubstringExpression(inputExpression, fromExpression, forExpression);
+        Expression contextOperand = parseExpressionNode(substringExpressionNode.context);
+        Optional<Expression> fromOperand = Optional.ofNullable(substringExpressionNode.from).map(this::parseExpressionNode);
+        Optional<Expression> forOperand = Optional.ofNullable(substringExpressionNode.for_).map(this::parseExpressionNode);
+        return new SubstringExpression(contextOperand, fromOperand, forOperand);
     }
 
     private Expression parsePositionExpressionNode(PositionExpressionContext positionExpressionNode) {
-        Expression subjectExpression = parseExpressionNode(positionExpressionNode.subjectExpression);
-        Expression contextExpression = parseExpressionNode(positionExpressionNode.contextExpression);
-        return new PositionExpression(subjectExpression, contextExpression);
+        Expression subjectOperand = parseExpressionNode(positionExpressionNode.subject);
+        Expression contextOperand = parseExpressionNode(positionExpressionNode.context);
+        return new PositionExpression(subjectOperand, contextOperand);
     }
 
     private Expression parseExtractExpressionNode(ExtractExpressionContext extractExpressionNode) {
-        Expression inputExpression = parseExpressionNode(extractExpressionNode.inputExpression);
+        Expression contextOperand = parseExpressionNode(extractExpressionNode.context);
         ExtractExpression.ExtractField extractField = parseExtractFieldNode(extractExpressionNode.extractFieldName());
-        return new ExtractExpression(inputExpression, extractField);
+        return new ExtractExpression(contextOperand, extractField);
     }
 
     private ExtractExpression.ExtractField parseExtractFieldNode(ExtractFieldNameContext extractFieldNameNode) {
@@ -1238,7 +1297,7 @@ public class AntlrSqlParser implements SqlParser {
     }
 
     private Integer parseSizeParameterNode(SizeParameterContext sizeParameterNode) {
-        TerminalNode integerToken = sizeParameterNode.TOKEN_INTEGER();
+        TerminalNode integerToken = sizeParameterNode.D_INTEGER();
         if (integerToken != null) {
             return parseIntegerNode(integerToken).intValueExact();
         }
@@ -1256,10 +1315,18 @@ public class AntlrSqlParser implements SqlParser {
         return new TypeConstruct(TypeConstruct.Symbol.INTERVAL, null, scale);
     }
 
+    private Expression parseOverlapsExpressionNode(OverlapsExpressionContext overlapsExpressionNode) {
+        Expression start1Operand = parseExpressionNode(overlapsExpressionNode.start1);
+        Expression end1Operand = parseExpressionNode(overlapsExpressionNode.end1);
+        Expression start2Operand = parseExpressionNode(overlapsExpressionNode.start2);
+        Expression end2Operand = parseExpressionNode(overlapsExpressionNode.end2);
+        return new OverlapsExpression(start1Operand, end1Operand, start2Operand, end2Operand);
+    }
+
     private Expression parseCaseExpressionNode(CaseExpressionContext caseExpressionNode) {
-        Expression givenExpression = null;
-        if (caseExpressionNode.givenExpression != null) {
-            givenExpression = parseExpressionNode(caseExpressionNode.givenExpression);
+        Expression subjectExpression = null;
+        if (caseExpressionNode.subject != null) {
+            subjectExpression = parseExpressionNode(caseExpressionNode.subject);
         }
         Expression elseExpression = null;
         ElsePartContext elsePartNode = caseExpressionNode.elsePart();
@@ -1270,12 +1337,12 @@ public class AntlrSqlParser implements SqlParser {
         ImmutableList<CaseExpression.WhenItem> whenItems =
                 ImmutableList.fromCollection(caseExpressionNode.whenPart()).map(this::parseCaseWhenItem);
 
-        return new CaseExpression(givenExpression, whenItems, elseExpression);
+        return new CaseExpression(subjectExpression, whenItems, elseExpression);
     }
 
     private CaseExpression.WhenItem parseCaseWhenItem(WhenPartContext whenPartNode) {
-        Expression conditionExpression = parseExpressionNode(whenPartNode.conditionExpression);
-        Expression resultExpression = parseExpressionNode(whenPartNode.resultExpression);
+        Expression conditionExpression = parseExpressionNode(whenPartNode.condition);
+        Expression resultExpression = parseExpressionNode(whenPartNode.result);
         return new CaseExpression.WhenItem(conditionExpression, resultExpression);
     }
 
@@ -1413,7 +1480,7 @@ public class AntlrSqlParser implements SqlParser {
 
         OrderByPositionContext orderByPositionNode = orderByItemNode.orderByPosition();
         if (orderByPositionNode != null) {
-            LargeInteger largeOrderByPosition = parseIntegerNode(orderByPositionNode.TOKEN_INTEGER());
+            LargeInteger largeOrderByPosition = parseIntegerNode(orderByPositionNode.D_INTEGER());
             Integer orderByPosition = largeOrderByPosition != null ? largeOrderByPosition.intValueExact() : null;
             return new OrderByItem(null, null, orderByPosition, ascOrder, nullsOrderMode);
         }
@@ -1462,7 +1529,7 @@ public class AntlrSqlParser implements SqlParser {
     }
 
     private Object parseLimitParameterNode(LimitParameterContext limitParameterNode) {
-        TerminalNode integerToken = limitParameterNode.TOKEN_INTEGER();
+        TerminalNode integerToken = limitParameterNode.D_INTEGER();
         if (integerToken != null) {
             return parseIntegerNode(integerToken);
         }
@@ -1499,17 +1566,17 @@ public class AntlrSqlParser implements SqlParser {
     }
 
     private String parseIdentifierNode(IdentifierContext identifierNode) {
-        TerminalNode simpleNameNode = identifierNode.TOKEN_SIMPLENAME();
+        TerminalNode simpleNameNode = identifierNode.D_SIMPLENAME();
         if (simpleNameNode != null) {
             return simpleNameNode.getText().toLowerCase();
         }
 
-        TerminalNode quotedNameNode = identifierNode.TOKEN_QUOTEDNAME();
+        TerminalNode quotedNameNode = identifierNode.D_QUOTEDNAME();
         if (quotedNameNode != null) {
             return unquote(quotedNameNode.getText(), '"');
         }
 
-        TerminalNode backtickedNameNode = identifierNode.TOKEN_BACKTICKEDNAME();
+        TerminalNode backtickedNameNode = identifierNode.D_BACKTICKEDNAME();
         if (backtickedNameNode != null) {
             return unquote(backtickedNameNode.getText(), '`');
         }
@@ -1522,7 +1589,7 @@ public class AntlrSqlParser implements SqlParser {
         if (simpleRelationNode != null) {
             ExtendedValueContext extendedValueNode = postfixConditionNode.extendedValue();
             Object value = parseExtendedValueNode(extendedValueNode);
-            if (simpleRelationNode.EQ() != null) {
+            if (simpleRelationNode.S_EQ() != null) {
                 return value;
             } else {
                 return buildHalfRangeCondition(simpleRelationNode, value);
@@ -1544,13 +1611,13 @@ public class AntlrSqlParser implements SqlParser {
     }
 
     private Object buildHalfRangeCondition(SimpleRelationContext simpleRelationNode, Object value) {
-        if (simpleRelationNode.LESS() != null) {
+        if (simpleRelationNode.S_LESS() != null) {
             return new RangeCondition(null, false, value, false);
-        } else if (simpleRelationNode.LESS_EQ() != null) {
+        } else if (simpleRelationNode.S_LEQ() != null) {
             return new RangeCondition(null, false, value, true);
-        } else if (simpleRelationNode.GREATER() != null) {
+        } else if (simpleRelationNode.S_GREATER() != null) {
             return new RangeCondition(value, false, null, false);
-        } else if (simpleRelationNode.GREATER_EQ() != null) {
+        } else if (simpleRelationNode.S_GEQ() != null) {
             return new RangeCondition(value, true, null, false);
         } else {
             throw new IllegalArgumentException("Invalid range condition: " + simpleRelationNode.getText());
@@ -1598,6 +1665,11 @@ public class AntlrSqlParser implements SqlParser {
             return parseStringLiteralNode(stringLiteralNode);
         }
 
+        BitStringLiteralContext bitStringLiteralNode = literalNode.bitStringLiteral();
+        if (bitStringLiteralNode != null) {
+            return parseBitStringLiteralNode(bitStringLiteralNode);
+        }
+
         BooleanLiteralContext booleanLiteralNode = literalNode.booleanLiteral();
         if (booleanLiteralNode != null) {
             return parseBooleanLiteralNode(booleanLiteralNode);
@@ -1607,14 +1679,14 @@ public class AntlrSqlParser implements SqlParser {
     }
 
     private LargeInteger parseIntegerLiteralNode(IntegerLiteralContext integerLiteralNode) {
-        boolean negate = integerLiteralNode.MINUS() != null;
-        LargeInteger largeIntegerValue = parseIntegerNode(integerLiteralNode.TOKEN_INTEGER());
+        boolean negate = integerLiteralNode.S_MINUS() != null;
+        LargeInteger largeIntegerValue = parseIntegerNode(integerLiteralNode.D_INTEGER());
         return negate ? largeIntegerValue.negate() : largeIntegerValue;
     }
 
     private BigDecimal parseDecimalLiteralNode(DecimalLiteralContext decimalLiteralNode) {
-        boolean negate = decimalLiteralNode.MINUS() != null;
-        BigDecimal bigDecimalValue = parseDecimalNode(decimalLiteralNode.TOKEN_DECIMAL());
+        boolean negate = decimalLiteralNode.S_MINUS() != null;
+        BigDecimal bigDecimalValue = parseDecimalNode(decimalLiteralNode.D_DECIMAL());
         return negate ? bigDecimalValue.negate() : bigDecimalValue;
     }
 
@@ -1642,14 +1714,14 @@ public class AntlrSqlParser implements SqlParser {
 
     private String parseStringTokenListNode(StringTokenListContext stringTokenListNode) {
         StringBuilder resultBuilder = new StringBuilder();
-        for (TerminalNode stringNode : stringTokenListNode.TOKEN_STRING()) {
-            resultBuilder.append(parseStringNode(stringNode));
+        for (StringTokenContext stringTokenNode : stringTokenListNode.stringToken()) {
+            resultBuilder.append(parseStringTokenNode(stringTokenNode));
         }
         return resultBuilder.toString();
     }
 
-    private String parseStringNode(TerminalNode stringNode) {
-        return unquote(stringNode.getText(), '\'');
+    private String parseStringTokenNode(StringTokenContext stringTokenNode) {
+        return unquote(stringTokenNode.getText(), '\'');
     }
 
     private static String unquote(String quotedLiteralText, char quoteChar) {
@@ -1670,7 +1742,7 @@ public class AntlrSqlParser implements SqlParser {
 
     private String parseEscapeStringTokenListNode(EscapeStringTokenListContext escapeStringTokenListNode) {
         StringBuilder resultBuilder = new StringBuilder();
-        resultBuilder.append(parseEscapeStringNode(escapeStringTokenListNode.TOKEN_ESTRING()));
+        resultBuilder.append(parseEscapeStringNode(escapeStringTokenListNode.D_ESTRING()));
         for (EscapeStringContinuationContext escapeStringContinuationNode : escapeStringTokenListNode.escapeStringContinuation()) {
             resultBuilder.append(parseEscapeContinuationNode(escapeStringContinuationNode));
         }
@@ -1684,7 +1756,11 @@ public class AntlrSqlParser implements SqlParser {
 
     private String parseEscapeContinuationNode(EscapeStringContinuationContext escapeStringContinuationNode) {
         String text = escapeStringContinuationNode.getText();
-        return unfoldEscapeStringContent(text.substring(1, text.length() - 1));
+        if (text.charAt(0) == '\'') {
+            return unquote(text, '\'');
+        } else {
+            return unfoldEscapeStringContent(text.substring(2, text.length() - 1));
+        }
     }
 
     private String unfoldEscapeStringContent(String escapeStringContent) {
@@ -1797,6 +1873,70 @@ public class AntlrSqlParser implements SqlParser {
         int codePoint = Integer.parseInt(octalLiteralBuilder.toString(), 8);
         resultBuilder.append((char) codePoint);
         return p;
+    }
+
+    public static BitString parseBitStringLiteralNode(BitStringLiteralContext bitStringLiteralNode) {
+        BinaryStringTokenListContext binaryStringTokenListNode = bitStringLiteralNode.binaryStringTokenList();
+        if (binaryStringTokenListNode != null) {
+            return parseBinaryStringTokenListNode(binaryStringTokenListNode);
+        }
+
+        HexadecimalStringTokenListContext hexadecimalStringTokenListNode = bitStringLiteralNode.hexadecimalStringTokenList();
+        if (hexadecimalStringTokenListNode != null) {
+            return parseHexadecimalStringTokenListNode(hexadecimalStringTokenListNode);
+        }
+
+        throw new IllegalArgumentException("Unexpected bit string syntax: " + bitStringLiteralNode.getText());
+    }
+
+    public static BitString parseBinaryStringTokenListNode(BinaryStringTokenListContext binaryStringTokenListNode) {
+        StringBuilder bitStringBuilder = new StringBuilder();
+        bitStringBuilder.append(parseBinaryStringNode(binaryStringTokenListNode.D_BSTRING()));
+        for (BinaryStringContinuationContext binaryStringContinuationNode : binaryStringTokenListNode.binaryStringContinuation()) {
+            bitStringBuilder.append(parseBinaryStringContinuationNode(binaryStringContinuationNode));
+        }
+        return BitString.of(bitStringBuilder.toString());
+    }
+
+    public static String parseBinaryStringNode(TerminalNode binaryStringTokenNode) {
+        String nodeText = binaryStringTokenNode.getText();
+        return nodeText.substring(2, nodeText.length() - 1);
+    }
+
+    public static String parseBinaryStringContinuationNode(BinaryStringContinuationContext  binaryStringContinuationNode) {
+        String nodeText = binaryStringContinuationNode.getText();
+        return nodeText.substring(nodeText.charAt(0) == '\'' ? 1 : 2, nodeText.length() - 1);
+    }
+
+    public static BitString parseHexadecimalStringTokenListNode(HexadecimalStringTokenListContext hexadecimalStringTokenListNode) {
+        StringBuilder hexadecimalStringBuilder = new StringBuilder();
+        hexadecimalStringBuilder.append(parseHexadecimalStringTokenNode(hexadecimalStringTokenListNode.D_XSTRING()));
+        for (
+                HexadecimalStringContinuationContext hexadecimalStringContinuationNode :
+                hexadecimalStringTokenListNode.hexadecimalStringContinuation()) {
+            hexadecimalStringBuilder.append(parseHexadecimalStringContinuationNode(hexadecimalStringContinuationNode));
+        }
+        String hexadecimalString = hexadecimalStringBuilder.toString();
+        int hexadecimalStringLength = hexadecimalString.length();
+        StringBuilder bitStringBuilder = new StringBuilder(hexadecimalString.length() * 4);
+        for (int i = 0; i < hexadecimalStringLength; i++) {
+            int intValue = Integer.parseInt("" + hexadecimalString.charAt(i), 16);
+            bitStringBuilder.append((intValue & 8) != 0 ? '1' : '0');
+            bitStringBuilder.append((intValue & 4) != 0 ? '1' : '0');
+            bitStringBuilder.append((intValue & 2) != 0 ? '1' : '0');
+            bitStringBuilder.append((intValue & 1) != 0 ? '1' : '0');
+        }
+        return BitString.of(bitStringBuilder.toString());
+    }
+
+    public static String parseHexadecimalStringTokenNode(TerminalNode hexadecimalStringTokenNode) {
+        String nodeText = hexadecimalStringTokenNode.getText();
+        return nodeText.substring(2, nodeText.length() - 1);
+    }
+
+    public static String parseHexadecimalStringContinuationNode(HexadecimalStringContinuationContext hexadecimalStringContinuationNode) {
+        String nodeText = hexadecimalStringContinuationNode.getText();
+        return nodeText.substring(nodeText.charAt(0) == '\'' ? 1 : 2, nodeText.length() - 1);
     }
 
     public static Boolean parseBooleanLiteralNode(BooleanLiteralContext booleanLiteralNode) {

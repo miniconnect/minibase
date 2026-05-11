@@ -3,6 +3,7 @@ package hu.webarticum.minibase.query.util;
 import java.time.ZoneOffset;
 import java.time.temporal.Temporal;
 
+import hu.webarticum.miniconnect.lang.BitString;
 import hu.webarticum.miniconnect.lang.ByteString;
 import hu.webarticum.miniconnect.lang.DateTimeDelta;
 
@@ -26,6 +27,8 @@ public final class ConvertUtil {
             return StringUtil.stringify(value, size);
         } else if (Number.class.isAssignableFrom(targetType)) {
             return NumberUtil.convertToNumber(value, targetType, size, scale);
+        } else if (targetType == BitString.class) {
+            return BitStringUtil.bitStringify(value, size);
         } else if (targetType == ByteString.class) {
             return ByteStringUtil.byteStringify(value, size);
         } else if (targetType.isAssignableFrom(value.getClass())) {

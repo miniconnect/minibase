@@ -12,31 +12,31 @@ import hu.webarticum.miniconnect.lang.ImmutableMap;
 
 public class InExpression implements Expression {
 
-    private final Expression givenExpression;
+    private final Expression subjectOperand;
 
-    private final ImmutableList<Expression> listedExpressions;
+    private final ImmutableList<Expression> contextListOperand;
 
 
-    public InExpression(Expression givenExpression, ImmutableList<Expression> listedExpressions) {
-        this.givenExpression = givenExpression;
-        this.listedExpressions = listedExpressions;
+    public InExpression(Expression subjectOperand, ImmutableList<Expression> contextListOperand) {
+        this.subjectOperand = subjectOperand;
+        this.contextListOperand = contextListOperand;
     }
 
 
-    public Expression givenExpression() {
-        return givenExpression;
+    public Expression subjectOperand() {
+        return subjectOperand;
     }
 
-    public ImmutableList<Expression> listedExpressions() {
-        return listedExpressions;
+    public ImmutableList<Expression> contextListOperand() {
+        return contextListOperand;
     }
 
     @Override
     public ImmutableList<Parameter> parameters() {
         Set<Parameter> subParameters = new LinkedHashSet<>();
-        subParameters.addAll(givenExpression.parameters().asList());
-        for (Expression listedExpression : listedExpressions) {
-            subParameters.addAll(listedExpression.parameters().asList());
+        subParameters.addAll(subjectOperand.parameters().asList());
+        for (Expression itemExpression : contextListOperand) {
+            subParameters.addAll(itemExpression.parameters().asList());
         }
         return ImmutableList.fromCollection(subParameters);
     }
@@ -47,74 +47,61 @@ public class InExpression implements Expression {
     }
 
     @Override
-    public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
+    public Class<?> type(ImmutableMap<Parameter, Class<?>> typeSubstitutions) {
         return Boolean.class;
     }
 
     @Override
     public boolean isNullable() {
-        if (givenExpression.isNullable()) {
+        if (subjectOperand.isNullable()) {
             return true;
         }
-        for (Expression listedExpression : listedExpressions) {
-            if (!listedExpression.isNullable()) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    @Override
-    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
-        if (givenExpression.isNullable(nullabilities)) {
-            return true;
-        }
-        for (Expression listedExpression : listedExpressions) {
-            if (!listedExpression.isNullable(nullabilities)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    @Override
-    public Object evaluate(ImmutableMap<Parameter, Object> values) {
-        Object givenValue = givenExpression.evaluate(values);
-        if (givenValue == null) {
-            return null;
-        }
-        Class<?> givenType = UnifyUtil.typeOf(givenValue);
-        boolean foundNotNull = false;
-        for (Expression listedExpression : listedExpressions) {
-            Object listedValue = listedExpression.evaluate(values);
-            if (listedValue == null) {
-                continue;
-            }
-            Object convertedValue = ConvertUtil.convert(listedValue, givenType);
-            if (ValueUtil.evalEquality(givenValue, convertedValue)) {
+        for (Expression listedExpression : contextListOperand) {
+            if (listedExpression.isNullable()) {
                 return true;
             }
-            foundNotNull = true;
         }
-        return foundNotNull ? false : null;
+        return false;
     }
 
     @Override
-    public String automaticName() {
-        StringBuilder resultBuilder = new StringBuilder();
-        resultBuilder.append(givenExpression.automaticName());
-        resultBuilder.append(" IN (");
-        boolean first = true;
-        for (Expression listedExpression : listedExpressions) {
-            if (first) {
-                first = false;
-            } else {
-                resultBuilder.append(", ");
-            }
-            resultBuilder.append(listedExpression.automaticName());
+    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilitySubstitutions) {
+        if (subjectOperand.isNullable(nullabilitySubstitutions)) {
+            return true;
         }
-        resultBuilder.append(")");
-        return resultBuilder.toString();
+        for (Expression itemExpression : contextListOperand) {
+            if (itemExpression.isNullable(nullabilitySubstitutions)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public Object evaluate(ImmutableMap<Parameter, Object> substitutions) {
+        Object subjectValue = subjectOperand.evaluate(substitutions);
+        if (subjectValue == null) {
+            return null;
+        }
+        Class<?> subjectType = UnifyUtil.typeOf(subjectValue);
+        boolean foundNull = false;
+        for (Expression itemExpression : contextListOperand) {
+            Object itemValue = itemExpression.evaluate(substitutions);
+            if (itemValue == null) {
+                foundNull = true;
+                continue;
+            }
+            Object convertedItemValue = ConvertUtil.convert(itemValue, subjectType);
+            if (ValueUtil.evalEquality(subjectValue, convertedItemValue)) {
+                return true;
+            }
+        }
+        return foundNull ? null : false;
+    }
+
+    @Override
+    public String automaticName(int columnIndex) {
+        return "expr_in_col" + columnIndex;
     }
 
 }

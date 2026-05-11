@@ -95,13 +95,11 @@ public class TableQueryUtil {
         Object convertedValue = newRawValue;
         Class<?> clazz = columnDefinition.clazz();
         if (convertedValue instanceof VariableValue) {
-            String variableName = ((VariableValue) convertedValue).name();
-            convertedValue = state.getUserVariable(variableName);
-            convertedValue = TableQueryUtil.convert(convertedValue, clazz);
+            convertedValue = TableQueryUtil.convert(ResultUtil.resolveValue(convertedValue, state), clazz);
         } else if (convertedValue instanceof RangeCondition) {
             RangeCondition rangeCondition = (RangeCondition) convertedValue;
-            Object convertedFrom = TableQueryUtil.convert(rangeCondition.from(), clazz);
-            Object convertedTo = TableQueryUtil.convert(rangeCondition.to(), clazz);
+            Object convertedFrom = TableQueryUtil.convert(ResultUtil.resolveValue(rangeCondition.from(), state), clazz);
+            Object convertedTo = TableQueryUtil.convert(ResultUtil.resolveValue(rangeCondition.to(), state), clazz);
             convertedValue = new RangeCondition(
                     convertedFrom, rangeCondition.fromInclusive(), convertedTo, rangeCondition.toInclusive());
         } else if (!(convertedValue instanceof SpecialCondition)) {
@@ -190,12 +188,13 @@ public class TableQueryUtil {
     }
 
     public static LargeInteger countRows(Table table, Map<String, Object> queryWhere) {
-        Map<ImmutableList<String>, TableIndex> indexesByColumnName = new LinkedHashMap<>();
-        Set<String> unindexedColumnNames = collectIndexes(table, queryWhere, indexesByColumnName);
+        List<IndexMatchItem> collectedIndexes = new ArrayList<>();
+        Set<String> unindexedColumnNames = collectIndexes(table, queryWhere, collectedIndexes);
+        Collections.sort(collectedIndexes);
 
         List<TableSelection> moreSelections = new ArrayList<>();
         TableSelection firstSelection = collectIndexSelections(
-                table.size(), queryWhere, Collections.emptyList(), indexesByColumnName, moreSelections);
+                table.size(), queryWhere, Collections.emptyList(), collectedIndexes, moreSelections);
 
         LargeInteger result = LargeInteger.ZERO;
         for (LargeInteger rowIndex : firstSelection) {
@@ -229,13 +228,14 @@ public class TableQueryUtil {
         if (orderIndex != null) {
             filterIndexColumns.removeAll(matchedFilterColumns);
         }
-        Map<ImmutableList<String>, TableIndex> indexesByColumnName = new LinkedHashMap<>();
-        Set<String> unindexedColumnNames = collectIndexes(table, filter, indexesByColumnName);
-        indexesByColumnName = prependIndex(matchedFilterColumns, orderIndex, indexesByColumnName);
+        List<IndexMatchItem> collectedIndexes = new ArrayList<>();
+        Set<String> unindexedColumnNames = collectIndexes(table, filter, collectedIndexes);
+        Collections.sort(collectedIndexes);
+        prependIndex(collectedIndexes, matchedFilterColumns, orderIndex);
 
         List<TableSelection> moreSelections = new ArrayList<>();
         TableSelection firstSelection = collectIndexSelections(
-                table.size(), filter, matchedOrderByEntries, indexesByColumnName, moreSelections);
+                table.size(), filter, matchedOrderByEntries, collectedIndexes, moreSelections);
 
         Iterator<LargeInteger> result = matchRows(table, filter, firstSelection, moreSelections, unindexedColumnNames);
 
@@ -390,20 +390,25 @@ public class TableQueryUtil {
         return result;
     }
 
-    private static Map<ImmutableList<String>, TableIndex> prependIndex(
-            List<String> columnNames, TableIndex index, Map<ImmutableList<String>, TableIndex> indexes) {
+    private static void prependIndex(
+            List<IndexMatchItem> collectedIndexes, List<String> columnNames, TableIndex index) {
         if (index == null) {
-            return indexes;
+            return;
         }
 
-        Map<ImmutableList<String>, TableIndex> result = new LinkedHashMap<>();
-        result.put(ImmutableList.fromCollection(columnNames), index);
-        result.putAll(indexes);
-        return result;
+        Iterator<IndexMatchItem> iterator = collectedIndexes.iterator();
+        while (iterator.hasNext()) {
+            IndexMatchItem item = iterator.next();
+            if (item.index == index) {
+                iterator.remove();
+                break;
+            }
+        }
+        collectedIndexes.add(0, new IndexMatchItem(index, ImmutableList.fromCollection(columnNames)));
     }
 
     private static Set<String> collectIndexes(
-            Table table, Map<String, Object> queryWhere, Map<ImmutableList<String>, TableIndex> map) {
+            Table table, Map<String, Object> queryWhere, List<IndexMatchItem> collectedIndexes) {
         NamedResourceStore<TableIndex> indexStore = table.indexes();
         ImmutableList<TableIndex> indexes = indexStore.resources();
         int maxIndexColumnCount = calculateMaxIndexColumnCount(indexes);
@@ -413,9 +418,9 @@ public class TableQueryUtil {
             for (TableIndex tableIndex : indexes) {
                 ImmutableList<String> indexColumnNames = tableIndex.columnNames();
                 if (areColumnsMatching(indexColumnNames, result, columnCount, queryWhere)) {
-                    ImmutableList<String> matchedColumnNames =
-                            indexColumnNames.section(0, columnCount);
-                    map.put(matchedColumnNames, tableIndex);
+                    ImmutableList<String> matchedColumnNames = indexColumnNames.section(0, columnCount);
+                    ImmutableList<Object> filterValues = matchedColumnNames.map(queryWhere::get);
+                    collectedIndexes.add(new IndexMatchItem(tableIndex, matchedColumnNames, filterValues));
                     result.removeAll(matchedColumnNames.asList());
                 }
             }
@@ -462,17 +467,15 @@ public class TableQueryUtil {
             LargeInteger tableSize,
             Map<String, Object> filter,
             List<OrderByEntry> orderBy,
-            Map<ImmutableList<String>, TableIndex> indexesByColumnName,
+            List<IndexMatchItem> collectedIndexes,
             List<TableSelection> moreSelections) {
         if (filter.containsValue(null)) {
             return new SimpleSelection(ImmutableList.empty());
         }
 
         TableSelection firstSelection = null;
-        for (Map.Entry<ImmutableList<String>, TableIndex> entry : indexesByColumnName.entrySet()) {
-            ImmutableList<String> columnNames = entry.getKey();
-            TableIndex tableIndex = entry.getValue();
-            ImmutableList<Object> values = columnNames.map(filter::get);
+        for (IndexMatchItem item : collectedIndexes) {
+            ImmutableList<Object> values = item.columnNames.map(filter::get);
 
             ImmutableList<Object> fromCondition = values.map(TableQueryUtil::rangeFromForValue);
             ImmutableList<Object> toCondition = values.map(TableQueryUtil::rangeToForValue);
@@ -491,7 +494,7 @@ public class TableQueryUtil {
             } else {
                 sortModes = values.map(v -> SortMode.UNSORTED);
             }
-            TableSelection selection = tableIndex.findMulti(
+            TableSelection selection = item.index.findMulti(
                     fromCondition,
                     rangeFromInclusionModeForValues(values),
                     toCondition,
@@ -825,6 +828,52 @@ public class TableQueryUtil {
             default:
                 throw PredefinedError.OTHER_ERROR.toException();
         }
+    }
+
+    private static class IndexMatchItem implements Comparable<IndexMatchItem> {
+
+        final TableIndex index;
+
+        final ImmutableList<String> columnNames;
+
+        final int priority;
+
+        IndexMatchItem(
+                TableIndex index,
+                ImmutableList<String> columnNames) {
+            this.index = index;
+            this.columnNames = columnNames;
+            this.priority = 0;
+        }
+
+        IndexMatchItem(
+                TableIndex index,
+                ImmutableList<String> columnNames,
+                ImmutableList<Object> filterValues) {
+            this.index = index;
+            this.columnNames = columnNames;
+            this.priority = calculatePriority(index, filterValues);
+        }
+
+        private int calculatePriority(TableIndex index, ImmutableList<Object> filterValues) {
+            if (filterValues.size() == 1) {
+                Object filterValue = filterValues.get(0);
+                if (!(filterValue instanceof SpecialCondition)) {
+                    return index.isUnique() ? 1 : 2;
+                } else if (filterValue instanceof RangeCondition) {
+                    return index.isUnique() ? 3 : 4;
+                } else if (filterValue instanceof NullCondition) {
+                    return 5;
+                }
+            }
+            return 6;
+        }
+
+        @Override
+        public int compareTo(IndexMatchItem other) {
+            return Integer.compare(priority, other.priority);
+        }
+
     }
 
 }

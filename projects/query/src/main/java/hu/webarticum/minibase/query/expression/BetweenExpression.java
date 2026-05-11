@@ -7,35 +7,35 @@ import hu.webarticum.miniconnect.lang.ImmutableMap;
 
 public class BetweenExpression implements Expression {
 
-    private final Expression givenExpression;
+    private final Expression subjectOperand;
 
-    private final Expression minExpression;
+    private final Expression minOperand;
 
-    private final Expression maxExpression;
+    private final Expression maxOperand;
 
 
-    public BetweenExpression(Expression givenExpression, Expression minExpression, Expression maxExpression) {
-        this.givenExpression = givenExpression;
-        this.minExpression = minExpression;
-        this.maxExpression = maxExpression;
+    public BetweenExpression(Expression subjectOperand, Expression minOperand, Expression maxOperand) {
+        this.subjectOperand = subjectOperand;
+        this.minOperand = minOperand;
+        this.maxOperand = maxOperand;
     }
 
 
-    public Expression givenExpression() {
-        return givenExpression;
+    public Expression subjectOperand() {
+        return subjectOperand;
     }
 
-    public Expression minExpression() {
-        return minExpression;
+    public Expression minOperand() {
+        return minOperand;
     }
 
-    public Expression maxExpression() {
-        return maxExpression;
+    public Expression maxOperand() {
+        return maxOperand;
     }
 
     @Override
     public ImmutableList<Parameter> parameters() {
-        return givenExpression.parameters().concat(minExpression.parameters()).concat(maxExpression.parameters());
+        return subjectOperand.parameters().concat(minOperand.parameters()).concat(maxOperand.parameters());
     }
 
     @Override
@@ -44,36 +44,36 @@ public class BetweenExpression implements Expression {
     }
 
     @Override
-    public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
+    public Class<?> type(ImmutableMap<Parameter, Class<?>> typeSubstitutions) {
         return Boolean.class;
     }
 
     @Override
     public boolean isNullable() {
-        return givenExpression.isNullable() || minExpression.isNullable() || maxExpression.isNullable();
+        return subjectOperand.isNullable() || minOperand.isNullable() || maxOperand.isNullable();
     }
 
     @Override
-    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
+    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilitySubstitutions) {
         return
-            givenExpression.isNullable(nullabilities) ||
-            minExpression.isNullable(nullabilities) ||
-            maxExpression.isNullable(nullabilities);
+                subjectOperand.isNullable(nullabilitySubstitutions) ||
+                minOperand.isNullable(nullabilitySubstitutions) ||
+                maxOperand.isNullable(nullabilitySubstitutions);
     }
 
     @Override
-    public Object evaluate(ImmutableMap<Parameter, Object> values) {
+    public Object evaluate(ImmutableMap<Parameter, Object> substitutions) {
         Expression subExpression1 = new OrderRelationExpression(
-                OrderRelationExpression.Operation.LESS_EQ, minExpression, givenExpression);
+                OrderRelationExpression.Operation.LEQ, minOperand, subjectOperand);
         Expression subExpression2 = new OrderRelationExpression(
-                OrderRelationExpression.Operation.LESS_EQ, givenExpression, maxExpression);
+                OrderRelationExpression.Operation.LEQ, subjectOperand, maxOperand);
         Expression andExpression = new AndExpression(subExpression1, subExpression2);
-        return andExpression.evaluate(values);
+        return andExpression.evaluate(substitutions);
     }
 
     @Override
-    public String automaticName() {
-        return givenExpression.automaticName() + " BETWEEN " + minExpression.automaticName() + " AND " + maxExpression.automaticName();
+    public String automaticName(int columnIndex) {
+        return "expr_between_col" + columnIndex;
     }
 
 }

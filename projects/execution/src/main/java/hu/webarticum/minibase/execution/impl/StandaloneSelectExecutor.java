@@ -37,7 +37,7 @@ public class StandaloneSelectExecutor implements SharedThrowingQueryExecutor {
         ImmutableList<ImmutableList<Expression>> expressionMatrix = standaloneSelectQuery.expressionMatrix();
         ImmutableList<Expression> firstRow = expressionMatrix.get(0);
         ImmutableList<String> aliases = standaloneSelectQuery.aliases()
-                .map((i, a) -> ensureAlias(a, firstRow.get(i)));
+                .map((i, a) -> ensureAlias(a, firstRow.get(i), i));
         ImmutableList<Class<?>> types = aliases
                 .map((i, a) -> findType(i, expressionMatrix, state));
         ImmutableList<Boolean> nullabilities = aliases
@@ -49,11 +49,11 @@ public class StandaloneSelectExecutor implements SharedThrowingQueryExecutor {
         return StoredResult.of(StoredResultSetData.from(columnHeaders, values));
     }
 
-    private String ensureAlias(String alias, Expression firstExpression) {
+    private String ensureAlias(String alias, Expression firstExpression, int columnIndex) {
         if (alias != null) {
             return alias;
         } else {
-            return firstExpression.automaticName();
+            return firstExpression.automaticName(columnIndex);
         }
     }
 

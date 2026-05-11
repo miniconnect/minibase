@@ -8,28 +8,28 @@ import hu.webarticum.miniconnect.lang.ImmutableMap;
 
 public class PowExpression implements Expression {
 
-    private final Expression baseExpression;
+    private final Expression baseOperand;
 
-    private final Expression powerExpression;
+    private final Expression exponentOperand;
 
 
-    public PowExpression(Expression baseExpression, Expression powerExpression) {
-        this.baseExpression = baseExpression;
-        this.powerExpression = powerExpression;
+    public PowExpression(Expression baseOperand, Expression exponentOperand) {
+        this.baseOperand = baseOperand;
+        this.exponentOperand = exponentOperand;
     }
 
 
-    public Expression baseExpression() {
-        return baseExpression;
+    public Expression baseOperand() {
+        return baseOperand;
     }
 
-    public Expression powerExpression() {
-        return powerExpression;
+    public Expression exponentOperand() {
+        return exponentOperand;
     }
 
     @Override
     public ImmutableList<Parameter> parameters() {
-        return baseExpression.parameters().concat(powerExpression.parameters());
+        return baseOperand.parameters().concat(exponentOperand.parameters());
     }
 
     @Override
@@ -38,39 +38,39 @@ public class PowExpression implements Expression {
     }
 
     @Override
-    public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
+    public Class<?> type(ImmutableMap<Parameter, Class<?>> typeSubstitutions) {
         return Double.class;
     }
 
     @Override
     public boolean isNullable() {
-        return baseExpression.isNullable() || powerExpression.isNullable();
+        return baseOperand.isNullable() || exponentOperand.isNullable();
     }
 
     @Override
-    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
-        return baseExpression.isNullable(nullabilities) || powerExpression.isNullable(nullabilities);
+    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilitySubstitutions) {
+        return baseOperand.isNullable(nullabilitySubstitutions) || exponentOperand.isNullable(nullabilitySubstitutions);
     }
 
     @Override
-    public Object evaluate(ImmutableMap<Parameter, Object> values) {
-        Object baseValue = baseExpression.evaluate(values);
+    public Object evaluate(ImmutableMap<Parameter, Object> substitutions) {
+        Object baseValue = baseOperand.evaluate(substitutions);
         if (baseValue == null) {
             return null;
         }
-        Object powerValue = powerExpression.evaluate(values);
-        if (powerValue == null) {
+        Object exponentValue = exponentOperand.evaluate(substitutions);
+        if (exponentValue == null) {
             return null;
         }
 
         double base = (Double) ConvertUtil.convert(baseValue, Double.class);
-        double power = (Double) ConvertUtil.convert(powerValue, Double.class);
-        return Math.pow(base, power);
+        double exponent = (Double) ConvertUtil.convert(exponentValue, Double.class);
+        return Math.pow(base, exponent);
     }
 
     @Override
-    public String automaticName() {
-        return "POW(" + baseExpression.automaticName() + ", " + powerExpression.automaticName() + ")";
+    public String automaticName(int columnIndex) {
+        return "expr_pow_col" + columnIndex;
     }
 
 }

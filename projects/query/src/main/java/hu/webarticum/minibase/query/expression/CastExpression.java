@@ -8,19 +8,19 @@ import hu.webarticum.miniconnect.lang.ImmutableMap;
 
 public class CastExpression implements Expression {
 
-    private final Expression subExpression;
+    private final Expression subjectOperand;
 
     private final TypeConstruct targetTypeConstruct;
 
 
-    public CastExpression(Expression subExpression, TypeConstruct targetTypeConstruct) {
-        this.subExpression = subExpression;
+    public CastExpression(Expression subjectOperand, TypeConstruct targetTypeConstruct) {
+        this.subjectOperand = subjectOperand;
         this.targetTypeConstruct = targetTypeConstruct;
     }
 
 
-    public Expression subExpression() {
-        return subExpression;
+    public Expression subjectOperand() {
+        return subjectOperand;
     }
 
     public TypeConstruct targetTypeConstruct() {
@@ -29,7 +29,7 @@ public class CastExpression implements Expression {
 
     @Override
     public ImmutableList<Parameter> parameters() {
-        return subExpression.parameters();
+        return subjectOperand.parameters();
     }
 
     @Override
@@ -38,32 +38,32 @@ public class CastExpression implements Expression {
     }
 
     @Override
-    public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
+    public Class<?> type(ImmutableMap<Parameter, Class<?>> typeSubstitutions) {
         return targetTypeConstruct.symbol().type();
     }
 
     @Override
     public boolean isNullable() {
-        return subExpression.isNullable();
+        return targetTypeConstruct.symbol().type() == Void.class || subjectOperand.isNullable();
     }
 
     @Override
-    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
-        return subExpression.isNullable(nullabilities);
+    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilitySubstitutions) {
+        return targetTypeConstruct.symbol().type() == Void.class || subjectOperand.isNullable(nullabilitySubstitutions);
     }
 
     @Override
-    public Object evaluate(ImmutableMap<Parameter, Object> values) {
-        Object subValue = subExpression.evaluate(values);
+    public Object evaluate(ImmutableMap<Parameter, Object> substitutions) {
+        Object subjectValue = subjectOperand.evaluate(substitutions);
         Class<?> targetType = targetTypeConstruct.symbol().type();
         Integer size = targetTypeConstruct.size();
         Integer scale = targetTypeConstruct.scale();
-        return ConvertUtil.convert(subValue, targetType, size, scale);
+        return ConvertUtil.convert(subjectValue, targetType, size, scale);
     }
 
     @Override
-    public String automaticName() {
-        return "CAST(" + subExpression.automaticName() + " AS " + targetTypeConstruct.symbol().name() + ")";
+    public String automaticName(int columnIndex) {
+        return "expr_cast_col" + columnIndex;
     }
 
 }

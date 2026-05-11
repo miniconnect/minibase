@@ -21,30 +21,28 @@ Some of the supported features are these:
 
 ## Limitations
 
-Here is some of the major limitations:
+Here are some of the major limitations:
 
-- limited `WHERE` filters (currently, only simple column filters supported, connected with `AND` operators)
-- limited `JOIN` (currently, only `INNER JOIN` and `LEFT JOIN` are supported, single foreign column only)
+- limited `WHERE` filters (currently, only simple column filters are supported, connected with `AND` operators)
+- limited `JOIN` (currently, only `INNER JOIN` and `LEFT JOIN` are supported with a single foreign column only)
 - very limited aggregation: limited `COUNT`, no `GROUP BY` and `HAVING` clauses, no window functions
 - no set operations on result sets (currently, only a very limited use of `UNION` is implemented)
 - no subqueries
-- limited support for binary data (not `BIT` type, no collations and explicit charsets)
+- limited support for collations and charsets
 - no advanced transaction management (currently, autocommit is forced, but concurrency is handled efficiently)
 
 The following additions are expected in the next major versions:
 
 | Feature | MiniBase version |
 | ------- | ---------------: |
-| `BIT` type | `0.6.0` |
-| Collations and charsets | `0.6.0` |
-| Arbitrary WHERE | `0.7.0` |
-| Arbitrary JOIN condition | `0.7.0` |
-| Subqueries | `0.7.0` |
-| CROSS join | `0.7.0` |
-| More aggregation functions | `0.8.0` |
-| GROUP BY and HAVING | `0.8.0` |
-| Window functions | `0.8.0` |
-| Set operations (e.g. UNION) | `0.8.0` |
+| Arbitrary WHERE | `0.8.0` |
+| Arbitrary JOIN condition | `0.8.0` |
+| Subqueries | `0.8.0` |
+| CROSS join | `0.8.0` |
+| More aggregation functions | `0.9.0` |
+| GROUP BY and HAVING | `0.9.0` |
+| Window functions | `0.9.0` |
+| Set operations (e.g. UNION) | `0.9.0` |
 
 ## Keywords
 
@@ -269,9 +267,9 @@ Some of the above types has aliases:
 | `TIMEZONE` | `UTCOFFSET` |
 
 The `INTERVAL` type is a little bit special.
-Traditionally, it has no size and scale parameters,
+Traditionally, it has no overall size and scale parameters,
 but a start field (with optional size) and an end field (with optional scale).
-These are internally normalized to size and scale as metadata.
+These are internally normalized to overall size and scale as metadata.
 
 `INTERVAL` is mapped to a unified interval implementation mixing `java.time.Period` and `java.time.Duration`.
 It can handle any mix of fields,
@@ -326,7 +324,7 @@ These are the supported operators in precedence order (higher precedence first):
 | Name | Symbol | Example | Result |
 | ---- | :----: | :-----: | :----: |
 | Unary minus | `-` | `- 3` | `-3` |
-| Unary plus | `+` | `+5` | `5` |
+| Unary plus | `+` | `+ 5` | `5` |
 | Logical NOT | `NOT` | `NOT TRUE` | `FALSE` |
 | Inline cast | `::` | `'12'::int` | `12` |
 | Multiplication | `*` | `2 * 3` | `6` |
@@ -347,7 +345,7 @@ These are the supported operators in precedence order (higher precedence first):
 | Different from | `!=` OR `<>` | `2 != 5` | `TRUE` |
 | Inline concatenation | `||` | `'Value: ' || 3` | `'Value: 3'` |
 
-Currently, division-by-zero behavior is lenient,
+Currently, division-by-zero behavior is lenient (just like in MySQL),
 so a zero operand after a division operator (`/`, `DIV`, or `%`) will result in `NULL`.
 
 In most cases, each of these returns with `NULL` if any of the given operands is `NULL`.
@@ -605,6 +603,12 @@ These functions are keywords and not identifiers, so they must be written in bar
 Some expressions are similar to functions but have a special syntax for the parameters.
 Like system functions, their names are keywords.
 
+Some of the string functions work with the BIT and BINARY types as well,
+as input and output types (while any other input is interpreted as a normal string), namely:
+
+`CONCAT` `CONCAT_WS` `LEFT`, `LPAD`, `POSITION` `REPEAT`, `REPLACE`,
+`REVERSE`, `RIGHT`, `RPAD`, `RRPAD`, `SPLIT_PART`, `SUBSTRING`, `TRIM`
+
 ### The `INTERVAL` expression
 
 While `INTERVAL` is also a type name, it can also be used for introducing interval literals.
@@ -666,7 +670,7 @@ Some examples with unit:
 | ---------- | ------- |
 | `INTERVAL 0 HOUR` | zero-length interval |
 | `INTERVAL 4 MINUTE` | 4 minutes |
-| `INTERVAL 7.5 SECOND` | 7 second 500 millis |
+| `INTERVAL 7.5 SECOND` | 7 seconds 500 millis |
 | `INTERVAL 7.5 DAY` | 7 days |
 | `INTERVAL '12:30' SECOND` | 12 minutes 30 seconds |
 | `INTERVAL '12:30' MINUTE` | 12 hours 30 minutes |
@@ -678,7 +682,7 @@ Unit parameters and the `TO` syntax is also supported in the same way
 
 ### The `TRIM` expression
 
-The expression `TRIM(x)` or `TRIM(FROM x)` removes all leading and trailing spaces from `x` (interpreted as a string).
+The expression `TRIM(x)` or `TRIM(FROM x)` removes all leading and trailing spaces from `x`.
 The expression `TRIM(c FROM x)` removes all leading and trailing occurences of the first character of `c`
 (if `c` is an empty string then it will return with `x` unchanged).
 
@@ -694,13 +698,16 @@ Some examples:
 
 If any specified parameter is null then null will be returned.
 
+The `BIT` and `BINARY` types are also supported, and behave accordingly.
+By default, they remove zero bits or bytes.
+
 ### The `SUBSTRING` expression
 
 The `SUBSTRING` (or `SUBSTR`) expression extracts a substring from an input interpreted as string.
 It contains at least one of the `FROM` clause and the `FOR` clause.
 The `FROM` clause specifies the starting position of the substring,
 while the `FOR` clause specifies the length.
-Both are 1-indexed, following the standard.
+Both parameters are 1-based, following the standard.
 The substring is allowed partially or entirely out of bounds either in the negative or positive (or both) direction.
 
 Some examples:
@@ -718,11 +725,13 @@ Some examples:
 
 If any specified parameter is null then null will be returned.
 
+The `BIT` and `BINARY` types are also supported, and behave accordingly.
+
 ### The `POSITION` expression
 
 The expression `POSITION(x IN a)` searches for the first occurence position of `x` in `a` (both interpreted as a string).
-The resulting position is 1-indexed.
-If no occurence is found then `0` will be returned.
+The resulting position is 1-based.
+If no occurence is found then the expression will evaluate to `0`.
 
 Some examples:
 
@@ -734,6 +743,8 @@ Some examples:
 | `POSITION('lorem' in 'ore')` | `0` |
 
 If any specified parameter is null then null will be returned.
+
+The `BIT` and `BINARY` types are also supported, and behave accordingly.
 
 ### The `EXTRACT` expression
 
@@ -980,7 +991,7 @@ SELECT 2 AS no, @some_other_variable AS var
 SELECT 3 AS no, @some_more_variable AS var;
 ```
 
-### Insert (or replace) records to table
+### Insert (or replace) a record into table
 
 New records can be inserted to a table with the `INSERT` statement:
 
@@ -1000,9 +1011,9 @@ The `REPLACE` statement is roughly the same, but it deletes all the conflicting 
 REPLACE INTO tbl (col1, col2) VALUES ('lorem', 42);
 ```
 
-### Update records in table
+### Update records in a table
 
-Existing values can be chaged using the `UPDATE` statement:
+Existing values can be changed using the `UPDATE` statement:
 
 ```sql
 UPDATE tbl SET col1 = 'lorem', col2 = 42 WHERE id BETWEEN 16 AND 23;
@@ -1010,7 +1021,7 @@ UPDATE tbl SET col1 = 'lorem', col2 = 42 WHERE id BETWEEN 16 AND 23;
 
 The `WHERE` clause is optional, if omitted, all records will be updated.
 
-### Delete records from table
+### Delete records from a table
 
 Records can be deleted from a table with the `DELETE` statement:
 

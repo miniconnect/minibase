@@ -45,21 +45,21 @@ public class DivideExpression implements Expression {
     public Optional<Class<?>> type() {
         Class<?> leftType = leftOperand.type().orElse(null);
         Class<?> rightType = rightOperand.type().orElse(null);
-        if (TemporalAmount.class.isAssignableFrom(leftType)) {
-            return Optional.of(DateTimeDelta.class);
-        } else if (leftType == null || rightType == null) {
+        if (leftType == null || rightType == null) {
             return Optional.empty();
+        } else if (TemporalAmount.class.isAssignableFrom(leftType)) {
+            return Optional.of(DateTimeDelta.class);
         }
         return Optional.of(NumberUtil.commonNumericTypeOf(leftType, rightType));
     }
 
     @Override
-    public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
-        Class<?> leftType = leftOperand.type(types);
+    public Class<?> type(ImmutableMap<Parameter, Class<?>> typeSubstitutions) {
+        Class<?> leftType = leftOperand.type(typeSubstitutions);
         if (TemporalAmount.class.isAssignableFrom(leftType)) {
             return DateTimeDelta.class;
         }
-        return NumberUtil.commonNumericTypeOf(leftType, rightOperand.type(types));
+        return NumberUtil.commonNumericTypeOf(leftType, rightOperand.type(typeSubstitutions));
     }
 
     @Override
@@ -68,8 +68,11 @@ public class DivideExpression implements Expression {
     }
 
     @Override
-    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
-        return leftOperand.isNullable(nullabilities) || rightOperand.isNullable(nullabilities) || canResultInZero(rightOperand);
+    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilitySubstitutions) {
+        return
+                leftOperand.isNullable(nullabilitySubstitutions) ||
+                rightOperand.isNullable(nullabilitySubstitutions) ||
+                canResultInZero(rightOperand);
     }
 
     private boolean canResultInZero(Expression expression) {
@@ -81,14 +84,15 @@ public class DivideExpression implements Expression {
     }
 
     @Override
-    public Object evaluate(ImmutableMap<Parameter, Object> values) {
-        Object leftValue = leftOperand.evaluate(values);
-        Object rightValue = rightOperand.evaluate(values);
-        if (NumberUtil.isZero(rightValue)) {
+    public Object evaluate(ImmutableMap<Parameter, Object> substitutions) {
+        Object leftValue = leftOperand.evaluate(substitutions);
+        Object rightValue = rightOperand.evaluate(substitutions);
+        if (leftValue == null || rightValue == null) {
+            return null;
+        } else if (NumberUtil.isZero(rightValue)) {
             // TODO: raise SQL warning
             return null;
-        }
-        if (leftValue instanceof TemporalAmount) {
+        } else if (leftValue instanceof TemporalAmount) {
             return divideTemporalAmount(leftValue, rightValue);
         }
         Class<?> commonType = NumberUtil.commonNumericTypeOf(leftValue.getClass(), rightValue.getClass());
@@ -121,8 +125,8 @@ public class DivideExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return leftOperand.automaticName() + " / " + rightOperand.automaticName();
+    public String automaticName(int columnIndex) {
+        return "expr_div_col" + columnIndex;
     }
 
 }

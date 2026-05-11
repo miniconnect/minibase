@@ -10,11 +10,11 @@ import hu.webarticum.miniconnect.lang.ImmutableMap;
 
 public class LikeExpression implements Expression {
 
-    private final Expression givenExpression;
+    private final Expression contextOperand;
 
-    private final Expression patternExpression;
+    private final Expression patternOperand;
 
-    private final Expression escapeExpression;
+    private final Expression escapeOperand;
 
     private final boolean caseInsensitive;
 
@@ -22,12 +22,12 @@ public class LikeExpression implements Expression {
 
 
     public LikeExpression(
-            Expression givenExpression, Expression patternExpression, Expression escapeExpression, boolean caseInsensitive) {
-        this.givenExpression = givenExpression;
-        this.patternExpression = patternExpression;
-        this.escapeExpression = escapeExpression;
+            Expression contextOperand, Expression patternOperand, Expression escapeOperand, boolean caseInsensitive) {
+        this.contextOperand = contextOperand;
+        this.patternOperand = patternOperand;
+        this.escapeOperand = escapeOperand;
         this.caseInsensitive = caseInsensitive;
-        this.precompiledPattern = precompilePatternIfConstant(patternExpression, escapeExpression, caseInsensitive);
+        this.precompiledPattern = precompilePatternIfConstant(patternOperand, escapeOperand, caseInsensitive);
     }
 
     private static Pattern precompilePatternIfConstant(Expression patternExpression, Expression escapeExpression, boolean caseInsensitive) {
@@ -78,16 +78,16 @@ public class LikeExpression implements Expression {
     }
 
 
-    public Expression givenExpression() {
-        return givenExpression;
+    public Expression contextOperand() {
+        return contextOperand;
     }
 
-    public Expression patternExpression() {
-        return patternExpression;
+    public Expression patternOperand() {
+        return patternOperand;
     }
 
-    public Expression escapeExpression() {
-        return escapeExpression;
+    public Expression escapeOperand() {
+        return escapeOperand;
     }
 
     public boolean caseInsensitive() {
@@ -96,11 +96,11 @@ public class LikeExpression implements Expression {
 
     @Override
     public ImmutableList<Parameter> parameters() {
-        ImmutableList<Parameter> parameters = givenExpression.parameters().concat(patternExpression.parameters());
-        if (escapeExpression == null) {
+        ImmutableList<Parameter> parameters = contextOperand.parameters().concat(patternOperand.parameters());
+        if (escapeOperand == null) {
             return parameters;
         } else {
-            return parameters.concat(escapeExpression.parameters());
+            return parameters.concat(escapeOperand.parameters());
         }
     }
 
@@ -110,50 +110,48 @@ public class LikeExpression implements Expression {
     }
 
     @Override
-    public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
+    public Class<?> type(ImmutableMap<Parameter, Class<?>> typeSubstitutions) {
         return Boolean.class;
     }
 
     @Override
     public boolean isNullable() {
-        return givenExpression.isNullable() || patternExpression.isNullable();
+        return contextOperand.isNullable() || patternOperand.isNullable();
     }
 
     @Override
-    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
-        return givenExpression.isNullable(nullabilities) || patternExpression.isNullable(nullabilities);
+    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilitySubstitutions) {
+        return contextOperand.isNullable(nullabilitySubstitutions) || patternOperand.isNullable(nullabilitySubstitutions);
     }
 
     @Override
-    public Object evaluate(ImmutableMap<Parameter, Object> values) {
-        Object givenValue = givenExpression.evaluate(values);
-        if (givenValue == null) {
+    public Object evaluate(ImmutableMap<Parameter, Object> substitutions) {
+        Object subjectValue = contextOperand.evaluate(substitutions);
+        if (subjectValue == null) {
             return null;
         }
 
-        Pattern pattern = getPattern(values);
+        Pattern pattern = getPattern(substitutions);
         if (pattern == null) {
             return null;
         }
 
-        String givenString = StringUtil.stringify(givenValue);
-        return pattern.matcher(givenString).matches();
+        return pattern.matcher(StringUtil.stringify(subjectValue)).matches();
     }
 
-    private Pattern getPattern(ImmutableMap<Parameter, Object> values) {
+    private Pattern getPattern(ImmutableMap<Parameter, Object> substitutions) {
         if (precompiledPattern != null) {
             return precompiledPattern;
         }
 
-        Object patternValue = patternExpression.evaluate(values);
-        Object escapeValue = escapeExpression != null ? escapeExpression.evaluate(values) : null;
+        Object patternValue = patternOperand.evaluate(substitutions);
+        Object escapeValue = escapeOperand != null ? escapeOperand.evaluate(substitutions) : null;
         return compilePattern(patternValue, escapeValue, caseInsensitive);
     }
 
     @Override
-    public String automaticName() {
-        String op = caseInsensitive ? "ILIKE" : "LIKE";
-        return givenExpression.automaticName() + " " + op + " " + patternExpression.automaticName();
+    public String automaticName(int columnIndex) {
+        return "expr_like_col" + columnIndex;
     }
 
 }

@@ -1,10 +1,12 @@
 package hu.webarticum.minibase.query.expression;
 
 import java.math.BigDecimal;
+import java.time.temporal.TemporalAmount;
 import java.util.Optional;
 
 import hu.webarticum.minibase.query.util.ConvertUtil;
 import hu.webarticum.minibase.query.util.NumberUtil;
+import hu.webarticum.miniconnect.lang.DateTimeDelta;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
 import hu.webarticum.miniconnect.lang.LargeInteger;
@@ -41,13 +43,19 @@ public class RemainderExpression implements Expression {
         Class<?> rightType = rightOperand.type().orElse(null);
         if (leftType == null || rightType == null) {
             return Optional.empty();
+        } else if (TemporalAmount.class.isAssignableFrom(rightType)) {
+            return Optional.of(DateTimeDelta.class);
         }
         return Optional.of(NumberUtil.commonNumericTypeOf(leftType, rightType));
     }
 
     @Override
-    public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
-        return NumberUtil.commonNumericTypeOf(leftOperand.type(types), rightOperand.type(types));
+    public Class<?> type(ImmutableMap<Parameter, Class<?>> typeSubstitutions) {
+        Class<?> rightType = rightOperand.type(typeSubstitutions);
+        if (TemporalAmount.class.isAssignableFrom(rightType)) {
+            return DateTimeDelta.class;
+        }
+        return NumberUtil.commonNumericTypeOf(leftOperand.type(typeSubstitutions), rightType);
     }
 
     @Override
@@ -56,8 +64,11 @@ public class RemainderExpression implements Expression {
     }
 
     @Override
-    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
-        return leftOperand.isNullable(nullabilities) || rightOperand.isNullable(nullabilities) || canResultInZero(rightOperand);
+    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilitySubstitutions) {
+        return
+                leftOperand.isNullable(nullabilitySubstitutions) ||
+                rightOperand.isNullable(nullabilitySubstitutions) ||
+                canResultInZero(rightOperand);
     }
 
     private boolean canResultInZero(Expression expression) {
@@ -69,34 +80,46 @@ public class RemainderExpression implements Expression {
     }
 
     @Override
-    public Object evaluate(ImmutableMap<Parameter, Object> values) {
-        Object leftValue = leftOperand.evaluate(values);
-        Object rightValue = rightOperand.evaluate(values);
-        if (NumberUtil.isZero(rightValue)) {
+    public Object evaluate(ImmutableMap<Parameter, Object> substitutions) {
+        Object rightValue = rightOperand.evaluate(substitutions);
+        if (rightValue == null || NumberUtil.isZero(rightValue)) {
             // TODO: raise SQL warning
             return null;
         }
-        Class<?> commonType = NumberUtil.commonNumericTypeOf(leftValue.getClass(), rightValue.getClass());
-        if (commonType == Double.class) {
-            double leftDouble = (Double) ConvertUtil.convert(leftValue, Double.class);
-            double rightDouble = (Double) ConvertUtil.convert(rightValue, Double.class);
-            return leftDouble % rightDouble;
+        Object leftValue = leftOperand.evaluate(substitutions);
+        if (leftValue == null) {
+            return null;
+        }
+        Class<?> commonType;
+        if (rightValue instanceof TemporalAmount) {
+            commonType = DateTimeDelta.class;
+        } else {
+            commonType = NumberUtil.commonNumericTypeOf(leftValue.getClass(), rightValue.getClass());
+        }
+        if (commonType == LargeInteger.class) {
+            LargeInteger leftLargeInteger = (LargeInteger) ConvertUtil.convert(leftValue, LargeInteger.class);
+            LargeInteger rightLargeInteger = (LargeInteger) ConvertUtil.convert(rightValue, LargeInteger.class);
+            return leftLargeInteger.remainder(rightLargeInteger);
         } else if (commonType == BigDecimal.class) {
             BigDecimal leftBigDecimal = (BigDecimal) ConvertUtil.convert(leftValue, BigDecimal.class);
             BigDecimal rightBigDecimal = (BigDecimal) ConvertUtil.convert(rightValue, BigDecimal.class);
             return leftBigDecimal.remainder(rightBigDecimal);
-        } else if (commonType == LargeInteger.class) {
-            LargeInteger leftLargeInteger = (LargeInteger) ConvertUtil.convert(leftValue, LargeInteger.class);
-            LargeInteger rightLargeInteger = (LargeInteger) ConvertUtil.convert(rightValue, LargeInteger.class);
-            return leftLargeInteger.remainder(rightLargeInteger);
+        } else if (commonType == Double.class) {
+            double leftDouble = (Double) ConvertUtil.convert(leftValue, Double.class);
+            double rightDouble = (Double) ConvertUtil.convert(rightValue, Double.class);
+            return leftDouble % rightDouble;
+        } else if (commonType == DateTimeDelta.class) {
+            BigDecimal leftBigDecimal = (BigDecimal) ConvertUtil.convert(leftValue, BigDecimal.class);
+            BigDecimal rightBigDecimal = (BigDecimal) ConvertUtil.convert(rightValue, BigDecimal.class);
+            return ConvertUtil.convert(leftBigDecimal.remainder(rightBigDecimal), DateTimeDelta.class);
         } else {
             throw new IllegalArgumentException("Can not unify values for remainder operation");
         }
     }
 
     @Override
-    public String automaticName() {
-        return leftOperand.automaticName() + " % " + rightOperand.automaticName();
+    public String automaticName(int columnIndex) {
+        return "expr_rem_col" + columnIndex;
     }
 
 }

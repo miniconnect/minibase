@@ -36,6 +36,9 @@ class TemporalUtilTest {
         assertThat(TemporalUtil.temporalify(Instant.ofEpochSecond(1768176123))).isEqualTo(Instant.ofEpochSecond(1768176123));
         assertThat(TemporalUtil.temporalify(1768176123)).isEqualTo(Instant.ofEpochSecond(1768176123));
         assertThat(TemporalUtil.temporalify("01:02:03")).isEqualTo(LocalTime.of(1, 2, 3));
+        assertThat(TemporalUtil.temporalify("1:02:03")).isEqualTo(LocalTime.of(1, 2, 3));
+        assertThat(TemporalUtil.temporalify("01:02")).isEqualTo(LocalTime.of(1, 2, 0));
+        assertThat(TemporalUtil.temporalify("1:02")).isEqualTo(LocalTime.of(1, 2, 0));
         assertThat(TemporalUtil.temporalify("2026-05-06")).isEqualTo(LocalDate.of(2026, 5, 6));
         assertThat(TemporalUtil.temporalify("2026-05-06T01:02:09")).isEqualTo(LocalDateTime.of(2026, 5, 6, 1, 2, 9));
         assertThat(TemporalUtil.temporalify("2026-02-06 01:02:09")).isEqualTo(LocalDateTime.of(2026, 2, 6, 1, 2, 9));

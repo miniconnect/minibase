@@ -2,94 +2,174 @@ package hu.webarticum.minibase.query.expression;
 
 import java.util.Optional;
 
+import hu.webarticum.minibase.query.util.BitStringUtil;
+import hu.webarticum.minibase.query.util.ByteStringUtil;
 import hu.webarticum.minibase.query.util.NumberUtil;
 import hu.webarticum.minibase.query.util.StringUtil;
+import hu.webarticum.miniconnect.lang.BitString;
+import hu.webarticum.miniconnect.lang.ByteString;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
 
 public class SplitPartExpression implements Expression {
 
-    private final Expression inputExpression;
+    private final Expression contextOperand;
 
-    private final Expression delimiterExpression;
+    private final Expression delimiterOperand;
 
-    private final Expression slotExpression;
+    private final Expression slotOperand;
 
 
-    public SplitPartExpression(Expression inputExpression, Expression delimiterExpression, Expression slotExpression) {
-        this.inputExpression = inputExpression;
-        this.delimiterExpression = delimiterExpression;
-        this.slotExpression = slotExpression;
+    public SplitPartExpression(Expression contextOperand, Expression delimiterOperand, Expression slotOperand) {
+        this.contextOperand = contextOperand;
+        this.delimiterOperand = delimiterOperand;
+        this.slotOperand = slotOperand;
     }
 
 
-    public Expression inputExpression() {
-        return inputExpression;
+    public Expression contextOperand() {
+        return contextOperand;
     }
 
-    public Expression delimiterExpression() {
-        return delimiterExpression;
+    public Expression delimiterOperand() {
+        return delimiterOperand;
     }
 
-    public Expression slotExpression() {
-        return slotExpression;
+    public Expression slotOperand() {
+        return slotOperand;
     }
 
     @Override
     public ImmutableList<Parameter> parameters() {
-        return inputExpression.parameters().concat(delimiterExpression.parameters()).concat(slotExpression.parameters());
+        return contextOperand.parameters().concat(delimiterOperand.parameters()).concat(slotOperand.parameters());
     }
 
     @Override
     public Optional<Class<?>> type() {
-        return Optional.of(String.class);
+        Class<?> contextType = contextOperand.type().orElse(null);
+        if (contextType == null || contextType == ByteString.class || contextType == BitString.class) {
+            return Optional.ofNullable(contextType);
+        } else {
+            return Optional.of(String.class);
+        }
     }
 
     @Override
-    public Class<?> type(ImmutableMap<Parameter, Class<?>> values) {
-        return String.class;
+    public Class<?> type(ImmutableMap<Parameter, Class<?>> typeSubstitutions) {
+        Class<?> contextType = contextOperand.type(typeSubstitutions);
+        if (contextType == ByteString.class || contextType == BitString.class) {
+            return contextType;
+        } else {
+            return String.class;
+        }
     }
 
     @Override
     public boolean isNullable() {
-        return inputExpression.isNullable() || delimiterExpression.isNullable() || slotExpression.isNullable();
+        return contextOperand.isNullable() || delimiterOperand.isNullable() || slotOperand.isNullable();
     }
 
     @Override
-    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
+    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilitySubstitutions) {
         return
-                inputExpression.isNullable(nullabilities) ||
-                delimiterExpression.isNullable(nullabilities) ||
-                slotExpression.isNullable(nullabilities);
+                contextOperand.isNullable(nullabilitySubstitutions) ||
+                delimiterOperand.isNullable(nullabilitySubstitutions) ||
+                slotOperand.isNullable(nullabilitySubstitutions);
     }
 
     @Override
-    public Object evaluate(ImmutableMap<Parameter, Object> values) {
-        Object inputValue = inputExpression.evaluate(values);
-        if (inputValue == null) {
+    public Object evaluate(ImmutableMap<Parameter, Object> substitutions) {
+        Object contextValue = contextOperand.evaluate(substitutions);
+        if (contextValue == null) {
             return null;
         }
 
-        Object delimiterValue = delimiterExpression.evaluate(values);
+        Object delimiterValue = delimiterOperand.evaluate(substitutions);
         if (delimiterValue == null) {
             return null;
         }
 
-        Object slotValue = slotExpression.evaluate(values);
+        Object slotValue = slotOperand.evaluate(substitutions);
         if (slotValue == null) {
             return null;
         }
 
-        String inputString = StringUtil.stringify(inputValue);
-        String delimiterString = StringUtil.stringify(delimiterValue);
-        int slotZeroBased = NumberUtil.asInt(slotValue) - 1;
+        int slot = NumberUtil.asInt(slotValue);
+        if (contextValue instanceof ByteString) {
+            return operate((ByteString) contextValue, ByteStringUtil.byteStringify(delimiterValue), slot);
+        } else if (contextValue instanceof BitString) {
+            return operate((BitString) contextValue, BitStringUtil.bitStringify(delimiterValue), slot);
+        } else {
+            return operate(StringUtil.stringify(contextValue), StringUtil.stringify(delimiterValue), slot);
+        }
+    }
 
-        return StringUtil.extractSlot(inputString, delimiterString, slotZeroBased);
+    private String operate(String context, String delimiter, int slot) {
+        int length = context.length();
+        int delimiterLength = delimiter.length();
+        if (length == 0 || delimiterLength == 0 || slot <= 0) {
+            return "";
+        }
+
+        int currentSlot = 1;
+        int pos = 0;
+        while (true) {
+            int foundIndex = context.indexOf(delimiter, pos);
+            if (foundIndex == -1) {
+                return currentSlot == slot ? context.substring(pos, length) : "";
+            } else if (currentSlot == slot) {
+                return context.substring(pos, foundIndex);
+            }
+            pos = foundIndex + delimiterLength;
+            currentSlot++;
+        }
+    }
+
+    private ByteString operate(ByteString context, ByteString delimiter, int slot) {
+        int length = context.length();
+        int delimiterLength = delimiter.length();
+        if (length == 0 || delimiterLength == 0 || slot <= 0) {
+            return ByteString.empty();
+        }
+
+        int currentSlot = 1;
+        int pos = 0;
+        while (true) {
+            int foundIndex = context.indexOf(delimiter, pos);
+            if (foundIndex == -1) {
+                return currentSlot == slot ? context.substring(pos, length) : ByteString.empty();
+            } else if (currentSlot == slot) {
+                return context.substring(pos, foundIndex);
+            }
+            pos = foundIndex + delimiterLength;
+            currentSlot++;
+        }
+    }
+
+    private BitString operate(BitString context, BitString delimiter, int slot) {
+        int length = context.length();
+        int delimiterLength = delimiter.length();
+        if (length == 0 || delimiterLength == 0 || slot <= 0) {
+            return BitString.empty();
+        }
+
+        int currentSlot = 1;
+        int pos = 0;
+        while (true) {
+            int foundIndex = context.indexOf(delimiter, pos);
+            if (foundIndex == -1) {
+                return currentSlot == slot ? context.substring(pos, length) : BitString.empty();
+            } else if (currentSlot == slot) {
+                return context.substring(pos, foundIndex);
+            }
+            pos = foundIndex + delimiterLength;
+            currentSlot++;
+        }
     }
 
     @Override
-    public String automaticName() {
-        return "SPLIT_PART(" + inputExpression.automaticName() + ", " + slotExpression.automaticName() + ")";
+    public String automaticName(int columnIndex) {
+        return "expr_substr_col" + columnIndex;
     }
 
 }

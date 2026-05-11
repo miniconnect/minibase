@@ -31,19 +31,19 @@ public class RoundExpression implements Expression {
     }
 
 
-    private final Expression givenExpression;
+    private final Expression operand;
 
     private final RoundMode roundMode;
 
 
-    public RoundExpression(Expression givenExpression, RoundMode roundMode) {
-        this.givenExpression = givenExpression;
+    public RoundExpression(Expression operand, RoundMode roundMode) {
+        this.operand = operand;
         this.roundMode = roundMode;
     }
 
 
-    public Expression givenExpression() {
-        return givenExpression;
+    public Expression operand() {
+        return operand;
     }
 
     public RoundMode roundMode() {
@@ -52,7 +52,7 @@ public class RoundExpression implements Expression {
 
     @Override
     public ImmutableList<Parameter> parameters() {
-        return givenExpression.parameters();
+        return operand.parameters();
     }
 
     @Override
@@ -61,23 +61,23 @@ public class RoundExpression implements Expression {
     }
 
     @Override
-    public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
+    public Class<?> type(ImmutableMap<Parameter, Class<?>> typeSubstitutions) {
         return LargeInteger.class;
     }
 
     @Override
     public boolean isNullable() {
-        return givenExpression.isNullable();
+        return operand.isNullable();
     }
 
     @Override
-    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
-        return givenExpression.isNullable(nullabilities);
+    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilitySubstitutions) {
+        return operand.isNullable(nullabilitySubstitutions);
     }
 
     @Override
-    public Object evaluate(ImmutableMap<Parameter, Object> values) {
-        Object givenValue = givenExpression.evaluate(values);
+    public Object evaluate(ImmutableMap<Parameter, Object> substitutions) {
+        Object givenValue = operand.evaluate(substitutions);
         if (givenValue == null) {
             return null;
         }
@@ -95,8 +95,8 @@ public class RoundExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return roundMode.name() + "(" + givenExpression.automaticName() + ")";
+    public String automaticName(int columnIndex) {
+        return roundMode.name().toLowerCase() + "_" + operand.automaticName(columnIndex);
     }
 
 }

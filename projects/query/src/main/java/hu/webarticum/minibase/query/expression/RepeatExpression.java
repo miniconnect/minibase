@@ -4,84 +4,128 @@ import java.util.Optional;
 
 import hu.webarticum.minibase.query.util.NumberUtil;
 import hu.webarticum.minibase.query.util.StringUtil;
+import hu.webarticum.miniconnect.lang.BitString;
+import hu.webarticum.miniconnect.lang.ByteString;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
 
 public class RepeatExpression implements Expression {
 
-    private final Expression inputExpression;
+    private final Expression subjectOperand;
 
-    private final Expression countExpression;
+    private final Expression countOperand;
 
 
-    public RepeatExpression(Expression inputExpression, Expression countExpression) {
-        this.inputExpression = inputExpression;
-        this.countExpression = countExpression;
+    public RepeatExpression(Expression subjectOperand, Expression countOperand) {
+        this.subjectOperand = subjectOperand;
+        this.countOperand = countOperand;
     }
 
 
-    public Expression inputExpression() {
-        return inputExpression;
+    public Expression subjectOperand() {
+        return subjectOperand;
     }
 
-    public Expression countExpression() {
-        return countExpression;
+    public Expression countOperand() {
+        return countOperand;
     }
 
     @Override
     public ImmutableList<Parameter> parameters() {
-        return inputExpression.parameters().concat(countExpression.parameters());
+        return subjectOperand.parameters().concat(countOperand.parameters());
     }
 
     @Override
     public Optional<Class<?>> type() {
-        return Optional.of(String.class);
+        Class<?> subjectType = subjectOperand.type().orElse(null);
+        if (subjectType == null || subjectType == ByteString.class || subjectType == BitString.class) {
+            return Optional.ofNullable(subjectType);
+        } else {
+            return Optional.of(String.class);
+        }
     }
 
     @Override
-    public Class<?> type(ImmutableMap<Parameter, Class<?>> values) {
-        return String.class;
+    public Class<?> type(ImmutableMap<Parameter, Class<?>> typeSubstitutions) {
+        Class<?> subjectType = subjectOperand.type(typeSubstitutions);
+        if (subjectType == ByteString.class || subjectType == BitString.class) {
+            return subjectType;
+        } else {
+            return String.class;
+        }
     }
 
     @Override
     public boolean isNullable() {
-        return inputExpression.isNullable() || countExpression.isNullable();
+        return subjectOperand.isNullable() || countOperand.isNullable();
     }
 
     @Override
-    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
-        return inputExpression.isNullable(nullabilities) || countExpression.isNullable(nullabilities);
+    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilitySubstitutions) {
+        return subjectOperand.isNullable(nullabilitySubstitutions) || countOperand.isNullable(nullabilitySubstitutions);
     }
 
     @Override
-    public Object evaluate(ImmutableMap<Parameter, Object> values) {
-        Object inputValue = inputExpression.evaluate(values);
-        if (inputValue == null) {
+    public Object evaluate(ImmutableMap<Parameter, Object> substitutions) {
+        Object subjectValue = subjectOperand.evaluate(substitutions);
+        if (subjectValue == null) {
             return null;
         }
 
-        Object countValue = countExpression.evaluate(values);
+        Object countValue = countOperand.evaluate(substitutions);
         if (countValue == null) {
             return null;
         }
 
-        String inputString = StringUtil.stringify(inputValue);
-        if (inputString.isEmpty()) {
+        int count = NumberUtil.asInt(countValue);
+        if (subjectValue instanceof ByteString) {
+            return operate((ByteString) subjectValue, count);
+        } else if (subjectValue instanceof BitString) {
+            return operate((BitString) subjectValue, count);
+        } else {
+            return operate(StringUtil.stringify(subjectValue), count);
+        }
+    }
+
+    private String operate(String subject, int count) {
+        if (subject.isEmpty()) {
             return "";
         }
 
-        int count = NumberUtil.asInt(countValue);
-
         StringBuilder resultBuilder = new StringBuilder();
         for (int i = 0; i < count; i++) {
-            resultBuilder.append(inputString);
+            resultBuilder.append(subject);
         }
         return resultBuilder.toString();
     }
 
+    private ByteString operate(ByteString subject, int count) {
+        if (subject.isEmpty()) {
+            return ByteString.empty();
+        }
+
+        ByteString.Builder resultBuilder = ByteString.builder();
+        for (int i = 0; i < count; i++) {
+            resultBuilder.append(subject);
+        }
+        return resultBuilder.build();
+    }
+
+    private BitString operate(BitString subject, int count) {
+        if (subject.isEmpty()) {
+            return BitString.empty();
+        }
+
+        BitString.Builder resultBuilder = BitString.builder();
+        for (int i = 0; i < count; i++) {
+            resultBuilder.append(subject);
+        }
+        return resultBuilder.build();
+    }
+
     @Override
-    public String automaticName() {
-        return "REPEAT(" + inputExpression.automaticName() + ", " + countExpression.automaticName() + ")";
+    public String automaticName(int columnIndex) {
+        return "expr_repeat_col" + columnIndex;
     }
 
 }

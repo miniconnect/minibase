@@ -7,21 +7,21 @@ import hu.webarticum.miniconnect.lang.ImmutableMap;
 
 public class IsNullExpression implements Expression {
 
-    private final Expression subExpression;
+    private final Expression operand;
 
 
     public IsNullExpression(Expression subExpression) {
-        this.subExpression = subExpression;
+        this.operand = subExpression;
     }
 
 
     public Expression subExpression() {
-        return subExpression;
+        return operand;
     }
 
     @Override
     public ImmutableList<Parameter> parameters() {
-        return subExpression.parameters();
+        return operand.parameters();
     }
 
     @Override
@@ -30,7 +30,7 @@ public class IsNullExpression implements Expression {
     }
 
     @Override
-    public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
+    public Class<?> type(ImmutableMap<Parameter, Class<?>> typeSubstitutions) {
         return Boolean.class;
     }
 
@@ -40,19 +40,19 @@ public class IsNullExpression implements Expression {
     }
 
     @Override
-    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
+    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilitySubstitutions) {
         return false;
     }
 
     @Override
-    public Object evaluate(ImmutableMap<Parameter, Object> values) {
-        Object subValue = subExpression.evaluate(values);
+    public Object evaluate(ImmutableMap<Parameter, Object> substitutions) {
+        Object subValue = operand.evaluate(substitutions);
         return subValue == null;
     }
 
     @Override
-    public String automaticName() {
-        return subExpression.automaticName() + " IS NULL";
+    public String automaticName(int columnIndex) {
+        return "null_" + operand.automaticName(columnIndex);
     }
 
 }

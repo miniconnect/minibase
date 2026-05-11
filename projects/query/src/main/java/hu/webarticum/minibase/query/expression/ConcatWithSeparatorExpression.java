@@ -4,97 +4,132 @@ import java.util.LinkedHashSet;
 import java.util.Optional;
 import java.util.Set;
 
+import hu.webarticum.minibase.query.util.BitStringUtil;
+import hu.webarticum.minibase.query.util.ByteStringUtil;
 import hu.webarticum.minibase.query.util.StringUtil;
+import hu.webarticum.miniconnect.lang.BitString;
+import hu.webarticum.miniconnect.lang.ByteString;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.ImmutableMap;
 
 public class ConcatWithSeparatorExpression implements Expression {
 
-    private final Expression separatorExpression;
+    private final Expression separatorOperand;
 
-    private final ImmutableList<Expression> itemExpressions;
+    private final ImmutableList<Expression> itemOperands;
 
 
-    public ConcatWithSeparatorExpression(Expression separatorExpression, ImmutableList<Expression> itemExpressions) {
-        this.separatorExpression = separatorExpression;
-        this.itemExpressions = itemExpressions;
+    public ConcatWithSeparatorExpression(Expression separatorOperand, ImmutableList<Expression> itemOperands) {
+        this.separatorOperand = separatorOperand;
+        this.itemOperands = itemOperands;
     }
 
 
-    public Expression separatorExpression() {
-        return separatorExpression;
+    public Expression separatorOperand() {
+        return separatorOperand;
     }
 
-    public ImmutableList<Expression> itemExpressions() {
-        return itemExpressions;
+    public ImmutableList<Expression> itemOperands() {
+        return itemOperands;
     }
 
     @Override
     public ImmutableList<Parameter> parameters() {
-        Set<Parameter> subParameters = new LinkedHashSet<>(separatorExpression.parameters().asList());
-        for (Expression itemExpression : itemExpressions) {
-            subParameters.addAll(itemExpression.parameters().asList());
+        Set<Parameter> subParameters = new LinkedHashSet<>(separatorOperand.parameters().asList());
+        for (Expression itemOperand : itemOperands) {
+            subParameters.addAll(itemOperand.parameters().asList());
         }
         return ImmutableList.fromCollection(subParameters);
     }
 
     @Override
     public Optional<Class<?>> type() {
-        return Optional.of(String.class);
+        return separatorOperand.type();
     }
 
     @Override
-    public Class<?> type(ImmutableMap<Parameter, Class<?>> values) {
-        return String.class;
+    public Class<?> type(ImmutableMap<Parameter, Class<?>> typeSubstitutions) {
+        return separatorOperand.type(typeSubstitutions);
     }
 
     @Override
     public boolean isNullable() {
-        return separatorExpression.isNullable();
+        return separatorOperand.isNullable();
     }
 
     @Override
-    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
-        return separatorExpression.isNullable(nullabilities);
+    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilitySubstitutions) {
+        return separatorOperand.isNullable(nullabilitySubstitutions);
     }
 
     @Override
-    public Object evaluate(ImmutableMap<Parameter, Object> values) {
-        Object separatorValue = separatorExpression.evaluate(values);
+    public Object evaluate(ImmutableMap<Parameter, Object> substitutions) {
+        Object separatorValue = separatorOperand.evaluate(substitutions);
         if (separatorValue == null) {
             return null;
+        } else if (separatorValue instanceof BitString) {
+            return operate(BitStringUtil.bitStringify(separatorValue), substitutions);
+        } else if (separatorValue instanceof ByteString) {
+            return operate(ByteStringUtil.byteStringify(separatorValue), substitutions);
+        } else {
+            return operate(StringUtil.stringify(separatorValue), substitutions);
         }
+    }
 
-        String separatorString = StringUtil.stringify(separatorValue);
-
-        StringBuilder resultBuilder = new StringBuilder();
+    public Object operate(BitString separator, ImmutableMap<Parameter, Object> substitutions) {
+        BitString.Builder resultBuilder = BitString.builder();
         boolean first = true;
-        for (Expression itemExpression : itemExpressions) {
-            Object itemValue = itemExpression.evaluate(values);
-            if (itemValue == null) {
+        for (Expression itemOperand : itemOperands) {
+            Object value = itemOperand.evaluate(substitutions);
+            if (value == null) {
                 continue;
-            }
-            if (first) {
+            } else if (first) {
                 first = false;
             } else {
-                resultBuilder.append(separatorString);
+                resultBuilder.append(separator);
             }
-            String itemString = StringUtil.stringify(itemValue);
-            resultBuilder.append(itemString);
+            resultBuilder.append(BitStringUtil.bitStringify(value));
+        }
+        return resultBuilder.build();
+    }
+
+    public Object operate(ByteString separator, ImmutableMap<Parameter, Object> substitutions) {
+        ByteString.Builder resultBuilder = ByteString.builder();
+        boolean first = true;
+        for (Expression itemOperand : itemOperands) {
+            Object value = itemOperand.evaluate(substitutions);
+            if (value == null) {
+                continue;
+            } else if (first) {
+                first = false;
+            } else {
+                resultBuilder.append(separator);
+            }
+            resultBuilder.append(ByteStringUtil.byteStringify(value));
+        }
+        return resultBuilder.build();
+    }
+
+    public Object operate(String separator, ImmutableMap<Parameter, Object> substitutions) {
+        StringBuilder resultBuilder = new StringBuilder();
+        boolean first = true;
+        for (Expression itemOperand : itemOperands) {
+            Object value = itemOperand.evaluate(substitutions);
+            if (value == null) {
+                continue;
+            } else if (first) {
+                first = false;
+            } else {
+                resultBuilder.append(separator);
+            }
+            resultBuilder.append(StringUtil.stringify(value));
         }
         return resultBuilder.toString();
     }
 
     @Override
-    public String automaticName() {
-        StringBuilder resultBuilder = new StringBuilder("CONCAT_WS(");
-        resultBuilder.append(separatorExpression.automaticName());
-        for (Expression itemExpression : itemExpressions) {
-            resultBuilder.append(", ");
-            resultBuilder.append(itemExpression.automaticName());
-        }
-        resultBuilder.append(")");
-        return resultBuilder.toString();
+    public String automaticName(int columnIndex) {
+        return "expr_concat_col" + columnIndex;
     }
 
 }

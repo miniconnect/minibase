@@ -38,7 +38,7 @@ public class AndExpression implements Expression {
     }
 
     @Override
-    public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
+    public Class<?> type(ImmutableMap<Parameter, Class<?>> typeSubstitutions) {
         return Boolean.class;
     }
 
@@ -48,19 +48,19 @@ public class AndExpression implements Expression {
     }
 
     @Override
-    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
-        return leftOperand.isNullable(nullabilities) || rightOperand.isNullable(nullabilities);
+    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilitySubstitutions) {
+        return leftOperand.isNullable(nullabilitySubstitutions) || rightOperand.isNullable(nullabilitySubstitutions);
     }
 
     @Override
-    public Object evaluate(ImmutableMap<Parameter, Object> values) {
-        Boolean leftValue = BooleanUtil.boolify(leftOperand.evaluate(values));
+    public Object evaluate(ImmutableMap<Parameter, Object> substitutions) {
+        Boolean leftValue = BooleanUtil.boolify(leftOperand.evaluate(substitutions));
         boolean leftIsNull = (leftValue == null);
         if (!leftIsNull && leftValue == false) {
             return false;
         }
 
-        Boolean rightValue = BooleanUtil.boolify(rightOperand.evaluate(values));
+        Boolean rightValue = BooleanUtil.boolify(rightOperand.evaluate(substitutions));
         boolean rightIsNull = (rightValue == null);
         if (!rightIsNull && rightValue == false) {
             return false;
@@ -74,8 +74,8 @@ public class AndExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return leftOperand.automaticName() + " AND " + rightOperand.automaticName();
+    public String automaticName(int columnIndex) {
+        return "expr_and_col" + columnIndex;
     }
 
 }

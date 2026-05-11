@@ -8,35 +8,35 @@ import hu.webarticum.miniconnect.lang.ImmutableMap;
 
 public class TranslateExpression implements Expression {
 
-    private final Expression contextExpression;
+    private final Expression contextOperand;
 
-    private final Expression fromCharsExpression;
+    private final Expression fromCharsOperand;
 
-    private final Expression toCharsExpression;
+    private final Expression toCharsOperand;
 
 
-    public TranslateExpression(Expression contextExpression, Expression fromCharsExpression, Expression toCharsExpression) {
-        this.contextExpression = contextExpression;
-        this.fromCharsExpression = fromCharsExpression;
-        this.toCharsExpression = toCharsExpression;
+    public TranslateExpression(Expression contextOperand, Expression fromCharsOperand, Expression toCharsOperand) {
+        this.contextOperand = contextOperand;
+        this.fromCharsOperand = fromCharsOperand;
+        this.toCharsOperand = toCharsOperand;
     }
 
 
-    public Expression contextExpression() {
-        return contextExpression;
+    public Expression contextOperand() {
+        return contextOperand;
     }
 
-    public Expression fromCharsExpression() {
-        return fromCharsExpression;
+    public Expression fromCharsOperand() {
+        return fromCharsOperand;
     }
 
-    public Expression toCharsExpression() {
-        return toCharsExpression;
+    public Expression toCharsOperand() {
+        return toCharsOperand;
     }
 
     @Override
     public ImmutableList<Parameter> parameters() {
-        return contextExpression.parameters().concat(fromCharsExpression.parameters()).concat(toCharsExpression.parameters());
+        return contextOperand.parameters().concat(fromCharsOperand.parameters()).concat(toCharsOperand.parameters());
     }
 
     @Override
@@ -45,36 +45,36 @@ public class TranslateExpression implements Expression {
     }
 
     @Override
-    public Class<?> type(ImmutableMap<Parameter, Class<?>> values) {
+    public Class<?> type(ImmutableMap<Parameter, Class<?>> typeSubstitutions) {
         return String.class;
     }
 
     @Override
     public boolean isNullable() {
-        return contextExpression.isNullable() || fromCharsExpression.isNullable() || toCharsExpression.isNullable();
+        return contextOperand.isNullable() || fromCharsOperand.isNullable() || toCharsOperand.isNullable();
     }
 
     @Override
-    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
+    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilitySubstitutions) {
         return
-                contextExpression.isNullable(nullabilities) ||
-                fromCharsExpression.isNullable(nullabilities) ||
-                toCharsExpression.isNullable(nullabilities);
+                contextOperand.isNullable(nullabilitySubstitutions) ||
+                fromCharsOperand.isNullable(nullabilitySubstitutions) ||
+                toCharsOperand.isNullable(nullabilitySubstitutions);
     }
 
     @Override
-    public Object evaluate(ImmutableMap<Parameter, Object> values) {
-        Object contextValue = contextExpression.evaluate(values);
+    public Object evaluate(ImmutableMap<Parameter, Object> substitutions) {
+        Object contextValue = contextOperand.evaluate(substitutions);
         if (contextValue == null) {
             return null;
         }
 
-        Object fromCharsValue = fromCharsExpression.evaluate(values);
+        Object fromCharsValue = fromCharsOperand.evaluate(substitutions);
         if (fromCharsValue == null) {
             return null;
         }
 
-        Object toCharsValue = toCharsExpression.evaluate(values);
+        Object toCharsValue = toCharsOperand.evaluate(substitutions);
         if (toCharsValue == null) {
             return null;
         }
@@ -103,10 +103,8 @@ public class TranslateExpression implements Expression {
     }
 
     @Override
-    public String automaticName() {
-        return "TRANSLATE(" + contextExpression.automaticName() + ", " +
-                fromCharsExpression.automaticName() + ", " +
-                toCharsExpression.automaticName() + ")";
+    public String automaticName(int columnIndex) {
+        return "expr_trans_col" + columnIndex;
     }
 
 }

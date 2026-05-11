@@ -13,76 +13,76 @@ import hu.webarticum.miniconnect.lang.LargeInteger;
 
 public class NegateExpression implements Expression {
 
-    private final Expression subExpression;
+    private final Expression operand;
 
 
-    public NegateExpression(Expression subExpression) {
-        this.subExpression = subExpression;
+    public NegateExpression(Expression operand) {
+        this.operand = operand;
     }
 
 
-    public Expression subExpression() {
-        return subExpression;
+    public Expression operand() {
+        return operand;
     }
 
     @Override
     public ImmutableList<Parameter> parameters() {
-        return subExpression.parameters();
+        return operand.parameters();
     }
 
     @Override
     public Optional<Class<?>> type() {
-        Class<?> subType = subExpression.type().orElse(null);
-        if (subType == null) {
+        Class<?> operandType = operand.type().orElse(null);
+        if (operandType == null) {
             return Optional.empty();
         }
-        if (TemporalAmount.class.isAssignableFrom(subType)) {
+        if (TemporalAmount.class.isAssignableFrom(operandType)) {
             return Optional.of(DateTimeDelta.class);
         }
-        return Optional.of(NumberUtil.numberifyType(subType));
+        return Optional.of(NumberUtil.numberifyType(operandType));
     }
 
     @Override
-    public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
-        Class<?> subType = subExpression.type(types);
-        if (TemporalAmount.class.isAssignableFrom(subType)) {
+    public Class<?> type(ImmutableMap<Parameter, Class<?>> typeSubstitutions) {
+        Class<?> operandType = operand.type(typeSubstitutions);
+        if (TemporalAmount.class.isAssignableFrom(operandType)) {
             return DateTimeDelta.class;
         }
-        return NumberUtil.numberifyType(subType);
+        return NumberUtil.numberifyType(operandType);
     }
 
     @Override
     public boolean isNullable() {
-        return subExpression.isNullable();
+        return operand.isNullable();
     }
 
     @Override
-    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
-        return subExpression.isNullable(nullabilities);
+    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilitySubstitutions) {
+        return operand.isNullable(nullabilitySubstitutions);
     }
 
     @Override
-    public Object evaluate(ImmutableMap<Parameter, Object> values) {
-        Object subValue = subExpression.evaluate(values);
-        if (subValue instanceof TemporalAmount) {
-            DateTimeDelta subDelta = DateTimeDeltaUtil.deltaify(subValue);
+    public Object evaluate(ImmutableMap<Parameter, Object> substitutions) {
+        Object value = operand.evaluate(substitutions);
+        if (value instanceof TemporalAmount) {
+            DateTimeDelta subDelta = DateTimeDeltaUtil.deltaify(value);
             return subDelta.negated();
         }
-        Number subNumber = NumberUtil.numberify(subValue);
-        if (subNumber == null) {
+        Number numericValue = NumberUtil.numberify(value);
+        if (numericValue == null) {
             return null;
-        } else if (subNumber instanceof LargeInteger) {
-            return ((LargeInteger) subNumber).negate();
-        } else if (subNumber instanceof BigDecimal) {
-            return ((BigDecimal) subNumber).negate();
+        } else if (numericValue instanceof LargeInteger) {
+            return ((LargeInteger) numericValue).negate();
+        } else if (numericValue instanceof BigDecimal) {
+            return ((BigDecimal) numericValue).negate();
         } else {
-            return -subNumber.doubleValue();
+            return -numericValue.doubleValue();
         }
     }
 
     @Override
-    public String automaticName() {
-        return "-" + subExpression.automaticName();
+    public String automaticName(int columnIndex) {
+        return "neg_" + operand.automaticName(columnIndex);
     }
 
 }

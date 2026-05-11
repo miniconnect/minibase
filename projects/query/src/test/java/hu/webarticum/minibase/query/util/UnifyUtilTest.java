@@ -35,6 +35,7 @@ class UnifyUtilTest {
         assertThat(UnifyUtil.unifyTypes(String.class)).isEqualTo(String.class);
         assertThat(UnifyUtil.unifyTypes(LargeInteger.of(73).getClass())).isEqualTo(LargeInteger.class);
         assertThat(UnifyUtil.unifyTypes(Integer.class, Double.class)).isEqualTo(Double.class);
+        assertThat(UnifyUtil.unifyTypes(LargeInteger.class, Boolean.class)).isEqualTo(LargeInteger.class);
         assertThat(UnifyUtil.unifyTypes(LocalDateTime.class, String.class)).isEqualTo(LocalDateTime.class);
         assertThat(UnifyUtil.unifyTypes(LocalDate.class, LocalTime.class)).isEqualTo(LocalDateTime.class);
         assertThat(UnifyUtil.unifyTypes(LocalDate.class, LocalTime.class, Instant.class)).isEqualTo(Instant.class);

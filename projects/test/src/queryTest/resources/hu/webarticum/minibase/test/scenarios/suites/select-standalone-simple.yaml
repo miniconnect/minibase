@@ -5,90 +5,83 @@ cases:
   - name: single-constant
     description: Select single constant
     query: "SELECT 1"
-    columns:
-      - type: hu.webarticum.miniconnect.lang.LargeInteger
-        nullable: false
     expectedResult:
       - [ 1 ]
+    columns:
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
 
   - name: single-constant-aliased
     description: Select single constant with alias
     query: "SELECT 100 AS hundred"
-    columns:
-      - name: hundred
-        type: hu.webarticum.miniconnect.lang.LargeInteger
-        nullable: false
     expectedResult:
       - [ 100 ]
+    columns:
+      - { name: hundred, type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
 
   - name: multiple-constants
     description: Select constants in several ways
     query: "SELECT 10, 20 AS twenty, 30, 40, 50 fifty, '60' as `sixty`, null `70`, 80"
-    columns:
-      - type: hu.webarticum.miniconnect.lang.LargeInteger
-        nullable: false
-      - name: twenty
-        type: hu.webarticum.miniconnect.lang.LargeInteger
-        nullable: false
-      - type: hu.webarticum.miniconnect.lang.LargeInteger
-        nullable: false
-      - type: hu.webarticum.miniconnect.lang.LargeInteger
-        nullable: false
-      - name: fifty
-        type: hu.webarticum.miniconnect.lang.LargeInteger
-        nullable: false
-      - name: sixty
-        type: java.lang.String
-        nullable: false
-      - name: "70"
-        type: java.lang.Void
-        nullable: true
-      - type: hu.webarticum.miniconnect.lang.LargeInteger
-        nullable: false
     expectedResult:
       - [ 10, 20, 30, 40, 50, "60", null, 80 ]
+    columns:
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { name: twenty, type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { name: fifty, type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { name: sixty, type: java.lang.String, nullable: false }
+      - { name: "70", type: java.lang.Void, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+
+  - name: special-values
+    description: Select constants in several ways
+    query: "SELECT SYSTEM_USER, SYSTEM_USER(), READONLY, READONLY()"
+    expectedResult:
+      - [ "", "", false, false ]
+    columns:
+      - { name: system_user, type: java.lang.String, nullable: false }
+      - { name: system_user, type: java.lang.String, nullable: false }
+      - { name: readonly, type: java.lang.Boolean, nullable: false }
+      - { name: readonly, type: java.lang.Boolean, nullable: false }
 
   - name: simple-math
     description: Simple mathematical operations
     query: "SELECT 1 + 1, 0.7 + 0.3, 8 / 2, 5 / 2, 5.0 / 2, 3 * -7, 2 - 4, -1 - -12"
-    columns:
-      - type: hu.webarticum.miniconnect.lang.LargeInteger
-        nullable: false
-      - type: java.math.BigDecimal
-        nullable: false
-      - type: hu.webarticum.miniconnect.lang.LargeInteger
-        nullable: false
-      - type: hu.webarticum.miniconnect.lang.LargeInteger
-        nullable: false
-      - type: java.math.BigDecimal
-        nullable: false
-      - type: hu.webarticum.miniconnect.lang.LargeInteger
-        nullable: false
-      - type: hu.webarticum.miniconnect.lang.LargeInteger
-        nullable: false
-      - type: hu.webarticum.miniconnect.lang.LargeInteger
-        nullable: false
     expectedResult:
       - [ 2, "1.0", 4, 2, "2.5", -21, -2, 11 ]
+    columns:
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
 
-  - name: casting-basic
+  - name: explicit-casting
     description: Obvious casts between basic types
     query: "SELECT 7::NUMERIC, CAST('12' AS INT), 32::CHAR, '4.3'::NUMERIC::INT::CHAR, null::INT, 5::DECIMAL(3, 2)"
-    columns:
-      - type: java.math.BigDecimal
-        nullable: false
-      - type: hu.webarticum.miniconnect.lang.LargeInteger
-        nullable: false
-      - type: java.lang.String
-        nullable: false
-      - type: java.lang.String
-        nullable: false
-      - type: hu.webarticum.miniconnect.lang.LargeInteger
-        nullable: true
-      - type: java.math.BigDecimal
-        nullable: false
     expectedResult:
       - [ "7", 12, "32", "4", null, "5.00" ]
+    columns:
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.String, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }
+      - { type: java.math.BigDecimal, nullable: false }
+
+  - name: implicit-casting
+    description: Implicit casts during operations
+    query: "SELECT 2 || ' options', '2' + '4', 10 | b'0100', 3 * b'100'"
+    expectedResult:
+      - [ "2 options", "6", "1110", 12 ]
+    columns:
+      - { type: java.lang.String, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.BitString, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
 
   - name: null-handling-1
     description: Simple tests checking null behaviour
@@ -101,30 +94,20 @@ cases:
         NULL, COALESCE(2, NULL, 3), COALESCE(NULL), COALESCE(@var0, @var1, @var2, @var3),
         NULL IS NULL, NULL IS NOT NULL, 2 IS NULL, @var1 IS NULL, @var2 IS NULL,
         NULLIF(@var2, 'lorem'), NULLIF(@var2, 'ipsum')
-    columns:
-      - type: java.lang.Void
-        nullable: true
-      - type: hu.webarticum.miniconnect.lang.LargeInteger
-        nullable: false
-      - type: java.lang.Void
-        nullable: true
-      - type: java.lang.String
-        nullable: false
-      - type: java.lang.Boolean
-        nullable: false
-      - type: java.lang.Boolean
-        nullable: false
-      - type: java.lang.Boolean
-        nullable: false
-      - type: java.lang.Boolean
-        nullable: false
-      - type: java.lang.Boolean
-        nullable: false
-      - type: java.lang.String
-        nullable: true
-      - type: java.lang.String
     expectedResult:
       - [ null, 2, null, "lorem", true, false, false, true, false, null, "lorem" ]
+    columns:
+      - { type: java.lang.Void, nullable: true }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: java.lang.Void, nullable: true }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.String, nullable: true }
+      - { type: java.lang.String }
 
   - name: null-handling-2
     description: More simple tests checking null behaviour
@@ -133,28 +116,74 @@ cases:
         4 + NULL, NULL - NULL, 'lorem' || NULL, NULL || NULL,
         CONCAT_WS(',', 'lorem', NULL, 'ipsum', 'dolor', NULL, NULL),
         TRUE AND NULL, TRUE OR NULL, FALSE AND NULL, FALSE OR NULL, NULL AND NULL, NULL OR NULL
-    columns:
-      - type: java.lang.Void
-        nullable: true
-      - type: java.lang.Void
-        nullable: true
-      - type: java.lang.String
-        nullable: true
-      - type: java.lang.String
-        nullable: true
-      - type: java.lang.String
-        nullable: false
-      - type: java.lang.Boolean
-        nullable: true
-      - type: java.lang.Boolean
-        nullable: true
-      - type: java.lang.Boolean
-        nullable: true
-      - type: java.lang.Boolean
-        nullable: true
-      - type: java.lang.Boolean
-        nullable: true
-      - type: java.lang.Boolean
-        nullable: true
     expectedResult:
       - [ null, null, null, null, "lorem,ipsum,dolor", null, true, false, null, null, null ]
+    columns:
+      - { type: java.lang.Void, nullable: true }
+      - { type: java.lang.Void, nullable: true }
+      - { type: java.lang.String, nullable: true }
+      - { type: java.lang.String, nullable: true }
+      - { type: java.lang.String, nullable: false }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+      - { type: java.lang.Boolean, nullable: true }
+
+  - name: large-numbers
+    description: Operations with large numbers
+    query: |
+      SELECT
+        4670173433400012763701872674647127363834607164763848087167087236473468082734374283,
+        -57740729413657264870685372492731948017724008742841964652891062680437,
+        583810623649823773 * 723708823,
+        724901809184438749857908374723478713642834 * 10274674608172548495,
+        231233 - 364706817263816381623480712676821346061276461274399011,
+        759234808734858887071724766846703746389592743758423490.07138123959607,
+        43107346817264909009987437781818127346732183746028384321168000 - 0.03,
+        999999999999999999999999999999999999999999999999999999999 * 0.3
+    expectedResult:
+      - [ "4670173433400012763701872674647127363834607164763848087167087236473468082734374283",
+          "-57740729413657264870685372492731948017724008742841964652891062680437",
+          "422508899296509926915249179",
+          "7448130212245694728093866869469539314400961974162678974234830",
+          "-364706817263816381623480712676821346061276461274167778",
+          "759234808734858887071724766846703746389592743758423490.07138123959607",
+          "43107346817264909009987437781818127346732183746028384321167999.97",
+          "299999999999999999999999999999999999999999999999999999999.7" ]
+    columns:
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+      - { type: java.math.BigDecimal, nullable: false }
+
+  - name: boolify
+    description: Test conversion to boolean (important in conditions)
+    query: |
+      SELECT
+        FALSE::BOOL, 0::BOOL, 0.0::BOOL, b'000'::BOOL, ''::BOOL, '0'::BOOL, 'FaLSe'::BOOL,
+        TRUE::BOOL, 1::BOOL, 0.5::BOOL, b'010'::BOOL, '1'::BOOL, '-1'::BOOL, 'TRue'::BOOL,
+        NULL::BOOL
+    expectedResult:
+      - [ false, false, false, false, false, false, false, true, true, true, true, true, true, true, null ]
+    columns:
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: false }
+      - { type: java.lang.Boolean, nullable: true }

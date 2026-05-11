@@ -22,7 +22,7 @@ public class PiExpression implements Expression {
     }
 
     @Override
-    public Class<?> type(ImmutableMap<Parameter, Class<?>> types) {
+    public Class<?> type(ImmutableMap<Parameter, Class<?>> typeSubstitutions) {
         return Double.class;
     }
 
@@ -32,18 +32,18 @@ public class PiExpression implements Expression {
     }
 
     @Override
-    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilities) {
+    public boolean isNullable(ImmutableMap<Parameter, Boolean> nullabilitySubstitutions) {
         return false;
     }
 
     @Override
-    public Object evaluate(ImmutableMap<Parameter, Object> values) {
+    public Object evaluate(ImmutableMap<Parameter, Object> substitutions) {
         return Math.PI;
     }
 
     @Override
-    public String automaticName() {
-        return "PI()";
+    public String automaticName(int columnIndex) {
+        return "pi";
     }
 
 }

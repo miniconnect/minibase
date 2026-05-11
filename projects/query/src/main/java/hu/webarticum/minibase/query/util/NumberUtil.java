@@ -13,9 +13,12 @@ import java.time.OffsetTime;
 import java.time.Period;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.time.temporal.TemporalAmount;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import hu.webarticum.miniconnect.lang.BitString;
+import hu.webarticum.miniconnect.lang.ByteString;
 import hu.webarticum.miniconnect.lang.DateTimeDelta;
 import hu.webarticum.miniconnect.lang.ImmutableList;
 import hu.webarticum.miniconnect.lang.LargeInteger;
@@ -69,17 +72,13 @@ public final class NumberUtil {
                 type == Integer.class ||
                 type == Short.class ||
                 type == Byte.class ||
+                type == BitString.class ||
+                type == ByteString.class ||
                 type == BigInteger.class ||
                 type == Boolean.class ||
                 type == Character.class ||
                 type == LocalDate.class ||
-                type == LocalTime.class ||
-                type == OffsetTime.class ||
-                type == LocalDateTime.class ||
-                type == OffsetDateTime.class ||
-                type == ZonedDateTime.class ||
                 type == ZoneOffset.class ||
-                type == Instant.class ||
                 type == Period.class) {
             return LargeInteger.class;
         } else if (
@@ -87,7 +86,14 @@ public final class NumberUtil {
                 type == DateTimeDelta.class ||
                 type == Duration.class ||
                 type == String.class ||
-                CharSequence.class.isAssignableFrom(type)) {
+                type == LocalTime.class ||
+                type == OffsetTime.class ||
+                type == LocalDateTime.class ||
+                type == OffsetDateTime.class ||
+                type == ZonedDateTime.class ||
+                type == Instant.class ||
+                CharSequence.class.isAssignableFrom(type) ||
+                TemporalAmount.class.isAssignableFrom(type)) {
             return BigDecimal.class;
         } else if (Number.class.isAssignableFrom(type)) {
             return Double.class;
@@ -252,6 +258,15 @@ public final class NumberUtil {
                 object instanceof Short ||
                 object instanceof Byte) {
             return LargeInteger.of(((Number) object).longValue());
+        } else if (object instanceof BitString) {
+            BitString bitStringValue = (BitString) object;
+            if (bitStringValue.length() <= 64) {
+                return LargeInteger.ofUnsignedLong(bitStringValue.toLong());
+            } else {
+                return LargeInteger.of(bitStringValue.toUnsignedBigInteger());
+            }
+        } else if (object instanceof ByteString) {
+            return LargeInteger.of(((ByteString) object).extract());
         } else if (object instanceof BigInteger) {
             return LargeInteger.of((BigInteger) object);
         } else if (object instanceof Number) {
@@ -263,19 +278,19 @@ public final class NumberUtil {
         } else if (object instanceof LocalDate) {
             return LargeInteger.of(((LocalDate) object).toEpochDay());
         } else if (object instanceof LocalTime) {
-            return LargeInteger.of(((LocalTime) object).toSecondOfDay());
+            return localTimeToBigDecimal((LocalTime) object);
         } else if (object instanceof OffsetTime) {
-            return numberify(((OffsetTime) object).toLocalTime());
+            return localTimeToBigDecimal(((OffsetTime) object).toLocalTime());
         } else if (object instanceof LocalDateTime) {
-            return LargeInteger.of(((LocalDateTime) object).toEpochSecond(ZoneOffset.UTC));
+            return instantToBigDecimal(((LocalDateTime) object).toInstant(ZoneOffset.UTC));
         } else if (object instanceof OffsetDateTime) {
-            return numberify(((OffsetDateTime) object).toInstant());
+            return instantToBigDecimal(((OffsetDateTime) object).toInstant());
         } else if (object instanceof ZonedDateTime) {
-            return numberify(((ZonedDateTime) object).toInstant());
+            return instantToBigDecimal(((ZonedDateTime) object).toInstant());
         } else if (object instanceof ZoneOffset) {
             return LargeInteger.of(((ZoneOffset) object).getTotalSeconds());
         } else if (object instanceof Instant) {
-            return LargeInteger.of(((Instant) object).getEpochSecond());
+            return instantToBigDecimal((Instant) object);
         } else if (object instanceof DateTimeDelta) {
             return durationToBigDecimal(((DateTimeDelta) object).toCollapsedDuration());
         } else if (object instanceof Duration) {
@@ -289,9 +304,23 @@ public final class NumberUtil {
         }
     }
 
+    private static BigDecimal instantToBigDecimal(Instant instant) {
+        return temporalToBigDecimal(instant.getEpochSecond(), instant.getNano());
+    }
+
+    private static BigDecimal localTimeToBigDecimal(LocalTime time) {
+        return temporalToBigDecimal(time.toSecondOfDay(), time.getNano());
+    }
+
     private static BigDecimal durationToBigDecimal(Duration duration) {
-        BigDecimal result = BigDecimal.valueOf(duration.getSeconds());
-        result = result.add(new BigDecimal(BigInteger.valueOf(duration.getNano()), 9));
+        return temporalToBigDecimal(duration.getSeconds(), duration.getNano());
+    }
+
+    private static BigDecimal temporalToBigDecimal(long seconds, int nanos) {
+        BigDecimal result = BigDecimal.valueOf(seconds);
+        if (nanos != 0) {
+            result = result.add(new BigDecimal(BigInteger.valueOf(nanos), 9).stripTrailingZeros());
+        }
         return result;
     }
 
@@ -547,25 +576,41 @@ public final class NumberUtil {
     public static BigDecimal divideBigDecimals(BigDecimal divident, BigDecimal divisor) {
         if (divisor.signum() == 0) {
             throw new ArithmeticException("Division by zero");
-        } else if (isExactDecimalDivisor(divisor)) {
-            return divident.divide(divisor);
         } else if (divident.signum() == 0) {
-            return BigDecimal.ZERO;
+            return divident;
+        } else if (canBeDividedExactly(divident, divisor)) {
+            return divident.divide(divisor);
         } else {
             int scale = Math.max(0, divident.scale()) + UNEXACT_DIVISION_SCALE;
             return divident.divide(divisor, scale, RoundingMode.HALF_UP);
         }
     }
 
-    private static boolean isExactDecimalDivisor(BigDecimal divisor) {
-        LargeInteger n = LargeInteger.of(divisor.unscaledValue());
-        while (n.isDivisibleBy(2)) {
-            n = n.half();
+    private static boolean canBeDividedExactly(BigDecimal divident, BigDecimal divisor) {
+        return canBeDividedExactly(LargeInteger.of(divident.unscaledValue()), LargeInteger.of(divisor.unscaledValue()));
+    }
+
+    private static boolean canBeDividedExactly(LargeInteger divident, LargeInteger divisor) {
+        LargeInteger gcd = divident.gcd(divisor);
+        return isExactDecimalDivisor(divisor.divide(gcd));
+    }
+
+    private static boolean isExactDecimalDivisor(LargeInteger divisor) {
+        while (divisor.isDivisibleBy(2)) {
+            divisor = divisor.half();
         }
-        while (n.isDivisibleBy(5)) {
-            n = n.divide(5);
+        while (divisor.isDivisibleBy(5)) {
+            divisor = divisor.divide(5);
         }
-        return n.abs().isEqualTo(LargeInteger.ONE);
+        return divisor.abs().isEqualTo(LargeInteger.ONE);
+    }
+
+    public static BigDecimal gcd(BigDecimal a, BigDecimal b) {
+        int commonScale = Math.max(a.scale(), b.scale());
+        BigInteger aBigInteger = a.movePointRight(commonScale).toBigInteger();
+        BigInteger bBigInteger = b.movePointRight(commonScale).toBigInteger();
+        BigInteger unscaledResult = aBigInteger.gcd(bBigInteger);
+        return new BigDecimal(unscaledResult, commonScale);
     }
 
 }
