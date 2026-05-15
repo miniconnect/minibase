@@ -57,7 +57,7 @@ cases:
       - { type: java.time.OffsetDateTime, nullable: false }
       - { type: java.lang.String, nullable: false }
 
-  - name: huge-compund-expression
+  - name: huge-compound-expression
     description: A single huge expression
     query: 
       SELECT

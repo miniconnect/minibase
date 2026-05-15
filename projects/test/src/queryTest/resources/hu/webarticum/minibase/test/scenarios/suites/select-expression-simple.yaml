@@ -629,6 +629,12 @@ cases:
         EXTRACT(SECOND FROM DATETIMEO('2025-06-01T12:30:17.2-01:30')),
         EXTRACT(TIMEZONE_HOUR FROM DATETIMEO('2025-06-01T12:30:17.2-01:30')),
         EXTRACT(TIMEZONE_MINUTE FROM DATETIMEO('2025-06-01T12:30:17.2-01:30')),
+        EXTRACT(YEAR FROM DATETIME('2025-06-01T12:02:05')),
+        EXTRACT(YEAR FROM INSTANT('2025-06-01T01:04:12+00:00')),
+        EXTRACT(YEAR FROM DATE('2025-06-01')),
+        EXTRACT(MINUTE FROM DATE('2025-06-01')),
+        EXTRACT(YEAR FROM TIME('15:01:42')),
+        EXTRACT(MINUTE FROM TIME('15:01:42')),
         EXTRACT(MINUTE FROM DATETIMEO(NULL)),
         EXTRACT(YEAR FROM INTERVAL 'P2Y2DT3H12M25.41S'),
         EXTRACT(MONTH FROM INTERVAL 'P2Y2DT3H12M25.41S'),
@@ -641,7 +647,8 @@ cases:
         EXTRACT(MINUTE FROM INTERVAL(NULL)),
         EXTRACT(MINUTE FROM NULL)
     expectedResult:
-      - [ 2025, 6, 1, 12, 30, "17.2", -1, -30, null, 2, 0, 2, 3, 12, "25.41", -2, "-25.41", null, null ]
+      - [ 2025, 6, 1, 12, 30, "17.2", -1, -30, 2025, 2025, 2025, 0, 0, 1, null,
+          2, 0, 2, 3, 12, "25.41", -2, "-25.41", null, null ]
     columns:
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
@@ -649,6 +656,12 @@ cases:
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
       - { type: java.math.BigDecimal, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
+      - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: false }
       - { type: hu.webarticum.miniconnect.lang.LargeInteger, nullable: true }

@@ -5,6 +5,8 @@ import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAmount;
 import java.time.temporal.TemporalField;
 import java.time.temporal.TemporalUnit;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoField;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -39,6 +41,9 @@ public class ExtractExpression implements Expression {
         }
 
         public Object extractFrom(Temporal temporal) {
+            if (temporal instanceof Instant) {
+                temporal = ((Instant) temporal).atOffset(ZoneOffset.UTC);
+            }
             if (this == TIMEZONE_HOUR || this == TIMEZONE_MINUTE) {
                 if (!temporal.isSupported(ChronoField.OFFSET_SECONDS)) {
                     return LargeInteger.ZERO;
